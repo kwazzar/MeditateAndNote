@@ -8,17 +8,29 @@
 
 /* Begin PBXBuildFile section */
 		E361876F2D68B221000E326D /* MeditateAndNoteApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E361876E2D68B221000E326D /* MeditateAndNoteApp.swift */; };
-		E36187712D68B221000E326D /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E36187702D68B221000E326D /* ContentView.swift */; };
 		E36187732D68B223000E326D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E36187722D68B223000E326D /* Assets.xcassets */; };
 		E36187762D68B223000E326D /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E36187752D68B223000E326D /* Preview Assets.xcassets */; };
+		E361877F2D68B373000E326D /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E361877E2D68B373000E326D /* MainView.swift */; };
+		E36187812D68D021000E326D /* Note.swift in Sources */ = {isa = PBXBuildFile; fileRef = E36187802D68D021000E326D /* Note.swift */; };
+		E36187862D68D0A5000E326D /* NoteCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E36187852D68D0A5000E326D /* NoteCard.swift */; };
+		E36187892D68F928000E326D /* Extension+View.swift in Sources */ = {isa = PBXBuildFile; fileRef = E36187882D68F928000E326D /* Extension+View.swift */; };
+		E361878C2D68FEF3000E326D /* MockNotes.swift in Sources */ = {isa = PBXBuildFile; fileRef = E361878B2D68FEF3000E326D /* MockNotes.swift */; };
+		E361878F2D68FF88000E326D /* MainViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E361878E2D68FF88000E326D /* MainViewModel.swift */; };
+		E36187912D6902CE000E326D /* CloudParametersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E36187902D6902CE000E326D /* CloudParametersView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		E361876B2D68B221000E326D /* MeditateAndNote.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MeditateAndNote.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E361876E2D68B221000E326D /* MeditateAndNoteApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditateAndNoteApp.swift; sourceTree = "<group>"; };
-		E36187702D68B221000E326D /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		E36187722D68B223000E326D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		E36187752D68B223000E326D /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		E361877E2D68B373000E326D /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
+		E36187802D68D021000E326D /* Note.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Note.swift; sourceTree = "<group>"; };
+		E36187852D68D0A5000E326D /* NoteCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteCard.swift; sourceTree = "<group>"; };
+		E36187882D68F928000E326D /* Extension+View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Extension+View.swift"; sourceTree = "<group>"; };
+		E361878B2D68FEF3000E326D /* MockNotes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockNotes.swift; sourceTree = "<group>"; };
+		E361878E2D68FF88000E326D /* MainViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewModel.swift; sourceTree = "<group>"; };
+		E36187902D6902CE000E326D /* CloudParametersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudParametersView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -51,8 +63,12 @@
 		E361876D2D68B221000E326D /* MeditateAndNote */ = {
 			isa = PBXGroup;
 			children = (
+				E36187872D68F901000E326D /* Extensions */,
+				E361878D2D68FF37000E326D /* ViewModels */,
+				E36187832D68D05C000E326D /* Views */,
+				E36187822D68D04E000E326D /* Models */,
+				E361878A2D68FED6000E326D /* Mock */,
 				E361876E2D68B221000E326D /* MeditateAndNoteApp.swift */,
-				E36187702D68B221000E326D /* ContentView.swift */,
 				E36187722D68B223000E326D /* Assets.xcassets */,
 				E36187742D68B223000E326D /* Preview Content */,
 			);
@@ -65,6 +81,56 @@
 				E36187752D68B223000E326D /* Preview Assets.xcassets */,
 			);
 			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		E36187822D68D04E000E326D /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				E36187802D68D021000E326D /* Note.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		E36187832D68D05C000E326D /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				E361877E2D68B373000E326D /* MainView.swift */,
+				E36187842D68D087000E326D /* Components */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		E36187842D68D087000E326D /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				E36187852D68D0A5000E326D /* NoteCard.swift */,
+				E36187902D6902CE000E326D /* CloudParametersView.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		E36187872D68F901000E326D /* Extensions */ = {
+			isa = PBXGroup;
+			children = (
+				E36187882D68F928000E326D /* Extension+View.swift */,
+			);
+			path = Extensions;
+			sourceTree = "<group>";
+		};
+		E361878A2D68FED6000E326D /* Mock */ = {
+			isa = PBXGroup;
+			children = (
+				E361878B2D68FEF3000E326D /* MockNotes.swift */,
+			);
+			path = Mock;
+			sourceTree = "<group>";
+		};
+		E361878D2D68FF37000E326D /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				E361878E2D68FF88000E326D /* MainViewModel.swift */,
+			);
+			path = ViewModels;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -137,8 +203,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E36187712D68B221000E326D /* ContentView.swift in Sources */,
+				E361878F2D68FF88000E326D /* MainViewModel.swift in Sources */,
 				E361876F2D68B221000E326D /* MeditateAndNoteApp.swift in Sources */,
+				E36187912D6902CE000E326D /* CloudParametersView.swift in Sources */,
+				E36187862D68D0A5000E326D /* NoteCard.swift in Sources */,
+				E36187892D68F928000E326D /* Extension+View.swift in Sources */,
+				E361877F2D68B373000E326D /* MainView.swift in Sources */,
+				E36187812D68D021000E326D /* Note.swift in Sources */,
+				E361878C2D68FEF3000E326D /* MockNotes.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

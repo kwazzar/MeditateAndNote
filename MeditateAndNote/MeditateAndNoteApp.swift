@@ -11,7 +11,7 @@ import SwiftUI
 struct MeditateAndNoteApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            MainView(viewModel: MainViewModel())
         }
     }
 }
