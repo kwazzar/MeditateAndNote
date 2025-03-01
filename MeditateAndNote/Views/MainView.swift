@@ -7,10 +7,6 @@
 
 import SwiftUI
 
-#warning("cоздать note view")
-#warning("островки для кожної сторони")
-#warning("свайп екрана вправо єто новая заметка")
-#warning("свайп вправо вибір медитації")
 struct MainView: View {
     @StateObject var viewModel: MainViewModel
     
@@ -40,16 +36,13 @@ struct MainView: View {
                 .padding(.trailing, -4)
             }
             Spacer()
-#warning("последние 10 заметок")
-#warning("при нажании на заметку она становится на первый план")
-            noteCards
+            NoteCardsView(noteCards: viewModel.last10Notes)
         }.background(.green)
     }
 }
 
 //MARK: - Extension
 private extension MainView {
-    
     var meditateButton: some View {
         Button(action: {
             
@@ -65,29 +58,10 @@ private extension MainView {
                 .shadow(radius: 5)
         }
     }
-    
-    var noteCards: some View {
-        ZStack {
-            ForEach(Array(viewModel.visibleNotes.enumerated().reversed()), id: \.element.id) { index, note in
-                NoteCard(note: note)
-                    .offset(y: CGFloat(index) * 25)
-                    .onTapGesture {
-                        withAnimation {
-                            if let noteIndex = viewModel.visibleNotes.firstIndex(where: { $0.id == note.id }) {
-                                let note = viewModel.visibleNotes.remove(at: noteIndex)
-                                viewModel.visibleNotes.append(note)
-                            }
-                        }
-                    }
-            }
-        }
-        .padding(.horizontal)
-        .padding(.bottom, CGFloat(viewModel.visibleNotes.count) * 20)
-    }
 }
 
 struct MainView_Previews: PreviewProvider {
     static var previews: some View {
-        MainView(viewModel: MainViewModel())
+        MainView(viewModel: MainViewModel(visibleNotes: MockNotes))
     }
 }

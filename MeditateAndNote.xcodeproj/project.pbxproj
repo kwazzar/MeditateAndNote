@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E32E6CD12D7345CA008529D3 /* NoteCardsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E32E6CD02D7345CA008529D3 /* NoteCardsView.swift */; };
 		E361876F2D68B221000E326D /* MeditateAndNoteApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E361876E2D68B221000E326D /* MeditateAndNoteApp.swift */; };
 		E36187732D68B223000E326D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E36187722D68B223000E326D /* Assets.xcassets */; };
 		E36187762D68B223000E326D /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E36187752D68B223000E326D /* Preview Assets.xcassets */; };
@@ -20,6 +21,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		E32E6CD02D7345CA008529D3 /* NoteCardsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteCardsView.swift; sourceTree = "<group>"; };
 		E361876B2D68B221000E326D /* MeditateAndNote.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MeditateAndNote.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E361876E2D68B221000E326D /* MeditateAndNoteApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditateAndNoteApp.swift; sourceTree = "<group>"; };
 		E36187722D68B223000E326D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -104,6 +106,7 @@
 			isa = PBXGroup;
 			children = (
 				E36187852D68D0A5000E326D /* NoteCard.swift */,
+				E32E6CD02D7345CA008529D3 /* NoteCardsView.swift */,
 				E36187902D6902CE000E326D /* CloudParametersView.swift */,
 			);
 			path = Components;
@@ -205,6 +208,7 @@
 			files = (
 				E361878F2D68FF88000E326D /* MainViewModel.swift in Sources */,
 				E361876F2D68B221000E326D /* MeditateAndNoteApp.swift in Sources */,
+				E32E6CD12D7345CA008529D3 /* NoteCardsView.swift in Sources */,
 				E36187912D6902CE000E326D /* CloudParametersView.swift in Sources */,
 				E36187862D68D0A5000E326D /* NoteCard.swift in Sources */,
 				E36187892D68F928000E326D /* Extension+View.swift in Sources */,
