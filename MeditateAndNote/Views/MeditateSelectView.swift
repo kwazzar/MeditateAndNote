@@ -22,8 +22,7 @@ struct MeditateSelectView: View {
                 .foregroundColor(.secondary)
             
             Button("Start Meditation") {
-                //додати логіку запуску медитації
-                print("Start Meditation tapped")
+                //додати логіку запуску медитації                
             }
             .font(.headline)
             .foregroundColor(.white)
@@ -32,7 +31,6 @@ struct MeditateSelectView: View {
             .cornerRadius(12)
             
             Button("Close") {
-                print("Close button tapped")
                 router.presentingSheet = nil
             }
             .font(.headline)
@@ -44,9 +42,6 @@ struct MeditateSelectView: View {
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.green.opacity(0.1))
-        .onAppear {
-            print("MeditateSelectView appeared")
-        }
     }
 }
 

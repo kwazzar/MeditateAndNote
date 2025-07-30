@@ -30,9 +30,6 @@ struct MainViewContent: View {
             Spacer()
             HStack {
                 Button(action: {
-                    print("Meditation button tapped")
-                    print("🔧 Using router: \(router.debugDescription)")
-                    print("🔧 Router isActive: \(router.isActive)")
                     router.navigate(to: .sheet(.meditationSettings))
                 }) {
                     Text("Meditation")
@@ -54,9 +51,6 @@ struct MainViewContent: View {
                 Spacer()
 
                 Button(action: {
-                    print("New Note button tapped")
-                    print("🔧 Using router: \(router.debugDescription)")
-                    print("🔧 Router isActive: \(router.isActive)")
                     router.navigate(to: .sheet(.newNote))
                 }) {
                     Text("New Note")
@@ -84,30 +78,6 @@ struct MainViewContent: View {
 private extension MainViewContent {
     var meditateButton: some View {
         Button(action: {
-            print("Meditate button tapped")
-            print("🔧 Using router: \(router.debugDescription)")
-            print("🔧 Router isActive: \(router.isActive)")
-            router.navigate(to: .fullScreen(.meditationSession(id: "main")))
-        }) {
-            Circle()
-                .fill(Color.blue)
-                .frame(width: 200, height: 200)
-                .overlay(
-                    Text("M")
-                        .foregroundColor(.white)
-                        .font(.system(size: 150))
-                )
-                .shadow(radius: 5)
-        }
-    }
-}
-
-
-//MARK: - Extension
-private extension MainView {
-    var meditateButton: some View {
-        Button(action: {
-            print("Meditate button tapped")
             router.navigate(to: .fullScreen(.meditationSession(id: "main")))
         }) {
             Circle()

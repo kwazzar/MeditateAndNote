@@ -24,16 +24,12 @@ struct CloudParametersView: View {
             .background(
                 RoundedRectangle(cornerRadius: 15)
                     .fill(Color.gray.opacity(0.1))
-
             )
-
         }
-
         .padding()
     }
 }
 
-// Компонент параметра
 struct ParameterItem: View {
     let title: String
     let value: String
