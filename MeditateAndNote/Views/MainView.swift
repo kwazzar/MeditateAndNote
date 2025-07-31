@@ -9,18 +9,6 @@ import SwiftUI
 
 struct MainView: View {
     @StateObject var viewModel: MainViewModel
-    @StateObject private var router = Router(level: 0, identifierTab: nil)
-
-    var body: some View {
-        NavigationContainer(parentRouter: router) {
-            MainViewContent(viewModel: viewModel)
-        }
-    }
-}
-
-//MARK: - MainViewContent
-struct MainViewContent: View {
-    @StateObject var viewModel: MainViewModel
     @EnvironmentObject var router: Router 
 
     var body: some View {
@@ -30,7 +18,8 @@ struct MainViewContent: View {
             Spacer()
             HStack {
                 Button(action: {
-                    router.navigate(to: .sheet(.meditationSettings))
+//                    router.navigate(to: .sheet(.meditationSettings))
+                    router.navigate(to: .fullScreen(.meditationSession(id: "left wing")))
                 }) {
                     Text("Meditation")
                         .font(.system(size: 16, weight: .medium))
@@ -75,10 +64,11 @@ struct MainViewContent: View {
 }
 
 // MARK: - Extension
-private extension MainViewContent {
+private extension MainView {
     var meditateButton: some View {
         Button(action: {
-            router.navigate(to: .fullScreen(.meditationSession(id: "main")))
+//            router.navigate(to: .fullScreen(.meditationSession(id: "main")))
+            router.navigate(to: .push(.meditationDetails(id: "meditate")))
         }) {
             Circle()
                 .fill(Color.blue)
@@ -95,6 +85,6 @@ private extension MainViewContent {
 
 struct MainView_Previews: PreviewProvider {
     static var previews: some View {
-        MainView(viewModel: MainViewModel(visibleNotes: MockNotes))
+        MainView(viewModel: AppContainer().makeMainViewModel())
     }
 }

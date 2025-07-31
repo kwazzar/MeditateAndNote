@@ -9,9 +9,15 @@ import SwiftUI
 
 @main
 struct MeditateAndNoteApp: App {
+    @StateObject private var router = Router(level: 0, identifierTab: nil)
+    @StateObject private var container = AppContainer()
+
     var body: some Scene {
         WindowGroup {
-            MainView(viewModel: MainViewModel(visibleNotes: MockNotes))
+            NavigationContainer(parentRouter: router) {
+                MainView(viewModel: container.makeMainViewModel())
+            }
+            .environmentObject(container)
         }
     }
 }

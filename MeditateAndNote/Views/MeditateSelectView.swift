@@ -32,6 +32,8 @@ struct MeditateSelectView: View {
             
             Button("Close") {
                 router.presentingSheet = nil
+                router.presentingFullScreen = nil
+                router.navigationStackPath = []
             }
             .font(.headline)
             .foregroundColor(.red)
@@ -47,7 +49,7 @@ struct MeditateSelectView: View {
 
 struct MeditateSelectView_Previews: PreviewProvider {
     static var previews: some View {
-        MeditateSelectView(viewModel: MeditateSelectViewModel())
+        MeditateSelectView(viewModel: AppContainer().makeMeditateSelectViewModel())
             .environmentObject(Router.previewRouter())
     }
 }

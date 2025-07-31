@@ -22,9 +22,9 @@ public struct DeepLink {
 
     static let registeredParsers: [DeepLinkParser] = [
         .equal(to: ["home"], destination: .tab(.home)),
-        .equal(to: ["meditate"], destination: .tab(.meditate)),
-        .equal(to: ["notes"], destination: .tab(.notes)),
-        .equal(to: ["reading"], destination: .tab(.reading)),
+//        .equal(to: ["meditate"], destination: .tab(.meditate)),
+//        .equal(to: ["notes"], destination: .tab(.notes)),
+//        .equal(to: ["reading"], destination: .tab(.reading)),
 
         .equal(to: ["meditation", "new"], destination: .sheet(.meditationSettings)),
         .equal(to: ["note", "new"], destination: .sheet(.newNote)),

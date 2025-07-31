@@ -18,19 +18,19 @@ struct NoteView: View {
                 .padding(.horizontal)
 
             ZStack(alignment: .topLeading) {
-                if viewModel.noteText.isEmpty {
+                if viewModel.content.isEmpty {
                     Text("Write your note here...")
                         .foregroundColor(.gray)
                         .padding(.horizontal, 18)
                         .padding(.top, 16)
                 }
 
-                TextEditor(text: $viewModel.noteText)
+                TextEditor(text: $viewModel.content)
                     .font(.body)
                     .padding(12)
                     .frame(minHeight: 300)
                     .background(Color.white)
-                    .opacity(viewModel.noteText.isEmpty ? 0.25 : 1)
+                    .opacity(viewModel.content.isEmpty ? 0.25 : 1)
             }
             .padding(.horizontal)
 
@@ -54,6 +54,6 @@ struct NoteView: View {
 
 struct NoteView_Previews: PreviewProvider {
     static var previews: some View {
-        NoteView(viewModel: NoteViewModel())
+        NoteView(viewModel: AppContainer().makeNoteViewModel())
     }
 }

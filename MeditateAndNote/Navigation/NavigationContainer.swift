@@ -43,6 +43,7 @@ struct NavigationContainer<Content: View>: View {
     }
 }
 
+//MARK: - InnerContainer
 private struct InnerContainer<Content: View>: View {
     @ObservedObject var router: Router
     @ViewBuilder var content: () -> Content

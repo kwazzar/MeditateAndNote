@@ -48,9 +48,6 @@ public enum PushDestination: Hashable, CustomStringConvertible {
 
 public enum TabDestination: String, Hashable {
     case home
-    case meditate
-    case notes
-    case reading
 }
 
 public enum SheetDestination: Hashable, CustomStringConvertible {
