@@ -11,7 +11,7 @@ final class AppContainer: ObservableObject {
 
     // MARK: - Services (Singletons)
     lazy var notesService: NotesService = NotesService()
-    lazy var meditationService: MeditationService = MeditationService()
+    lazy var meditationService: MeditationService = SampleMeditationService()
 
     // MARK: - ViewModels Factory Methods
     func makeMainViewModel() -> MainViewModel {

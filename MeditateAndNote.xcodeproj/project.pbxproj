@@ -27,6 +27,7 @@
 		E361878C2D68FEF3000E326D /* MockNotes.swift in Sources */ = {isa = PBXBuildFile; fileRef = E361878B2D68FEF3000E326D /* MockNotes.swift */; };
 		E361878F2D68FF88000E326D /* MainViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E361878E2D68FF88000E326D /* MainViewModel.swift */; };
 		E36187912D6902CE000E326D /* CloudParametersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E36187902D6902CE000E326D /* CloudParametersView.swift */; };
+		E36366292E3D0AB80026E810 /* MeditationCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E36366282E3D0AB80026E810 /* MeditationCard.swift */; };
 		E3848D502E3BC9A0001BE8AB /* NotesService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3848D4F2E3BC9A0001BE8AB /* NotesService.swift */; };
 		E3848D522E3BCA7F001BE8AB /* MeditationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3848D512E3BCA7F001BE8AB /* MeditationService.swift */; };
 		E3848D542E3BCAC4001BE8AB /* Meditation.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3848D532E3BCAC4001BE8AB /* Meditation.swift */; };
@@ -60,6 +61,7 @@
 		E361878B2D68FEF3000E326D /* MockNotes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockNotes.swift; sourceTree = "<group>"; };
 		E361878E2D68FF88000E326D /* MainViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewModel.swift; sourceTree = "<group>"; };
 		E36187902D6902CE000E326D /* CloudParametersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudParametersView.swift; sourceTree = "<group>"; };
+		E36366282E3D0AB80026E810 /* MeditationCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationCard.swift; sourceTree = "<group>"; };
 		E3848D4F2E3BC9A0001BE8AB /* NotesService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesService.swift; sourceTree = "<group>"; };
 		E3848D512E3BCA7F001BE8AB /* MeditationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationService.swift; sourceTree = "<group>"; };
 		E3848D532E3BCAC4001BE8AB /* Meditation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Meditation.swift; sourceTree = "<group>"; };
@@ -147,6 +149,7 @@
 			children = (
 				E361877E2D68B373000E326D /* MainView.swift */,
 				E389732A2D7918E700A9A662 /* MeditateSelectView.swift */,
+				E36366282E3D0AB80026E810 /* MeditationCard.swift */,
 				E340C16C2D75066A004D3645 /* NoteView.swift */,
 				E3BAF8A52E293D340036E250 /* ReadingView.swift */,
 				E36187842D68D087000E326D /* Components */,
@@ -307,6 +310,7 @@
 				E3848D562E3BD098001BE8AB /* ContainerView.swift in Sources */,
 				E389732D2D79191200A9A662 /* MeditateSelectViewModel.swift in Sources */,
 				E320C3F92E2DC8E4009452DD /* Destination-ViewMapping.swift in Sources */,
+				E36366292E3D0AB80026E810 /* MeditationCard.swift in Sources */,
 				E361878C2D68FEF3000E326D /* MockNotes.swift in Sources */,
 				E320C3ED2E2D1AC9009452DD /* Destination.swift in Sources */,
 				E389732B2D7918E700A9A662 /* MeditateSelectView.swift in Sources */,

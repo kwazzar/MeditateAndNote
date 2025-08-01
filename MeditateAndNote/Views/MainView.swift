@@ -18,8 +18,7 @@ struct MainView: View {
             Spacer()
             HStack {
                 Button(action: {
-//                    router.navigate(to: .sheet(.meditationSettings))
-                    router.navigate(to: .fullScreen(.meditationSession(id: "left wing")))
+                    router.navigate(to: .push(.meditationDetails(id: "left wing")))
                 }) {
                     Text("Meditation")
                         .font(.system(size: 16, weight: .medium))
