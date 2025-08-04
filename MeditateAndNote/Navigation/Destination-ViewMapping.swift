@@ -26,6 +26,8 @@ import SwiftUI
                 NoteView(viewModel: container.makeNoteViewModel())
             case .readingView(let id):
                 ReadingView()
+            case .meditation(id: let id):
+                MeditationView(viewModel: container.makeMeditationView())
             }
         }
         .navigationBarBackButtonHidden(true)

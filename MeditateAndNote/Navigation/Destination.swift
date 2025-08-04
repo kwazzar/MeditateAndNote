@@ -33,6 +33,7 @@ public enum PushDestination: Hashable, CustomStringConvertible {
     case meditationDetails(id: String)
     case noteDetails(id: String)
     case readingView(id: String)
+    case meditation(id: String)
 
     public var description: String {
         switch self {
@@ -42,6 +43,8 @@ public enum PushDestination: Hashable, CustomStringConvertible {
             return ".noteDetails(\(id))"
         case let .readingView(id): 
             return ".readingView(\(id))"
+        case .meditation(id: let id):
+            return ".meditation(\(id))"
         }
     }
 }

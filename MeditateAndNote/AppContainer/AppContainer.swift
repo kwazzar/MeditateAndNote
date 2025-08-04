@@ -25,4 +25,8 @@ final class AppContainer: ObservableObject {
     func makeMeditateSelectViewModel() -> MeditateSelectViewModel {
         MeditateSelectViewModel(meditationService: meditationService)
     }
+
+    func makeMeditationView() -> MeditationViewModel {
+        MeditationViewModel()
+    }
 }
