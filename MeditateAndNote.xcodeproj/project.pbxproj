@@ -90,6 +90,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		E34D18AB2E424CEE004CCFA8 /* Meditation */ = {
+			isa = PBXGroup;
+			children = (
+				E36164422E410D3D00A5DCCF /* MeditationProgressView.swift */,
+				E361643E2E41048C00A5DCCF /* MeditationView.swift */,
+			);
+			path = Meditation;
+			sourceTree = "<group>";
+		};
 		E34EE7662E3AFD0F0044CDC6 /* AppContainer */ = {
 			isa = PBXGroup;
 			children = (
@@ -154,8 +163,7 @@
 			isa = PBXGroup;
 			children = (
 				E361877E2D68B373000E326D /* MainView.swift */,
-				E361643E2E41048C00A5DCCF /* MeditationView.swift */,
-				E36164422E410D3D00A5DCCF /* MeditationProgressView.swift */,
+				E34D18AB2E424CEE004CCFA8 /* Meditation */,
 				E389732A2D7918E700A9A662 /* MeditateSelectView.swift */,
 				E36366282E3D0AB80026E810 /* MeditationCard.swift */,
 				E340C16C2D75066A004D3645 /* NoteView.swift */,

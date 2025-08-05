@@ -26,7 +26,9 @@ final class AppContainer: ObservableObject {
         MeditateSelectViewModel(meditationService: meditationService)
     }
 
-    func makeMeditationView() -> MeditationViewModel {
-        MeditationViewModel()
+    func makeMeditationViewModel(id: String) -> MeditationViewModel {
+        let meditation = meditationService.getMeditations()
+            .first { $0.id == id }!
+        return MeditationViewModel(meditation: meditation)
     }
 }

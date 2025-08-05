@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+#warning("sheet for pick time meditation")
 
 struct MeditationView: View {
     @StateObject var viewModel: MeditationViewModel
@@ -18,7 +19,6 @@ struct MeditationView: View {
             meditationCircle
             Spacer()
             progressBar
-
         }
     }
 }
@@ -26,7 +26,7 @@ struct MeditationView: View {
 //MARK: - Extension
 private extension MeditationView {
     var navigationBar: some View {
-        Text("navigationBar")
+        Text("\(viewModel.meditation.title)")
     }
 
     var meditationPlan: some View {
@@ -38,12 +38,13 @@ private extension MeditationView {
     }
 
     var progressBar: some View {
-        MeditationProgressView(progress: Float(viewModel.meditationTime), color: .blue)
+      return MeditationProgressView(progress: viewModel.progress, color: .blue)
+
     }
 }
 
 struct MeditationView_Previews: PreviewProvider {
     static var previews: some View {
-        MeditationView(viewModel: MeditationViewModel())
+        MeditationView(viewModel: MeditationViewModel(meditation: SampleMeditationService().getMeditations().first!))
     }
 }

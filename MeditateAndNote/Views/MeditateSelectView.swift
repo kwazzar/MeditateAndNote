@@ -153,7 +153,7 @@ private extension MeditateSelectView {
 
                 if let selectedMeditation = viewModel.selectedMeditation {
                     viewModel.saveLastSelectedMeditation(selectedMeditation)
-                    router.navigate(to: .push(.readingView(id: selectedMeditation.id)))
+                    router.navigate(to: .push(.meditation(id: selectedMeditation.id)))
                 }
 
                 router.presentingSheet = nil

@@ -27,7 +27,7 @@ import SwiftUI
             case .readingView(let id):
                 ReadingView()
             case .meditation(id: let id):
-                MeditationView(viewModel: container.makeMeditationView())
+                MeditationView(viewModel: container.makeMeditationViewModel(id: id))
             }
         }
         .navigationBarBackButtonHidden(true)
