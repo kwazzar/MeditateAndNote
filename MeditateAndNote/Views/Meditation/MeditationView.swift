@@ -6,11 +6,10 @@
 //
 
 import SwiftUI
-#warning("sheet for pick time meditation")
-
+#warning("UI")
 struct MeditationView: View {
     @StateObject var viewModel: MeditationViewModel
-
+    @EnvironmentObject var router: Router
     var body: some View {
         VStack {
             navigationBar
@@ -18,7 +17,12 @@ struct MeditationView: View {
             Spacer()
             meditationCircle
             Spacer()
-            progressBar
+            MeditationProgressView(progress: viewModel.progress, color: .blue)
+        }
+        .onAppear {
+            router.navigate(to: .sheet(.timeMeditation { duration in
+                viewModel.start(with: duration)
+            }))
         }
     }
 }
@@ -28,18 +32,13 @@ private extension MeditationView {
     var navigationBar: some View {
         Text("\(viewModel.meditation.title)")
     }
-
+    
     var meditationPlan: some View {
         Text("meditationPlan")
     }
 
     var meditationCircle: some View {
         Text("meditationCircle")
-    }
-
-    var progressBar: some View {
-      return MeditationProgressView(progress: viewModel.progress, color: .blue)
-
     }
 }
 

@@ -9,21 +9,25 @@ import SwiftUI
 
 final class MeditationViewModel: ObservableObject {
     let meditation: Meditation
-    @Published var meditationTime: TimeInterval
+    @Published var meditationTime: TimeInterval = 0
+    private var totalDuration: TimeInterval = 0
     private var timer: Timer?
+
     var progress: Float {
-        guard meditation.duration > 0 else { return 0 }
-        return Float((meditation.duration - meditationTime) / meditation.duration)
+        guard totalDuration > 0 else { return 0 }
+        return Float((totalDuration - meditationTime) / totalDuration)
     }
 
     init(meditation: Meditation) {
         self.meditation = meditation
-        self.meditationTime = meditation.duration
-
-        startTimer()
     }
 
-    private func startTimer() {
+    func start(with duration: MeditationDuration) {
+        totalDuration = duration.rawValue
+        meditationTime = duration.rawValue
+
+        timer?.invalidate()
+
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             guard let self = self else { return }
             if self.meditationTime > 0 {

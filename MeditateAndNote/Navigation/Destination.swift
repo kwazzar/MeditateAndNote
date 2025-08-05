@@ -57,6 +57,7 @@ public enum SheetDestination: Hashable, CustomStringConvertible {
     case newNote
     case meditationSettings
     case noteEditor(id: String)
+    case timeMeditation(onSelection: (MeditationDuration) -> Void)
 
     public var description: String {
         switch self {
@@ -66,7 +67,17 @@ public enum SheetDestination: Hashable, CustomStringConvertible {
             return ".meditationSettings"
         case let .noteEditor(id): 
             return ".noteEditor(\(id))"
+        case .timeMeditation:
+            return ".timeMeditation"
         }
+    }
+
+    public static func == (lhs: SheetDestination, rhs: SheetDestination) -> Bool {
+        lhs.id == rhs.id
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
     }
 }
 
@@ -79,6 +90,8 @@ extension SheetDestination: Identifiable {
             return "meditationSettings"
         case let .noteEditor(id): 
             return "noteEditor_\(id)"
+        case .timeMeditation:
+            return ".timeMeditation"
         }
     }
 }

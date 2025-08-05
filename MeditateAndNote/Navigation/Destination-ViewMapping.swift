@@ -44,6 +44,9 @@ import SwiftUI
                 MeditateSelectView(viewModel: container.makeMeditateSelectViewModel())
             case let .noteEditor(id):
                 NoteView(viewModel: container.makeNoteViewModel())
+            case let .timeMeditation(onSelection):
+                TimeMeditationSheet(onSelection: onSelection)
+                    .presentationDetents([.medium])
             }
         }
         .navigationBarTitleDisplayMode(.inline)

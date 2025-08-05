@@ -131,7 +131,7 @@ private extension MeditateSelectView {
                                 .font(.body)
                                 .fontWeight(.medium)
 
-                            Text("\(Int(selectedMeditation.duration / 60)) minutes")
+                            Text("empty here")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }

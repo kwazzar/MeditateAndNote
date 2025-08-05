@@ -39,7 +39,7 @@ struct MeditationCard: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
 
-                    Text("\(Int(meditation.duration / 60)) min")
+                    Text("\(meditation.breathingStyle.pattern.name) pattern")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }

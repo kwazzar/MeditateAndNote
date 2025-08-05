@@ -16,6 +16,8 @@
 		E320C3F92E2DC8E4009452DD /* Destination-ViewMapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = E320C3F82E2DC8E4009452DD /* Destination-ViewMapping.swift */; };
 		E32E6CD12D7345CA008529D3 /* NoteCardsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E32E6CD02D7345CA008529D3 /* NoteCardsView.swift */; };
 		E340C16D2D75066A004D3645 /* NoteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E340C16C2D75066A004D3645 /* NoteView.swift */; };
+		E34D18AD2E425A01004CCFA8 /* Breathing.swift in Sources */ = {isa = PBXBuildFile; fileRef = E34D18AC2E425A01004CCFA8 /* Breathing.swift */; };
+		E34D18AF2E426346004CCFA8 /* TimeMeditationSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E34D18AE2E426346004CCFA8 /* TimeMeditationSheet.swift */; };
 		E34EE7682E3AFDCE0044CDC6 /* AppContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E34EE7672E3AFDCE0044CDC6 /* AppContainer.swift */; };
 		E361643F2E41048C00A5DCCF /* MeditationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E361643E2E41048C00A5DCCF /* MeditationView.swift */; };
 		E36164412E41050F00A5DCCF /* MeditationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E36164402E41050F00A5DCCF /* MeditationViewModel.swift */; };
@@ -52,6 +54,8 @@
 		E320C3F82E2DC8E4009452DD /* Destination-ViewMapping.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Destination-ViewMapping.swift"; sourceTree = "<group>"; };
 		E32E6CD02D7345CA008529D3 /* NoteCardsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteCardsView.swift; sourceTree = "<group>"; };
 		E340C16C2D75066A004D3645 /* NoteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteView.swift; sourceTree = "<group>"; };
+		E34D18AC2E425A01004CCFA8 /* Breathing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Breathing.swift; sourceTree = "<group>"; };
+		E34D18AE2E426346004CCFA8 /* TimeMeditationSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeMeditationSheet.swift; sourceTree = "<group>"; };
 		E34EE7672E3AFDCE0044CDC6 /* AppContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppContainer.swift; sourceTree = "<group>"; };
 		E361643E2E41048C00A5DCCF /* MeditationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationView.swift; sourceTree = "<group>"; };
 		E36164402E41050F00A5DCCF /* MeditationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationViewModel.swift; sourceTree = "<group>"; };
@@ -95,6 +99,7 @@
 			children = (
 				E36164422E410D3D00A5DCCF /* MeditationProgressView.swift */,
 				E361643E2E41048C00A5DCCF /* MeditationView.swift */,
+				E34D18AE2E426346004CCFA8 /* TimeMeditationSheet.swift */,
 			);
 			path = Meditation;
 			sourceTree = "<group>";
@@ -155,6 +160,7 @@
 			children = (
 				E36187802D68D021000E326D /* Note.swift */,
 				E3848D532E3BCAC4001BE8AB /* Meditation.swift */,
+				E34D18AC2E425A01004CCFA8 /* Breathing.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -312,6 +318,7 @@
 				E34EE7682E3AFDCE0044CDC6 /* AppContainer.swift in Sources */,
 				E3FC3FC12D75C6FF00D6391D /* NoteViewModel.swift in Sources */,
 				E320C3F32E2D1F67009452DD /* Config.swift in Sources */,
+				E34D18AF2E426346004CCFA8 /* TimeMeditationSheet.swift in Sources */,
 				E320C3F52E2DC691009452DD /* Deeplink.swift in Sources */,
 				E320C3F72E2DC6D4009452DD /* DeepLinkParser.swift in Sources */,
 				E320C3F12E2D1CD6009452DD /* Router.swift in Sources */,
@@ -334,6 +341,7 @@
 				E361878C2D68FEF3000E326D /* MockNotes.swift in Sources */,
 				E320C3ED2E2D1AC9009452DD /* Destination.swift in Sources */,
 				E389732B2D7918E700A9A662 /* MeditateSelectView.swift in Sources */,
+				E34D18AD2E425A01004CCFA8 /* Breathing.swift in Sources */,
 				E3848D522E3BCA7F001BE8AB /* MeditationService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
