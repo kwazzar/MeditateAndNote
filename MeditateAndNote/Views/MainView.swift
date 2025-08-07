@@ -84,6 +84,7 @@ private extension MainView {
 
 struct MainView_Previews: PreviewProvider {
     static var previews: some View {
-        MainView(viewModel: AppContainer().makeMainViewModel())
+        MainView(viewModel: MainViewModel(notesService: NotesService()))
+            .environmentObject(Router.previewRouter())
     }
 }

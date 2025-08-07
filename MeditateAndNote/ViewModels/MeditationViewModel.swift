@@ -9,9 +9,16 @@ import SwiftUI
 
 final class MeditationViewModel: ObservableObject {
     let meditation: Meditation
-    @Published var meditationTime: TimeInterval = 0
+    @Published private var meditationTime: TimeInterval = 0
+    @Published var currentPhase: BreathingPhase?
+    @Published var phaseProgress: Double = 0
+    @Published var cycleCount: Int = 0
+
     private var totalDuration: TimeInterval = 0
     private var timer: Timer?
+    private var phaseTimer: Timer?
+    private var currentPhaseIndex: Int = 0
+    private var phaseStartTime: Date = Date()
 
     var progress: Float {
         guard totalDuration > 0 else { return 0 }
@@ -25,8 +32,13 @@ final class MeditationViewModel: ObservableObject {
     func start(with duration: MeditationDuration) {
         totalDuration = duration.rawValue
         meditationTime = duration.rawValue
+        currentPhaseIndex = 0
+        cycleCount = 0
 
         timer?.invalidate()
+        phaseTimer?.invalidate()
+
+        startBreathingCycle()
 
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             guard let self = self else { return }
@@ -36,11 +48,63 @@ final class MeditationViewModel: ObservableObject {
                 }
             } else {
                 self.timer?.invalidate()
+                self.phaseTimer?.invalidate()
             }
         }
     }
 
     deinit {
         timer?.invalidate()
+        phaseTimer?.invalidate()
+    }
+}
+
+//MARK: - Private methods
+extension MeditationViewModel {
+    private func startBreathingCycle() {
+        let pattern = meditation.breathingStyle.pattern
+        guard !pattern.phases.isEmpty else { return }
+
+        currentPhase = pattern.phases[currentPhaseIndex]
+        phaseStartTime = Date()
+        phaseProgress = 0
+
+        startPhaseTimer()
+    }
+
+    private func startPhaseTimer() {
+        guard let phase = currentPhase else { return }
+
+        phaseTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+            guard let self = self else { return }
+
+            let elapsed = Date().timeIntervalSince(self.phaseStartTime)
+            let progress = min(elapsed / phase.duration, 1.0)
+
+            withAnimation(.linear(duration: 0.1)) {
+                self.phaseProgress = progress
+            }
+
+            if progress >= 1.0 {
+                self.moveToNextPhase()
+            }
+        }
+    }
+
+    private func moveToNextPhase() {
+        phaseTimer?.invalidate()
+
+        let pattern = meditation.breathingStyle.pattern
+        currentPhaseIndex = (currentPhaseIndex + 1) % pattern.phases.count
+
+        if currentPhaseIndex == 0 {
+            cycleCount += 1
+        }
+
+        currentPhase = pattern.phases[currentPhaseIndex]
+        phaseStartTime = Date()
+        phaseProgress = 0
+
+        startPhaseTimer()
     }
 }

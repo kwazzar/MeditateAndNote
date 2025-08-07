@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+#warning("якщо текст не влазить на наступну сторінку")
 struct MeditationCard: View {
     let meditation: Meditation
     let isSelected: Bool

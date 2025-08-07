@@ -19,6 +19,7 @@
 		E34D18AD2E425A01004CCFA8 /* Breathing.swift in Sources */ = {isa = PBXBuildFile; fileRef = E34D18AC2E425A01004CCFA8 /* Breathing.swift */; };
 		E34D18AF2E426346004CCFA8 /* TimeMeditationSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E34D18AE2E426346004CCFA8 /* TimeMeditationSheet.swift */; };
 		E34EE7682E3AFDCE0044CDC6 /* AppContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E34EE7672E3AFDCE0044CDC6 /* AppContainer.swift */; };
+		E35B6FBC2E44ECAF00B235AE /* ConcentricRing.swift in Sources */ = {isa = PBXBuildFile; fileRef = E35B6FBB2E44ECAF00B235AE /* ConcentricRing.swift */; };
 		E361643F2E41048C00A5DCCF /* MeditationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E361643E2E41048C00A5DCCF /* MeditationView.swift */; };
 		E36164412E41050F00A5DCCF /* MeditationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E36164402E41050F00A5DCCF /* MeditationViewModel.swift */; };
 		E36164432E410D3D00A5DCCF /* MeditationProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E36164422E410D3D00A5DCCF /* MeditationProgressView.swift */; };
@@ -57,6 +58,7 @@
 		E34D18AC2E425A01004CCFA8 /* Breathing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Breathing.swift; sourceTree = "<group>"; };
 		E34D18AE2E426346004CCFA8 /* TimeMeditationSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeMeditationSheet.swift; sourceTree = "<group>"; };
 		E34EE7672E3AFDCE0044CDC6 /* AppContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppContainer.swift; sourceTree = "<group>"; };
+		E35B6FBB2E44ECAF00B235AE /* ConcentricRing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConcentricRing.swift; sourceTree = "<group>"; };
 		E361643E2E41048C00A5DCCF /* MeditationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationView.swift; sourceTree = "<group>"; };
 		E36164402E41050F00A5DCCF /* MeditationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationViewModel.swift; sourceTree = "<group>"; };
 		E36164422E410D3D00A5DCCF /* MeditationProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationProgressView.swift; sourceTree = "<group>"; };
@@ -97,8 +99,9 @@
 		E34D18AB2E424CEE004CCFA8 /* Meditation */ = {
 			isa = PBXGroup;
 			children = (
-				E36164422E410D3D00A5DCCF /* MeditationProgressView.swift */,
 				E361643E2E41048C00A5DCCF /* MeditationView.swift */,
+				E35B6FBB2E44ECAF00B235AE /* ConcentricRing.swift */,
+				E36164422E410D3D00A5DCCF /* MeditationProgressView.swift */,
 				E34D18AE2E426346004CCFA8 /* TimeMeditationSheet.swift */,
 			);
 			path = Meditation;
@@ -329,6 +332,7 @@
 				E3BAF8A92E2940380036E250 /* NavigationContainer.swift in Sources */,
 				E36187862D68D0A5000E326D /* NoteCard.swift in Sources */,
 				E36187892D68F928000E326D /* Extension+View.swift in Sources */,
+				E35B6FBC2E44ECAF00B235AE /* ConcentricRing.swift in Sources */,
 				E3848D502E3BC9A0001BE8AB /* NotesService.swift in Sources */,
 				E340C16D2D75066A004D3645 /* NoteView.swift in Sources */,
 				E36164432E410D3D00A5DCCF /* MeditationProgressView.swift in Sources */,

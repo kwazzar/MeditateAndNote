@@ -7,18 +7,18 @@
 
 import SwiftUI
 #warning("UI")
-
+#warning("добавить маску для верха шита")
 struct TimeMeditationSheet: View {
     @EnvironmentObject var router: Router
     @State private var selectedDuration: MeditationDuration = .threeMin
     let onSelection: (MeditationDuration) -> Void
 
     var body: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: 12) {
             Text("Select Duration")
                 .font(.title2)
                 .fontWeight(.semibold)
-                .padding(.top)
+                .padding(.top, 25)
 
             Picker("Duration", selection: $selectedDuration) {
                 ForEach(MeditationDuration.allCases) { duration in
@@ -27,9 +27,9 @@ struct TimeMeditationSheet: View {
                 }
             }
             .pickerStyle(WheelPickerStyle())
-            .frame(height: 200)
+            .frame(height: 150)
 
-            Spacer()
+            Spacer().frame(height:40)
 
             Button(action: {
                 onSelection(selectedDuration)
@@ -45,7 +45,7 @@ struct TimeMeditationSheet: View {
                     .cornerRadius(12)
             }
             .padding(.horizontal)
-            .padding(.bottom, 32)
+            .padding(.bottom, 16)
         }
         .padding()
     }
