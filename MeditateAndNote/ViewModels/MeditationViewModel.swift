@@ -8,12 +8,12 @@
 import SwiftUI
 
 final class MeditationViewModel: ObservableObject {
-    let meditation: Meditation
+    private let meditation: Meditation
     @Published private var meditationTime: TimeInterval = 0
     @Published var currentPhase: BreathingPhase?
     @Published var phaseProgress: Double = 0
     @Published var cycleCount: Int = 0
-    @Published var isPaused: Bool = false
+    @Published var meditationState: MeditationState = .notStarted
 
     private var totalDuration: TimeInterval = 0
     private var timer: Timer?
@@ -21,6 +21,13 @@ final class MeditationViewModel: ObservableObject {
     private var currentPhaseIndex: Int = 0
     private var phaseStartTime: Date = Date()
     private var pausedPhaseElapsed: TimeInterval = 0
+    private var isPaused: Bool {
+        return meditationState == .paused
+    }
+
+    var meditationTitle: String {
+        return self.meditation.title
+    }
 
     var progress: Float {
         guard totalDuration > 0 else { return 0 }
@@ -36,7 +43,7 @@ final class MeditationViewModel: ObservableObject {
         meditationTime = duration.rawValue
         currentPhaseIndex = 0
         cycleCount = 0
-        isPaused = false
+        meditationState = .started
         pausedPhaseElapsed = 0
 
         timer?.invalidate()
@@ -46,21 +53,23 @@ final class MeditationViewModel: ObservableObject {
 
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             guard let self = self else { return }
-            if !self.isPaused && self.meditationTime > 0 {
+            if self.meditationState == .started && self.meditationTime > 0 {
                 withAnimation(.linear(duration: 0.3)) {
                     self.meditationTime -= 1
                 }
             } else if self.meditationTime <= 0 {
+                self.meditationState = .finished
                 self.timer?.invalidate()
                 self.phaseTimer?.invalidate()
+                self.stop()
             }
         }
     }
 
     func pause() {
-        guard !isPaused else { return }
+        guard meditationState == .started else { return }
 
-        isPaused = true
+        meditationState = .paused
 
         if currentPhase != nil {
             let elapsed = Date().timeIntervalSince(phaseStartTime)
@@ -71,9 +80,9 @@ final class MeditationViewModel: ObservableObject {
     }
 
     func resume() {
-        guard isPaused else { return }
+        guard meditationState == .paused else { return }
 
-        isPaused = false
+        meditationState = .started
 
         phaseStartTime = Date().addingTimeInterval(-pausedPhaseElapsed)
         startPhaseTimer()
@@ -82,7 +91,7 @@ final class MeditationViewModel: ObservableObject {
     func stop() {
         timer?.invalidate()
         phaseTimer?.invalidate()
-        isPaused = false
+        meditationState = .notStarted
         meditationTime = 0
         phaseProgress = 0
         cycleCount = 0
@@ -116,8 +125,7 @@ private extension MeditationViewModel {
         phaseTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
             guard let self = self else { return }
 
-            // Не обновляем прогресс если медитация на паузе
-            guard !self.isPaused else { return }
+            guard self.meditationState == .started else { return }
 
             let elapsed = Date().timeIntervalSince(self.phaseStartTime)
             let progress = min(elapsed / phase.duration, 1.0)

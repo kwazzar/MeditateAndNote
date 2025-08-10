@@ -49,3 +49,24 @@ public enum MeditationDuration: TimeInterval, CaseIterable, Identifiable {
         }
     }
 }
+
+//MARK: - MeditationState
+enum MeditationState {
+    case notStarted
+    case started
+    case paused
+    case finished
+
+    var progressText: String {
+        switch self {
+        case .notStarted:
+            return "Start"
+        case .started:
+            return "Tap to Pause"
+        case .paused:
+            return "Resume"
+        case .finished:
+            return "Next"
+        }
+    }
+}

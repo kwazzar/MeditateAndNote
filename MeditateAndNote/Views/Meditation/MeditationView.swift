@@ -8,7 +8,7 @@
 import SwiftUI
 #warning("UI")
 #warning("переход сразу на напоследнею медитацию если через переход на кнопку m")
-#warning("баг закритого шита без вибраного часу медитації")
+#warning("додати звук до стейтів медитації")
 struct MeditationView: View {
     @StateObject var viewModel: MeditationViewModel
     @EnvironmentObject var router: Router
@@ -34,23 +34,23 @@ struct MeditationView: View {
 private extension MeditationView {
     var navigationBar: some View {
         ZStack {
-            Text("\(viewModel.meditation.title)")
+            Text("\(viewModel.meditationTitle)")
                 .font(.headline)
                 .fontWeight(.medium)
             HStack {
-            Spacer()
-            Button(action: {
-                router.navigationStackPath = []
-            }) {
-                Image(systemName: "xmark")
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(.primary)
-                    .frame(width: 32, height: 32)
-                    .background(Color(.systemGray5))
-                    .clipShape(Circle())
+                Spacer()
+                Button(action: {
+                    router.navigationStackPath = []
+                }) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(.primary)
+                        .frame(width: 32, height: 32)
+                        .background(Color(.systemGray5))
+                        .clipShape(Circle())
+                }
+                .buttonStyle(PlainButtonStyle())
             }
-            .buttonStyle(PlainButtonStyle())
-        }
 
         }
         .padding(.horizontal)
@@ -104,25 +104,27 @@ private extension MeditationView {
 
     var progress: some View {
         Button(action: {
-            if !viewModel.isPaused {
+            switch viewModel.meditationState {
+            case .notStarted:
+                router.navigate(to: .sheet(.timeMeditation { duration in
+                    viewModel.start(with: duration)
+                }))
+            case .started:
                 viewModel.pause()
-            } else {
+            case .paused:
                 viewModel.resume()
+            case .finished:
+                break
+              //TODO:
+            ///router to reeding
             }
         }) {
             ZStack {
                 MeditationProgressView(progress: viewModel.progress, color: .blue)
-                if !viewModel.isPaused {
-                    Text("Tap to pause")
-                        .font(.system(size: 24))
-                        .bold()
-                        .foregroundColor(.black)
-                } else {
-                    Text("Resume")
-                        .font(.system(size: 24))
-                        .bold()
-                        .foregroundColor(.black)
-                }
+                Text(viewModel.meditationState.progressText)
+                    .font(.system(size: 24))
+                    .bold()
+                    .foregroundColor(.black)
             }
         }
     }
