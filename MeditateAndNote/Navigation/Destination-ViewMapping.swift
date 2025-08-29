@@ -46,7 +46,7 @@ import SwiftUI
                 NoteView(viewModel: container.makeNoteViewModel())
             case let .timeMeditation(onSelection):
                 TimeMeditationSheet(onSelection: onSelection)
-                    .presentationDetents([.height(300)]) 
+                #warning("sheet")
             }
         }
         .navigationBarTitleDisplayMode(.inline)

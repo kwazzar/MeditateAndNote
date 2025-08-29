@@ -6,19 +6,15 @@
 //
 
 import SwiftUI
-#warning("UI")
-#warning("добавить маску для верха шита")
+
 struct TimeMeditationSheet: View {
     @EnvironmentObject var router: Router
     @State private var selectedDuration: MeditationDuration = .threeMin
     let onSelection: (MeditationDuration) -> Void
 
     var body: some View {
-        VStack(spacing: 12) {
-            Text("Select Duration")
-                .font(.title2)
-                .fontWeight(.semibold)
-                .padding(.top, 25)
+        VStack(spacing: 5) {
+            Spacer().frame(height: 20)
 
             Picker("Duration", selection: $selectedDuration) {
                 ForEach(MeditationDuration.allCases) { duration in
@@ -27,14 +23,26 @@ struct TimeMeditationSheet: View {
                 }
             }
             .pickerStyle(WheelPickerStyle())
-            .frame(height: 150)
 
-            Spacer().frame(height:40)
+            .clipShape(
+                Rectangle()
+                    .path(in: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 150))
+            )
+            .mask(
+                GeometryReader { geometry in
+                    CustomTopRoundedShape()
+                        .offset(y: -20)
+                }
+            )
+
+            Text("Select Duration")
+                .font(.title2)
+                .fontWeight(.semibold)
+                .padding(.top, 25)
 
             Button(action: {
                 onSelection(selectedDuration)
                 router.presentingSheet = nil
-
             }) {
                 Text("Start Meditation")
                     .font(.headline)
@@ -47,7 +55,27 @@ struct TimeMeditationSheet: View {
             .padding(.horizontal)
             .padding(.bottom, 16)
         }
-        .padding()
+        .padding(.bottom)
+        .background(
+            CustomTopRoundedShape()
+                .fill(Color(.systemBackground))
+        )
+        .clipShape(CustomTopRoundedShape())
+        .shadow(radius: 10)
+    }
+}
+
+// MARK: - Custom Shape
+fileprivate struct CustomTopRoundedShape: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        path.move(to: CGPoint(x: 0, y: rect.height))
+        path.addLine(to: CGPoint(x: 0, y: 140)) // left
+        path.addQuadCurve(to: CGPoint(x: rect.width, y: 140),
+                          control: CGPoint(x: rect.width / 2, y: -10)) // up
+        path.addLine(to: CGPoint(x: rect.width, y: rect.height)) // right
+        path.closeSubpath()
+        return path
     }
 }
 

@@ -12,6 +12,7 @@ import SwiftUI
 struct MeditationView: View {
     @StateObject var viewModel: MeditationViewModel
     @EnvironmentObject var router: Router
+    @State var showTimeMeditation: Bool = true
     
     var body: some View {
         VStack {
@@ -22,10 +23,26 @@ struct MeditationView: View {
             Spacer()
             progress
         }
+        .overlay(
+                    Group {
+                        if showTimeMeditation {
+                            VStack(spacing: 0) {
+                                Spacer()
+                                TimeMeditationSheet(onSelection: { duration in
+                                    showTimeMeditation = false
+                                })
+                                .transition(.move(edge: .bottom))
+                            }
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .edgesIgnoringSafeArea(.all)
+                            .padding(0)
+                        }
+                    }
+                )
         .onAppear {
-            router.navigate(to: .sheet(.timeMeditation { duration in
-                viewModel.start(with: duration)
-            }))
+//            router.navigate(to: .sheet(.timeMeditation { duration in
+//                viewModel.start(with: duration)
+//            }))
         }
     }
 }
