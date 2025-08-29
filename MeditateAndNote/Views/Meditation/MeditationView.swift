@@ -12,7 +12,6 @@ import SwiftUI
 struct MeditationView: View {
     @StateObject var viewModel: MeditationViewModel
     @EnvironmentObject var router: Router
-    @State var showTimeMeditation: Bool = true
     
     var body: some View {
         VStack {
@@ -24,26 +23,22 @@ struct MeditationView: View {
             progress
         }
         .overlay(
-                    Group {
-                        if showTimeMeditation {
-                            VStack(spacing: 0) {
-                                Spacer()
-                                TimeMeditationSheet(onSelection: { duration in
-                                    showTimeMeditation = false
-                                })
-                                .transition(.move(edge: .bottom))
-                            }
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            .edgesIgnoringSafeArea(.all)
-                            .padding(0)
-                        }
+            Group {
+                if viewModel.showTimeMeditation {
+                    VStack(spacing: 0) {
+                        Spacer()
+                        TimeMeditationSheet(onSelection: { duration in
+                            viewModel.showTimeMeditation = false
+                            viewModel.start(with: duration)
+                        })
+                        .transition(.move(edge: .bottom))
                     }
-                )
-        .onAppear {
-//            router.navigate(to: .sheet(.timeMeditation { duration in
-//                viewModel.start(with: duration)
-//            }))
-        }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .edgesIgnoringSafeArea(.all)
+                    .padding(0)
+                }
+            }
+        )
     }
 }
 
@@ -68,11 +63,11 @@ private extension MeditationView {
                 }
                 .buttonStyle(PlainButtonStyle())
             }
-
+            
         }
         .padding(.horizontal)
     }
-
+    
     var meditationPlan: some View {
         VStack(spacing: 8) {
             if let currentPhase = viewModel.currentPhase {
@@ -83,14 +78,14 @@ private extension MeditationView {
             }
         }
     }
-
+    
     var meditationCircle: some View {
         ZStack {
             // Background circle
             Circle()
                 .stroke(Color.gray.opacity(0.2), lineWidth: 2)
                 .frame(width: 250, height: 250)
-
+            
             // Concentric rings animation
             ForEach(0..<5, id: \.self) { index in
                 ConcentricRing(
@@ -100,13 +95,13 @@ private extension MeditationView {
                     breathingColor: breathingColor
                 )
             }
-
+            
             // Center circle
             Circle()
                 .fill(breathingColor.opacity(0.8))
                 .frame(width: 80, height: 80)
                 .animation(.easeInOut(duration: 0.3), value: breathingColor)
-
+            
             // Center text
             VStack(spacing: 4) {
                 if let currentPhase = viewModel.currentPhase {
@@ -118,7 +113,7 @@ private extension MeditationView {
             }
         }
     }
-
+    
     var progress: some View {
         Button(action: {
             switch viewModel.meditationState {
@@ -132,8 +127,8 @@ private extension MeditationView {
                 viewModel.resume()
             case .finished:
                 break
-              //TODO:
-            ///router to reeding
+                //TODO:
+                ///router to reeding
             }
         }) {
             ZStack {
@@ -145,10 +140,10 @@ private extension MeditationView {
             }
         }
     }
-
+    
     private var breathingColor: Color {
         guard let currentPhase = viewModel.currentPhase else { return .blue }
-
+        
         switch currentPhase.type {
         case .inhale:
             return .cyan
@@ -160,7 +155,7 @@ private extension MeditationView {
             return .indigo
         }
     }
-
+    
     private func formatTime(_ time: TimeInterval) -> String {
         return String(format: "%d", Int(max(time, 0)))
     }

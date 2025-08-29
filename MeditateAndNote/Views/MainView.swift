@@ -66,8 +66,9 @@ struct MainView: View {
 private extension MainView {
     var meditateButton: some View {
         Button(action: {
-//            router.navigate(to: .fullScreen(.meditationSession(id: "main")))
-            router.navigate(to: .push(.meditationDetails(id: "meditate")))
+            let lastSelectedId = UserDefaults.standard.string(forKey: "lastSelectedMeditationId") ?? "default_meditation_id"
+
+            router.navigate(to: .push(.meditation(id: lastSelectedId)))
         }) {
             Circle()
                 .fill(Color.blue)

@@ -42,7 +42,6 @@ struct TimeMeditationSheet: View {
 
             Button(action: {
                 onSelection(selectedDuration)
-                router.presentingSheet = nil
             }) {
                 Text("Start Meditation")
                     .font(.headline)
