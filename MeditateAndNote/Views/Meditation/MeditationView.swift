@@ -6,9 +6,8 @@
 //
 
 import SwiftUI
-#warning("UI")
-#warning("переход сразу на напоследнею медитацию если через переход на кнопку m")
 #warning("додати звук до стейтів медитації")
+#warning("вигляд time навігейшн sheet це меню вибору книги")
 struct MeditationView: View {
     @StateObject var viewModel: MeditationViewModel
     @EnvironmentObject var router: Router
@@ -118,17 +117,13 @@ private extension MeditationView {
         Button(action: {
             switch viewModel.meditationState {
             case .notStarted:
-                router.navigate(to: .sheet(.timeMeditation { duration in
-                    viewModel.start(with: duration)
-                }))
+                viewModel.showTimeMeditation = true
             case .started:
                 viewModel.pause()
             case .paused:
                 viewModel.resume()
             case .finished:
-                break
-                //TODO:
-                ///router to reeding
+                router.navigate(to: .push(.readingView(id: "read")))
             }
         }) {
             ZStack {

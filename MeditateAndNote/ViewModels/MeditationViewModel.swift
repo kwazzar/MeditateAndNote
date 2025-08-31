@@ -59,10 +59,9 @@ final class MeditationViewModel: ObservableObject {
                     self.meditationTime -= 1
                 }
             } else if self.meditationTime <= 0 {
-                self.meditationState = .finished
-                self.timer?.invalidate()
-                self.phaseTimer?.invalidate()
-                self.stop()
+                DispatchQueue.main.async {
+                    self.finish()
+                }
             }
         }
     }
@@ -108,6 +107,22 @@ final class MeditationViewModel: ObservableObject {
 
 // MARK: - Private methods
 private extension MeditationViewModel {
+    func finish() {
+       DispatchQueue.main.async {
+           self.timer?.invalidate()
+           self.phaseTimer?.invalidate()
+
+           withAnimation(.easeOut(duration: 0.8)) {
+               self.currentPhase = nil
+               self.phaseProgress = 0
+           }
+
+           DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+               self.meditationState = .finished
+           }
+       }
+   }
+
     func startBreathingCycle() {
         let pattern = meditation.breathingStyle.pattern
         guard !pattern.phases.isEmpty else { return }
@@ -159,3 +174,43 @@ private extension MeditationViewModel {
         startPhaseTimer()
     }
 }
+
+//MARK: - MeditationState
+enum MeditationState {
+    case notStarted
+    case started
+    case paused
+    case finished
+
+    var progressText: String {
+        switch self {
+        case .notStarted:
+            return "Start"
+        case .started:
+            return "Tap to Pause"
+        case .paused:
+            return "Resume"
+        case .finished:
+            return "Next"
+        }
+    }
+}
+
+//MARK: - MeditationDuration
+public enum MeditationDuration: TimeInterval, CaseIterable, Identifiable {
+    case oneMin = 60
+    case threeMin = 180
+    case fiveMin = 300
+
+    public var id: TimeInterval { rawValue }
+
+    #warning("заміна лейбла (minutes) відповідна до числа")
+    var label: String {
+        switch self {
+        case .oneMin: return "1 min"
+        case .threeMin: return "3 min"
+        case .fiveMin: return "5 min"
+        }
+    }
+}
+

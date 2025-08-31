@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+#warning("можливість керувати транзицією")
 struct NavigationContainer<Content: View>: View {
     @StateObject var router: Router
     @ViewBuilder var content: () -> Content
