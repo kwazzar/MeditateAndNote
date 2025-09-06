@@ -7,7 +7,6 @@
 
 import SwiftUI
 
-#warning("якщо текст не влазить на наступну сторінку")
 struct MeditationCard: View {
     let meditation: Meditation
     let isSelected: Bool
@@ -34,8 +33,10 @@ struct MeditationCard: View {
                     .fontWeight(.semibold)
                     .foregroundColor(.primary)
                     .multilineTextAlignment(.leading)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
 
-                HStack {
+                HStack(alignment: .top, spacing: 4) {
                     Image(systemName: "clock")
                         .font(.caption)
                         .foregroundColor(.secondary)
@@ -43,12 +44,68 @@ struct MeditationCard: View {
                     Text("\(meditation.breathingStyle.pattern.name) pattern")
                         .font(.caption)
                         .foregroundColor(.secondary)
+                        .lineLimit(2) // Дозволяємо 2 рядки для патерну
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
 
-                Spacer()
+                Spacer(minLength: 0)
             }
             .padding()
-            .frame(height: 120)
+            .frame(minHeight: 120)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(isSelected ? Color.blue.opacity(0.1) : Color.white)
+                    .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(isSelected ? Color.blue : Color.clear, lineWidth: 2)
+            )
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+
+    var adaptiveBody: some View {
+        Button(action: onSelect) {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Image(systemName: meditationIcon(for: meditation.title))
+                        .font(.title2)
+                        .foregroundColor(.blue)
+
+                    Spacer()
+
+                    if isSelected {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                    }
+                }
+
+                Text(meditation.title)
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.primary)
+                    .multilineTextAlignment(.leading)
+                    .lineLimit(3)
+                    .layoutPriority(1)
+
+                Spacer(minLength: 4)
+
+                HStack(alignment: .top, spacing: 4) {
+                    Image(systemName: "clock")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .padding(.top, 2)
+
+                    Text("\(meditation.breathingStyle.pattern.name) pattern")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .lineLimit(nil)
+                        .multilineTextAlignment(.leading)
+                }
+            }
+            .padding()
             .background(
                 RoundedRectangle(cornerRadius: 12)
                     .fill(isSelected ? Color.blue.opacity(0.1) : Color.white)
