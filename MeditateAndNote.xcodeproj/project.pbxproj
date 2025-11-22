@@ -43,6 +43,7 @@
 		E3BAF8A62E293D340036E250 /* ReadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3BAF8A52E293D340036E250 /* ReadingView.swift */; };
 		E3BAF8A92E2940380036E250 /* NavigationContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3BAF8A82E2940380036E250 /* NavigationContainer.swift */; };
 		E3FC3FC12D75C6FF00D6391D /* NoteViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3FC3FC02D75C6FF00D6391D /* NoteViewModel.swift */; };
+		E3FDF77C2ED0CE0F00ACD847 /* MeditationInfoScroll.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3FDF77B2ED0CE0F00ACD847 /* MeditationInfoScroll.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -83,6 +84,7 @@
 		E3BAF8A52E293D340036E250 /* ReadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingView.swift; sourceTree = "<group>"; };
 		E3BAF8A82E2940380036E250 /* NavigationContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationContainer.swift; sourceTree = "<group>"; };
 		E3FC3FC02D75C6FF00D6391D /* NoteViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteViewModel.swift; sourceTree = "<group>"; };
+		E3FDF77B2ED0CE0F00ACD847 /* MeditationInfoScroll.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationInfoScroll.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -100,6 +102,7 @@
 			isa = PBXGroup;
 			children = (
 				E389732A2D7918E700A9A662 /* MeditateSelectView.swift */,
+				E3FDF77B2ED0CE0F00ACD847 /* MeditationInfoScroll.swift */,
 				E36366282E3D0AB80026E810 /* MeditationCard.swift */,
 			);
 			path = MeditationSelect;
@@ -354,6 +357,7 @@
 				E320C3ED2E2D1AC9009452DD /* Destination.swift in Sources */,
 				E389732B2D7918E700A9A662 /* MeditateSelectView.swift in Sources */,
 				E34D18AD2E425A01004CCFA8 /* Breathing.swift in Sources */,
+				E3FDF77C2ED0CE0F00ACD847 /* MeditationInfoScroll.swift in Sources */,
 				E3848D522E3BCA7F001BE8AB /* MeditationService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
