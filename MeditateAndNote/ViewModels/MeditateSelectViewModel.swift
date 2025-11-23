@@ -11,6 +11,7 @@ final class MeditateSelectViewModel: ObservableObject {
     @Published var meditations: [Meditation] = []
     @Published var selectedMeditation: Meditation? = nil
     @Published var isLoading = false
+    @Published var selectedMeditationForInfo: Meditation?
     
     private let meditationService: MeditationService
     private let lastSelectedKey = "lastSelectedMeditationId"
