@@ -10,7 +10,11 @@ import SwiftUI
 // MARK: - Meditation Info Sheet
 struct MeditationInfoSheet: View {
     let meditation: Meditation
-    @Binding var isPresented: Bool
+    @Environment(\.dismiss) private var dismiss
+
+    init(_ meditation: Meditation) {
+        self.meditation = meditation
+    }
 
     var body: some View {
         Group {
@@ -23,16 +27,15 @@ struct MeditationInfoSheet: View {
 
                     Spacer()
 
-                    Button("Done") {
-                        isPresented = false
+                    Button("Close") {
+                        dismiss()
                     }
                     .font(.body)
                     .fontWeight(.medium)
                 }
                 .padding()
                 .background(Color(UIColor.systemGray6))
-
-                #warning("ScrollView content")
+                
                 // ScrollView content
                 MeditationInfoScroll(meditation: meditation)
                 .padding()

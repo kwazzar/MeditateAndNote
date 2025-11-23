@@ -6,8 +6,6 @@
 //
 
 import SwiftUI
-
-#warning("якщо довго тримати на картинку медитації показується інформація с приводу вибраної медитації(показувати sheet)")
 #warning("спробувати вставити в місцеву логіку навігації")
 
 struct MeditateSelectView: View {
@@ -15,7 +13,6 @@ struct MeditateSelectView: View {
     @EnvironmentObject var router: Router
 
     // Додаємо стейт для показу інформаційного листа
-    @State private var showingMeditationInfo = false
     @State private var selectedMeditationForInfo: Meditation?
 
     private let columns = [
@@ -45,13 +42,10 @@ struct MeditateSelectView: View {
                 endPoint: .bottomTrailing
             )
         )
-        .sheet(isPresented: $showingMeditationInfo) {
-            if let meditation = selectedMeditationForInfo {
-                MeditationInfoSheet(
-                    meditation: meditation,
-                    isPresented: $showingMeditationInfo
-                )
-            }
+        .sheet(item: $selectedMeditationForInfo) { meditation in
+            MeditationInfoSheet(meditation)
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
         }
         .onAppear {
             viewModel.loadMeditations()
@@ -139,7 +133,6 @@ private extension MeditateSelectView {
 
                             // Показуємо інформаційний лист
                             selectedMeditationForInfo = meditation
-                            showingMeditationInfo = true
                         }
                     )
                 }
