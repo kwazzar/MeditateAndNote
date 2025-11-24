@@ -27,6 +27,7 @@ struct MeditateSelectView: View {
                 meditationGridSection
             }
             actionButtonsSection
+                .padding(.bottom, 12)
         }
         .padding()
         .background(
@@ -68,30 +69,29 @@ private extension MeditateSelectView {
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
             }
-
-            VStack {
-                HStack {
-                    Spacer()
-
-                    Button {
-                        router.presentingSheet = nil
-                        router.presentingFullScreen = nil
-                        router.navigationStackPath = []
-                    } label: {
-                        Image(systemName: "xmark")
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(.secondary)
-                            .padding(8)
-                            .background(
-                                Circle()
-                                    .fill(Color.gray.opacity(0.1))
-                            )
-                    }
-                    .buttonStyle(PlainButtonStyle())
-                }
-
-                Spacer()
-            }
+            //            VStack {
+            //                HStack {
+            //                    Spacer()
+            //
+            //                    Button {
+            //                        router.presentingSheet = nil
+            //                        router.presentingFullScreen = nil
+            //                        router.navigationStackPath = []
+            //                    } label: {
+            //                        Image(systemName: "xmark")
+            //                            .font(.system(size: 16, weight: .medium))
+            //                            .foregroundColor(.secondary)
+            //                            .padding(8)
+            //                            .background(
+            //                                Circle()
+            //                                    .fill(Color.gray.opacity(0.1))
+            //                            )
+            //                    }
+            //                    .buttonStyle(PlainButtonStyle())
+            //                }
+            //
+            //                Spacer()
+            //            }
         }
     }
 
@@ -126,7 +126,7 @@ private extension MeditateSelectView {
                             impactFeedback.impactOccurred()
 
                             // Показуємо інформаційний лист
-                                viewModel.selectedMeditationForInfo = meditation
+                            viewModel.selectedMeditationForInfo = meditation
                         }
                     )
                 }

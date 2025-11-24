@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+#warning("нотатки в кеш")
 struct NoteView: View {
     @StateObject var viewModel: NoteViewModel
 

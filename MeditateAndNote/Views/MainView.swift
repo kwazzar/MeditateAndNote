@@ -9,7 +9,7 @@ import SwiftUI
 #warning("UI")
 struct MainView: View {
     @StateObject var viewModel: MainViewModel
-    @EnvironmentObject var router: Router 
+    @EnvironmentObject var router: Router
 
     var body: some View {
         VStack {
@@ -17,46 +17,13 @@ struct MainView: View {
                 .innerStroke()
             Spacer()
             HStack {
-                Button(action: {
-                    router.navigate(to: .push(.meditationDetails(id: "left wing")))
-                }) {
-                    Text("Meditation")
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(.black)
-                        .fixedSize()
-                        .rotationEffect(.degrees(90))
-                        .frame(width: 40, height: 200)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(.white)
-                        )
-                }
-                .innerStroke(inset: 1)
-                .padding(.leading, -4)
-
                 Spacer()
                 meditateButton
                 Spacer()
-
-                Button(action: {
-                    router.navigate(to: .sheet(.newNote))
-                }) {
-                    Text("New Note")
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(.black)
-                        .fixedSize()
-                        .rotationEffect(.degrees(-90))
-                        .frame(width: 40, height: 200)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(.white)
-                        )
-                }
-                .innerStroke(inset: 1)
-                .padding(.trailing, -4)
             }
             Spacer()
             NoteCardsView(noteCards: viewModel.last10Notes)
+                .padding(.bottom, 12)
         }
         .background(.green)
     }

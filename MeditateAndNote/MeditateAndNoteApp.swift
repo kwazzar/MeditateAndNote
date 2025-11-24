@@ -14,10 +14,9 @@ struct MeditateAndNoteApp: App {
 
     var body: some Scene {
         WindowGroup {
-            NavigationContainer(parentRouter: router) {
-                MainView(viewModel: container.makeMainViewModel())
-            }
-            .environmentObject(container)
+            RootContainer()
+                .environmentObject(router)
+                .environmentObject(container)
         }
     }
 }

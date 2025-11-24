@@ -7,15 +7,6 @@
 
 import SwiftUI
 
-@ViewBuilder func view(for destination: TabDestination) -> some View {
-    ContainerView { container in
-        switch destination {
-        case .home:
-             MainView(viewModel: container.makeMainViewModel())
-        }
-    }
-}
-
 @ViewBuilder func view(for destination: PushDestination) -> some View {
     ContainerView { container in
         Group {
