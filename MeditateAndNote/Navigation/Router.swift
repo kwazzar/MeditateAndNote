@@ -27,7 +27,6 @@ public final class Router: ObservableObject {
     /// Current presented full screen
     @Published public var presentingFullScreen: FullScreenDestination?
     
-#warning("Logger")
     public let logger = Logger(subsystem: Config.bundleID, category: "Navigation")
     
     /// Reference to the parent router to form a hierarchy

@@ -11,7 +11,7 @@ import SwiftUI
 struct NoteCard: View {
     let note: Note
 
-    var dateFormatter: DateFormatter {
+    private var dateFormatter: DateFormatter {
         let formatter = DateFormatter()
         formatter.dateFormat = "d MMMM"
         return formatter

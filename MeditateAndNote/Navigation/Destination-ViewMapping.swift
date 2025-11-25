@@ -11,11 +11,11 @@ import SwiftUI
     ContainerView { container in
         Group {
             switch destination {
-            case .meditationDetails(let id):
+            case .meditationDetails(_):
                 MeditateSelectView(viewModel: container.makeMeditateSelectViewModel())
             case .noteDetails(let id):
-                NoteView(viewModel: container.makeNoteViewModel())
-            case .readingView(let id):
+                NoteView(viewModel: container.makeNoteViewModel(noteId: id))
+            case .readingView(_):
                 ReadingView()
             case .meditation(id: let id):
                 MeditationView(viewModel: container.makeMeditationViewModel(id: id))
@@ -33,11 +33,10 @@ import SwiftUI
                 NoteView(viewModel: container.makeNoteViewModel())
             case .meditationSettings:
                 MeditateSelectView(viewModel: container.makeMeditateSelectViewModel())
-            case let .noteEditor(id):
+            case .noteEditor(_):
                 NoteView(viewModel: container.makeNoteViewModel())
             case let .timeMeditation(onSelection):
                 TimeMeditationSheet(onSelection: onSelection)
-                #warning("sheet")
             }
         }
         .navigationBarTitleDisplayMode(.inline)
@@ -49,9 +48,9 @@ import SwiftUI
     ContainerView { container in
         Group {
             switch destination {
-            case let .meditationSession(id):
+            case .meditationSession(_):
                 MeditateSelectView(viewModel: container.makeMeditateSelectViewModel())
-            case let .fullScreenNote(id):
+            case .fullScreenNote(_):
                 NoteView(viewModel: container.makeNoteViewModel())
             }
         }

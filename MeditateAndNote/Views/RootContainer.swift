@@ -35,8 +35,6 @@ struct RootContainer: View {
                     MeditateSelectView(viewModel: container.makeMeditateSelectViewModel())
                 }
                 .tag(TabDestination.meditations)
-
-
             }
             .ignoresSafeArea()
             .toolbar(.hidden, for: .tabBar)
@@ -96,5 +94,7 @@ struct CustomTabBar: View {
 struct RootContainer_Previews: PreviewProvider {
     static var previews: some View {
         RootContainer()
+            .environmentObject(Router.previewRouter())
+            .environmentObject(AppContainer())
     }
 }

@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-#warning("спробувати вставити в місцеву логіку навігації")
 
 struct MeditateSelectView: View {
     @StateObject var viewModel: MeditateSelectViewModel
