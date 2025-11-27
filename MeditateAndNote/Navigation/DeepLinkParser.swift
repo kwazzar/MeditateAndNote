@@ -49,14 +49,14 @@ extension DeepLinkParser {
         return .push(.meditationDetails(id: meditationID))
     }
 
-    static let noteDetails: Self = .init { url in
-        guard
-            url.fullComponents.first == "note",
-            let noteID = url.fullComponents.last
-        else { return nil }
-
-        return .push(.noteDetails(id: noteID))
-    }
+//    static let noteDetails: Self = .init { url in
+//        guard
+//            url.fullComponents.first == "note",
+//            let noteID = url.fullComponents.last
+//        else { return nil }
+//
+//        return .push(.noteDetails(id: noteID))
+//    }
 
     static let meditationSettings: Self = .init { url in
         guard

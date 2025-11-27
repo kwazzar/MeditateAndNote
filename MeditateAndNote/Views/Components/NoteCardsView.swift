@@ -8,12 +8,19 @@
 import SwiftUI
 
 struct NoteCardsView: View {
+    @EnvironmentObject var router: Router
+//    @EnvironmentObject var conteiner: AppContainer
     @State var noteCards: [Note]
 
     var body: some View {
         ZStack {
             ForEach(Array(noteCards.enumerated().reversed()), id: \.element.id) { index, note in
-                NoteCard(note: note)
+                NoteCard(note: note) {
+                    note in
+//                    AppContainer.shared.sharedNoteViewModel.set(note: note)
+//                    router.navigate(to: .tab(.notes))
+                    router.navigate(to: .push(.noteDetails(noteId: note.id, id: "from Main")))
+                }
                     .offset(y: CGFloat(index) * 25)
                     .onTapGesture {
                         withAnimation {

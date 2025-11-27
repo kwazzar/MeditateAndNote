@@ -9,17 +9,20 @@ import Foundation
 
 final class AppContainer: ObservableObject {
 
+//    static let shared = AppContainer()
+//    lazy var sharedNoteViewModel: NoteViewModel = makeNoteViewModel()
+
     // MARK: - Services (Singletons)
-    lazy var notesService: NotesService = NotesService()
-    lazy var meditationService: MeditationService = SampleMeditationService()
+    private lazy var notesService: NotesService = NotesService()
+    private lazy var meditationService: MeditationService = SampleMeditationService()
 
     // MARK: - ViewModels Factory Methods
     func makeMainViewModel() -> MainViewModel {
         MainViewModel(notesService: notesService)
     }
 
-    func makeNoteViewModel(noteId: String? = nil) -> NoteViewModel {
-        NoteViewModel(notesService: notesService)
+    func makeNoteViewModel(noteId: UUID? = nil) -> NoteViewModel {
+        NoteViewModel(noteId: noteId, notesService: notesService)
     }
 
     func makeMeditateSelectViewModel() -> MeditateSelectViewModel {

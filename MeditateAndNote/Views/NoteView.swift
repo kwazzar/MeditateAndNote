@@ -10,47 +10,61 @@ import SwiftUI
 #warning("нотатки в кеш")
 
 struct NoteView: View {
-    @StateObject var viewModel: NoteViewModel
+    @ObservedObject var viewModel: NoteViewModel
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("New Note")
-                .font(.largeTitle)
-                .fontWeight(.bold)
+        VStack {
+            HStack {
+                Button(action: { dismiss() }) {
+                    Image(systemName: "chevron.left")
+                        .foregroundColor(.primary)
+                        .padding(5)
+                }
+                 Spacer()
+            }
+            .padding(.horizontal)
+
+            VStack(alignment: .leading, spacing: 0) {
+                TextField("New Note", text: $viewModel.title)
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+                    .foregroundColor(.primary)
+                    .padding(.horizontal)
+
+                ZStack(alignment: .topLeading) {
+                    if viewModel.content.isEmpty {
+                        Text("Write your note here...")
+                            .foregroundColor(.gray)
+                            .padding(.horizontal, 18)
+                            .padding(.top, 16)
+                    }
+
+                    TextEditor(text: $viewModel.content)
+                        .font(.body)
+                        .padding(12)
+                        .frame(minHeight: 300)
+                        .background(Color.white)
+                        .opacity(viewModel.content.isEmpty ? 0.25 : 1)
+                }
                 .padding(.horizontal)
 
-            ZStack(alignment: .topLeading) {
-                if viewModel.content.isEmpty {
-                    Text("Write your note here...")
-                        .foregroundColor(.gray)
-                        .padding(.horizontal, 18)
-                        .padding(.top, 16)
+                Spacer()
+
+                Button(action: viewModel.saveNote) {
+                    Text("Save Note")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.green)
+                        .foregroundColor(.white)
+                        .cornerRadius(12)
+                        .shadow(radius: 4)
                 }
-
-                TextEditor(text: $viewModel.content)
-                    .font(.body)
-                    .padding(12)
-                    .frame(minHeight: 300)
-                    .background(Color.white)
-                    .opacity(viewModel.content.isEmpty ? 0.25 : 1)
+                .padding(.horizontal)
             }
-            .padding(.horizontal)
-
-            Spacer()
-
-            Button(action: viewModel.saveNote) {
-                Text("Save Note")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.green)
-                    .foregroundColor(.white)
-                    .cornerRadius(12)
-                    .shadow(radius: 4)
-            }
-            .padding(.horizontal)
+            .padding(.vertical)
         }
-        .padding(.vertical)
     }
 }
 

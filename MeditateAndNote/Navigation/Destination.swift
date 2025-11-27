@@ -31,7 +31,7 @@ extension Destination: CustomStringConvertible {
 
 public enum PushDestination: Hashable, CustomStringConvertible {
     case meditationDetails(id: String)
-    case noteDetails(id: String)
+    case noteDetails(noteId: UUID?, id: String)
     case readingView(id: String)
     case meditation(id: String)
 
@@ -39,7 +39,7 @@ public enum PushDestination: Hashable, CustomStringConvertible {
         switch self {
         case let .meditationDetails(id): 
             return ".meditationDetails(\(id))"
-        case let .noteDetails(id): 
+        case let .noteDetails(_, id):
             return ".noteDetails(\(id))"
         case let .readingView(id): 
             return ".readingView(\(id))"

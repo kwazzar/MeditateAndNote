@@ -6,10 +6,10 @@
 //
 
 import SwiftUI
-#warning("arrow кнопка перехода на заметку")
 
 struct NoteCard: View {
     let note: Note
+    let toNoteAction: (Note) -> Void
 
     private var dateFormatter: DateFormatter {
         let formatter = DateFormatter()
@@ -41,8 +41,12 @@ struct NoteCard: View {
                     .font(.headline)
                 Spacer()
 
-                Image(systemName: "chevron.right")
-                    .foregroundColor(.black)
+                Button {
+                    toNoteAction(note)
+                   } label: {
+                       Image(systemName: "chevron.right")
+                           .foregroundColor(.black)
+                   }
             }
             .padding(.horizontal)
             .padding(.vertical, 8)

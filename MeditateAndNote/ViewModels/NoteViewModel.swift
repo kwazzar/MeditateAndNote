@@ -50,3 +50,11 @@ final class NoteViewModel: ObservableObject {
     }
 }
 
+extension NoteViewModel {
+    func set(note: Note) {
+        self.note = note
+        self.title = note.title
+        self.content = note.content
+        self.isEditing = false
+    }
+}

@@ -13,8 +13,8 @@ import SwiftUI
             switch destination {
             case .meditationDetails(_):
                 MeditateSelectView(viewModel: container.makeMeditateSelectViewModel())
-            case .noteDetails(let id):
-                NoteView(viewModel: container.makeNoteViewModel(noteId: id))
+            case .noteDetails(let noteId, _):
+                NoteView(viewModel: container.makeNoteViewModel(noteId: noteId))
             case .readingView(_):
                 ReadingView()
             case .meditation(id: let id):
