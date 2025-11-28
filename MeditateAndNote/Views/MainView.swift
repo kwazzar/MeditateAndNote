@@ -7,6 +7,7 @@
 
 import SwiftUI
 #warning("UI")
+#warning("1meditate 2(read <-> note)3")
 struct MainView: View {
     @StateObject var viewModel: MainViewModel
     @EnvironmentObject var router: Router
@@ -22,8 +23,10 @@ struct MainView: View {
                 Spacer()
             }
             Spacer()
-            NoteCardsView(noteCards: viewModel.last10Notes)
-                .padding(.bottom, 12)
+
+            #warning("week streak")
+//            NoteCardsView(noteCards: viewModel.last10Notes)
+//                .padding(.bottom, 12)
         }
         .background(.green)
     }

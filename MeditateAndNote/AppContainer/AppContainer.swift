@@ -13,7 +13,7 @@ final class AppContainer: ObservableObject {
 //    lazy var sharedNoteViewModel: NoteViewModel = makeNoteViewModel()
 
     // MARK: - Services (Singletons)
-    private lazy var notesService: NotesService = NotesService()
+    private lazy var notesService: NotesProtocol = NotesService()
     private lazy var meditationService: MeditationService = SampleMeditationService()
 
     // MARK: - ViewModels Factory Methods
@@ -33,5 +33,9 @@ final class AppContainer: ObservableObject {
         let meditation = meditationService.getMeditations()
             .first { $0.id == id }!
         return MeditationViewModel(meditation: meditation)
+    }
+
+    func makeNoteMenuView() -> NoteMenuViewModel {
+        NoteMenuViewModel(notesService: notesService)
     }
 }

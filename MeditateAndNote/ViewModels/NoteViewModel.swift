@@ -13,10 +13,10 @@ final class NoteViewModel: ObservableObject {
     @Published var title: String = ""
     @Published var content: String = ""
 
-    private let notesService: NotesService
+    private let notesService: NotesProtocol
     private let isNewNote: Bool
 
-    init(noteId: UUID? = nil, notesService: NotesService) {
+    init(noteId: UUID? = nil, notesService: NotesProtocol) {
         self.notesService = notesService
 
         #warning("UUID Search")

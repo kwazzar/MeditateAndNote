@@ -1,13 +1,13 @@
 //
-//  MainViewModel.swift
+//  NoteMenuViewModel.swift
 //  MeditateAndNote
 //
-//  Created by Quasar on 21.02.2025.
+//  Created by Quasar on 28.11.2025.
 //
 
-import SwiftUI
+import Foundation
 
-final class MainViewModel: ObservableObject {
+final class NoteMenuViewModel: ObservableObject {
     private let notesService: NotesProtocol
     @Published var visibleNotes: [Note] = MockNotes
     var last10Notes: [Note] = []

@@ -7,7 +7,14 @@
 
 import Foundation
 
-final class NotesService: ObservableObject {
+protocol NotesProtocol {
+    func fetchNotes() -> [Note]
+    func saveNote(_ note: Note)
+    func deleteNote(id: UUID)
+    func getNote(id: UUID) -> Note?
+}
+
+final class NotesService: ObservableObject, NotesProtocol {
     @Published var notes: [Note] = MockNotes
 
     func fetchNotes() -> [Note] {

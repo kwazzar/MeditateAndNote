@@ -14,6 +14,8 @@
 		E320C3F52E2DC691009452DD /* Deeplink.swift in Sources */ = {isa = PBXBuildFile; fileRef = E320C3F42E2DC691009452DD /* Deeplink.swift */; };
 		E320C3F72E2DC6D4009452DD /* DeepLinkParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = E320C3F62E2DC6D4009452DD /* DeepLinkParser.swift */; };
 		E320C3F92E2DC8E4009452DD /* Destination-ViewMapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = E320C3F82E2DC8E4009452DD /* Destination-ViewMapping.swift */; };
+		E32C6BBD2ED9C39F0093F735 /* NoteMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = E32C6BBC2ED9C39F0093F735 /* NoteMenu.swift */; };
+		E32C6BBF2ED9C6600093F735 /* NoteMenuViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E32C6BBE2ED9C6600093F735 /* NoteMenuViewModel.swift */; };
 		E32E6CD12D7345CA008529D3 /* NoteCardsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E32E6CD02D7345CA008529D3 /* NoteCardsView.swift */; };
 		E340C16D2D75066A004D3645 /* NoteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E340C16C2D75066A004D3645 /* NoteView.swift */; };
 		E34D18AD2E425A01004CCFA8 /* Breathing.swift in Sources */ = {isa = PBXBuildFile; fileRef = E34D18AC2E425A01004CCFA8 /* Breathing.swift */; };
@@ -55,6 +57,8 @@
 		E320C3F42E2DC691009452DD /* Deeplink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Deeplink.swift; sourceTree = "<group>"; };
 		E320C3F62E2DC6D4009452DD /* DeepLinkParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepLinkParser.swift; sourceTree = "<group>"; };
 		E320C3F82E2DC8E4009452DD /* Destination-ViewMapping.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Destination-ViewMapping.swift"; sourceTree = "<group>"; };
+		E32C6BBC2ED9C39F0093F735 /* NoteMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteMenu.swift; sourceTree = "<group>"; };
+		E32C6BBE2ED9C6600093F735 /* NoteMenuViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteMenuViewModel.swift; sourceTree = "<group>"; };
 		E32E6CD02D7345CA008529D3 /* NoteCardsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteCardsView.swift; sourceTree = "<group>"; };
 		E340C16C2D75066A004D3645 /* NoteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteView.swift; sourceTree = "<group>"; };
 		E34D18AC2E425A01004CCFA8 /* Breathing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Breathing.swift; sourceTree = "<group>"; };
@@ -190,6 +194,7 @@
 				E34D18AB2E424CEE004CCFA8 /* Meditation */,
 				E31DE9A32E6C84EA00C330DC /* MeditationSelect */,
 				E340C16C2D75066A004D3645 /* NoteView.swift */,
+				E32C6BBC2ED9C39F0093F735 /* NoteMenu.swift */,
 				E3BAF8A52E293D340036E250 /* ReadingView.swift */,
 				E36187842D68D087000E326D /* Components */,
 			);
@@ -227,6 +232,7 @@
 			children = (
 				E361878E2D68FF88000E326D /* MainViewModel.swift */,
 				E3FC3FC02D75C6FF00D6391D /* NoteViewModel.swift */,
+				E32C6BBE2ED9C6600093F735 /* NoteMenuViewModel.swift */,
 				E389732C2D79191200A9A662 /* MeditateSelectViewModel.swift */,
 				E36164402E41050F00A5DCCF /* MeditationViewModel.swift */,
 			);
@@ -354,7 +360,9 @@
 				E36187812D68D021000E326D /* Note.swift in Sources */,
 				E36D33912ED33DCC0048B6AC /* RootContainer.swift in Sources */,
 				E3848D562E3BD098001BE8AB /* ContainerView.swift in Sources */,
+				E32C6BBF2ED9C6600093F735 /* NoteMenuViewModel.swift in Sources */,
 				E389732D2D79191200A9A662 /* MeditateSelectViewModel.swift in Sources */,
+				E32C6BBD2ED9C39F0093F735 /* NoteMenu.swift in Sources */,
 				E320C3F92E2DC8E4009452DD /* Destination-ViewMapping.swift in Sources */,
 				E36366292E3D0AB80026E810 /* MeditationCard.swift in Sources */,
 				E361878C2D68FEF3000E326D /* MockNotes.swift in Sources */,
