@@ -9,19 +9,26 @@ import Foundation
 
 final class NoteMenuViewModel: ObservableObject {
     private let notesService: NotesProtocol
+    private let itemManager: AnyItemManager<Note>
+
     @Published var visibleNotes: [Note] = MockNotes
     var last10Notes: [Note] = []
+
+    let searchState: SearchState
+    let uiState: NotesUIState
 
     //    init(notesService: NotesService) {
     //        self.notesService = notesService
     //        loadNotes()
     //    }
 
-    init(notesService: NotesProtocol) {
+    init(notesService: NotesProtocol, itemManager: AnyItemManager<Note>) {
         self.notesService = notesService
-        self.visibleNotes = visibleNotes
+        self.itemManager = itemManager
+        self.searchState = SearchState(itemProvider: itemManager)
+        self.uiState = NotesUIState()
 
-        last10Notes = Array(visibleNotes.suffix(10))
+            self.last10Notes = Array(visibleNotes.suffix(10))
     }
 
     private func loadNotes() {

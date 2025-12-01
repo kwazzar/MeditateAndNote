@@ -15,6 +15,7 @@ final class AppContainer: ObservableObject {
     // MARK: - Services (Singletons)
     private lazy var notesService: NotesProtocol = NotesService()
     private lazy var meditationService: MeditationService = SampleMeditationService()
+    private lazy var noteManager = NoteManager()
 
     // MARK: - ViewModels Factory Methods
     func makeMainViewModel() -> MainViewModel {
@@ -36,6 +37,6 @@ final class AppContainer: ObservableObject {
     }
 
     func makeNoteMenuView() -> NoteMenuViewModel {
-        NoteMenuViewModel(notesService: notesService)
+        NoteMenuViewModel(notesService: notesService, itemManager: AnyItemManager(noteManager))
     }
 }
