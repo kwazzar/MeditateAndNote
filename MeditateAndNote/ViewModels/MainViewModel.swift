@@ -8,7 +8,7 @@
 import SwiftUI
 
 final class MainViewModel: ObservableObject {
-    private let notesService: NotesProtocol
+    private let repository: NotesRepository
     @Published var visibleNotes: [Note] = MockNotes
     var last10Notes: [Note] = []
 
@@ -17,15 +17,15 @@ final class MainViewModel: ObservableObject {
     //        loadNotes()
     //    }
 
-    init(notesService: NotesProtocol) {
-        self.notesService = notesService
+    init(repository: NotesRepository) {
+        self.repository = repository
         self.visibleNotes = visibleNotes
 
         last10Notes = Array(visibleNotes.suffix(10))
     }
 
     private func loadNotes() {
-        visibleNotes = notesService.fetchNotes()
+        visibleNotes = repository.fetchAll()
     }
 
     func refreshNotes() {
@@ -33,7 +33,7 @@ final class MainViewModel: ObservableObject {
     }
 
     func deleteNote(id: UUID) {
-        notesService.deleteNote(id: id)
+        repository.delete(id: id)
         refreshNotes()
     }
 }

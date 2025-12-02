@@ -7,9 +7,9 @@
 
 import Foundation
 
-struct Note: Identifiable, Equatable {
-    let id = UUID()
-    let title: String
-    let content: String
-    let date: Date
+struct Note: Codable, Identifiable, Equatable {
+    var id = UUID()
+    var title: String
+    var content: String
+    var date: Date
 }

@@ -13,14 +13,14 @@ final class NoteViewModel: ObservableObject {
     @Published var title: String = ""
     @Published var content: String = ""
 
-    private let notesService: NotesProtocol
+    private let repository: NotesRepository
     private let isNewNote: Bool
 
-    init(noteId: UUID? = nil, notesService: NotesProtocol) {
-        self.notesService = notesService
+    init(noteId: UUID? = nil, repository: NotesRepository) {
+        self.repository = repository
 
         #warning("UUID Search")
-        if let id = noteId, let existingNote = notesService.getNote(id: id) {
+        if let id = noteId, let existingNote = repository.fetch(id: id) {
             self.note = existingNote
             self.isNewNote = false
             self.title = existingNote.title
@@ -34,7 +34,7 @@ final class NoteViewModel: ObservableObject {
 
     func saveNote() {
         let updatedNote = Note(title: title, content: content, date: Date())
-        notesService.saveNote(updatedNote)
+        repository.save(updatedNote)
         note = updatedNote
         isEditing = false
     }

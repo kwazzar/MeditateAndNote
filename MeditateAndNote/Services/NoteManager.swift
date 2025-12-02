@@ -10,24 +10,30 @@ import Foundation
 #warning("from NotesService to NoteManager")
 final class NoteManager: ItemProvidable, ItemManagable {
     typealias Item = Note
-    
-    private(set) var currentItems: [Item] = []
+
+    private let repository: NotesRepository
+    private(set) var currentItems: [Note] = []
+
+    init(repository: NotesRepository) {
+        self.repository = repository
+        self.currentItems = repository.fetchAll()
+    }
 
     func addItem(_ item: Item) {
-
+        repository.save(item)
+        currentItems = repository.fetchAll()
     }
 
     func deleteItem(_ item: Item) {
-    }
-
-    func decrementItem(_ item: Item) {
+        repository.delete(id: item.id)
+        currentItems = repository.fetchAll()
     }
 
     func filterItems(query: SearchQuery) -> [Item] {
         return query.text.isEmpty
         ? currentItems
         : currentItems.reversed()
-//        : currentItems.filter { $0.description.value.lowercased().contains(query.text.lowercased()) }
+        //        : currentItems.filter { $0.description.value.lowercased().contains(query.text.lowercased()) }
     }
 
     func clearAll() {

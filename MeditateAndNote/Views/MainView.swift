@@ -55,7 +55,7 @@ private extension MainView {
 
 struct MainView_Previews: PreviewProvider {
     static var previews: some View {
-        MainView(viewModel: MainViewModel(notesService: NotesService()))
+        MainView(viewModel: MainViewModel(repository: InMemoryNotesRepository()))
             .environmentObject(Router.previewRouter())
     }
 }

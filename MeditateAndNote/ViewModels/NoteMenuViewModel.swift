@@ -8,7 +8,6 @@
 import Foundation
 
 final class NoteMenuViewModel: ObservableObject {
-    private let notesService: NotesProtocol
     private let itemManager: AnyItemManager<Note>
 
     @Published var visibleNotes: [Note] = MockNotes
@@ -22,8 +21,7 @@ final class NoteMenuViewModel: ObservableObject {
     //        loadNotes()
     //    }
 
-    init(notesService: NotesProtocol, itemManager: AnyItemManager<Note>) {
-        self.notesService = notesService
+    init(itemManager: AnyItemManager<Note>) {
         self.itemManager = itemManager
         self.searchState = SearchState(itemProvider: itemManager)
         self.uiState = NotesUIState()
@@ -32,15 +30,15 @@ final class NoteMenuViewModel: ObservableObject {
     }
 
     private func loadNotes() {
-        visibleNotes = notesService.fetchNotes()
+        visibleNotes = itemManager.currentItems
     }
 
     func refreshNotes() {
         loadNotes()
     }
 
-    func deleteNote(id: UUID) {
-        notesService.deleteNote(id: id)
+    func deleteNote(_ note: Note) {
+        itemManager.deleteItem(note)
         refreshNotes()
     }
 }
