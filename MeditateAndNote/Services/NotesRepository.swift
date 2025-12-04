@@ -7,17 +7,178 @@
 
 import Foundation
 
-// MARK: - Protocol
-protocol NotesRepository {
-    func fetchAll() -> [Note]
-    func fetch(id: UUID) -> Note?
-    func save(_ note: Note)
+#warning("CoreData Implementation /Store")
+typealias NotesRepository = Repository<Note, InMemoryNotesDataSource, CoreDataNotesDataSource>
+
+//final class RepositoryFactory {
+//    static func userRepository(source: DataSource) -> NotesDataSource {
+//        switch source {
+//        case .local:
+//            return CoreDataUserRepository(context: container.viewContext)
+//        case .remote:
+//            return APIUserRepository(apiClient: apiClient)
+//        case .hybrid:
+//            return HybridUserRepository(local: CoreDataUserRepository(), remote: APIUserRepository())
+//        }
+//    }
+//}
+
+enum DataStrategy {
+    case localOnly, remoteOnly, localFirst, remoteFirst, hybrid
+}
+
+protocol RepositoryProtocol {
+    associatedtype Item
+
+    func getItem(strategy: DataStrategy) async throws -> [Item]
+    func getItem(id: String, strategy: DataStrategy) async throws -> Item
+    func saveItem(_ note: Note, strategy: DataStrategy) async throws
+    func deleteItem(id: String, strategy: DataStrategy) async throws
+}
+
+final class Repository<Item, LocalDS: DataSourceProtocol, RemoteDS: DataSourceProtocol>: RepositoryProtocol
+where LocalDS.Item == Item, RemoteDS.Item == Item, Item: Identifiable, Item.ID == UUID {
+
+    private let localDataSource: LocalDS
+    private let remoteDataSource: RemoteDS
+
+    init(localDataSource: LocalDS, remoteDataSource: RemoteDS) {
+        self.localDataSource = localDataSource
+        self.remoteDataSource = remoteDataSource
+    }
+
+    func getItems(strategy: DataStrategy) async throws -> [Item] {
+        switch strategy {
+        case .localOnly:
+            return localDataSource.fetchAll()
+
+        case .remoteOnly:
+            return remoteDataSource.fetchAll()
+
+        case .localFirst:
+            let local = localDataSource.fetchAll()
+            return local.isEmpty ? remoteDataSource.fetchAll() : local
+
+        case .remoteFirst:
+            let remote = remoteDataSource.fetchAll()
+            return remote.isEmpty ? localDataSource.fetchAll() : remote
+
+        case .hybrid:
+            let local = localDataSource.fetchAll()
+            let remote = remoteDataSource.fetchAll()
+
+            // Merge, удаляя дубликаты по ID
+            var merged = [UUID: Item]()
+            (local + remote).forEach { merged[$0.id] = $0 }
+            return Array(merged.values)
+        }
+    }
+
+    func getItem(id: String, strategy: DataStrategy) async throws -> Item {
+        guard let uuid = UUID(uuidString: id) else {
+            throw RepositoryError.invalidID
+        }
+
+        switch strategy {
+        case .localOnly:
+            guard let item = localDataSource.fetch(id: uuid) else {
+                throw RepositoryError.notFound
+            }
+            return item
+
+        case .remoteOnly:
+            guard let item = remoteDataSource.fetch(id: uuid) else {
+                throw RepositoryError.notFound
+            }
+            return item
+
+        case .localFirst:
+            if let local = localDataSource.fetch(id: uuid) {
+                return local
+            }
+            guard let remote = remoteDataSource.fetch(id: uuid) else {
+                throw RepositoryError.notFound
+            }
+            return remote
+
+        case .remoteFirst:
+            if let remote = remoteDataSource.fetch(id: uuid) {
+                return remote
+            }
+            guard let local = localDataSource.fetch(id: uuid) else {
+                throw RepositoryError.notFound
+            }
+            return local
+
+        case .hybrid:
+            // Приоритет remote
+            if let remote = remoteDataSource.fetch(id: uuid) {
+                return remote
+            }
+            guard let local = localDataSource.fetch(id: uuid) else {
+                throw RepositoryError.notFound
+            }
+            return local
+        }
+    }
+
+    func saveItem(_ item: Item, strategy: DataStrategy) async throws {
+        switch strategy {
+        case .localOnly:
+            localDataSource.save(item)
+
+        case .remoteOnly:
+            remoteDataSource.save(item)
+
+        case .localFirst, .remoteFirst, .hybrid:
+            // Сохраняем в оба источника
+            localDataSource.save(item)
+            remoteDataSource.save(item)
+        }
+    }
+
+    func deleteItem(id: String, strategy: DataStrategy) async throws {
+        guard let uuid = UUID(uuidString: id) else {
+            throw RepositoryError.invalidID
+        }
+
+        switch strategy {
+        case .localOnly:
+            localDataSource.delete(id: uuid)
+
+        case .remoteOnly:
+            remoteDataSource.delete(id: uuid)
+
+        case .localFirst, .remoteFirst, .hybrid:
+            // Удаляем из обоих источников
+            localDataSource.delete(id: uuid)
+            remoteDataSource.delete(id: uuid)
+        }
+    }
+}
+
+// MARK: - Errors
+enum RepositoryError: Error {
+    case invalidID
+    case notFound
+    case saveFailed
+}
+
+// MARK: - NotesDataSource
+protocol DataSourceProtocol {
+    associatedtype Item
+
+    func fetchAll() -> [Item]
+    func fetch(id: UUID) -> Item?
+    func save(_ note: Item)
     func delete(id: UUID)
     func deleteAll()
 }
 
+protocol NotesDataSource: DataSourceProtocol where Item == Note {}
+
 // MARK: - In-Memory Implementation (для тестів/прототипу)
-final class InMemoryNotesRepository: NotesRepository {
+final class InMemoryNotesDataSource: NotesDataSource {
     private var notes: [Note] = MockNotes
 
     func fetchAll() -> [Note] {
@@ -46,7 +207,7 @@ final class InMemoryNotesRepository: NotesRepository {
 }
 
 // MARK: - CoreData Implementation
-//final class CoreDataNotesRepository: NotesRepository {
+//final class CoreDataNotesDataSource: NotesRepository {
 //    private let context: NSManagedObjectContext
 //
 //    init(context: NSManagedObjectContext) {
@@ -116,7 +277,7 @@ final class InMemoryNotesRepository: NotesRepository {
 //}
 
 // MARK: - UserDefaults Implementation
-final class UserDefaultsNotesRepository: NotesRepository {
+final class UserDefaultsNotesRepository: NotesDataSource {
     private let key = "saved_notes"
     private let defaults = UserDefaults.standard
 
@@ -160,7 +321,7 @@ final class UserDefaultsNotesRepository: NotesRepository {
 }
 
 // MARK: - API Implementation (async)
-final class APINotesRepository: NotesRepository {
+final class APINotesRepository: NotesDataSource {
     private let baseURL = "https://api.example.com/notes"
     private var cachedNotes: [Note] = []
 

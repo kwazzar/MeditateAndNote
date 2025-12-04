@@ -7,7 +7,6 @@
 
 import Foundation
 
-#warning("from NotesService to NoteManager")
 final class NoteManager: ItemProvidable, ItemManagable {
     typealias Item = Note
 
