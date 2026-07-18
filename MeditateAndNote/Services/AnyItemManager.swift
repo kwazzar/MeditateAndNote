@@ -10,37 +10,51 @@ import Foundation
 protocol ItemProvidable {
     associatedtype Item
 
-    var currentItems: [Item] { get }
-    func filterItems(query: SearchQuery) -> [Item]
+    var currentItems: [Item] { get async }
+    func filterItems(query: SearchQuery) async -> [Item]
 }
 
 protocol ItemManagable {
     associatedtype Item
 
-    func addItem(_ item: Item)
-    func deleteItem(_ item: Item)
-    func clearAll()
+    func addItem(_ item: Item) async throws
+    func deleteItem(_ item: Item) async throws
+    func clearAll() async
 }
 
 //MARK: - AnyItemManager
-final class AnyItemManager<Item>: ItemProvidable & ItemManagable {
-    private let _currentItems: () -> [Item]
-    private let _addItem: (Item) -> Void
-    private let _deleteItem: (Item) -> Void
-    private let _clearAll: () -> Void
-    private let _filterItems: (SearchQuery) -> [Item]
+final class AnyItemManager<Item>: ItemProvidable, ItemManagable {
+    private let _currentItems: () async -> [Item]
+    private let _filterItems: (SearchQuery) async -> [Item]
+    private let _addItem: (Item) async throws -> Void
+    private let _deleteItem: (Item) async throws -> Void
+    private let _clearAll: () async -> Void
 
     init<T: ItemProvidable & ItemManagable>(_ manager: T) where T.Item == Item {
-        _currentItems = { manager.currentItems }
-        _addItem = manager.addItem(_:)
-        _deleteItem = manager.deleteItem(_:)
-        _clearAll = manager.clearAll
-        _filterItems = manager.filterItems(query:)
+        _currentItems = { await manager.currentItems }
+        _filterItems = { await manager.filterItems(query: $0) }
+        _addItem = { try await manager.addItem($0) }
+        _deleteItem = { try await manager.deleteItem($0) }
+        _clearAll = { await manager.clearAll() }
     }
 
-    var currentItems: [Item] { _currentItems() }
-    func addItem(_ item: Item) { _addItem(item) }
-    func deleteItem(_ item: Item) { _deleteItem(item) }
-    func clearAll() { _clearAll() }
-    func filterItems(query: SearchQuery) -> [Item] { _filterItems(query) }
+    var currentItems: [Item] {
+        get async { await _currentItems() }
+    }
+
+    func filterItems(query: SearchQuery) async -> [Item] {
+        await _filterItems(query)
+    }
+
+    func addItem(_ item: Item) async throws {
+        try await _addItem(item)
+    }
+
+    func deleteItem(_ item: Item) async throws {
+        try await _deleteItem(item)
+    }
+
+    func clearAll() async {
+        await _clearAll()
+    }
 }
