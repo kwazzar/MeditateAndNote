@@ -23,21 +23,23 @@ struct RootContainer: View {
             TabView(selection: bindingSelectedTab) {
                 NavigationContainer(parentRouter: router, tab: .home) {
                     MainView(viewModel: container.makeMainViewModel())
+                        .toolbar(.hidden, for: .tabBar)
                 }
                 .tag(TabDestination.home)
 
                 NavigationContainer(parentRouter: router, tab: .notes) {
                     NoteView(viewModel: container.makeNoteViewModel())
+                        .toolbar(.hidden, for: .tabBar)
                 }
                 .tag(TabDestination.notes)
 
                 NavigationContainer(parentRouter: router, tab: .meditations) {
                     MeditateSelectView(viewModel: container.makeMeditateSelectViewModel())
+                        .toolbar(.hidden, for: .tabBar)
                 }
                 .tag(TabDestination.meditations)
             }
             .ignoresSafeArea()
-            .toolbar(.hidden, for: .tabBar)
 
             CustomTabBar(selectedTab: bindingSelectedTab)
                 .padding(.horizontal, 16)

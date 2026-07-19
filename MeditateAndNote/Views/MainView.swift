@@ -53,9 +53,13 @@ private extension MainView {
     }
 }
 
-//struct MainView_Previews: PreviewProvider {
-//    static var previews: some View {
-//        MainView(viewModel: MainViewModel(repository: InMemoryNotesRepository()))
-//            .environmentObject(Router.previewRouter())
-//    }
-//}
+struct MainView_Previews: PreviewProvider {
+    static var previews: some View {
+        let repo = NotesRepository(
+            localDataSource: UserDefaultsNotesRepository(),
+            remoteDataSource: InMemoryNotesDataSource()
+        )
+        MainView(viewModel: MainViewModel(repository: repo))
+            .environmentObject(Router.previewRouter())
+    }
+}
