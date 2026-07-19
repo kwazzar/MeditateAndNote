@@ -7,35 +7,44 @@
 
 import Foundation
 
-final class NoteManager: ItemProvidable, ItemManagable {
+final actor NoteManager: ItemProvidable, ItemManagable {
     typealias Item = Note
 
     private let repository: NotesRepository
     private(set) var currentItems: [Note] = []
+    private(set) var lastError: Error?
 
     init(repository: NotesRepository) {
         self.repository = repository
-        self.currentItems = repository.fetchAll()
     }
 
-    func addItem(_ item: Item) {
-        repository.save(item)
-        currentItems = repository.fetchAll()
+    func refreshFromRemote() async {
+        do {
+            currentItems = try await repository.getItems(strategy: .remoteFirst)
+            lastError = nil
+        } catch {
+            print("Failed to fetch initial notes: \(error)")
+            lastError = error
+        }
     }
 
-    func deleteItem(_ item: Item) {
-        repository.delete(id: item.id)
-        currentItems = repository.fetchAll()
+    func addItem(_ item: Item) async throws {
+        try await repository.saveItem(item, strategy: .hybrid)
+        currentItems = try await repository.getItems(strategy: .hybrid)
     }
 
-    func filterItems(query: SearchQuery) -> [Item] {
-        return query.text.isEmpty
-        ? currentItems
-        : currentItems.reversed()
-        //        : currentItems.filter { $0.description.value.lowercased().contains(query.text.lowercased()) }
+    func deleteItem(_ item: Item) async throws {
+        try await repository.deleteItem(id: item.id.uuidString, strategy: .hybrid)
+        currentItems = try await repository.getItems(strategy: .hybrid)
     }
 
-    func clearAll() {
+    func filterItems(query: SearchQuery) async -> [Item] {
+        query.text.isEmpty
+            ? currentItems
+            : currentItems.reversed()
+    }
+
+    func clearAll() async {
         currentItems.removeAll()
     }
 }

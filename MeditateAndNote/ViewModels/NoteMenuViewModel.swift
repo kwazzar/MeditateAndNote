@@ -29,16 +29,17 @@ final class NoteMenuViewModel: ObservableObject {
             self.last10Notes = Array(visibleNotes.suffix(10))
     }
 
-    private func loadNotes() {
-        visibleNotes = itemManager.currentItems
+    private func loadNotes() async {
+        visibleNotes = await itemManager.currentItems
     }
 
-    func refreshNotes() {
-        loadNotes()
+    func refreshNotes() async {
+        await loadNotes()
     }
 
-    func deleteNote(_ note: Note) {
-        itemManager.deleteItem(note)
-        refreshNotes()
+    #warning("force unwrap")
+    func deleteNote(_ note: Note) async {
+        try! await itemManager.deleteItem(note)
+        await refreshNotes()
     }
 }

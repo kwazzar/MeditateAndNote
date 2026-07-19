@@ -10,7 +10,7 @@ import SwiftUI
 final class MainViewModel: ObservableObject {
     private let repository: NotesRepository
     @Published var visibleNotes: [Note] = MockNotes
-    var last10Notes: [Note] = []
+    @Published var last10Notes: [Note] = []
 
     //    init(notesService: NotesService) {
     //        self.notesService = notesService
@@ -24,16 +24,18 @@ final class MainViewModel: ObservableObject {
         last10Notes = Array(visibleNotes.suffix(10))
     }
 
-    private func loadNotes() {
-        visibleNotes = repository.fetchAll()
+    #warning("force uwrap")
+    private func loadNotes() async {
+        visibleNotes = try! await repository.getItems(strategy: .remoteFirst)
     }
 
-    func refreshNotes() {
-        loadNotes()
+    func refreshNotes() async {
+        await loadNotes()
     }
 
-    func deleteNote(id: UUID) {
-        repository.delete(id: id)
-        refreshNotes()
+#warning("force uwrap")
+    func deleteNote(id: UUID) async {
+        try! await repository.deleteItem(id: id.uuidString, strategy: .remoteFirst)
+        await refreshNotes()
     }
 }

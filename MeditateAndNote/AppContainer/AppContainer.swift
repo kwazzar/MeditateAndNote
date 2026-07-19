@@ -7,6 +7,10 @@
 
 import Foundation
 
+typealias NotesRepository = Repository<Note,
+                                       UserDefaultsNotesRepository,
+                                       InMemoryNotesDataSource>
+
 final class AppContainer: ObservableObject {
 
 //    static let shared = AppContainer()
@@ -17,15 +21,13 @@ final class AppContainer: ObservableObject {
     private lazy var meditationService: MeditationService = SampleMeditationService()
 //    private lazy var repository: NotesRepository = DefaultNotesRepository(InMemoryDataSource: UserDefaultsNotesRepository(), coreDataSource: InMemoryNotesRepository())
 
-    private typealias NotesRepo = Repository<Note, InMemoryNotesDataSource, CoreDataNotesDataSource>
-
-    private lazy var notesRepository: NotesRepo = {
-        let local = InMemoryNotesDataSource()
-        let remote = CoreDataNotesDataSource()
-        return NotesRepo(localDataSource: local, remoteDataSource: remote)
+    private lazy var notesRepository: NotesRepository = {
+        let local = UserDefaultsNotesRepository()
+        let remote = InMemoryNotesDataSource()
+        return NotesRepository(localDataSource: local, remoteDataSource: remote)
     }()
 
-    private lazy var noteManager = NoteManager(repository: notesRepository)
+    private lazy var noteManager =  NoteManager(repository: notesRepository)
 
     // MARK: - ViewModels Factory Methods
     func makeMainViewModel() -> MainViewModel {
@@ -47,6 +49,9 @@ final class AppContainer: ObservableObject {
     }
 
     func makeNoteMenuView() -> NoteMenuViewModel {
-        NoteMenuViewModel(itemManager: AnyItemManager(noteManager))
+        let manager = noteManager
+        Task { await manager.refreshFromRemote() }
+        return NoteMenuViewModel(itemManager: AnyItemManager(manager))
     }
 }
+

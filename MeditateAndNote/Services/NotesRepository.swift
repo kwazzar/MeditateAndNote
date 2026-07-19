@@ -6,9 +6,6 @@
 //
 
 import Foundation
-#warning("fix protocol conformance111")
-#warning("CoreData Implementation /Store")
-typealias NotesRepository = Repository<Note, InMemoryNotesDataSource, CoreDataNotesDataSource>
 
 //final class RepositoryFactory {
 //    static func userRepository(source: DataSource) -> NotesDataSource {
@@ -209,6 +206,7 @@ final class InMemoryNotesDataSource: NotesDataSource {
     }
 }
 
+#warning("CoreData Implementation /Store")
 // MARK: - CoreData Implementation
 //final class CoreDataNotesDataSource: NotesRepository {
 //    private let context: NSManagedObjectContext

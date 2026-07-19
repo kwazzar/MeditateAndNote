@@ -84,7 +84,7 @@ struct MeditationInfoScroll: View {
                 styleOfBreating
 
                 //                     Опис (якщо є)
-                if let description = meditation.breathingStyle.rawValue {
+                if let description = meditation.description, !description.isEmpty {
                     descriptionView(description)
                 }
 

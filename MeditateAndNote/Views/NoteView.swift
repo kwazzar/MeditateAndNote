@@ -51,8 +51,10 @@ struct NoteView: View {
 
                 Spacer()
 
-                Button(action: viewModel.saveNote) {
-                    Text("Save Note")
+                Button(action: {
+                    Task { await viewModel.saveNote() }
+                }) {
+                    Text(viewModel.isSaving ? "Saving..." : "Save Note")
                         .font(.headline)
                         .frame(maxWidth: .infinity)
                         .padding()
@@ -61,9 +63,13 @@ struct NoteView: View {
                         .cornerRadius(12)
                         .shadow(radius: 4)
                 }
+                .disabled(viewModel.isSaving)
                 .padding(.horizontal)
             }
             .padding(.vertical)
+        }
+        .task {
+            await viewModel.loadNoteIfNeeded()
         }
     }
 }

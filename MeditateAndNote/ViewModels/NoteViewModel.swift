@@ -12,49 +12,62 @@ final class NoteViewModel: ObservableObject {
     @Published var isEditing: Bool = false
     @Published var title: String = ""
     @Published var content: String = ""
-
+    @Published var errorText: String?
+    @Published var isSaving: Bool = false
+    
     private let repository: NotesRepository
-    private let isNewNote: Bool
-
+    private let noteId: UUID?
+    private(set) var isNewNote: Bool
+    
     init(noteId: UUID? = nil, repository: NotesRepository) {
         self.repository = repository
-
-        #warning("UUID Search")
-        if let id = noteId, let existingNote = repository.fetch(id: id) {
-            self.note = existingNote
+        self.noteId = noteId
+        
+        if noteId != nil {
+            // Тимчасова заглушка, поки не завантажили реальну нотатку
+            self.note = Note(title: "", content: "", date: Date())
             self.isNewNote = false
-            self.title = existingNote.title
-            self.content = existingNote.content
         } else {
             self.note = Note(title: "", content: "", date: Date())
             self.isNewNote = true
             self.isEditing = true
         }
     }
-
-    func saveNote() {
-        let updatedNote = Note(title: title, content: content, date: Date())
-        repository.save(updatedNote)
-        note = updatedNote
-        isEditing = false
+    
+    func loadNoteIfNeeded() async {
+        guard let id = noteId, !isNewNote else { return }
+        do {
+            let existingNote = try await repository.getItem(id: id.uuidString, strategy: .remoteFirst)
+            self.note = existingNote
+            self.title = existingNote.title
+            self.content = existingNote.content
+        } catch {
+            errorText = "Не вдалося завантажити нотатку"
+        }
     }
+    
+    func saveNote() async {
+        guard !isSaving else { return }
+        isSaving = true
+        defer { isSaving = false }
 
+        let updatedNote = Note(title: title, content: content, date: Date())
+        do {
+            try await repository.saveItem(updatedNote, strategy: .hybrid)
+            note = updatedNote
+            isEditing = false
+        } catch {
+            errorText = "Не вдалося зберегти нотатку"
+        }
+    }
+    
     func startEditing() {
         isEditing = true
     }
-
+    
     func cancelEditing() {
         title = note.title
         content = note.content
         isEditing = false
-    }
-}
-
-extension NoteViewModel {
-    func set(note: Note) {
-        self.note = note
-        self.title = note.title
-        self.content = note.content
-        self.isEditing = false
     }
 }
