@@ -12,6 +12,7 @@ protocol ItemProvidable {
 
     var currentItems: [Item] { get async }
     func filterItems(query: SearchQuery) async -> [Item]
+    func refresh() async
 }
 
 protocol ItemManagable {
@@ -26,6 +27,7 @@ protocol ItemManagable {
 final class AnyItemManager<Item>: ItemProvidable, ItemManagable {
     private let _currentItems: () async -> [Item]
     private let _filterItems: (SearchQuery) async -> [Item]
+    private let _refresh: () async -> Void
     private let _addItem: (Item) async throws -> Void
     private let _deleteItem: (Item) async throws -> Void
     private let _clearAll: () async -> Void
@@ -33,6 +35,7 @@ final class AnyItemManager<Item>: ItemProvidable, ItemManagable {
     init<T: ItemProvidable & ItemManagable>(_ manager: T) where T.Item == Item {
         _currentItems = { await manager.currentItems }
         _filterItems = { await manager.filterItems(query: $0) }
+        _refresh = { await manager.refresh() }
         _addItem = { try await manager.addItem($0) }
         _deleteItem = { try await manager.deleteItem($0) }
         _clearAll = { await manager.clearAll() }
@@ -44,6 +47,10 @@ final class AnyItemManager<Item>: ItemProvidable, ItemManagable {
 
     func filterItems(query: SearchQuery) async -> [Item] {
         await _filterItems(query)
+    }
+    
+    func refresh() async {
+        await _refresh()
     }
 
     func addItem(_ item: Item) async throws {

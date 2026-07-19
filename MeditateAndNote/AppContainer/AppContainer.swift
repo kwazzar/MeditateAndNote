@@ -49,9 +49,7 @@ final class AppContainer: ObservableObject {
     }
 
     func makeNoteMenuView() -> NoteMenuViewModel {
-        let manager = noteManager
-        Task { await manager.refreshFromRemote() }
-        return NoteMenuViewModel(itemManager: AnyItemManager(manager))
+        return NoteMenuViewModel(itemManager: AnyItemManager(noteManager))
     }
 }
 

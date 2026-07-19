@@ -39,6 +39,9 @@ struct NoteMenu: View {
                 .padding(.bottom, 12)
 
         }
+        .task {
+            await viewModel.loadIfNeeded()
+        }
         .background(Color.blue)
 
     }

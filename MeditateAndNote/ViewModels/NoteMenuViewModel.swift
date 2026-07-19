@@ -28,6 +28,10 @@ final class NoteMenuViewModel: ObservableObject {
 
             self.last10Notes = Array(visibleNotes.suffix(10))
     }
+    
+    func loadIfNeeded() async {
+        await itemManager.refresh()
+    }
 
     private func loadNotes() async {
         visibleNotes = await itemManager.currentItems
