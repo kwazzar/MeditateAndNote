@@ -65,6 +65,7 @@ struct NoteView: View {
                 }
                 .disabled(viewModel.isSaving)
                 .padding(.horizontal)
+                .padding(.bottom, 45)
             }
             .padding(.vertical)
         }

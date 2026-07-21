@@ -26,7 +26,7 @@ struct MeditateSelectView: View {
                 meditationGridSection
             }
             actionButtonsSection
-                .padding(.bottom, 12)
+                .padding(.bottom, 45)
         }
         .padding()
         .background(
