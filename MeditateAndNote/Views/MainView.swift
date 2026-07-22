@@ -6,16 +6,20 @@
 //
 
 import SwiftUI
+#warning("замість параметрів стрік")
 #warning("UI")
 #warning("1meditate 2(read <-> note)3")
+
+var theme: MainScreenTheme = .breathing
+
 struct MainView: View {
     @StateObject var viewModel: MainViewModel
     @EnvironmentObject var router: Router
 
     var body: some View {
         VStack {
-            CloudParametersView()
-                .innerStroke()
+//            CloudParametersView()
+//                .innerStroke()
             Spacer()
             HStack {
                 Spacer()
@@ -28,7 +32,7 @@ struct MainView: View {
 //            NoteCardsView(noteCards: viewModel.last10Notes)
 //                .padding(.bottom, 12)
         }
-        .background(.green)
+        .background(theme.mainBackground)
     }
 }
 
@@ -40,16 +44,9 @@ private extension MainView {
 
             router.navigate(to: .push(.meditation(id: lastSelectedId)))
         }) {
-            Circle()
-                .fill(Color.blue)
-                .frame(width: 200, height: 200)
-                .overlay(
-                    Text("M")
-                        .foregroundColor(.white)
-                        .font(.system(size: 150))
-                )
-                .shadow(radius: 5)
+            theme.meditateIcon
         }
+        .buttonStyle(theme.meditateButtonStyle)
     }
 }
 

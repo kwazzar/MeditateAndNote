@@ -67,45 +67,56 @@ enum MainScreenTheme {
         switch self {
         case .liquidGlass:
             if #available(iOS 26.0, *) {
-                VStack(spacing: 8) {
-                                        Text("M")
-//                    Image(systemName: "figure.mind.and.body")
-//                        .font(.system(size: 44, weight: .light))
-//                    Text("Meditate")
-//                        .font(.subheadline.weight(.medium))
+                ZStack {
+                    ForEach(0..<3, id: \.self) { i in
+                        Circle()
+                            .stroke(Color.cyan.opacity(0.15 - Double(i) * 0.04), lineWidth: 2)
+                            .frame(width: 160 + CGFloat(i * 28), height: 160 + CGFloat(i * 28))
+                    }
+                    VStack(spacing: 8) {
+                        Image(systemName: "wind")
+                            .font(.system(size: 48, weight: .thin))
+                            .foregroundStyle(.black)
+                    }
+                    .foregroundStyle(.primary)
+                    .frame(width: 140, height: 140)
+                    .glassEffect(.regular.interactive(), in: .circle)
+                    .shadow(color: .black.opacity(0.12), radius: 20, y: 10)
                 }
-                .foregroundStyle(.primary)
-                .frame(width: 180, height: 180)
-                .glassEffect(.regular.interactive(), in: .circle)
-                .shadow(color: .black.opacity(0.12), radius: 20, y: 10)
+                
             } else {
-                VStack(spacing: 8) {
-                                        Text("M")
-//                    Image(systemName: "figure.mind.and.body")
-//                        .font(.system(size: 44, weight: .light))
-//                    Text("Meditate")
-//                        .font(.subheadline.weight(.medium))
+                ZStack {
+                    ForEach(0..<3, id: \.self) { i in
+                        Circle()
+                            .stroke(Color.cyan.opacity(0.15 - Double(i) * 0.04), lineWidth: 2)
+                            .frame(width: 160 + CGFloat(i * 28), height: 160 + CGFloat(i * 28))
+                    }
+                    VStack(spacing: 8) {
+                        Image(systemName: "wind")
+                            .font(.system(size: 48, weight: .thin))
+                            .foregroundStyle(.black)
+                    }
+                    .foregroundStyle(.primary)
+                    .frame(width: 180, height: 180)
+                    .background(
+                        Circle()
+                            .fill(.ultraThinMaterial)
+                            .overlay(
+                                Circle()
+                                    .stroke(
+                                        LinearGradient(
+                                            colors: [.white.opacity(0.6), .white.opacity(0.1)],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        ),
+                                        lineWidth: 1
+                                    )
+                            )
+                    )
+                    .shadow(color: .black.opacity(0.12), radius: 20, y: 10)
                 }
-                .foregroundStyle(.primary)
-                .frame(width: 180, height: 180)
-                .background(
-                    Circle()
-                        .fill(.ultraThinMaterial)
-                        .overlay(
-                            Circle()
-                                .stroke(
-                                    LinearGradient(
-                                        colors: [.white.opacity(0.6), .white.opacity(0.1)],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    ),
-                                    lineWidth: 1
-                                )
-                        )
-                )
-                .shadow(color: .black.opacity(0.12), radius: 20, y: 10)
             }
-
+            
         case .breathing:
             ZStack {
                 ForEach(0..<3, id: \.self) { i in
@@ -124,15 +135,20 @@ enum MainScreenTheme {
                     )
                     .frame(width: 140, height: 140)
                     .overlay(
-                                            Text("M")
-//                        Image(systemName: "wind")
-//                            .font(.system(size: 48, weight: .thin))
-//                            .foregroundStyle(.white)
+                        Image(systemName: "wind")
+                            .font(.system(size: 48, weight: .thin))
+                            .foregroundStyle(.white)
                     )
                     .shadow(color: .blue.opacity(0.35), radius: 24, y: 8)
             }
-
+            
         case .softDawn:
+            ZStack {
+                ForEach(0..<3, id: \.self) { i in
+                    Circle()
+                        .stroke(Color.cyan.opacity(0.15 - Double(i) * 0.04), lineWidth: 2)
+                        .frame(width: 160 + CGFloat(i * 28), height: 160 + CGFloat(i * 28))
+                }
             Circle()
                 .fill(
                     LinearGradient(
@@ -144,36 +160,100 @@ enum MainScreenTheme {
                         endPoint: .bottomTrailing
                     )
                 )
-                .frame(width: 160, height: 160)
+                .frame(width: 140, height: 140)
                 .overlay(
                     VStack(spacing: 4) {
-                                            Text("M")
-//                        Text("Begin")
-//                            .font(.title3.weight(.semibold))
-//                        Text("meditation")
-//                            .font(.caption)
-//                            .opacity(0.7)
+                        Image(systemName: "wind")
+                            .font(.system(size: 48, weight: .thin))
+                            .foregroundStyle(.white)
                     }
-                    .foregroundStyle(.white)
+                        .foregroundStyle(.white)
                 )
                 .shadow(color: Color.orange.opacity(0.2), radius: 16, y: 8)
-
+        }
+            
         case .darkZen:
             ZStack {
-                Circle()
-                    .stroke(Color.white.opacity(0.15), lineWidth: 1)
-                    .frame(width: 200, height: 200)
+                ForEach(0..<3, id: \.self) { i in
+                    Circle()
+                        .stroke(Color.cyan.opacity(0.15 - Double(i) * 0.04), lineWidth: 2)
+                        .frame(width: 160 + CGFloat(i * 28), height: 160 + CGFloat(i * 28))
+                }
                 Circle()
                     .fill(Color.white.opacity(0.08))
-                    .frame(width: 120, height: 120)
+                    .frame(width: 140, height: 140)
                     .overlay(
-                                            Text("M")
-//                        Circle()
-//                            .fill(Color.white.opacity(0.95))
-//                            .frame(width: 72, height: 72)
-//                            .shadow(color: .white.opacity(0.5), radius: 20)
+                        Image(systemName: "wind")
+                            .font(.system(size: 48, weight: .thin))
+                            .foregroundStyle(.white)
                     )
             }
+        }
+    }
+}
+
+extension MainScreenTheme {
+    var meditateButtonStyle: MeditateThemeButtonStyle {
+        MeditateThemeButtonStyle(theme: self)
+    }
+}
+
+struct MeditateThemeButtonStyle: ButtonStyle {
+    let theme: MainScreenTheme
+
+    func makeBody(configuration: Configuration) -> some View {
+        switch theme {
+        case .liquidGlass:
+            configuration.label
+
+        case .breathing:
+            configuration.label
+                .scaleEffect(configuration.isPressed ? 0.92 : 1.0)
+                .opacity(configuration.isPressed ? 0.85 : 1.0)
+                .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
+
+        case .softDawn:
+            configuration.label
+                .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
+                .opacity(configuration.isPressed ? 0.9 : 1.0)
+                .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
+
+        case .darkZen:
+            configuration.label
+                .scaleEffect(configuration.isPressed ? 0.94 : 1.0)
+                .shadow(
+                    color: .white.opacity(configuration.isPressed ? 0.4 : 0.0),
+                    radius: configuration.isPressed ? 16 : 0
+                )
+                .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
+        }
+    }
+}
+
+struct MeditateButtonIcon: View {
+    var body: some View {
+        ZStack {
+            ForEach(0..<3, id: \.self) { i in
+                Circle()
+                    .stroke(Color.cyan.opacity(0.15 - Double(i) * 0.04), lineWidth: 2)
+                    .frame(width: 160 + CGFloat(i * 28), height: 160 + CGFloat(i * 28))
+            }
+            Circle()
+                .fill(
+                    RadialGradient(
+                        colors: [.cyan, .blue, .purple.opacity(0.8)],
+                        center: .center,
+                        startRadius: 20,
+                        endRadius: 90
+                    )
+                )
+                .frame(width: 140, height: 140)
+                .overlay(
+                    Image(systemName: "wind")
+                        .font(.system(size: 48, weight: .thin))
+                        .foregroundStyle(.white)
+                )
+                .shadow(color: .blue.opacity(0.35), radius: 24, y: 8)
         }
     }
 }
