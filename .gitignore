@@ -117,3 +117,4 @@ xcuserdata
 /*.gcno
 **/xcshareddata/WorkspaceSettings.xcsettings
 .DS_Store
+graphify-out/
