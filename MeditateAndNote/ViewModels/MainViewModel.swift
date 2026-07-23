@@ -12,6 +12,7 @@ final class MainViewModel: ObservableObject {
     private let repository: NotesRepository
     @Published var visibleNotes: [Note] = MockNotes
     @Published var last10Notes: [Note] = []
+    @Published var errorMessage: String?
 
     //    init(notesService: NotesService) {
     //        self.notesService = notesService
@@ -35,18 +36,26 @@ final class MainViewModel: ObservableObject {
         return meditation
     }
 
-    #warning("force uwrap")
     private func loadNotes() async {
-        visibleNotes = try! await repository.getItems(strategy: .remoteFirst)
+        do {
+            visibleNotes = try await repository.getItems(strategy: .remoteFirst)
+        } catch {
+            errorMessage = error.localizedDescription
+            print("Error loading notes: \(error)")
+        }
     }
 
     func refreshNotes() async {
         await loadNotes()
     }
 
-#warning("force uwrap")
     func deleteNote(id: UUID) async {
-        try! await repository.deleteItem(id: id.uuidString, strategy: .remoteFirst)
-        await refreshNotes()
+        do {
+            try await repository.deleteItem(id: id.uuidString, strategy: .remoteFirst)
+            await refreshNotes()
+        } catch {
+            errorMessage = error.localizedDescription
+            print("Error deleting note: \(error)")
+        }
     }
 }

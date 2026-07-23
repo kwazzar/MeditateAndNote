@@ -11,6 +11,7 @@ final class NoteMenuViewModel: ObservableObject {
     private let itemManager: AnyItemManager<Note>
 
     @Published var visibleNotes: [Note] = MockNotes
+    @Published var errorMessage: String?
     var last10Notes: [Note] = []
 
     let searchState: SearchState
@@ -41,9 +42,13 @@ final class NoteMenuViewModel: ObservableObject {
         await loadNotes()
     }
 
-    #warning("force unwrap")
     func deleteNote(_ note: Note) async {
-        try! await itemManager.deleteItem(note)
-        await refreshNotes()
+        do {
+            try await itemManager.deleteItem(note)
+            await refreshNotes()
+        } catch {
+            errorMessage = error.localizedDescription
+            print("Error deleting note: \(error)")
+        }
     }
 }
