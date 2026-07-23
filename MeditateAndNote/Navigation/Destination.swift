@@ -7,7 +7,7 @@
 
 import Foundation
 
-public enum Destination: Hashable {
+enum Destination: Hashable {
     case tab(_ destination: TabDestination)
     case push(_ destination: PushDestination)
     case sheet(_ destination: SheetDestination)
@@ -29,16 +29,16 @@ extension Destination: CustomStringConvertible {
     }
 }
 
-public enum PushDestination: Hashable, CustomStringConvertible {
-    case meditationDetails(id: String)
+enum PushDestination: Hashable, CustomStringConvertible {
+//    case meditationDetails(id: String)
     case noteDetails(noteId: UUID?, id: String)
     case readingView(id: String)
-    case meditation(id: String)
+    case meditation(_ meditation: Meditation)
 
     public var description: String {
         switch self {
-        case let .meditationDetails(id): 
-            return ".meditationDetails(\(id))"
+//        case let .meditationDetails(id): 
+//            return ".meditationDetails(\(id))"
         case let .noteDetails(_, id):
             return ".noteDetails(\(id))"
         case let .readingView(id): 

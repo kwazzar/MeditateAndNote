@@ -40,14 +40,14 @@ extension DeepLinkParser {
         }
     }
 
-    static let meditationDetails: Self = .init { url in
-        guard
-            url.fullComponents.first == "meditation",
-            let meditationID = url.fullComponents.last
-        else { return nil }
-
-        return .push(.meditationDetails(id: meditationID))
-    }
+//    static let meditationDetails: Self = .init { url in
+//        guard
+//            url.fullComponents.first == "meditation",
+//            let meditationID = url.fullComponents.last
+//        else { return nil }
+//
+//        return .push(.meditationDetails(id: meditationID))
+//    }
 
 //    static let noteDetails: Self = .init { url in
 //        guard

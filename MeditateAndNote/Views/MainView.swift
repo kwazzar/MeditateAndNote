@@ -10,7 +10,7 @@ import SwiftUI
 #warning("UI")
 #warning("1meditate 2(read <-> note)3")
 
-var theme: MainScreenTheme = .breathing
+var theme: MainScreenTheme = .darkZen
 
 struct MainView: View {
     @StateObject var viewModel: MainViewModel
@@ -40,9 +40,11 @@ struct MainView: View {
 private extension MainView {
     var meditateButton: some View {
         Button(action: {
-            let lastSelectedId = UserDefaults.standard.string(forKey: "lastSelectedMeditationId") ?? "default_meditation_id"
-
-            router.navigate(to: .push(.meditation(id: lastSelectedId)))
+            do {
+                router.navigate(to: .push(.meditation(try viewModel.getMeditation())))
+            } catch {
+                print(error)
+            }
         }) {
             theme.meditateIcon
         }
@@ -56,7 +58,7 @@ struct MainView_Previews: PreviewProvider {
             localDataSource: UserDefaultsNotesRepository(),
             remoteDataSource: InMemoryNotesDataSource()
         )
-        MainView(viewModel: MainViewModel(repository: repo))
+        MainView(viewModel: MainViewModel(meditationService: SampleMeditationService(), repository: repo))
             .environmentObject(Router.previewRouter())
     }
 }

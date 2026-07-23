@@ -23,6 +23,10 @@ struct Meditation: Identifiable, Hashable {
     }
 }
 
+enum MeditationError: Error {
+    case notFound(id: String)
+}
+
 //MARK: - MeditationCategory
 enum MeditationCategory: String, CaseIterable {
     case mindfulness = "Mindfulness"

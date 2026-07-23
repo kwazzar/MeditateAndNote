@@ -19,7 +19,7 @@ public final class Router: ObservableObject {
     @Published public var selectedTab: TabDestination?
     
     /// Values presented in the navigation stack
-    @Published public var navigationStackPath: [PushDestination] = []
+    @Published var navigationStackPath: [PushDestination] = []
     
     /// Current presented sheet
     @Published public var presentingSheet: SheetDestination?
@@ -82,7 +82,7 @@ public extension Router {
 }
 
 // MARK: - Navigation
-public extension Router {
+extension Router {
     func navigate(to destination: Destination) {
         switch destination {
         case let .tab(tab):

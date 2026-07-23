@@ -31,7 +31,7 @@ final class AppContainer: ObservableObject {
 
     // MARK: - ViewModels Factory Methods
     func makeMainViewModel() -> MainViewModel {
-        MainViewModel(repository: notesRepository)
+        MainViewModel(meditationService: SampleMeditationService(), repository: notesRepository)
     }
 
     func makeNoteViewModel(noteId: UUID? = nil) -> NoteViewModel {
@@ -42,12 +42,10 @@ final class AppContainer: ObservableObject {
         MeditateSelectViewModel(meditationService: meditationService)
     }
 
-    func makeMeditationViewModel(id: String) -> MeditationViewModel {
-        let meditation = meditationService.getMeditations()
-            .first { $0.id == id }!
+    func makeMeditationViewModel(for meditation: Meditation) -> MeditationViewModel {
         return MeditationViewModel(meditation: meditation)
     }
-
+    
     func makeNoteMenuView() -> NoteMenuViewModel {
         return NoteMenuViewModel(itemManager: AnyItemManager(noteManager))
     }

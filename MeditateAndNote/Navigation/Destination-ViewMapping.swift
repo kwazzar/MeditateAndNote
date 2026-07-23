@@ -11,14 +11,12 @@ import SwiftUI
     ContainerView { container in
         Group {
             switch destination {
-            case .meditationDetails(_):
-                MeditateSelectView(viewModel: container.makeMeditateSelectViewModel())
             case .noteDetails(let noteId, _):
                 NoteView(viewModel: container.makeNoteViewModel(noteId: noteId))
             case .readingView(_):
                 ReadingView()
-            case .meditation(id: let id):
-                MeditationView(viewModel: container.makeMeditationViewModel(id: id))
+            case .meditation(_ : let meditation):
+                MeditationView(viewModel: container.makeMeditationViewModel(for: meditation))
             }
         }
         .navigationBarBackButtonHidden(true)

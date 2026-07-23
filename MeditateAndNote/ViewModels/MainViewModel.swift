@@ -8,6 +8,7 @@
 import SwiftUI
 
 final class MainViewModel: ObservableObject {
+    private let meditationService: MeditationService
     private let repository: NotesRepository
     @Published var visibleNotes: [Note] = MockNotes
     @Published var last10Notes: [Note] = []
@@ -17,11 +18,21 @@ final class MainViewModel: ObservableObject {
     //        loadNotes()
     //    }
 
-    init(repository: NotesRepository) {
+    init(meditationService: MeditationService, repository: NotesRepository) {
+        self.meditationService = meditationService
         self.repository = repository
         self.visibleNotes = visibleNotes
 
         last10Notes = Array(visibleNotes.suffix(10))
+    }
+    
+    func getMeditation() throws -> Meditation {
+        let lastSelectedId = UserDefaults.standard.string(forKey: "lastSelectedMeditationId") ?? "default_meditation_id"
+
+        guard let meditation = meditationService.getMeditations().first(where: { $0.id == lastSelectedId }) else {
+            throw MeditationError.notFound(id: lastSelectedId)
+        }
+        return meditation
     }
 
     #warning("force uwrap")
