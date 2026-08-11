@@ -204,13 +204,15 @@ public enum MeditationDuration: TimeInterval, CaseIterable, Identifiable {
 
     public var id: TimeInterval { rawValue }
 
-    #warning("заміна лейбла (minutes) відповідна до числа")
+    var minutes: Int {
+        Int(rawValue / 60)
+    }
+
     var label: String {
-        switch self {
-        case .oneMin: return "1 min"
-        case .threeMin: return "3 min"
-        case .fiveMin: return "5 min"
-        }
+        let measurement = Measurement(value: Double(minutes), unit: UnitDuration.minutes)
+        let formatter = MeasurementFormatter()
+        formatter.unitOptions = .naturalScale
+        formatter.locale = Locale.current
+        return formatter.string(from: measurement)
     }
 }
-
