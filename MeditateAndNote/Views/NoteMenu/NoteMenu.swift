@@ -1,0 +1,112 @@
+//
+//  NoteMenu.swift
+//  MeditateAndNote
+//
+//  Created by Quasar on 28.11.2025.
+//
+
+import SwiftUI
+#warning("Note and Reading")
+
+enum Menu {
+    case Note
+    case Reading
+}
+
+struct NoteMenu: View {
+    @StateObject var viewModel: NoteMenuViewModel
+    @StateObject var uiState: NotesUIState
+    @StateObject var searchState: SearchState
+    
+    @State private var isScrolling = false
+    
+    init(viewModel: NoteMenuViewModel) {
+        _viewModel = StateObject(wrappedValue: viewModel)
+        _uiState = StateObject(wrappedValue: viewModel.uiState)
+        _searchState = StateObject(wrappedValue: viewModel.searchState)
+    }
+    
+    var body: some View {
+        VStack {
+            HStack {
+                searchBar
+                    .padding(.horizontal)
+            }
+            
+            ScrollDetector(isScrolling: $isScrolling) {
+                LazyVStack {
+                    ForEach(viewModel.visibleNotes) { note in
+                        NoteCard(note: note, toNoteAction: { _ in })
+                    }
+                }
+                .padding(.bottom, 40)
+                .padding()
+            }
+            .overlay(alignment: .bottomTrailing) {
+                addNoteButton
+                    .opacity(isScrolling ? 0 : 1)
+                    .scaleEffect(isScrolling ? 0.6 : 1)
+                    .padding(.bottom, 60)
+                    .padding(.trailing, 12)
+                    .allowsHitTesting(!isScrolling)
+                    .animation(.easeInOut(duration: 0.2),
+                               value: isScrolling)
+            }
+        }
+        .task {
+            await viewModel.loadIfNeeded()
+        }
+        .background(Color.blue)
+    }
+}
+
+private extension NoteMenu {
+    var addNoteButton: some View {
+        Button(action: {
+            // TODO: Implement add note action
+        }) {
+            
+            HStack {
+                Text("Add Note")
+                    .font(.headline)
+                    .foregroundColor(.black)
+                    .frame(height: 40)
+                    .padding(5)
+            }
+            .padding(.horizontal, 10)
+            .background(
+                Capsule()
+                    .fill(Color.white)
+                    .shadow(color: .gray.opacity(0.3),
+                            radius: 5)
+            )
+            .overlay(
+                Capsule()
+                    .strokeBorder(Color.black, lineWidth: 2)
+            )
+        }
+    }
+    
+    var searchBar: some View {
+        SearchBar(
+            titleSearch: "Search notes...",
+            searchText: Binding(
+                get: { viewModel.searchState.searchText.text },
+                set: { newText in
+                    let query = SearchQuery(text: newText)
+                    viewModel.searchState.searchText = query
+                    viewModel.searchState.updateFilteredItems(for: query)
+                }
+            ),
+            onClose: {
+                viewModel.searchState.resetSearch()
+            }
+        )
+    }
+}
+
+struct NoteMenu_Previews: PreviewProvider {
+    static var previews: some View {
+        NoteMenu(viewModel: AppContainer().makeNoteMenuView())
+    }
+}

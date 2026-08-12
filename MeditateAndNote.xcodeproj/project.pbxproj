@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		78421A37302C1C4E001B52A6 /* ScrollDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78421A36302C1C4C001B52A6 /* ScrollDetector.swift */; };
 		789B7B0A3010417D0082F0CB /* MainScreenTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 789B7B093010417D0082F0CB /* MainScreenTheme.swift */; };
 		E320C3ED2E2D1AC9009452DD /* Destination.swift in Sources */ = {isa = PBXBuildFile; fileRef = E320C3EC2E2D1AC9009452DD /* Destination.swift */; };
 		E320C3EF2E2D1C12009452DD /* MeditateAndNoteDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = E320C3EE2E2D1C12009452DD /* MeditateAndNoteDetails.swift */; };
@@ -55,6 +56,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		78421A36302C1C4C001B52A6 /* ScrollDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollDetector.swift; sourceTree = "<group>"; };
 		789B7B093010417D0082F0CB /* MainScreenTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainScreenTheme.swift; sourceTree = "<group>"; };
 		E320C3EC2E2D1AC9009452DD /* Destination.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Destination.swift; sourceTree = "<group>"; };
 		E320C3EE2E2D1C12009452DD /* MeditateAndNoteDetails.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditateAndNoteDetails.swift; sourceTree = "<group>"; };
@@ -114,6 +116,16 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		782A8C0C302D0DE70004249F /* NoteMenu */ = {
+			isa = PBXGroup;
+			children = (
+				E32C6BBC2ED9C39F0093F735 /* NoteMenu.swift */,
+				E32C6BC02ED9CD6D0093F735 /* SearchBar.swift */,
+				78421A36302C1C4C001B52A6 /* ScrollDetector.swift */,
+			);
+			path = NoteMenu;
+			sourceTree = "<group>";
+		};
 		E31DE9A32E6C84EA00C330DC /* MeditationSelect */ = {
 			isa = PBXGroup;
 			children = (
@@ -199,14 +211,13 @@
 		E36187832D68D05C000E326D /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				782A8C0C302D0DE70004249F /* NoteMenu */,
 				E36D33902ED33DCC0048B6AC /* RootContainer.swift */,
 				E361877E2D68B373000E326D /* MainView.swift */,
 				789B7B093010417D0082F0CB /* MainScreenTheme.swift */,
 				E34D18AB2E424CEE004CCFA8 /* Meditation */,
 				E31DE9A32E6C84EA00C330DC /* MeditationSelect */,
 				E340C16C2D75066A004D3645 /* NoteView.swift */,
-				E32C6BBC2ED9C39F0093F735 /* NoteMenu.swift */,
-				E32C6BC02ED9CD6D0093F735 /* SearchBar.swift */,
 				E32C6BC22ED9CEBB0093F735 /* SearchState.swift */,
 				E3BAF8A52E293D340036E250 /* ReadingView.swift */,
 				E36187842D68D087000E326D /* Components */,
@@ -376,6 +387,7 @@
 				E36164432E410D3D00A5DCCF /* MeditationProgressView.swift in Sources */,
 				E361877F2D68B373000E326D /* MainView.swift in Sources */,
 				E36187812D68D021000E326D /* Note.swift in Sources */,
+				78421A37302C1C4E001B52A6 /* ScrollDetector.swift in Sources */,
 				E36D33912ED33DCC0048B6AC /* RootContainer.swift in Sources */,
 				E32C6BC12ED9CD6D0093F735 /* SearchBar.swift in Sources */,
 				E32C6BC32ED9CEBB0093F735 /* SearchState.swift in Sources */,

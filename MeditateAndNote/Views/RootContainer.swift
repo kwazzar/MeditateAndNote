@@ -10,14 +10,14 @@ import SwiftUI
 struct RootContainer: View {
     @EnvironmentObject var router: Router
     @EnvironmentObject var container: AppContainer
-
+    
     private var bindingSelectedTab: Binding<TabDestination> {
         Binding(
             get: { router.selectedTab ?? .home },
             set: { router.selectedTab = $0 }
         )
     }
-
+    
     var body: some View {
         ZStack(alignment: .bottom) {
             TabView(selection: bindingSelectedTab) {
@@ -26,13 +26,13 @@ struct RootContainer: View {
                         .toolbar(.hidden, for: .tabBar)
                 }
                 .tag(TabDestination.home)
-
+                
                 NavigationContainer(parentRouter: router, tab: .notes) {
-                    NoteView(viewModel: container.makeNoteViewModel())
+                    NoteMenu(viewModel: container.makeNoteMenuView())
                         .toolbar(.hidden, for: .tabBar)
                 }
                 .tag(TabDestination.notes)
-
+                
                 NavigationContainer(parentRouter: router, tab: .meditations) {
                     MeditateSelectView(viewModel: container.makeMeditateSelectViewModel())
                         .toolbar(.hidden, for: .tabBar)
@@ -40,7 +40,7 @@ struct RootContainer: View {
                 .tag(TabDestination.meditations)
             }
             .ignoresSafeArea()
-
+            
             CustomTabBar(selectedTab: bindingSelectedTab)
                 .padding(.horizontal, 16)
         }
@@ -49,7 +49,7 @@ struct RootContainer: View {
 
 struct CustomTabBar: View {
     @Binding var selectedTab: TabDestination
-
+    
     var body: some View {
         HStack(spacing: 32) {
             tabButton(.notes, systemImage: "note.text", title: "Notes")
@@ -57,7 +57,6 @@ struct CustomTabBar: View {
             tabButton(.meditations, systemImage: "leaf", title: "Meditations")
             // додаси інші, якщо будуть
         }
-        .padding(.vertical, 3)
         .padding(.horizontal, 16)
         .background(
             Capsule()
@@ -65,12 +64,12 @@ struct CustomTabBar: View {
                 .shadow(radius: 8)
         )
     }
-
+    
     private func tabButton(_ tab: TabDestination,
                            systemImage: String,
                            title: String) -> some View {
         let isSelected = selectedTab == tab
-
+        
         return Button {
             selectedTab = tab
         } label: {
@@ -91,7 +90,6 @@ struct CustomTabBar: View {
         .buttonStyle(.plain)
     }
 }
-
 
 struct RootContainer_Previews: PreviewProvider {
     static var previews: some View {

@@ -13,7 +13,7 @@ struct SearchBar: View {
     var titleSearch: String
     var searchText: Binding<String>
     var onClose: () -> Void
-
+    
     var body: some View {
         VStack {
             HStack {
@@ -23,11 +23,14 @@ struct SearchBar: View {
                     .background(Color(.systemGray6))
                     .cornerRadius(8)
                     .padding(.horizontal, 2)
-                    .innerStroke(cornerRadius: 8, lineWidth: 2, color: .black, inset: 4)
+                    .innerStroke(cornerRadius: 8,
+                                 lineWidth: 2,
+                                 color: .black,
+                                 inset: 1)
                     .onTapGesture {
                         isSearching = true
                     }
-
+                
                 if isTextFieldFocused {
                     Button(action: {
                         isTextFieldFocused = false
@@ -40,7 +43,6 @@ struct SearchBar: View {
                     }
                 }
             }
-            .padding(.horizontal)
         }
         .animation(.easeInOut, value: isTextFieldFocused)
     }
@@ -49,7 +51,7 @@ struct SearchBar: View {
 struct SearchBar_Previews: PreviewProvider {
     struct PreviewWrapper: View {
         @State private var searchText = ""
-
+        
         var body: some View {
             SearchBar(titleSearch: "Search items...", searchText: $searchText) {
                 // Action when close button is pressed
@@ -57,9 +59,10 @@ struct SearchBar_Previews: PreviewProvider {
             }
         }
     }
-
+    
     static var previews: some View {
         PreviewWrapper()
+            .background(.blue)
             .previewLayout(.sizeThatFits) // Adjust the layout for better visibility in previews
             .padding() // Add padding for aesthetics in preview
     }
