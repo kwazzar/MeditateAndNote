@@ -8,10 +8,11 @@
 import SwiftUI
 
 //MARK: - SalesUIState
-final class NotesUIState: ObservableObject {
-    @Published var isPopupVisible = false
-    @Published var showingDailySales = false
-    @Published var activeMenuItemID: UUID? = nil
+@Observable
+final class NotesUIState {
+    var isPopupVisible = false
+    var showingDailySales = false
+    var activeMenuItemID: UUID? = nil
 }
 
 //MARK: - SearchState
@@ -19,10 +20,11 @@ struct SearchQuery {
     let text: String
 }
 
-final class SearchState: ObservableObject {
-    @Published var searchText: SearchQuery = SearchQuery(text: "")
-    @Published var isSearching = false
-    @Published var filteredItems: [Note] = []
+@Observable
+final class SearchState {
+    var searchText: SearchQuery = SearchQuery(text: "")
+    var isSearching = false
+    var filteredItems: [Note] = []
 
     private let itemProvider: any ItemProvidable
     private var availableItems: [Note] = []

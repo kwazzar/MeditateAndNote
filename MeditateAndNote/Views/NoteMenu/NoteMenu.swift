@@ -14,16 +14,16 @@ enum Menu {
 }
 
 struct NoteMenu: View {
-    @StateObject var viewModel: NoteMenuViewModel
-    @StateObject var uiState: NotesUIState
-    @StateObject var searchState: SearchState
+    @State var viewModel: NoteMenuViewModel
+    @State var uiState: NotesUIState
+    @State var searchState: SearchState
     
     @State private var isScrolling = false
     
     init(viewModel: NoteMenuViewModel) {
-        _viewModel = StateObject(wrappedValue: viewModel)
-        _uiState = StateObject(wrappedValue: viewModel.uiState)
-        _searchState = StateObject(wrappedValue: viewModel.searchState)
+        self.viewModel = viewModel
+        self.uiState = viewModel.uiState
+        self.searchState = viewModel.searchState
     }
     
     var body: some View {

@@ -122,6 +122,7 @@
 				E32C6BBC2ED9C39F0093F735 /* NoteMenu.swift */,
 				E32C6BC02ED9CD6D0093F735 /* SearchBar.swift */,
 				78421A36302C1C4C001B52A6 /* ScrollDetector.swift */,
+				E32C6BC22ED9CEBB0093F735 /* SearchState.swift */,
 			);
 			path = NoteMenu;
 			sourceTree = "<group>";
@@ -218,7 +219,6 @@
 				E34D18AB2E424CEE004CCFA8 /* Meditation */,
 				E31DE9A32E6C84EA00C330DC /* MeditationSelect */,
 				E340C16C2D75066A004D3645 /* NoteView.swift */,
-				E32C6BC22ED9CEBB0093F735 /* SearchState.swift */,
 				E3BAF8A52E293D340036E250 /* ReadingView.swift */,
 				E36187842D68D087000E326D /* Components */,
 			);

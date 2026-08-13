@@ -7,11 +7,12 @@
 
 import Foundation
 
-final class NoteMenuViewModel: ObservableObject {
+@Observable
+final class NoteMenuViewModel {
     private let itemManager: AnyItemManager<Note>
 
-    @Published var visibleNotes: [Note] = MockNotes
-    @Published var errorMessage: String?
+    var visibleNotes: [Note] = MockNotes
+    var errorMessage: String?
     var last10Notes: [Note] = []
 
     let searchState: SearchState

@@ -49,7 +49,7 @@ struct ScrollDetector<Content: View>: UIViewRepresentable {
         Coordinator(isScrolling: $isScrolling)
     }
     
-    class Coordinator: NSObject, UIScrollViewDelegate {
+   final class Coordinator: NSObject, UIScrollViewDelegate {
         @Binding var isScrolling: Bool
         var hostingController: UIHostingController<Content>?
         private var hideWorkItem: DispatchWorkItem?
