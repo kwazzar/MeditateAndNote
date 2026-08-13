@@ -33,9 +33,13 @@ final actor NoteManager: ItemProvidable, ItemManagable {
     }
     
     func filterItems(query: SearchQuery) async -> [Item] {
-        query.text.isEmpty
-        ? currentItems
-        : currentItems.reversed()
+        let trimmedQuery = query.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedQuery.isEmpty else { return currentItems }
+
+        return currentItems.filter { note in
+            note.title.localizedCaseInsensitiveContains(trimmedQuery)
+                || note.content.localizedCaseInsensitiveContains(trimmedQuery)
+        }
     }
     
     func clearAll() async {

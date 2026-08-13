@@ -27,16 +27,22 @@ final class NoteMenuViewModel {
         self.itemManager = itemManager
         self.searchState = SearchState(itemProvider: itemManager)
         self.uiState = NotesUIState()
+        self.searchState.setAvailableItems(visibleNotes)
 
-            self.last10Notes = Array(visibleNotes.suffix(10))
+        self.last10Notes = Array(visibleNotes.suffix(10))
     }
     
     func loadIfNeeded() async {
         await itemManager.refresh()
+        await loadNotes()
     }
 
     private func loadNotes() async {
         visibleNotes = await itemManager.currentItems
+        searchState.setAvailableItems(visibleNotes)
+        if !searchState.searchText.text.isEmpty {
+            searchState.updateFilteredItems(for: searchState.searchText)
+        }
     }
 
     func refreshNotes() async {

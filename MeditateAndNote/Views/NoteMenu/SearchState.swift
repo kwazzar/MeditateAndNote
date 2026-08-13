@@ -39,20 +39,24 @@ final class SearchState {
     }
 
     func updateFilteredItems(for query: SearchQuery) {
-//        if query.text.isEmpty {
+        let trimmedQuery = query.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        isSearching = !trimmedQuery.isEmpty
+
+        if trimmedQuery.isEmpty {
             filteredItems = availableItems
-//        } else {
-//            filteredItems = availableItems.filter { item in
-//                item.description.value
-//                    .localizedCaseInsensitiveContains(query.text)
-//            }
-//        }
+        } else {
+            filteredItems = availableItems.filter { note in
+                note.title.localizedCaseInsensitiveContains(trimmedQuery)
+                    || note.content.localizedCaseInsensitiveContains(trimmedQuery)
+            }
+        }
     }
 }
 
 extension SearchState {
     func resetSearch() {
         searchText = SearchQuery(text: "")
+        isSearching = false
         updateFilteredItems(for: SearchQuery(text: ""))
     }
 }
