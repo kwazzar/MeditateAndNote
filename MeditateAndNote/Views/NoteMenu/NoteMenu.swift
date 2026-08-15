@@ -14,7 +14,7 @@ enum Menu {
 }
 
 struct NoteMenu: View {
-    #warning("delete white background and change to liquid")
+#warning("delete white background and change to liquid")
     @State var viewModel: NoteMenuViewModel
     @State var uiState: NotesUIState
     @State var searchState: SearchState
@@ -34,15 +34,20 @@ struct NoteMenu: View {
                     .padding(.horizontal)
             }
             
-            ScrollDetector(isScrolling: $isScrolling) {
-                LazyVStack {
-                    ForEach(displayedNotes) { note in
-                        NoteCard(note: note, toNoteAction: { _ in })
+            GeometryReader { geo in
+                ScrollDetector(isScrolling: $isScrolling) {
+                    LazyVStack {
+                        ForEach(displayedNotes) { note in
+                            NoteCard(note: note, toNoteAction: { _ in })
+                        }
                     }
+                    .padding()
                 }
-                .padding(.bottom, 40)
-                .padding()
+                .frame(height: geo.size.height - 52)
+                .clipped()
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            
             .overlay(alignment: .bottomTrailing) {
                 addNoteButton
                     .opacity(isScrolling ? 0 : 1)
@@ -65,7 +70,7 @@ private extension NoteMenu {
     var displayedNotes: [Note] {
         viewModel.searchState.filteredItems
     }
-
+    
     var addNoteButton: some View {
         Button(action: {
             // TODO: Implement add note action

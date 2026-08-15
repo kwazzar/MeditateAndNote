@@ -26,6 +26,7 @@ struct ScrollDetector<Content: View>: UIViewRepresentable {
         
         let hosting = UIHostingController(rootView: content)
         hosting.view.backgroundColor = .clear
+        hosting.sizingOptions = .intrinsicContentSize
         hosting.view.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(hosting.view)
         

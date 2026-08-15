@@ -44,6 +44,7 @@ struct RootContainer: View {
             CustomTabBar(selectedTab: bindingSelectedTab)
                 .padding(.horizontal, 16)
         }
+        .ignoresSafeArea(.keyboard, edges: .bottom)
     }
 }
 
