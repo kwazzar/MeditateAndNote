@@ -14,7 +14,6 @@ enum Menu {
 }
 
 struct NoteMenu: View {
-#warning("delete white background and change to liquid")
     @State var viewModel: NoteMenuViewModel
     @State var uiState: NotesUIState
     @State var searchState: SearchState
@@ -62,7 +61,7 @@ struct NoteMenu: View {
         .task {
             await viewModel.loadIfNeeded()
         }
-        .background(Color.blue)
+        .background(theme.mainBackground)
     }
 }
 
