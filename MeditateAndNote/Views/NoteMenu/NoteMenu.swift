@@ -17,6 +17,7 @@ struct NoteMenu: View {
     @State var viewModel: NoteMenuViewModel
     @State var uiState: NotesUIState
     @State var searchState: SearchState
+    @Environment(ThemeManager.self) private var themeManager
     
     @State private var isScrolling = false
     
@@ -61,7 +62,7 @@ struct NoteMenu: View {
         .task {
             await viewModel.loadIfNeeded()
         }
-        .background(theme.mainBackground)
+        .background(themeManager.current.mainBackground)
     }
 }
 

@@ -1,5 +1,5 @@
 //
-//  MainScreenTheme.swift
+//  MainTheme.swift
 //  MeditateAndNote
 //
 //  Created by kwazzar on 22.07.2026.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-enum MainScreenTheme {
+enum MainTheme: String {
     case liquidGlass, breathing, softDawn, darkZen
     
     @ViewBuilder
@@ -192,14 +192,14 @@ enum MainScreenTheme {
     }
 }
 
-extension MainScreenTheme {
+extension MainTheme {
     var meditateButtonStyle: MeditateThemeButtonStyle {
         MeditateThemeButtonStyle(theme: self)
     }
 }
 
 struct MeditateThemeButtonStyle: ButtonStyle {
-    let theme: MainScreenTheme
+    let theme: MainTheme
 
     func makeBody(configuration: Configuration) -> some View {
         switch theme {

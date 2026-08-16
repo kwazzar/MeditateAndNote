@@ -8,7 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		78421A37302C1C4E001B52A6 /* ScrollDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78421A36302C1C4C001B52A6 /* ScrollDetector.swift */; };
-		789B7B0A3010417D0082F0CB /* MainScreenTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 789B7B093010417D0082F0CB /* MainScreenTheme.swift */; };
+		788956A2303201A80001D509 /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788956A13032019E0001D509 /* ThemeManager.swift */; };
+		788956A43032068F0001D509 /* ThemePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788956A33032068B0001D509 /* ThemePickerView.swift */; };
+		789B7B0A3010417D0082F0CB /* MainTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 789B7B093010417D0082F0CB /* MainTheme.swift */; };
 		E320C3ED2E2D1AC9009452DD /* Destination.swift in Sources */ = {isa = PBXBuildFile; fileRef = E320C3EC2E2D1AC9009452DD /* Destination.swift */; };
 		E320C3EF2E2D1C12009452DD /* MeditateAndNoteDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = E320C3EE2E2D1C12009452DD /* MeditateAndNoteDetails.swift */; };
 		E320C3F12E2D1CD6009452DD /* Router.swift in Sources */ = {isa = PBXBuildFile; fileRef = E320C3F02E2D1CD6009452DD /* Router.swift */; };
@@ -57,7 +59,9 @@
 
 /* Begin PBXFileReference section */
 		78421A36302C1C4C001B52A6 /* ScrollDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollDetector.swift; sourceTree = "<group>"; };
-		789B7B093010417D0082F0CB /* MainScreenTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainScreenTheme.swift; sourceTree = "<group>"; };
+		788956A13032019E0001D509 /* ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManager.swift; sourceTree = "<group>"; };
+		788956A33032068B0001D509 /* ThemePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemePickerView.swift; sourceTree = "<group>"; };
+		789B7B093010417D0082F0CB /* MainTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTheme.swift; sourceTree = "<group>"; };
 		E320C3EC2E2D1AC9009452DD /* Destination.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Destination.swift; sourceTree = "<group>"; };
 		E320C3EE2E2D1C12009452DD /* MeditateAndNoteDetails.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditateAndNoteDetails.swift; sourceTree = "<group>"; };
 		E320C3F02E2D1CD6009452DD /* Router.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Router.swift; sourceTree = "<group>"; };
@@ -205,6 +209,7 @@
 				E36187802D68D021000E326D /* Note.swift */,
 				E3848D532E3BCAC4001BE8AB /* Meditation.swift */,
 				E34D18AC2E425A01004CCFA8 /* Breathing.swift */,
+				789B7B093010417D0082F0CB /* MainTheme.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -212,14 +217,14 @@
 		E36187832D68D05C000E326D /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				782A8C0C302D0DE70004249F /* NoteMenu */,
 				E36D33902ED33DCC0048B6AC /* RootContainer.swift */,
 				E361877E2D68B373000E326D /* MainView.swift */,
-				789B7B093010417D0082F0CB /* MainScreenTheme.swift */,
-				E34D18AB2E424CEE004CCFA8 /* Meditation */,
-				E31DE9A32E6C84EA00C330DC /* MeditationSelect */,
+				788956A33032068B0001D509 /* ThemePickerView.swift */,
 				E340C16C2D75066A004D3645 /* NoteView.swift */,
 				E3BAF8A52E293D340036E250 /* ReadingView.swift */,
+				782A8C0C302D0DE70004249F /* NoteMenu */,
+				E34D18AB2E424CEE004CCFA8 /* Meditation */,
+				E31DE9A32E6C84EA00C330DC /* MeditationSelect */,
 				E36187842D68D087000E326D /* Components */,
 			);
 			path = Views;
@@ -266,6 +271,7 @@
 		E3848D4E2E3BC984001BE8AB /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				788956A13032019E0001D509 /* ThemeManager.swift */,
 				E3848D4F2E3BC9A0001BE8AB /* NotesRepository.swift */,
 				E3848D512E3BCA7F001BE8AB /* MeditationService.swift */,
 				E398CE752EDE458C00B96376 /* AnyItemManager.swift */,
@@ -360,7 +366,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E361878F2D68FF88000E326D /* MainViewModel.swift in Sources */,
-				789B7B0A3010417D0082F0CB /* MainScreenTheme.swift in Sources */,
+				789B7B0A3010417D0082F0CB /* MainTheme.swift in Sources */,
 				E320C3EF2E2D1C12009452DD /* MeditateAndNoteDetails.swift in Sources */,
 				E361876F2D68B221000E326D /* MeditateAndNoteApp.swift in Sources */,
 				E3848D542E3BCAC4001BE8AB /* Meditation.swift in Sources */,
@@ -375,6 +381,7 @@
 				E398CE762EDE458C00B96376 /* AnyItemManager.swift in Sources */,
 				E361643F2E41048C00A5DCCF /* MeditationView.swift in Sources */,
 				E32E6CD12D7345CA008529D3 /* NoteCardsView.swift in Sources */,
+				788956A43032068F0001D509 /* ThemePickerView.swift in Sources */,
 				E36187912D6902CE000E326D /* CloudParametersView.swift in Sources */,
 				E398CE782EDE464000B96376 /* NoteManager.swift in Sources */,
 				E3BAF8A62E293D340036E250 /* ReadingView.swift in Sources */,
@@ -391,6 +398,7 @@
 				E36D33912ED33DCC0048B6AC /* RootContainer.swift in Sources */,
 				E32C6BC12ED9CD6D0093F735 /* SearchBar.swift in Sources */,
 				E32C6BC32ED9CEBB0093F735 /* SearchState.swift in Sources */,
+				788956A2303201A80001D509 /* ThemeManager.swift in Sources */,
 				E3848D562E3BD098001BE8AB /* ContainerView.swift in Sources */,
 				E32C6BBF2ED9C6600093F735 /* NoteMenuViewModel.swift in Sources */,
 				E389732D2D79191200A9A662 /* MeditateSelectViewModel.swift in Sources */,

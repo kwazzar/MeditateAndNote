@@ -10,11 +10,10 @@ import SwiftUI
 #warning("UI")
 #warning("1meditate 2(read <-> note)3")
 
-var theme: MainScreenTheme = .darkZen
-
 struct MainView: View {
     @StateObject var viewModel: MainViewModel
     @EnvironmentObject var router: Router
+    @Environment(ThemeManager.self) private var themeManager
 
     var body: some View {
         VStack {
@@ -32,7 +31,7 @@ struct MainView: View {
 //            NoteCardsView(noteCards: viewModel.last10Notes)
 //                .padding(.bottom, 12)
         }
-        .background(theme.mainBackground)
+        .background(themeManager.current.mainBackground)
     }
 }
 
@@ -46,9 +45,9 @@ private extension MainView {
                 print(error)
             }
         }) {
-            theme.meditateIcon
+            themeManager.current.meditateIcon
         }
-        .buttonStyle(theme.meditateButtonStyle)
+        .buttonStyle(themeManager.current.meditateButtonStyle)
     }
 }
 

@@ -11,12 +11,14 @@ import SwiftUI
 struct MeditateAndNoteApp: App {
     @StateObject private var router = Router(level: 0, identifierTab: nil)
     @StateObject private var container = AppContainer()
+    @State private var themeManager = ThemeManager()
 
     var body: some Scene {
         WindowGroup {
             RootContainer()
                 .environmentObject(router)
                 .environmentObject(container)
+                .environment(themeManager)
         }
     }
 }
