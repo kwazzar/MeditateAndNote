@@ -10,6 +10,7 @@
 		78421A37302C1C4E001B52A6 /* ScrollDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78421A36302C1C4C001B52A6 /* ScrollDetector.swift */; };
 		788956A2303201A80001D509 /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788956A13032019E0001D509 /* ThemeManager.swift */; };
 		788956A43032068F0001D509 /* ThemePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788956A33032068B0001D509 /* ThemePickerView.swift */; };
+		788956A6303208330001D509 /* MeditateButtonComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788956A53032081E0001D509 /* MeditateButtonComponents.swift */; };
 		789B7B0A3010417D0082F0CB /* MainTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 789B7B093010417D0082F0CB /* MainTheme.swift */; };
 		E320C3ED2E2D1AC9009452DD /* Destination.swift in Sources */ = {isa = PBXBuildFile; fileRef = E320C3EC2E2D1AC9009452DD /* Destination.swift */; };
 		E320C3EF2E2D1C12009452DD /* MeditateAndNoteDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = E320C3EE2E2D1C12009452DD /* MeditateAndNoteDetails.swift */; };
@@ -61,6 +62,7 @@
 		78421A36302C1C4C001B52A6 /* ScrollDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollDetector.swift; sourceTree = "<group>"; };
 		788956A13032019E0001D509 /* ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManager.swift; sourceTree = "<group>"; };
 		788956A33032068B0001D509 /* ThemePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemePickerView.swift; sourceTree = "<group>"; };
+		788956A53032081E0001D509 /* MeditateButtonComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditateButtonComponents.swift; sourceTree = "<group>"; };
 		789B7B093010417D0082F0CB /* MainTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTheme.swift; sourceTree = "<group>"; };
 		E320C3EC2E2D1AC9009452DD /* Destination.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Destination.swift; sourceTree = "<group>"; };
 		E320C3EE2E2D1C12009452DD /* MeditateAndNoteDetails.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditateAndNoteDetails.swift; sourceTree = "<group>"; };
@@ -233,6 +235,7 @@
 		E36187842D68D087000E326D /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				788956A53032081E0001D509 /* MeditateButtonComponents.swift */,
 				E36187852D68D0A5000E326D /* NoteCard.swift */,
 				E32E6CD02D7345CA008529D3 /* NoteCardsView.swift */,
 				E36187902D6902CE000E326D /* CloudParametersView.swift */,
@@ -366,6 +369,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E361878F2D68FF88000E326D /* MainViewModel.swift in Sources */,
+				788956A6303208330001D509 /* MeditateButtonComponents.swift in Sources */,
 				789B7B0A3010417D0082F0CB /* MainTheme.swift in Sources */,
 				E320C3EF2E2D1C12009452DD /* MeditateAndNoteDetails.swift in Sources */,
 				E361876F2D68B221000E326D /* MeditateAndNoteApp.swift in Sources */,
