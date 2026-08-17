@@ -10,6 +10,7 @@ import SwiftUI
 struct RootContainer: View {
     @EnvironmentObject var router: Router
     @EnvironmentObject var container: AppContainer
+    @Environment(ThemeManager.self) private var themeManager
     
     private var bindingSelectedTab: Binding<TabDestination> {
         Binding(
@@ -23,18 +24,21 @@ struct RootContainer: View {
             TabView(selection: bindingSelectedTab) {
                 NavigationContainer(parentRouter: router, tab: .home) {
                     MainView(viewModel: container.makeMainViewModel())
+                        .environment(themeManager)
                         .toolbar(.hidden, for: .tabBar)
                 }
                 .tag(TabDestination.home)
                 
                 NavigationContainer(parentRouter: router, tab: .notes) {
                     NoteMenu(viewModel: container.makeNoteMenuView())
+                        .environment(themeManager)
                         .toolbar(.hidden, for: .tabBar)
                 }
                 .tag(TabDestination.notes)
                 
                 NavigationContainer(parentRouter: router, tab: .meditations) {
                     MeditateSelectView(viewModel: container.makeMeditateSelectViewModel())
+                        .environment(themeManager)
                         .toolbar(.hidden, for: .tabBar)
                 }
                 .tag(TabDestination.meditations)
@@ -97,5 +101,6 @@ struct RootContainer_Previews: PreviewProvider {
         RootContainer()
             .environmentObject(Router.previewRouter())
             .environmentObject(AppContainer())
+            .environment(ThemeManager())
     }
 }
