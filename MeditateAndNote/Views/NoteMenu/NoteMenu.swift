@@ -86,14 +86,14 @@ private extension NoteMenu {
             .padding(.horizontal, 10)
             .background(
                 Capsule()
-                    .fill(Color.white)
+                    .fill(.ultraThinMaterial)
                     .shadow(color: .gray.opacity(0.3),
                             radius: 5)
             )
             .overlay(
                 Capsule()
-                    .strokeBorder(Color.black,
-                                  lineWidth: 2)
+                    .strokeBorder(Color.white.opacity(0.3),
+                                  lineWidth: 1)
             )
         }
     }
@@ -119,5 +119,6 @@ private extension NoteMenu {
 struct NoteMenu_Previews: PreviewProvider {
     static var previews: some View {
         NoteMenu(viewModel: AppContainer().makeNoteMenuView())
+            .environment(ThemeManager())
     }
 }

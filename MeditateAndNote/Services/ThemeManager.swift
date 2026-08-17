@@ -19,6 +19,6 @@ final class ThemeManager {
 
     init() {
         let savedRawValue = UserDefaults.standard.string(forKey: Self.storageKey)
-        self.current = MainTheme(rawValue: savedRawValue ?? "") ?? .darkZen
+        self.current = MainTheme(rawValue: savedRawValue ?? "") ?? .liquidGlass
     }
 }

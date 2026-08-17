@@ -20,7 +20,7 @@ struct SearchBar: View {
                 TextField(titleSearch, text: searchText)
                     .focused($isTextFieldFocused)
                     .padding(10)
-                    .background(Color(.systemGray6))
+                    .background(.ultraThinMaterial)
                     .cornerRadius(8)
                     .padding(.horizontal, 2)
                     .innerStroke(cornerRadius: 8,
