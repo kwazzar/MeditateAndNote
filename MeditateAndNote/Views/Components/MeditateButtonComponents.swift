@@ -41,6 +41,12 @@ struct MeditateThemeButtonStyle: ButtonStyle {
                     radius: configuration.isPressed ? 16 : 0
                 )
                 .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
+        
+        case .obsidian:
+            configuration.label
+                .scaleEffect(configuration.isPressed ? 0.94 : 1.0)
+                .opacity(configuration.isPressed ? 0.9 : 1.0)
+                .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
         }
     }
 }

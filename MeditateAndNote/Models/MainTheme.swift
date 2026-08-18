@@ -8,7 +8,7 @@
 import SwiftUI
 
 enum MainTheme: String {
-    case liquidGlass, breathing, softDawn, darkZen
+    case liquidGlass, breathing, softDawn, darkZen, obsidian
 }
 
 extension MainTheme {
@@ -61,6 +61,76 @@ extension MainTheme {
                 endPoint: .bottomTrailing
             )
             .ignoresSafeArea()
+        case .obsidian:
+            LinearGradient(
+                colors: [
+                    Color(red: 0.04, green: 0.05, blue: 0.07),
+                    Color(red: 0.02, green: 0.02, blue: 0.03)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .ignoresSafeArea()
+        }
+    }
+    
+    var textPrimary: Color {
+        switch self {
+        case .liquidGlass: .primary
+        case .breathing: .primary
+        case .darkZen: .white
+        case .softDawn: .primary
+        case .obsidian: .white
+        }
+    }
+    
+    var textSecondary: Color {
+        switch self {
+        case .liquidGlass: .secondary
+        case .breathing: .secondary
+        case .darkZen: .white.opacity(0.6)
+        case .softDawn: .secondary
+        case .obsidian: .white.opacity(0.6)
+        }
+    }
+    
+    var iconPrimary: Color {
+        switch self {
+        case .liquidGlass: .primary
+        case .breathing: .primary
+        case .darkZen: .white
+        case .softDawn: .primary
+        case .obsidian: .white
+        }
+    }
+    
+    var toolbarBackground: Color {
+        switch self {
+        case .liquidGlass: Color.white.opacity(0.1)
+        case .breathing: Color.white.opacity(0.1)
+        case .darkZen: Color.white.opacity(0.1)
+        case .softDawn: Color.black.opacity(0.1)
+        case .obsidian: Color.white.opacity(0.1)
+        }
+    }
+    
+    var dividerColor: Color {
+        switch self {
+        case .liquidGlass: Color.black.opacity(0.1)
+        case .breathing: Color.black.opacity(0.1)
+        case .darkZen: Color.white.opacity(0.1)
+        case .softDawn: Color.black.opacity(0.1)
+        case .obsidian: Color.white.opacity(0.1)
+        }
+    }
+    
+    var editorBackground: Color {
+        switch self {
+        case .liquidGlass: Color.white.opacity(0.1)
+        case .breathing: Color.white.opacity(0.1)
+        case .darkZen: Color.white.opacity(0.05)
+        case .softDawn: Color.black.opacity(0.1)
+        case .obsidian: Color.white.opacity(0.05)
         }
     }
     
@@ -190,6 +260,24 @@ extension MainTheme {
                             .foregroundStyle(.white)
                     )
             }
+        case .obsidian:
+            ZStack {
+                ForEach(0..<3, id: \.self) { i in
+                    Circle()
+                        .stroke(Color.white.opacity(0.10 - Double(i) * 0.02), lineWidth: 2)
+                        .frame(width: 160 + CGFloat(i * 28), height: 160 + CGFloat(i * 28))
+                }
+                Circle()
+                    .fill(Color.white.opacity(0.06))
+                    .frame(width: 140, height: 140)
+                    .overlay(
+                        Image(systemName: "wind")
+                            .font(.system(size: 48, weight: .thin))
+                            .foregroundStyle(.white)
+                    )
+                    .shadow(color: .black.opacity(0.5), radius: 24, y: 10)
+            }
         }
     }
 }
+
