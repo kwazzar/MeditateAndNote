@@ -38,6 +38,10 @@ final class AppContainer: ObservableObject {
         NoteViewModel(noteId: noteId, repository: notesRepository)
     }
 
+    func makeNoteEditorViewModel(noteId: UUID? = nil) -> NoteEditorViewModel {
+        NoteEditorViewModel(noteId: noteId, repository: notesRepository)
+    }
+
     func makeMeditateSelectViewModel() -> MeditateSelectViewModel {
         MeditateSelectViewModel(meditationService: meditationService)
     }

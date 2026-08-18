@@ -12,7 +12,7 @@ import SwiftUI
         Group {
             switch destination {
             case .noteDetails(let noteId, _):
-                NoteView(viewModel: container.makeNoteViewModel(noteId: noteId))
+                NoteEditorView(viewModel: container.makeNoteEditorViewModel(noteId: noteId))
             case .readingView(_):
                 ReadingView()
             case .meditation(_ : let meditation):

@@ -4,79 +4,14 @@
 //
 //  Created by Quasar on 02.03.2025.
 //
+//  Deprecated — use NoteEditorView directly.
 
 import SwiftUI
-#warning("note menu flow")
-#warning("нотатки в кеш")
 
 struct NoteView: View {
     @ObservedObject var viewModel: NoteViewModel
-    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        VStack {
-            HStack {
-                Button(action: { dismiss() }) {
-                    Image(systemName: "chevron.left")
-                        .foregroundColor(.primary)
-                        .padding(5)
-                }
-                 Spacer()
-            }
-            .padding(.horizontal)
-
-            VStack(alignment: .leading, spacing: 0) {
-                TextField("New Note", text: $viewModel.title)
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                    .foregroundColor(.primary)
-                    .padding(.horizontal)
-
-                ZStack(alignment: .topLeading) {
-                    if viewModel.content.isEmpty {
-                        Text("Write your note here...")
-                            .foregroundColor(.gray)
-                            .padding(.horizontal, 18)
-                            .padding(.top, 16)
-                    }
-
-                    TextEditor(text: $viewModel.content)
-                        .font(.body)
-                        .padding(12)
-                        .frame(minHeight: 300)
-                        .background(Color.white)
-                        .opacity(viewModel.content.isEmpty ? 0.25 : 1)
-                }
-                .padding(.horizontal)
-
-                Spacer()
-
-                Button(action: {
-                    Task { await viewModel.saveNote() }
-                }) {
-                    Text(viewModel.isSaving ? "Saving..." : "Save Note")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.green)
-                        .foregroundColor(.white)
-                        .cornerRadius(12)
-                        .shadow(radius: 4)
-                }
-                .disabled(viewModel.isSaving)
-                .padding(.horizontal)
-                .padding(.bottom, 45)
-            }
-            .padding(.vertical)
-        }
-        .task {
-            await viewModel.loadNoteIfNeeded()
-        }
-    }
-}
-
-struct NoteView_Previews: PreviewProvider {
-    static var previews: some View {
-        NoteView(viewModel: AppContainer().makeNoteViewModel())
+        EmptyView()
     }
 }

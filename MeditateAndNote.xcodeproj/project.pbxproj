@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		78421A37302C1C4E001B52A6 /* ScrollDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78421A36302C1C4C001B52A6 /* ScrollDetector.swift */; };
+		788513DC3033D32C0052F4BC /* NoteEditorViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788513DB3033D32C0052F4BC /* NoteEditorViewModel.swift */; };
+		788513DE3033D35D0052F4BC /* FloatingToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788513DD3033D35D0052F4BC /* FloatingToolbar.swift */; };
+		788513E03033D9250052F4BC /* NoteEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788513DF3033D9250052F4BC /* NoteEditorView.swift */; };
 		788956A2303201A80001D509 /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788956A13032019E0001D509 /* ThemeManager.swift */; };
 		788956A43032068F0001D509 /* ThemePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788956A33032068B0001D509 /* ThemePickerView.swift */; };
 		788956A6303208330001D509 /* MeditateButtonComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788956A53032081E0001D509 /* MeditateButtonComponents.swift */; };
@@ -60,6 +63,9 @@
 
 /* Begin PBXFileReference section */
 		78421A36302C1C4C001B52A6 /* ScrollDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollDetector.swift; sourceTree = "<group>"; };
+		788513DB3033D32C0052F4BC /* NoteEditorViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteEditorViewModel.swift; sourceTree = "<group>"; };
+		788513DD3033D35D0052F4BC /* FloatingToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingToolbar.swift; sourceTree = "<group>"; };
+		788513DF3033D9250052F4BC /* NoteEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteEditorView.swift; sourceTree = "<group>"; };
 		788956A13032019E0001D509 /* ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManager.swift; sourceTree = "<group>"; };
 		788956A33032068B0001D509 /* ThemePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemePickerView.swift; sourceTree = "<group>"; };
 		788956A53032081E0001D509 /* MeditateButtonComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditateButtonComponents.swift; sourceTree = "<group>"; };
@@ -219,6 +225,8 @@
 		E36187832D68D05C000E326D /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				788513DF3033D9250052F4BC /* NoteEditorView.swift */,
+				788513DD3033D35D0052F4BC /* FloatingToolbar.swift */,
 				E36D33902ED33DCC0048B6AC /* RootContainer.swift */,
 				E361877E2D68B373000E326D /* MainView.swift */,
 				788956A33032068B0001D509 /* ThemePickerView.swift */,
@@ -262,6 +270,7 @@
 		E361878D2D68FF37000E326D /* ViewModels */ = {
 			isa = PBXGroup;
 			children = (
+				788513DB3033D32C0052F4BC /* NoteEditorViewModel.swift */,
 				E361878E2D68FF88000E326D /* MainViewModel.swift */,
 				E3FC3FC02D75C6FF00D6391D /* NoteViewModel.swift */,
 				E32C6BBE2ED9C6600093F735 /* NoteMenuViewModel.swift */,
@@ -390,6 +399,7 @@
 				E398CE782EDE464000B96376 /* NoteManager.swift in Sources */,
 				E3BAF8A62E293D340036E250 /* ReadingView.swift in Sources */,
 				E3BAF8A92E2940380036E250 /* NavigationContainer.swift in Sources */,
+				788513DE3033D35D0052F4BC /* FloatingToolbar.swift in Sources */,
 				E36187862D68D0A5000E326D /* NoteCard.swift in Sources */,
 				E36187892D68F928000E326D /* Extension+View.swift in Sources */,
 				E35B6FBC2E44ECAF00B235AE /* ConcentricRing.swift in Sources */,
@@ -404,6 +414,7 @@
 				E32C6BC32ED9CEBB0093F735 /* SearchState.swift in Sources */,
 				788956A2303201A80001D509 /* ThemeManager.swift in Sources */,
 				E3848D562E3BD098001BE8AB /* ContainerView.swift in Sources */,
+				788513E03033D9250052F4BC /* NoteEditorView.swift in Sources */,
 				E32C6BBF2ED9C6600093F735 /* NoteMenuViewModel.swift in Sources */,
 				E389732D2D79191200A9A662 /* MeditateSelectViewModel.swift in Sources */,
 				E32C6BBD2ED9C39F0093F735 /* NoteMenu.swift in Sources */,
@@ -413,6 +424,7 @@
 				E320C3ED2E2D1AC9009452DD /* Destination.swift in Sources */,
 				E389732B2D7918E700A9A662 /* MeditateSelectView.swift in Sources */,
 				E34D18AD2E425A01004CCFA8 /* Breathing.swift in Sources */,
+				788513DC3033D32C0052F4BC /* NoteEditorViewModel.swift in Sources */,
 				E3FDF77C2ED0CE0F00ACD847 /* MeditationInfoScroll.swift in Sources */,
 				E3848D522E3BCA7F001BE8AB /* MeditationService.swift in Sources */,
 			);
