@@ -60,8 +60,13 @@ private extension NoteCard {
                 Button {
                     toNoteAction(note)
                 } label: {
-                    Image(systemName: "chevron.right")
-                        .foregroundColor(.primary)
+                    HStack {
+                        Text("Read")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Image(systemName: "chevron.right")
+                            .foregroundColor(.primary)
+                    }
                 }
             }
             .padding(.horizontal)

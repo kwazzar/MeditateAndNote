@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-#warning("Note and Reading")
 
 enum Menu {
     case Note
@@ -17,6 +16,7 @@ struct NoteMenu: View {
     @State var viewModel: NoteMenuViewModel
     @State var uiState: NotesUIState
     @State var searchState: SearchState
+    @EnvironmentObject var router: Router
     @Environment(ThemeManager.self) private var themeManager
     
     @State private var isScrolling = false
@@ -38,12 +38,18 @@ struct NoteMenu: View {
                 ScrollDetector(isScrolling: $isScrolling) {
                     LazyVStack {
                         ForEach(displayedNotes) { note in
-                            NoteCard(note: note, toNoteAction: { _ in })
+                            NoteCard(
+                                note: note,
+                                toNoteAction: { note in
+                                    router.navigate(to: .push(.noteDetails(noteId: note.id,
+                                                                           id: "note details \(note.id)")))
+                                }
+                            )
                         }
                     }
                     .padding()
                 }
-                .frame(height: geo.size.height - 52)
+                .frame(height: max(0, geo.size.height - 52))
                 .clipped()
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -73,7 +79,8 @@ private extension NoteMenu {
     
     var addNoteButton: some View {
         Button(action: {
-            // TODO: Implement add note action
+            router.navigate(to: .push(.noteDetails(noteId: nil,
+                                                   id: "new note")))
         }) {
             
             HStack {
