@@ -35,3 +35,30 @@ struct FloatingToolbar: View {
         .buttonStyle(.plain)
     }
 }
+
+#Preview("Interactive") {
+    struct PreviewWrapper: View {
+        @State private var isKeyboardVisible = true
+
+        var body: some View {
+            ZStack(alignment: .bottom) {
+                Color.gray.opacity(0.15)
+                    .ignoresSafeArea()
+
+                VStack {
+                    Button(isKeyboardVisible ? "Hide" : "Show") {
+                        isKeyboardVisible.toggle()
+                    }
+                    Spacer()
+                }
+                .padding()
+
+                if isKeyboardVisible {
+                    FloatingToolbar(isKeyboardVisible: $isKeyboardVisible)
+                }
+            }
+        }
+    }
+    return PreviewWrapper()
+        .environment(ThemeManager())
+}

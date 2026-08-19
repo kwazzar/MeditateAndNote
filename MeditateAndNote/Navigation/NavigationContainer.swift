@@ -62,6 +62,9 @@ private struct InnerContainer<Content: View>: View {
         .fullScreenCover(item: $router.presentingFullScreen) { fullScreen in
             navigationView(for: fullScreen, from: router)
         }
+        .onReceive(router.$navigationStackPath) { path in
+            router.parent?.isDetailPresented = !path.isEmpty
+        }
     }
 
     @ViewBuilder

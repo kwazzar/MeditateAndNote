@@ -27,6 +27,10 @@ public final class Router: ObservableObject {
     /// Current presented full screen
     @Published public var presentingFullScreen: FullScreenDestination?
     
+    //MARK: - isDetailPresented
+    /// Indicates whether a detail view is pushed in any child navigation stack
+    @Published public var isDetailPresented: Bool = false
+    
     public let logger = Logger(subsystem: Config.bundleID, category: "Navigation")
     
     /// Reference to the parent router to form a hierarchy
