@@ -6,24 +6,23 @@
 import SwiftUI
 
 struct NoteEditorView: View {
+    @State var viewModel: NoteEditorViewModel
     @Environment(\.dismiss) private var dismiss
     @Environment(ThemeManager.self) private var themeManager
-
-    @State var viewModel: NoteEditorViewModel
-
+    
     @FocusState private var isEditorFocused: Bool
     @State private var isKeyboardVisible = false
     @State private var showDeleteConfirmation = false
-
+    
     var body: some View {
         ZStack {
             themeManager.current.mainBackground.ignoresSafeArea()
-
+            
             VStack(spacing: 0) {
                 topBar
                 editorBody
             }
-
+            
             VStack {
                 Spacer()
                 if isKeyboardVisible {
@@ -48,10 +47,11 @@ struct NoteEditorView: View {
             Text("This action cannot be undone.")
         }
     }
+}
 
+private extension NoteEditorView {
     // MARK: - Top Bar
-
-    private var topBar: some View {
+    var topBar: some View {
         HStack {
             Button(action: {
                 Task { await viewModel.save() }
@@ -62,9 +62,8 @@ struct NoteEditorView: View {
                     .foregroundStyle(themeManager.current.iconPrimary)
                     .frame(width: 36, height: 36)
             }
-
             Spacer()
-
+            
             SwiftUI.Menu {
                 Button(role: .destructive) {
                     showDeleteConfirmation = true
@@ -81,23 +80,22 @@ struct NoteEditorView: View {
         .padding(.horizontal, 12)
         .frame(height: 44)
     }
-
+    
     // MARK: - Editor
-
-    #warning("title")
-    private var editorBody: some View {
+    var editorBody: some View {
         VStack(alignment: .leading, spacing: 0) {
             TextField("Title", text: $viewModel.title)
                 .font(.system(size: 28, weight: .bold, design: .serif))
+                .multilineTextAlignment(.center)
                 .foregroundStyle(themeManager.current.textPrimary)
                 .padding(.horizontal, 20)
                 .padding(.top, 8)
                 .padding(.bottom, 4)
-
+            
             Divider()
                 .overlay(themeManager.current.dividerColor)
-                .padding(.horizontal, 20)
-
+                .padding(.horizontal, 0)
+            
             ZStack(alignment: .topLeading) {
                 if viewModel.body.isEmpty {
                     Text("Start writing...")
@@ -107,7 +105,7 @@ struct NoteEditorView: View {
                         .padding(.vertical, 16)
                         .allowsHitTesting(false)
                 }
-
+                
                 TextEditor(text: $viewModel.body)
                     .font(.body)
                     .scrollContentBackground(.hidden)
@@ -122,10 +120,9 @@ struct NoteEditorView: View {
             isEditorFocused = true
         }
     }
-
+    
     // MARK: - Keyboard
-
-    private func registerKeyboard() {
+    func registerKeyboard() {
         NotificationCenter.default.addObserver(
             forName: UIResponder.keyboardWillShowNotification,
             object: nil, queue: .main
@@ -134,7 +131,7 @@ struct NoteEditorView: View {
                 isKeyboardVisible = true
             }
         }
-
+        
         NotificationCenter.default.addObserver(
             forName: UIResponder.keyboardWillHideNotification,
             object: nil, queue: .main
@@ -144,8 +141,8 @@ struct NoteEditorView: View {
             }
         }
     }
-
-    private func unregisterKeyboard() {
+    
+    func unregisterKeyboard() {
         NotificationCenter.default.removeObserver(
             self,
             name: UIResponder.keyboardWillShowNotification,

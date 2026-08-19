@@ -28,11 +28,11 @@ import SwiftUI
         Group {
             switch destination {
             case .newNote:
-                NoteView(viewModel: container.makeNoteViewModel())
+                EmptyView()
             case .meditationSettings:
-                MeditateSelectView(viewModel: container.makeMeditateSelectViewModel())
+                EmptyView()
             case .noteEditor(_):
-                NoteView(viewModel: container.makeNoteViewModel())
+                EmptyView()
             case let .timeMeditation(onSelection):
                 TimeMeditationSheet(onSelection: onSelection)
             }
@@ -49,7 +49,7 @@ import SwiftUI
             case .meditationSession(_):
                 MeditateSelectView(viewModel: container.makeMeditateSelectViewModel())
             case .fullScreenNote(_):
-                NoteView(viewModel: container.makeNoteViewModel())
+                EmptyView()
             }
         }
     }
