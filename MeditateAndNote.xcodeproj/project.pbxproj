@@ -137,6 +137,15 @@
 			path = NoteMenu;
 			sourceTree = "<group>";
 		};
+		78C59AE03036C554007C155E /* NoteEditor */ = {
+			isa = PBXGroup;
+			children = (
+				788513DF3033D9250052F4BC /* NoteEditorView.swift */,
+				788513DD3033D35D0052F4BC /* FloatingToolbar.swift */,
+			);
+			path = NoteEditor;
+			sourceTree = "<group>";
+		};
 		E31DE9A32E6C84EA00C330DC /* MeditationSelect */ = {
 			isa = PBXGroup;
 			children = (
@@ -223,8 +232,7 @@
 		E36187832D68D05C000E326D /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				788513DF3033D9250052F4BC /* NoteEditorView.swift */,
-				788513DD3033D35D0052F4BC /* FloatingToolbar.swift */,
+				78C59AE03036C554007C155E /* NoteEditor */,
 				E36D33902ED33DCC0048B6AC /* RootContainer.swift */,
 				E361877E2D68B373000E326D /* MainView.swift */,
 				788956A33032068B0001D509 /* ThemePickerView.swift */,
