@@ -7,14 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		AA0000012026082000000001 /* DailyActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000022026082000000001 /* DailyActivity.swift */; };
-		AA0000032026082000000002 /* MeditationSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000042026082000000002 /* MeditationSession.swift */; };
-		AA0000052026082000000003 /* MeditationSessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000062026082000000003 /* MeditationSessionStore.swift */; };
-		AA0000072026082000000004 /* StreakTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000082026082000000004 /* StreakTracker.swift */; };
-		AA0000092026082000000005 /* StreakHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000A2026082000000005 /* StreakHeaderView.swift */; };
-		AA000011202608200000000C /* DayCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000012202608200000000C /* DayCellView.swift */; };
-		AA00000B2026082000000006 /* StreakDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000C2026082000000006 /* StreakDetailView.swift */; };
-		AA00000F2026082000000008 /* StreakTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000102026082000000008 /* StreakTrackerTests.swift */; };
 		78421A37302C1C4E001B52A6 /* ScrollDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78421A36302C1C4C001B52A6 /* ScrollDetector.swift */; };
 		788513DC3033D32C0052F4BC /* NoteEditorViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788513DB3033D32C0052F4BC /* NoteEditorViewModel.swift */; };
 		788513DE3033D35D0052F4BC /* FloatingToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788513DD3033D35D0052F4BC /* FloatingToolbar.swift */; };
@@ -23,6 +15,13 @@
 		788956A43032068F0001D509 /* ThemePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788956A33032068B0001D509 /* ThemePickerView.swift */; };
 		788956A6303208330001D509 /* MeditateButtonComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788956A53032081E0001D509 /* MeditateButtonComponents.swift */; };
 		789B7B0A3010417D0082F0CB /* MainTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 789B7B093010417D0082F0CB /* MainTheme.swift */; };
+		AA0000012026082000000001 /* DailyActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000022026082000000001 /* DailyActivity.swift */; };
+		AA0000032026082000000002 /* MeditationSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000042026082000000002 /* MeditationSession.swift */; };
+		AA0000052026082000000003 /* MeditationSessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000062026082000000003 /* MeditationSessionStore.swift */; };
+		AA0000072026082000000004 /* StreakTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000082026082000000004 /* StreakTracker.swift */; };
+		AA0000092026082000000005 /* StreakHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000A2026082000000005 /* StreakHeaderView.swift */; };
+		AA00000B2026082000000006 /* StreakDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000C2026082000000006 /* StreakDetailView.swift */; };
+		AA000011202608200000000C /* DayCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000012202608200000000C /* DayCellView.swift */; };
 		E320C3ED2E2D1AC9009452DD /* Destination.swift in Sources */ = {isa = PBXBuildFile; fileRef = E320C3EC2E2D1AC9009452DD /* Destination.swift */; };
 		E320C3EF2E2D1C12009452DD /* MeditateAndNoteDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = E320C3EE2E2D1C12009452DD /* MeditateAndNoteDetails.swift */; };
 		E320C3F12E2D1CD6009452DD /* Router.swift in Sources */ = {isa = PBXBuildFile; fileRef = E320C3F02E2D1CD6009452DD /* Router.swift */; };
@@ -51,7 +50,6 @@
 		E36187892D68F928000E326D /* Extension+View.swift in Sources */ = {isa = PBXBuildFile; fileRef = E36187882D68F928000E326D /* Extension+View.swift */; };
 		E361878C2D68FEF3000E326D /* MockNotes.swift in Sources */ = {isa = PBXBuildFile; fileRef = E361878B2D68FEF3000E326D /* MockNotes.swift */; };
 		E361878F2D68FF88000E326D /* MainViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E361878E2D68FF88000E326D /* MainViewModel.swift */; };
-		E36187912D6902CE000E326D /* CloudParametersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E36187902D6902CE000E326D /* CloudParametersView.swift */; };
 		E36366292E3D0AB80026E810 /* MeditationCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E36366282E3D0AB80026E810 /* MeditationCard.swift */; };
 		E36D33912ED33DCC0048B6AC /* RootContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E36D33902ED33DCC0048B6AC /* RootContainer.swift */; };
 		E3848D502E3BC9A0001BE8AB /* NotesRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3848D4F2E3BC9A0001BE8AB /* NotesRepository.swift */; };
@@ -69,14 +67,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		AA0000022026082000000001 /* DailyActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyActivity.swift; sourceTree = "<group>"; };
-		AA0000042026082000000002 /* MeditationSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationSession.swift; sourceTree = "<group>"; };
-		AA0000062026082000000003 /* MeditationSessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationSessionStore.swift; sourceTree = "<group>"; };
-		AA0000082026082000000004 /* StreakTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakTracker.swift; sourceTree = "<group>"; };
-		AA00000A2026082000000005 /* StreakHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakHeaderView.swift; sourceTree = "<group>"; };
-		AA00000C2026082000000006 /* StreakDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakDetailView.swift; sourceTree = "<group>"; };
-		AA000012202608200000000C /* DayCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayCellView.swift; sourceTree = "<group>"; };
-		AA0000102026082000000008 /* StreakTrackerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakTrackerTests.swift; sourceTree = "<group>"; };
 		78421A36302C1C4C001B52A6 /* ScrollDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollDetector.swift; sourceTree = "<group>"; };
 		788513DB3033D32C0052F4BC /* NoteEditorViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteEditorViewModel.swift; sourceTree = "<group>"; };
 		788513DD3033D35D0052F4BC /* FloatingToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingToolbar.swift; sourceTree = "<group>"; };
@@ -85,6 +75,14 @@
 		788956A33032068B0001D509 /* ThemePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemePickerView.swift; sourceTree = "<group>"; };
 		788956A53032081E0001D509 /* MeditateButtonComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditateButtonComponents.swift; sourceTree = "<group>"; };
 		789B7B093010417D0082F0CB /* MainTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTheme.swift; sourceTree = "<group>"; };
+		AA0000022026082000000001 /* DailyActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyActivity.swift; sourceTree = "<group>"; };
+		AA0000042026082000000002 /* MeditationSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationSession.swift; sourceTree = "<group>"; };
+		AA0000062026082000000003 /* MeditationSessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationSessionStore.swift; sourceTree = "<group>"; };
+		AA0000082026082000000004 /* StreakTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakTracker.swift; sourceTree = "<group>"; };
+		AA00000A2026082000000005 /* StreakHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakHeaderView.swift; sourceTree = "<group>"; };
+		AA00000C2026082000000006 /* StreakDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakDetailView.swift; sourceTree = "<group>"; };
+		AA0000102026082000000008 /* StreakTrackerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakTrackerTests.swift; sourceTree = "<group>"; };
+		AA000012202608200000000C /* DayCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayCellView.swift; sourceTree = "<group>"; };
 		E320C3EC2E2D1AC9009452DD /* Destination.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Destination.swift; sourceTree = "<group>"; };
 		E320C3EE2E2D1C12009452DD /* MeditateAndNoteDetails.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditateAndNoteDetails.swift; sourceTree = "<group>"; };
 		E320C3F02E2D1CD6009452DD /* Router.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Router.swift; sourceTree = "<group>"; };
@@ -114,7 +112,6 @@
 		E36187882D68F928000E326D /* Extension+View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Extension+View.swift"; sourceTree = "<group>"; };
 		E361878B2D68FEF3000E326D /* MockNotes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockNotes.swift; sourceTree = "<group>"; };
 		E361878E2D68FF88000E326D /* MainViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewModel.swift; sourceTree = "<group>"; };
-		E36187902D6902CE000E326D /* CloudParametersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudParametersView.swift; sourceTree = "<group>"; };
 		E36366282E3D0AB80026E810 /* MeditationCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationCard.swift; sourceTree = "<group>"; };
 		E36D33902ED33DCC0048B6AC /* RootContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootContainer.swift; sourceTree = "<group>"; };
 		E3848D4F2E3BC9A0001BE8AB /* NotesRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesRepository.swift; sourceTree = "<group>"; };
@@ -162,6 +159,34 @@
 			path = NoteEditor;
 			sourceTree = "<group>";
 		};
+		78C86D8E3037C27500950DB9 /* Main */ = {
+			isa = PBXGroup;
+			children = (
+				E361877E2D68B373000E326D /* MainView.swift */,
+				788956A53032081E0001D509 /* MeditateButtonComponents.swift */,
+				AA0000122026082000000009 /* Streak */,
+			);
+			path = Main;
+			sourceTree = "<group>";
+		};
+		AA0000122026082000000009 /* Streak */ = {
+			isa = PBXGroup;
+			children = (
+				AA000012202608200000000C /* DayCellView.swift */,
+				AA00000A2026082000000005 /* StreakHeaderView.swift */,
+				AA00000C2026082000000006 /* StreakDetailView.swift */,
+			);
+			path = Streak;
+			sourceTree = "<group>";
+		};
+		AA000014202608200000000A /* MeditateAndNoteTests */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000102026082000000008 /* StreakTrackerTests.swift */,
+			);
+			path = MeditateAndNoteTests;
+			sourceTree = "<group>";
+		};
 		E31DE9A32E6C84EA00C330DC /* MeditationSelect */ = {
 			isa = PBXGroup;
 			children = (
@@ -199,14 +224,6 @@
 				E361876C2D68B221000E326D /* Products */,
 				AA000014202608200000000A /* MeditateAndNoteTests */,
 			);
-			sourceTree = "<group>";
-		};
-		AA000014202608200000000A /* MeditateAndNoteTests */ = {
-			isa = PBXGroup;
-			children = (
-				AA0000102026082000000008 /* StreakTrackerTests.swift */,
-			);
-			path = MeditateAndNoteTests;
 			sourceTree = "<group>";
 		};
 		E361876C2D68B221000E326D /* Products */ = {
@@ -259,37 +276,24 @@
 		E36187832D68D05C000E326D /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				78C59AE03036C554007C155E /* NoteEditor */,
 				E36D33902ED33DCC0048B6AC /* RootContainer.swift */,
-				E361877E2D68B373000E326D /* MainView.swift */,
+				78C86D8E3037C27500950DB9 /* Main */,
 				788956A33032068B0001D509 /* ThemePickerView.swift */,
 				E3BAF8A52E293D340036E250 /* ReadingView.swift */,
 				782A8C0C302D0DE70004249F /* NoteMenu */,
 				E34D18AB2E424CEE004CCFA8 /* Meditation */,
+				78C59AE03036C554007C155E /* NoteEditor */,
 				E31DE9A32E6C84EA00C330DC /* MeditationSelect */,
 				E36187842D68D087000E326D /* Components */,
-				AA0000122026082000000009 /* Streak */,
 			);
 			path = Views;
-			sourceTree = "<group>";
-		};
-		AA0000122026082000000009 /* Streak */ = {
-			isa = PBXGroup;
-			children = (
-				AA000012202608200000000C /* DayCellView.swift */,
-				AA00000A2026082000000005 /* StreakHeaderView.swift */,
-				AA00000C2026082000000006 /* StreakDetailView.swift */,
-			);
-			path = Streak;
 			sourceTree = "<group>";
 		};
 		E36187842D68D087000E326D /* Components */ = {
 			isa = PBXGroup;
 			children = (
-				788956A53032081E0001D509 /* MeditateButtonComponents.swift */,
 				E36187852D68D0A5000E326D /* NoteCard.swift */,
 				E32E6CD02D7345CA008529D3 /* NoteCardsView.swift */,
-				E36187902D6902CE000E326D /* CloudParametersView.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -447,7 +451,6 @@
 				E361643F2E41048C00A5DCCF /* MeditationView.swift in Sources */,
 				E32E6CD12D7345CA008529D3 /* NoteCardsView.swift in Sources */,
 				788956A43032068F0001D509 /* ThemePickerView.swift in Sources */,
-				E36187912D6902CE000E326D /* CloudParametersView.swift in Sources */,
 				E398CE782EDE464000B96376 /* NoteManager.swift in Sources */,
 				E3BAF8A62E293D340036E250 /* ReadingView.swift in Sources */,
 				E3BAF8A92E2940380036E250 /* NavigationContainer.swift in Sources */,
