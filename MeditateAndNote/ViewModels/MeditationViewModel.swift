@@ -9,6 +9,8 @@ import SwiftUI
 
 final class MeditationViewModel: ObservableObject {
     private let meditation: Meditation
+    private let streakTracker: StreakTracker?
+    private let sessionStore: MeditationSessionStore?
     @Published private var meditationTime: TimeInterval = 0
     @Published var currentPhase: BreathingPhase?
     @Published var phaseProgress: Double = 0
@@ -35,8 +37,10 @@ final class MeditationViewModel: ObservableObject {
         return Float((totalDuration - meditationTime) / totalDuration)
     }
     
-    init(meditation: Meditation) {
+    init(meditation: Meditation, streakTracker: StreakTracker? = nil, sessionStore: MeditationSessionStore? = nil) {
         self.meditation = meditation
+        self.streakTracker = streakTracker
+        self.sessionStore = sessionStore
     }
     
     func start(with duration: MeditationDuration) {
@@ -111,6 +115,14 @@ private extension MeditationViewModel {
        DispatchQueue.main.async {
            self.timer?.invalidate()
            self.phaseTimer?.invalidate()
+
+           let session = MeditationSession(
+               meditationId: self.meditation.id,
+               completedAt: .now,
+               duration: self.totalDuration
+           )
+           self.sessionStore?.save(session)
+           self.streakTracker?.markMeditationCompleted()
 
            withAnimation(.easeOut(duration: 0.8)) {
                self.currentPhase = nil

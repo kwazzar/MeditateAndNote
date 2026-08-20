@@ -17,6 +17,8 @@ import SwiftUI
                 ReadingView()
             case .meditation(_ : let meditation):
                 MeditationView(viewModel: container.makeMeditationViewModel(for: meditation))
+            case .streakDetail:
+                StreakDetailView(streakTracker: container.streakTracker)
             }
         }
         .navigationBarBackButtonHidden(true)

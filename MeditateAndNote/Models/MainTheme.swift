@@ -133,5 +133,55 @@ extension MainTheme {
         case .obsidian: Color.white.opacity(0.05)
         }
     }
+
+    var streakSuccess: Color {
+        switch self {
+        case .liquidGlass: .green
+        case .breathing: .green
+        case .darkZen: .green.opacity(0.85)
+        case .softDawn: .green
+        case .obsidian: .green.opacity(0.85)
+        }
+    }
+
+    var streakActiveMeditation: Color {
+        switch self {
+        case .liquidGlass: .purple
+        case .breathing: .purple
+        case .darkZen: .purple.opacity(0.85)
+        case .softDawn: .purple
+        case .obsidian: .purple.opacity(0.85)
+        }
+    }
+
+    var streakActiveNote: Color {
+        switch self {
+        case .liquidGlass: .blue
+        case .breathing: .blue
+        case .darkZen: .blue.opacity(0.85)
+        case .softDawn: .blue
+        case .obsidian: .blue.opacity(0.85)
+        }
+    }
+
+    var streakMuted: Color {
+        switch self {
+        case .liquidGlass: .gray.opacity(0.35)
+        case .breathing: .gray.opacity(0.35)
+        case .darkZen: .white.opacity(0.2)
+        case .softDawn: .gray.opacity(0.35)
+        case .obsidian: .white.opacity(0.2)
+        }
+    }
+
+    var streakCellBackground: Color {
+        switch self {
+        case .liquidGlass: Color.white.opacity(0.06)
+        case .breathing: Color.white.opacity(0.06)
+        case .darkZen: Color.white.opacity(0.06)
+        case .softDawn: Color.black.opacity(0.04)
+        case .obsidian: Color.white.opacity(0.06)
+        }
+    }
 }
 

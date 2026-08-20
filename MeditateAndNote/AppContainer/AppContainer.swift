@@ -27,7 +27,10 @@ final class AppContainer: ObservableObject {
         return NotesRepository(localDataSource: local, remoteDataSource: remote)
     }()
 
-    private lazy var noteManager =  NoteManager(repository: notesRepository)
+    private(set) lazy var streakTracker = StreakTracker()
+    private(set) lazy var meditationSessionStore = MeditationSessionStore()
+
+    private lazy var noteManager = NoteManager(repository: notesRepository, streakTracker: streakTracker)
 
     // MARK: - ViewModels Factory Methods
     func makeMainViewModel() -> MainViewModel {
@@ -39,7 +42,7 @@ final class AppContainer: ObservableObject {
     }
 
     func makeNoteEditorViewModel(noteId: UUID? = nil) -> NoteEditorViewModel {
-        NoteEditorViewModel(noteId: noteId, repository: notesRepository)
+        NoteEditorViewModel(noteId: noteId, repository: notesRepository, streakTracker: streakTracker)
     }
 
     func makeMeditateSelectViewModel() -> MeditateSelectViewModel {
@@ -47,7 +50,7 @@ final class AppContainer: ObservableObject {
     }
 
     func makeMeditationViewModel(for meditation: Meditation) -> MeditationViewModel {
-        return MeditationViewModel(meditation: meditation)
+        MeditationViewModel(meditation: meditation, streakTracker: streakTracker, sessionStore: meditationSessionStore)
     }
     
     func makeNoteMenuView() -> NoteMenuViewModel {

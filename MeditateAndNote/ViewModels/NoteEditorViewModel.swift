@@ -13,15 +13,17 @@ final class NoteEditorViewModel {
     var isDirty: Bool = false
 
     private let repository: NotesRepository
+    private let streakTracker: StreakTracker?
     private var noteId: UUID?
     private var saveTask: Task<Void, Never>?
     private var autosaveWorkItem: DispatchWorkItem?
 
     var isNewNote: Bool { noteId == nil }
 
-    init(noteId: UUID? = nil, repository: NotesRepository) {
+    init(noteId: UUID? = nil, repository: NotesRepository, streakTracker: StreakTracker? = nil) {
         self.noteId = noteId
         self.repository = repository
+        self.streakTracker = streakTracker
 
         if let noteId {
             Task { await loadNote(noteId) }
@@ -70,6 +72,7 @@ final class NoteEditorViewModel {
             try await repository.saveItem(note, strategy: .localOnly)
             noteId = id
             isDirty = false
+            streakTracker?.markNoteCreated(date: note.date)
         } catch {
             print("NoteEditorViewModel: save failed — \(error)")
         }

@@ -11,11 +11,13 @@ final actor NoteManager: ItemProvidable, ItemManagable {
     typealias Item = Note
     
     private let repository: NotesRepository
+    private let streakTracker: StreakTracker?
     private(set) var currentItems: [Note] = []
     private(set) var lastError: Error?
     
-    init(repository: NotesRepository) {
+    init(repository: NotesRepository, streakTracker: StreakTracker? = nil) {
         self.repository = repository
+        self.streakTracker = streakTracker
     }
     
     func refresh() async {
@@ -25,6 +27,7 @@ final actor NoteManager: ItemProvidable, ItemManagable {
     func addItem(_ item: Item) async throws {
         try await repository.saveItem(item, strategy: .hybrid)
         currentItems = try await repository.getItems(strategy: .hybrid)
+        streakTracker?.markNoteCreated(date: item.date)
     }
     
     func deleteItem(_ item: Item) async throws {

@@ -104,5 +104,6 @@ struct RootContainer_Previews: PreviewProvider {
             .environmentObject(Router.previewRouter())
             .environmentObject(AppContainer())
             .environment(ThemeManager())
+            .environment(StreakTracker())
     }
 }

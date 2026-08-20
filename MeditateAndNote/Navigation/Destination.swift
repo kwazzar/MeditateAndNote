@@ -34,6 +34,7 @@ enum PushDestination: Hashable, CustomStringConvertible {
     case noteDetails(noteId: UUID?, id: String)
     case readingView(id: String)
     case meditation(_ meditation: Meditation)
+    case streakDetail
 
     public var description: String {
         switch self {
@@ -45,6 +46,8 @@ enum PushDestination: Hashable, CustomStringConvertible {
             return ".readingView(\(id))"
         case .meditation(id: let id):
             return ".meditation(\(id))"
+        case .streakDetail:
+            return ".streakDetail"
         }
     }
 }
