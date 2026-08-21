@@ -50,13 +50,15 @@ private extension MainView {
 
 struct MainView_Previews: PreviewProvider {
     static var previews: some View {
-        let repo = NotesRepository(
-            localDataSource: UserDefaultsNotesRepository(),
-            remoteDataSource: InMemoryNotesDataSource()
-        )
-        MainView(viewModel: MainViewModel(meditationService: SampleMeditationService(), repository: repo))
+        let localDataSource = UserDefaultsNoteDataSource()
+        let remoteDataSource = InMemoryNoteDataSource()
+        let noteRepository = DefaultNoteRepository(dataSource: localDataSource)
+        let syncCoordinator = DefaultNoteSyncCoordinator(local: localDataSource, remote: remoteDataSource)
+        let streakTracker = StreakTracker()
+        
+        MainView(viewModel: MainViewModel(meditationService: SampleMeditationService(), noteRepository: noteRepository))
             .environmentObject(Router.previewRouter())
             .environment(ThemeManager())
-            .environment(StreakTracker())
+            .environment(streakTracker)
     }
 }

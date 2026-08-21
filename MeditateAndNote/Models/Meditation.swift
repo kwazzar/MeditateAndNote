@@ -9,12 +9,12 @@ import Foundation
 //MARK: - Meditation
 struct Meditation: Identifiable, Hashable {
     let id: String
-    let title: String
+    let title: MeditationTitle
     let breathingStyle: BreathingStyle
     let description: String?
     let category: MeditationCategory
 
-    init(id: String, title: String, breathingStyle: BreathingStyle, description: String? = nil, category: MeditationCategory = .mindfulness) {
+    init(id: String, title: MeditationTitle, breathingStyle: BreathingStyle, description: String? = nil, category: MeditationCategory = .mindfulness) {
         self.id = id
         self.title = title
         self.breathingStyle = breathingStyle

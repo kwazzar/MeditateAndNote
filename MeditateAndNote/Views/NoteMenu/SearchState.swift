@@ -26,10 +26,10 @@ final class SearchState {
     var isSearching = false
     var filteredItems: [Note] = []
 
-    private let itemProvider: any ItemProvidable
+    private let itemProvider: any NoteProvidable
     private var availableItems: [Note] = []
 
-    init(itemProvider: some ItemProvidable) {
+    init(itemProvider: some NoteProvidable) {
         self.itemProvider = itemProvider
     }
 
@@ -46,7 +46,7 @@ final class SearchState {
             filteredItems = availableItems
         } else {
             filteredItems = availableItems.filter { note in
-                note.title.localizedCaseInsensitiveContains(trimmedQuery)
+                note.title.rawValue.localizedCaseInsensitiveContains(trimmedQuery)
                     || note.content.localizedCaseInsensitiveContains(trimmedQuery)
             }
         }

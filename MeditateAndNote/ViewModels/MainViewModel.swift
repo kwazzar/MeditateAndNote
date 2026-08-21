@@ -9,19 +9,14 @@ import SwiftUI
 
 final class MainViewModel: ObservableObject {
     private let meditationService: MeditationService
-    private let repository: NotesRepository
+    private let noteRepository: NoteRepository
     @Published var visibleNotes: [Note] = MockNotes
     @Published var last10Notes: [Note] = []
     @Published var errorMessage: String?
 
-    //    init(notesService: NotesService) {
-    //        self.notesService = notesService
-    //        loadNotes()
-    //    }
-
-    init(meditationService: MeditationService, repository: NotesRepository) {
+    init(meditationService: MeditationService, noteRepository: NoteRepository) {
         self.meditationService = meditationService
-        self.repository = repository
+        self.noteRepository = noteRepository
         self.visibleNotes = visibleNotes
 
         last10Notes = Array(visibleNotes.suffix(10))
@@ -38,7 +33,7 @@ final class MainViewModel: ObservableObject {
 
     private func loadNotes() async {
         do {
-            visibleNotes = try await repository.getItems(strategy: .remoteFirst)
+            visibleNotes = try await noteRepository.all()
         } catch {
             errorMessage = error.localizedDescription
             print("Error loading notes: \(error)")
@@ -51,7 +46,7 @@ final class MainViewModel: ObservableObject {
 
     func deleteNote(id: UUID) async {
         do {
-            try await repository.deleteItem(id: id.uuidString, strategy: .remoteFirst)
+            try await noteRepository.delete(NoteID(rawValue: id))
             await refreshNotes()
         } catch {
             errorMessage = error.localizedDescription

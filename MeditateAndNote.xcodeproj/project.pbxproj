@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		78215B553038AB4200DD8F99 /* NoteSyncCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78215B543038AB4200DD8F99 /* NoteSyncCoordinator.swift */; };
+		78215B573038AB5000DD8F99 /* DomainEvents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78215B563038AB5000DD8F99 /* DomainEvents.swift */; };
 		78421A37302C1C4E001B52A6 /* ScrollDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78421A36302C1C4C001B52A6 /* ScrollDetector.swift */; };
 		788513DC3033D32C0052F4BC /* NoteEditorViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788513DB3033D32C0052F4BC /* NoteEditorViewModel.swift */; };
 		788513DE3033D35D0052F4BC /* FloatingToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788513DD3033D35D0052F4BC /* FloatingToolbar.swift */; };
@@ -67,6 +69,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		78215B543038AB4200DD8F99 /* NoteSyncCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteSyncCoordinator.swift; sourceTree = "<group>"; };
+		78215B563038AB5000DD8F99 /* DomainEvents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DomainEvents.swift; sourceTree = "<group>"; };
 		78421A36302C1C4C001B52A6 /* ScrollDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollDetector.swift; sourceTree = "<group>"; };
 		788513DB3033D32C0052F4BC /* NoteEditorViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteEditorViewModel.swift; sourceTree = "<group>"; };
 		788513DD3033D35D0052F4BC /* FloatingToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingToolbar.swift; sourceTree = "<group>"; };
@@ -330,6 +334,8 @@
 		E3848D4E2E3BC984001BE8AB /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				78215B563038AB5000DD8F99 /* DomainEvents.swift */,
+				78215B543038AB4200DD8F99 /* NoteSyncCoordinator.swift */,
 				788956A13032019E0001D509 /* ThemeManager.swift */,
 				E3848D4F2E3BC9A0001BE8AB /* NotesRepository.swift */,
 				E3848D512E3BCA7F001BE8AB /* MeditationService.swift */,
@@ -436,7 +442,9 @@
 				E361878F2D68FF88000E326D /* MainViewModel.swift in Sources */,
 				788956A6303208330001D509 /* MeditateButtonComponents.swift in Sources */,
 				789B7B0A3010417D0082F0CB /* MainTheme.swift in Sources */,
+				78215B573038AB5000DD8F99 /* DomainEvents.swift in Sources */,
 				E320C3EF2E2D1C12009452DD /* MeditateAndNoteDetails.swift in Sources */,
+				78215B553038AB4200DD8F99 /* NoteSyncCoordinator.swift in Sources */,
 				E361876F2D68B221000E326D /* MeditateAndNoteApp.swift in Sources */,
 				E3848D542E3BCAC4001BE8AB /* Meditation.swift in Sources */,
 				E36164412E41050F00A5DCCF /* MeditationViewModel.swift in Sources */,

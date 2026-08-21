@@ -41,7 +41,7 @@ struct NoteMenu: View {
                             NoteCard(
                                 note: note,
                                 toNoteAction: { note in
-                                    router.navigate(to: .push(.noteDetails(noteId: note.id,
+                                    router.navigate(to: .push(.noteDetails(noteId: note.id.rawValue,
                                                                            id: "note details \(note.id)")))
                                 }
                             )
@@ -125,7 +125,7 @@ private extension NoteMenu {
 
 struct NoteMenu_Previews: PreviewProvider {
     static var previews: some View {
-        NoteMenu(viewModel: AppContainer().makeNoteMenuView())
+        NoteMenu(viewModel: AppContainer().makeNoteMenuViewModel())
             .environment(ThemeManager())
     }
 }

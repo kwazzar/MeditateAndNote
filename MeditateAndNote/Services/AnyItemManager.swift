@@ -7,32 +7,18 @@
 
 import Foundation
 
-protocol ItemProvidable {
-    associatedtype Item
+// Protocols are defined in NoteManager.swift
 
-    var currentItems: [Item] { get async }
-    func filterItems(query: SearchQuery) async -> [Item]
-    func refresh() async
-}
-
-protocol ItemManagable {
-    associatedtype Item
-
-    func addItem(_ item: Item) async throws
-    func deleteItem(_ item: Item) async throws
-    func clearAll() async
-}
-
-//MARK: - AnyItemManager
-final class AnyItemManager<Item>: ItemProvidable, ItemManagable {
-    private let _currentItems: () async -> [Item]
-    private let _filterItems: (SearchQuery) async -> [Item]
+//MARK: - AnyItemManager (Type Erasure for NoteProvidable & NoteManagable)
+final class AnyItemManager: NoteProvidable, NoteManagable {
+    private let _currentItems: () async -> [Note]
+    private let _filterItems: (SearchQuery) async -> [Note]
     private let _refresh: () async -> Void
-    private let _addItem: (Item) async throws -> Void
-    private let _deleteItem: (Item) async throws -> Void
+    private let _addItem: (Note) async throws -> Void
+    private let _deleteItem: (Note) async throws -> Void
     private let _clearAll: () async -> Void
 
-    init<T: ItemProvidable & ItemManagable>(_ manager: T) where T.Item == Item {
+    init<T: NoteProvidable & NoteManagable>(_ manager: T) {
         _currentItems = { await manager.currentItems }
         _filterItems = { await manager.filterItems(query: $0) }
         _refresh = { await manager.refresh() }
@@ -41,11 +27,11 @@ final class AnyItemManager<Item>: ItemProvidable, ItemManagable {
         _clearAll = { await manager.clearAll() }
     }
 
-    var currentItems: [Item] {
+    var currentItems: [Note] {
         get async { await _currentItems() }
     }
 
-    func filterItems(query: SearchQuery) async -> [Item] {
+    func filterItems(query: SearchQuery) async -> [Note] {
         await _filterItems(query)
     }
     
@@ -53,11 +39,11 @@ final class AnyItemManager<Item>: ItemProvidable, ItemManagable {
         await _refresh()
     }
 
-    func addItem(_ item: Item) async throws {
+    func addItem(_ item: Note) async throws {
         try await _addItem(item)
     }
 
-    func deleteItem(_ item: Item) async throws {
+    func deleteItem(_ item: Note) async throws {
         try await _deleteItem(item)
     }
 

@@ -10,25 +10,28 @@ import SwiftUI
 final class NoteViewModel: ObservableObject {
     @Published var note: Note
     @Published var isEditing: Bool = false
-    @Published var title: String = ""
+    @Published var title: MeditationTitle = MeditationTitle("")
     @Published var content: String = ""
     @Published var errorText: String?
     @Published var isSaving: Bool = false
     
-    private let repository: NotesRepository
+    private let noteRepository: NoteRepository
     private let noteId: UUID?
     private(set) var isNewNote: Bool
     
-    init(noteId: UUID? = nil, repository: NotesRepository) {
-        self.repository = repository
+    init(noteId: UUID? = nil, noteRepository: NoteRepository) {
+        self.noteRepository = noteRepository
         self.noteId = noteId
         
         if noteId != nil {
-            // Тимчасова заглушка, поки не завантажили реальну нотатку
-            self.note = Note(title: "", content: "", date: Date())
+            self.note = Note(title: MeditationTitle(""), content: "", date: Date())
+            self.title = MeditationTitle("")
+            self.content = ""
             self.isNewNote = false
         } else {
-            self.note = Note(title: "", content: "", date: Date())
+            self.note = Note(title: MeditationTitle(""), content: "", date: Date())
+            self.title = MeditationTitle("")
+            self.content = ""
             self.isNewNote = true
             self.isEditing = true
         }
@@ -37,10 +40,10 @@ final class NoteViewModel: ObservableObject {
     func loadNoteIfNeeded() async {
         guard let id = noteId, !isNewNote else { return }
         do {
-            let existingNote = try await repository.getItem(id: id.uuidString, strategy: .remoteFirst)
-            self.note = existingNote
-            self.title = existingNote.title
-            self.content = existingNote.content
+            let existingNote = try await noteRepository.find(NoteID(rawValue: id))
+            self.note = existingNote ?? Note(title: MeditationTitle(""), content: "", date: Date())
+            self.title = existingNote?.title ?? MeditationTitle("")
+            self.content = existingNote?.content ?? ""
         } catch {
             errorText = "Не вдалося завантажити нотатку"
         }
@@ -50,10 +53,10 @@ final class NoteViewModel: ObservableObject {
         guard !isSaving else { return }
         isSaving = true
         defer { isSaving = false }
-
+        
         let updatedNote = Note(title: title, content: content, date: Date())
         do {
-            try await repository.saveItem(updatedNote, strategy: .hybrid)
+            try await noteRepository.save(updatedNote)
             note = updatedNote
             isEditing = false
         } catch {

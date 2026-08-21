@@ -100,7 +100,7 @@ private extension MeditationInfoScroll {
     @ViewBuilder
     var headerScroll: some View {
         HStack(spacing: 16) {
-            Image(systemName: meditationIcon(for: meditation.title))
+            Image(systemName: meditationIcon(for: meditation.title.rawValue))
                 .font(.system(size: 40))
                 .foregroundColor(.blue)
                 .frame(width: 60, height: 60)
@@ -108,7 +108,7 @@ private extension MeditationInfoScroll {
                 .clipShape(Circle())
 
             VStack(alignment: .leading, spacing: 4) {
-                Text(meditation.title)
+                Text(meditation.title.rawValue)
                     .font(.title2)
                     .fontWeight(.bold)
                     .foregroundColor(.primary)
@@ -267,6 +267,6 @@ struct PatternDetailRow: View {
 
 struct MeditationInfoScroll_Previews: PreviewProvider {
     static var previews: some View {
-        MeditationInfoScroll(meditation: Meditation(id: "1", title: "Morning Mindfulness", breathingStyle: .fourEight, description: "Start your day with awareness", category: .mindfulness))
+        MeditationInfoScroll(meditation: Meditation(id: "1", title: MeditationTitle("Morning Mindfulness"), breathingStyle: .fourEight, description: "Start your day with awareness", category: .mindfulness))
     }
 }

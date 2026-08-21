@@ -56,7 +56,7 @@ private extension MeditateSelectView {
                     .font(.system(size: 40))
                     .foregroundColor(.green)
 
-                Text(viewModel.selectedMeditation?.title ?? "Meditation Session")
+                Text(viewModel.selectedMeditation?.title.rawValue ?? "Meditation Session")
                     .font(.largeTitle)
                     .fontWeight(.bold)
                     .foregroundColor(.primary)
@@ -146,7 +146,7 @@ private extension MeditateSelectView {
                             .foregroundColor(.green)
 
                         VStack(alignment: .leading) {
-                            Text(selectedMeditation.title)
+                            Text(selectedMeditation.title.rawValue)
                                 .font(.body)
                                 .fontWeight(.medium)
 

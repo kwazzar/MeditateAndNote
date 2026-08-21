@@ -30,7 +30,7 @@ struct RootContainer: View {
                 .tag(TabDestination.home)
                 
                 NavigationContainer(parentRouter: router, tab: .notes) {
-                    NoteMenu(viewModel: container.makeNoteMenuView())
+                    NoteMenu(viewModel: container.makeNoteMenuViewModel())
                         .environment(themeManager)
                         .toolbar(.hidden, for: .tabBar)
                 }

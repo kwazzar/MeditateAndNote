@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 enum Destination: Hashable {
     case tab(_ destination: TabDestination)
@@ -127,3 +128,4 @@ extension FullScreenDestination: Identifiable {
         }
     }
 }
+

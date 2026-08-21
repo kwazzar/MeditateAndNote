@@ -9,7 +9,7 @@ import Foundation
 
 @Observable
 final class NoteMenuViewModel {
-    private let itemManager: AnyItemManager<Note>
+    private let itemManager: AnyItemManager
 
     var visibleNotes: [Note] = MockNotes
     var errorMessage: String?
@@ -23,7 +23,7 @@ final class NoteMenuViewModel {
     //        loadNotes()
     //    }
 
-    init(itemManager: AnyItemManager<Note>) {
+    init(itemManager: AnyItemManager) {
         self.itemManager = itemManager
         self.searchState = SearchState(itemProvider: itemManager)
         self.uiState = NotesUIState()

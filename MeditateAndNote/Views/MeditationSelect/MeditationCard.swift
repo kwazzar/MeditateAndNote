@@ -16,7 +16,7 @@ struct MeditationCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Image(systemName: meditationIcon(for: meditation.title))
+                Image(systemName: meditationIcon(for: meditation.title.rawValue))
                     .font(.title2)
                     .foregroundColor(.blue)
 
@@ -28,7 +28,7 @@ struct MeditationCard: View {
                 }
             }
 
-            Text(meditation.title)
+            Text(meditation.title.rawValue)
                 .font(.headline)
                 .fontWeight(.semibold)
                 .foregroundColor(.primary)

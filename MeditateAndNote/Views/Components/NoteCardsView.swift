@@ -19,7 +19,7 @@ struct NoteCardsView: View {
                     note in
 //                    AppContainer.shared.sharedNoteViewModel.set(note: note)
 //                    router.navigate(to: .tab(.notes))
-                    router.navigate(to: .push(.noteDetails(noteId: note.id, id: "from Main")))
+                    router.navigate(to: .push(.noteDetails(noteId: note.id.rawValue, id: "from Main")))
                 }
                     .offset(y: CGFloat(index) * 25)
                     .onTapGesture {

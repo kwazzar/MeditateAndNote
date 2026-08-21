@@ -53,7 +53,7 @@ private extension NoteCard {
                     .foregroundColor(.secondary)
                 
                 Spacer()
-                Text(note.title)
+                Text(note.title.rawValue)
                     .font(.headline)
                 Spacer()
                 

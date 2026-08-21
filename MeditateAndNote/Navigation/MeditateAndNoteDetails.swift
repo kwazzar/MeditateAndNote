@@ -8,7 +8,7 @@
 import Foundation   
 
 public typealias MeditationID = String
-public typealias NoteID = String
+//public typealias NoteID = String
 
 public struct MeditationDetails {
     public let id: MeditationID
@@ -18,7 +18,7 @@ public struct MeditationDetails {
 }
 
 public struct NoteDetails {
-    public let id: NoteID
+    public let id: String
     public let title: String
     public let content: String
     public let date: Date
