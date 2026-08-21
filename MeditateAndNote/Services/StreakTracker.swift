@@ -8,8 +8,8 @@ import Foundation
 @Observable
 final class StreakTracker: @unchecked Sendable {
 
-    var currentStreak: Int = 0
-    var longestStreak: Int = 0
+    private(set) var currentStreak: Int = 0
+    private(set) var longestStreak: Int = 0
     private(set) var dailyActivities: [Date: DailyActivity] = [:]
 
     private let calendar: Calendar
@@ -28,18 +28,18 @@ final class StreakTracker: @unchecked Sendable {
         let key = startOfDay(date)
         ensureActivityExists(for: key)
         dailyActivities[key]?.hasNote = true
-        persist()
         recalculateStreak(today: key)
         if currentStreak > longestStreak { longestStreak = currentStreak }
+        persist()
     }
 
     func markMeditationCompleted(date: Date = .now) {
         let key = startOfDay(date)
         ensureActivityExists(for: key)
         dailyActivities[key]?.hasMeditation = true
-        persist()
         recalculateStreak(today: key)
         if currentStreak > longestStreak { longestStreak = currentStreak }
+        persist()
     }
 
     func checkStreakBreak() {
@@ -138,21 +138,27 @@ final class StreakTracker: @unchecked Sendable {
     }
 
     private func persist() {
-        let codable = dailyActivities.mapValues { CodableDailyActivity(from: $0) }
-        if let data = try? JSONEncoder().encode(codable) {
+        do {
+            let codable = dailyActivities.values.map { CodableDailyActivity(from: $0) }
+            let data = try JSONEncoder().encode(codable)
             defaults.set(data, forKey: "streakDailyActivities")
+        } catch {
+            print("StreakTracker: failed to persist activities — \(error)")
         }
         defaults.set(currentStreak, forKey: "streakCurrent")
         defaults.set(longestStreak, forKey: "streakLongest")
     }
 
     private func load() {
-        guard let data = defaults.data(forKey: "streakDailyActivities"),
-              let decoded = try? JSONDecoder().decode([Date: CodableDailyActivity].self, from: data)
-        else { return }
-        dailyActivities = decoded.mapValues { $0.toDailyActivity() }
-        currentStreak = defaults.integer(forKey: "streakCurrent")
-        longestStreak = defaults.integer(forKey: "streakLongest")
+        guard let data = defaults.data(forKey: "streakDailyActivities") else { return }
+        do {
+            let decoded = try JSONDecoder().decode([CodableDailyActivity].self, from: data)
+            dailyActivities = Dictionary(uniqueKeysWithValues: decoded.map { ($0.date, $0.toDailyActivity()) })
+            currentStreak = defaults.integer(forKey: "streakCurrent")
+            longestStreak = defaults.integer(forKey: "streakLongest")
+        } catch {
+            print("StreakTracker: failed to load activities — \(error)")
+        }
     }
 }
 
@@ -171,5 +177,20 @@ private struct CodableDailyActivity: Codable {
 
     func toDailyActivity() -> DailyActivity {
         DailyActivity(date: date, hasMeditation: hasMeditation, hasNote: hasNote)
+    }
+}
+
+// MARK: - Domain Event Subscription
+
+extension StreakTracker: DomainEventSubscriber {
+    func handle(_ event: DomainEvent) {
+        switch event {
+        case let event as NoteCreated:
+            markNoteCreated(date: event.note.date)
+        case let event as MeditationCompleted:
+            markMeditationCompleted(date: event.session.completedAt)
+        default:
+            break
+        }
     }
 }

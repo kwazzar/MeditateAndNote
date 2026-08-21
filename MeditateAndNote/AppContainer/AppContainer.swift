@@ -29,6 +29,10 @@ final class AppContainer: ObservableObject {
         syncCoordinator: syncCoordinator,
         noteRepository: noteRepository
     )
+
+    init() {
+        eventBus.subscribe(streakTracker)
+    }
     
     // MARK: - ViewModels Factory Methods
     
@@ -37,12 +41,16 @@ final class AppContainer: ObservableObject {
     }
     
     func makeNoteViewModel(noteId: UUID? = nil) -> NoteViewModel {
-        NoteViewModel(noteId: noteId, noteRepository: noteRepository)
+        NoteViewModel(
+            noteId: noteId.map(NoteID.init(rawValue:)),
+            noteRepository: noteRepository,
+            syncCoordinator: syncCoordinator
+        )
     }
-    
+
     func makeNoteEditorViewModel(noteId: UUID? = nil) -> NoteEditorViewModel {
         NoteEditorViewModel(
-            noteId: noteId,
+            noteId: noteId.map(NoteID.init(rawValue:)),
             noteRepository: noteRepository,
             syncCoordinator: syncCoordinator
         )

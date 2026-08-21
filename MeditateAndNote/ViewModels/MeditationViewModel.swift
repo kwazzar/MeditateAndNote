@@ -33,15 +33,12 @@ struct MeditationCore {
         return formatter.string(from: measurement)
     }
     
-    mutating func advancePhase(currentPhaseIndex: Int, pattern: BreathingPattern) -> (newIndex: Int, newPhase: BreathingPhase, cycleCountIncreased: Bool) {
+    func nextPhase(after index: Int, in pattern: BreathingPattern) -> (index: Int, phase: BreathingPhase, cycleCountIncreased: Bool)? {
         let phases = pattern.phases
-        guard !phases.isEmpty else { return (currentPhaseIndex, phases.first ?? BreathingPhase(type: .inhale, duration: 0), false) }
-        
-        let newIndex = (currentPhaseIndex + 1) % phases.count
-        let cycleIncreased = newIndex == 0
-        let newPhase = phases[newIndex]
-        
-        return (newIndex, newPhase, cycleIncreased)
+        guard !phases.isEmpty else { return nil }
+
+        let newIndex = (index + 1) % phases.count
+        return (newIndex, phases[newIndex], newIndex == 0)
     }
 }
 
@@ -56,7 +53,6 @@ final class MeditationViewModel: ObservableObject {
     @Published var phaseProgress: Double = 0
     @Published var cycleCount: Int = 0
     @Published var meditationState: MeditationState = .notStarted
-    @Published var showTimeMeditation: Bool = true
     
     private var totalDuration: TimeInterval = 0
     private var timer: Timer?
@@ -186,14 +182,13 @@ private extension MeditationViewModel {
    
     func startBreathingCycle() {
         let pattern = meditation.breathingStyle.pattern
-        guard !pattern.phases.isEmpty else { return }
-        
-        let result = core.advancePhase(currentPhaseIndex: currentPhaseIndex, pattern: pattern)
-        currentPhaseIndex = result.newIndex
-        currentPhase = result.newPhase
+        guard let result = core.nextPhase(after: currentPhaseIndex, in: pattern) else { return }
+
+        currentPhaseIndex = result.index
+        currentPhase = result.phase
         phaseProgress = 0
         pausedPhaseElapsed = 0
-        
+
         startPhaseTimer()
     }
     
@@ -220,20 +215,23 @@ private extension MeditationViewModel {
     
     func moveToNextPhase() {
         phaseTimer?.invalidate()
-        
+
         let pattern = meditation.breathingStyle.pattern
-        let result = core.advancePhase(currentPhaseIndex: currentPhaseIndex, pattern: pattern)
-        currentPhaseIndex = result.newIndex
-        currentPhase = result.newPhase
-        
+        guard let result = core.nextPhase(after: currentPhaseIndex, in: pattern) else {
+            stop()
+            return
+        }
+        currentPhaseIndex = result.index
+        currentPhase = result.phase
+
         if result.cycleCountIncreased {
             cycleCount += 1
         }
-        
+
         phaseStartTime = Date()
         phaseProgress = 0
         pausedPhaseElapsed = 0
-        
+
         startPhaseTimer()
     }
 }

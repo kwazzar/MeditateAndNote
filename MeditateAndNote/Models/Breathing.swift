@@ -66,7 +66,13 @@ enum BreathingStyle: String, CaseIterable, Identifiable {
                 ]
             )
         case .custom:
-            return BreathingPattern(name: "Custom", phases: [])
+            return BreathingPattern(
+                name: "Custom",
+                phases: [
+                    .init(type: .inhale, duration: 4),
+                    .init(type: .exhale, duration: 4)
+                ]
+            )
         }
     }
 }

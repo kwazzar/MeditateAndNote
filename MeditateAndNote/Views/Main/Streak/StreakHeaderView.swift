@@ -13,8 +13,8 @@ struct StreakHeaderView: View {
     private var last7Days: [Date] {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
-        return (0..<7).reversed().map { offset in
-            calendar.date(byAdding: .day, value: -offset, to: today)!
+        return (0..<7).reversed().compactMap { offset in
+            calendar.date(byAdding: .day, value: -offset, to: today)
         }
     }
 

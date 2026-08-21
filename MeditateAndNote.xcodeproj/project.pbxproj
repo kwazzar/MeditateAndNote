@@ -24,6 +24,7 @@
 		AA0000092026082000000005 /* StreakHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000A2026082000000005 /* StreakHeaderView.swift */; };
 		AA00000B2026082000000006 /* StreakDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000C2026082000000006 /* StreakDetailView.swift */; };
 		AA000011202608200000000C /* DayCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000012202608200000000C /* DayCellView.swift */; };
+		AA0000202026082100000001 /* StreakTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000102026082000000008 /* StreakTrackerTests.swift */; };
 		E320C3ED2E2D1AC9009452DD /* Destination.swift in Sources */ = {isa = PBXBuildFile; fileRef = E320C3EC2E2D1AC9009452DD /* Destination.swift */; };
 		E320C3EF2E2D1C12009452DD /* MeditateAndNoteDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = E320C3EE2E2D1C12009452DD /* MeditateAndNoteDetails.swift */; };
 		E320C3F12E2D1CD6009452DD /* Router.swift in Sources */ = {isa = PBXBuildFile; fileRef = E320C3F02E2D1CD6009452DD /* Router.swift */; };
@@ -87,6 +88,7 @@
 		AA00000C2026082000000006 /* StreakDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakDetailView.swift; sourceTree = "<group>"; };
 		AA0000102026082000000008 /* StreakTrackerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakTrackerTests.swift; sourceTree = "<group>"; };
 		AA000012202608200000000C /* DayCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayCellView.swift; sourceTree = "<group>"; };
+		AA0000202026082100000002 /* MeditateAndNoteTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MeditateAndNoteTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E320C3EC2E2D1AC9009452DD /* Destination.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Destination.swift; sourceTree = "<group>"; };
 		E320C3EE2E2D1C12009452DD /* MeditateAndNoteDetails.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditateAndNoteDetails.swift; sourceTree = "<group>"; };
 		E320C3F02E2D1CD6009452DD /* Router.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Router.swift; sourceTree = "<group>"; };
@@ -133,6 +135,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		AA0000202026082100000003 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		E36187682D68B221000E326D /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -234,6 +243,7 @@
 			isa = PBXGroup;
 			children = (
 				E361876B2D68B221000E326D /* MeditateAndNote.app */,
+				AA0000202026082100000002 /* MeditateAndNoteTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -365,6 +375,22 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		AA0000202026082100000005 /* MeditateAndNoteTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AA0000202026082100000008 /* Build configuration list for PBXNativeTarget "MeditateAndNoteTests" */;
+			buildPhases = (
+				AA0000202026082100000004 /* Sources */,
+				AA0000202026082100000003 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MeditateAndNoteTests;
+			productName = MeditateAndNoteTests;
+			productReference = AA0000202026082100000002 /* MeditateAndNoteTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		E361876A2D68B221000E326D /* MeditateAndNote */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = E36187792D68B223000E326D /* Build configuration list for PBXNativeTarget "MeditateAndNote" */;
@@ -392,6 +418,10 @@
 				LastSwiftUpdateCheck = 1420;
 				LastUpgradeCheck = 2660;
 				TargetAttributes = {
+					AA0000202026082100000005 = {
+						CreatedOnToolsVersion = 14.2;
+						TestTargetID = E361876A2D68B221000E326D;
+					};
 					E361876A2D68B221000E326D = {
 						CreatedOnToolsVersion = 14.2;
 					};
@@ -411,6 +441,7 @@
 			projectRoot = "";
 			targets = (
 				E361876A2D68B221000E326D /* MeditateAndNote */,
+				AA0000202026082100000005 /* MeditateAndNoteTests */,
 			);
 		};
 /* End PBXProject section */
@@ -428,6 +459,14 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		AA0000202026082100000004 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA0000202026082100000001 /* StreakTrackerTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		E36187672D68B221000E326D /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -495,6 +534,58 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
+		AA0000202026082100000006 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = nazar.MeditateAndNoteTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MeditateAndNote.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/MeditateAndNote";
+			};
+			name = Debug;
+		};
+		AA0000202026082100000007 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = nazar.MeditateAndNoteTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MeditateAndNote.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/MeditateAndNote";
+			};
+			name = Release;
+		};
 		E36187772D68B223000E326D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -684,6 +775,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		AA0000202026082100000008 /* Build configuration list for PBXNativeTarget "MeditateAndNoteTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA0000202026082100000006 /* Debug */,
+				AA0000202026082100000007 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		E36187662D68B221000E326D /* Build configuration list for PBXProject "MeditateAndNote" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

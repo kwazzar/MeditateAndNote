@@ -16,31 +16,27 @@ final class NoteViewModel: ObservableObject {
     @Published var isSaving: Bool = false
     
     private let noteRepository: NoteRepository
-    private let noteId: UUID?
-    private(set) var isNewNote: Bool
-    
-    init(noteId: UUID? = nil, noteRepository: NoteRepository) {
+    private let syncCoordinator: NoteSyncCoordinator
+    private let noteId: NoteID?
+    var isNewNote: Bool { noteId == nil }
+
+    init(noteId: NoteID? = nil, noteRepository: NoteRepository, syncCoordinator: NoteSyncCoordinator) {
         self.noteRepository = noteRepository
+        self.syncCoordinator = syncCoordinator
         self.noteId = noteId
-        
-        if noteId != nil {
-            self.note = Note(title: MeditationTitle(""), content: "", date: Date())
-            self.title = MeditationTitle("")
-            self.content = ""
-            self.isNewNote = false
-        } else {
-            self.note = Note(title: MeditationTitle(""), content: "", date: Date())
-            self.title = MeditationTitle("")
-            self.content = ""
-            self.isNewNote = true
-            self.isEditing = true
+        self.note = Note(title: MeditationTitle(""), content: "", date: Date())
+        self.title = MeditationTitle("")
+        self.content = ""
+
+        if isNewNote {
+            isEditing = true
         }
     }
-    
+
     func loadNoteIfNeeded() async {
         guard let id = noteId, !isNewNote else { return }
         do {
-            let existingNote = try await noteRepository.find(NoteID(rawValue: id))
+            let existingNote = try await noteRepository.find(id)
             self.note = existingNote ?? Note(title: MeditationTitle(""), content: "", date: Date())
             self.title = existingNote?.title ?? MeditationTitle("")
             self.content = existingNote?.content ?? ""
@@ -53,10 +49,15 @@ final class NoteViewModel: ObservableObject {
         guard !isSaving else { return }
         isSaving = true
         defer { isSaving = false }
-        
-        let updatedNote = Note(title: title, content: content, date: Date())
+
+        let updatedNote = Note(
+            id: isNewNote ? NoteID() : note.id,
+            title: title,
+            content: content,
+            date: isNewNote ? Date() : note.date
+        )
         do {
-            try await noteRepository.save(updatedNote)
+            try await syncCoordinator.save(updatedNote, strategy: .hybrid)
             note = updatedNote
             isEditing = false
         } catch {

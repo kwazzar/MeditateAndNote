@@ -11,7 +11,8 @@ import SwiftUI
 struct MeditationView: View {
     @StateObject var viewModel: MeditationViewModel
     @EnvironmentObject var router: Router
-    
+    @State private var showTimeSelection = true
+
     var body: some View {
         VStack {
             navigationBar
@@ -23,11 +24,11 @@ struct MeditationView: View {
         }
         .overlay(
             Group {
-                if viewModel.showTimeMeditation {
+                if showTimeSelection {
                     VStack(spacing: 0) {
                         Spacer()
                         TimeMeditationSheet(onSelection: { duration in
-                            viewModel.showTimeMeditation = false
+                            showTimeSelection = false
                             viewModel.start(with: duration)
                         })
                         .transition(.move(edge: .bottom))
@@ -117,7 +118,7 @@ private extension MeditationView {
         Button(action: {
             switch viewModel.meditationState {
             case .notStarted:
-                viewModel.showTimeMeditation = true
+                showTimeSelection = true
             case .started:
                 viewModel.pause()
             case .paused:
@@ -158,7 +159,9 @@ private extension MeditationView {
 
 struct MeditationView_Previews: PreviewProvider {
     static var previews: some View {
-        MeditationView(viewModel: MeditationViewModel(meditation: SampleMeditationService().getMeditations().first!))
+        let meditation = SampleMeditationService().getMeditations().first
+            ?? Meditation(id: "preview", title: MeditationTitle("Preview"), breathingStyle: .fourSevenEight)
+        return MeditationView(viewModel: MeditationViewModel(meditation: meditation))
             .environmentObject(Router.previewRouter())
     }
 }

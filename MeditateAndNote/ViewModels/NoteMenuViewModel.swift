@@ -16,17 +16,10 @@ final class NoteMenuViewModel {
     var last10Notes: [Note] = []
 
     let searchState: SearchState
-    let uiState: NotesUIState
-
-    //    init(notesService: NotesService) {
-    //        self.notesService = notesService
-    //        loadNotes()
-    //    }
 
     init(itemManager: AnyItemManager) {
         self.itemManager = itemManager
         self.searchState = SearchState(itemProvider: itemManager)
-        self.uiState = NotesUIState()
         self.searchState.setAvailableItems(visibleNotes)
 
         self.last10Notes = Array(visibleNotes.suffix(10))

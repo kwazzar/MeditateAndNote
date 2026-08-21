@@ -16,7 +16,6 @@ final class AnyItemManager: NoteProvidable, NoteManagable {
     private let _refresh: () async -> Void
     private let _addItem: (Note) async throws -> Void
     private let _deleteItem: (Note) async throws -> Void
-    private let _clearAll: () async -> Void
 
     init<T: NoteProvidable & NoteManagable>(_ manager: T) {
         _currentItems = { await manager.currentItems }
@@ -24,7 +23,6 @@ final class AnyItemManager: NoteProvidable, NoteManagable {
         _refresh = { await manager.refresh() }
         _addItem = { try await manager.addItem($0) }
         _deleteItem = { try await manager.deleteItem($0) }
-        _clearAll = { await manager.clearAll() }
     }
 
     var currentItems: [Note] {
@@ -34,7 +32,7 @@ final class AnyItemManager: NoteProvidable, NoteManagable {
     func filterItems(query: SearchQuery) async -> [Note] {
         await _filterItems(query)
     }
-    
+
     func refresh() async {
         await _refresh()
     }
@@ -45,9 +43,5 @@ final class AnyItemManager: NoteProvidable, NoteManagable {
 
     func deleteItem(_ item: Note) async throws {
         try await _deleteItem(item)
-    }
-
-    func clearAll() async {
-        await _clearAll()
     }
 }

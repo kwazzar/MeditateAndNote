@@ -7,17 +7,22 @@
 
 import SwiftUI
 
-//MARK: - SalesUIState
-@Observable
-final class NotesUIState {
-    var isPopupVisible = false
-    var showingDailySales = false
-    var activeMenuItemID: UUID? = nil
-}
-
 //MARK: - SearchState
 struct SearchQuery {
     let text: String
+}
+
+enum NoteFilter {
+    static func normalized(_ text: String) -> String {
+        text.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    static func matches(_ note: Note, query: String) -> Bool {
+        let trimmedQuery = normalized(query)
+        guard !trimmedQuery.isEmpty else { return true }
+        return note.title.rawValue.localizedCaseInsensitiveContains(trimmedQuery)
+            || note.content.localizedCaseInsensitiveContains(trimmedQuery)
+    }
 }
 
 @Observable
@@ -39,17 +44,8 @@ final class SearchState {
     }
 
     func updateFilteredItems(for query: SearchQuery) {
-        let trimmedQuery = query.text.trimmingCharacters(in: .whitespacesAndNewlines)
-        isSearching = !trimmedQuery.isEmpty
-
-        if trimmedQuery.isEmpty {
-            filteredItems = availableItems
-        } else {
-            filteredItems = availableItems.filter { note in
-                note.title.rawValue.localizedCaseInsensitiveContains(trimmedQuery)
-                    || note.content.localizedCaseInsensitiveContains(trimmedQuery)
-            }
-        }
+        isSearching = !NoteFilter.normalized(query.text).isEmpty
+        filteredItems = availableItems.filter { NoteFilter.matches($0, query: query.text) }
     }
 }
 
@@ -60,26 +56,3 @@ extension SearchState {
         updateFilteredItems(for: SearchQuery(text: ""))
     }
 }
-
-protocol ItemProtocol: Hashable {
-    associatedtype ItemType
-    var value: ItemType {get}
-}
-
-struct Description: ItemProtocol {
-    let value: String
-
-    init(_ value: String? = nil) {
-        guard let safeValue = value, !safeValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            self.value = "no Description"
-            return
-        }
-        self.value = safeValue
-    }
-}
-
-//struct SearchState_Previews: PreviewProvider {
-//    static var previews: some View {
-//        SearchState()
-//    }
-//}

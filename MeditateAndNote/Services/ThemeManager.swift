@@ -11,14 +11,17 @@ import SwiftUI
 final class ThemeManager {
     private static let storageKey = "selectedMainTheme"
 
+    private let defaults: UserDefaults
+
     var current: MainTheme {
         didSet {
-            UserDefaults.standard.set(current.rawValue, forKey: Self.storageKey)
+            defaults.set(current.rawValue, forKey: Self.storageKey)
         }
     }
 
-    init() {
-        let savedRawValue = UserDefaults.standard.string(forKey: Self.storageKey)
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+        let savedRawValue = defaults.string(forKey: Self.storageKey)
         self.current = MainTheme(rawValue: savedRawValue ?? "") ?? .liquidGlass
     }
 }

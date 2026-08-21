@@ -60,6 +60,7 @@ enum RepositoryError: Error {
     case invalidID
     case notFound
     case saveFailed
+    case invalidURL
 }
 
 // MARK: - In-Memory Implementation
@@ -138,40 +139,42 @@ final class UserDefaultsNoteDataSource: NoteDataSource {
 // MARK: - API Implementation
 
 final class APINoteDataSource: NoteDataSource {
-    private let baseURL = "https://api.example.com/notes"
+    private let baseURL = URL(string: "https://api.example.com/notes")
     private var cachedNotes: [Note] = []
-    
+
     func fetchAll() async throws -> [Note] {
         cachedNotes
     }
-    
+
     func fetch(id: UUID) async throws -> Note? {
         cachedNotes.first { $0.id.rawValue == id }
     }
-    
+
     func save(_ note: Note) async throws {
-        var request = URLRequest(url: URL(string: baseURL)!)
+        guard let url = baseURL else { throw RepositoryError.invalidURL }
+        var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.httpBody = try JSONEncoder().encode(note)
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        
+
         _ = try await URLSession.shared.data(for: request)
-        
+
         if let index = cachedNotes.firstIndex(where: { $0.id.rawValue == note.id.rawValue }) {
             cachedNotes[index] = note
         } else {
             cachedNotes.append(note)
         }
     }
-    
+
     func delete(id: UUID) async throws {
-        var request = URLRequest(url: URL(string: "\(baseURL)/\(id)")!)
+        guard let base = baseURL else { throw RepositoryError.invalidURL }
+        var request = URLRequest(url: base.appendingPathComponent(id.uuidString))
         request.httpMethod = "DELETE"
-        
+
         _ = try await URLSession.shared.data(for: request)
         cachedNotes.removeAll { $0.id.rawValue == id }
     }
-    
+
     func deleteAll() async throws {
         cachedNotes.removeAll()
     }

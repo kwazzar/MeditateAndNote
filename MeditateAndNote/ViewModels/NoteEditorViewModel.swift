@@ -11,8 +11,8 @@ import Observation
 //MARK: - NoteCore (pure domain logic)
 
 struct NoteCore {
-    func makeNote(id: UUID, title: String, body: String, date: Date) -> Note {
-        Note(id: NoteID(rawValue: id), title: MeditationTitle(title), content: body, date: date)
+    func makeNote(id: NoteID, title: String, body: String, date: Date) -> Note {
+        Note(id: id, title: MeditationTitle(title), content: body, date: date)
     }
     
     func isValid(_ note: Note) -> Bool {
@@ -41,37 +41,44 @@ final class NoteEditorViewModel {
 
     private let noteRepository: NoteRepository
     private let syncCoordinator: NoteSyncCoordinator
-    private var noteId: UUID?
+    private let eventBus: DomainEventPublisher
+    private var noteId: NoteID?
+    private var noteDate: Date?
     private var saveTask: Task<Void, Never>?
     private var autosaveWorkItem: DispatchWorkItem?
-    
+
     var isNewNote: Bool { noteId == nil }
-    
+
     private var noteCore = NoteCore()
-    
-    init(noteId: UUID? = nil, noteRepository: NoteRepository, syncCoordinator: NoteSyncCoordinator) {
+
+    init(noteId: NoteID? = nil,
+         noteRepository: NoteRepository,
+         syncCoordinator: NoteSyncCoordinator,
+         eventBus: DomainEventPublisher = DomainEventBus.shared) {
         self.noteId = noteId
         self.noteRepository = noteRepository
         self.syncCoordinator = syncCoordinator
-        
+        self.eventBus = eventBus
+
         if let noteId {
             Task { await loadNote(noteId) }
         }
     }
-    
+
     deinit {
         saveTask?.cancel()
         autosaveWorkItem?.cancel()
     }
-    
+
     // MARK: - Load
-    
-    private func loadNote(_ id: UUID) async {
+
+    private func loadNote(_ id: NoteID) async {
         do {
-            let note = try await noteRepository.find(NoteID(rawValue: id))
+            let note = try await noteRepository.find(id)
             if let note = note {
                 title = note.title.rawValue
                 body = note.content
+                noteDate = note.date
             }
             isDirty = false
         } catch {
@@ -96,26 +103,29 @@ final class NoteEditorViewModel {
     // MARK: - Save
     
     func save() async {
-        let id = noteId ?? UUID()
+        let isNew = noteId == nil
+        let id = noteId ?? NoteID()
         noteCore.normalizeTitle(&title)
-        let note = noteCore.makeNote(id: id, title: title, body: body, date: Date())
-        
+        let date = noteDate ?? Date()
+        let note = noteCore.makeNote(id: id, title: title, body: body, date: date)
+
         do {
             try await syncCoordinator.save(note, strategy: .hybrid)
             noteId = id
+            noteDate = date
             isDirty = false
-            // Streak update now happens via Domain Event → StreakTracker subscriber
+            eventBus.publish(isNew ? NoteCreated(note: note) : NoteUpdated(note: note))
         } catch {
             print("NoteEditorViewModel: save failed — \(error)")
         }
     }
-    
+
     // MARK: - Delete
-    
+
     func delete() async {
         guard let id = noteId else { return }
         do {
-            try await syncCoordinator.delete(NoteID(rawValue: id), strategy: .hybrid)
+            try await syncCoordinator.delete(id, strategy: .hybrid)
         } catch {
             print("NoteEditorViewModel: delete failed — \(error)")
         }

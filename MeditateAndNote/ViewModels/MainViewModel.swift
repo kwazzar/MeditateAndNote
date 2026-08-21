@@ -17,7 +17,6 @@ final class MainViewModel: ObservableObject {
     init(meditationService: MeditationService, noteRepository: NoteRepository) {
         self.meditationService = meditationService
         self.noteRepository = noteRepository
-        self.visibleNotes = visibleNotes
 
         last10Notes = Array(visibleNotes.suffix(10))
     }

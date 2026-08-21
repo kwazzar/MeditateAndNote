@@ -7,23 +7,16 @@
 
 import SwiftUI
 
-enum Menu {
-    case Note
-    case Reading
-}
-
 struct NoteMenu: View {
     @State var viewModel: NoteMenuViewModel
-    @State var uiState: NotesUIState
     @State var searchState: SearchState
     @EnvironmentObject var router: Router
     @Environment(ThemeManager.self) private var themeManager
-    
+
     @State private var isScrolling = false
-    
+
     init(viewModel: NoteMenuViewModel) {
         self.viewModel = viewModel
-        self.uiState = viewModel.uiState
         self.searchState = viewModel.searchState
     }
     
