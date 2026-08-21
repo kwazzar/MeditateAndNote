@@ -118,3 +118,4 @@ xcuserdata
 **/xcshareddata/WorkspaceSettings.xcsettings
 .DS_Store
 graphify-out/
+.opencode/opencode.json.bak
