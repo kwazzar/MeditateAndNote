@@ -36,10 +36,8 @@ struct MainView: View {
 private extension MainView {
     var meditateButton: some View {
         Button(action: {
-            do {
-                router.navigate(to: .push(.meditation(try viewModel.getMeditation())))
-            } catch {
-                print(error)
+            if let meditation = viewModel.lastSelectedMeditation() {
+                router.navigate(to: .push(.meditation(meditation)))
             }
         }) {
             themeManager.current.meditateIcon
@@ -51,10 +49,16 @@ private extension MainView {
 struct MainView_Previews: PreviewProvider {
     static var previews: some View {
         let localDataSource = UserDefaultsNoteDataSource()
-        let noteRepository = DefaultNoteRepository(dataSource: localDataSource)
+        let remoteDataSource = InMemoryNoteDataSource()
+        let syncCoordinator = DefaultNoteSyncCoordinator(local: localDataSource, remote: remoteDataSource)
+        let itemManager = AnyNoteManager(NoteManager(syncCoordinator: syncCoordinator))
         let streakTracker = StreakTracker()
 
-        MainView(viewModel: MainViewModel(meditationService: SampleMeditationService(), noteRepository: noteRepository))
+        MainView(viewModel: MainViewModel(
+            meditationService: SampleMeditationService(),
+            selectionStore: MeditationSelectionStore(),
+            notes: itemManager
+        ))
             .environmentObject(Router.previewRouter())
             .environment(ThemeManager())
             .environment(streakTracker)

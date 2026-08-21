@@ -14,12 +14,14 @@ final class MeditateSelectViewModel: ObservableObject {
     @Published var selectedMeditationForInfo: Meditation?
     
     private let meditationService: MeditationService
-    private let lastSelectedKey = "lastSelectedMeditationId"
-    
-    init(meditationService: MeditationService) {
+    private let selectionStore: MeditationSelectionStore
+
+    init(meditationService: MeditationService,
+         selectionStore: MeditationSelectionStore = MeditationSelectionStore()) {
         self.meditationService = meditationService
+        self.selectionStore = selectionStore
         loadMeditations()
-        
+
     }
     
     func loadMeditations() {
@@ -45,13 +47,12 @@ final class MeditateSelectViewModel: ObservableObject {
     }
     
     func saveLastSelectedMeditation(_ meditation: Meditation) {
-        UserDefaults.standard.set(meditation.id, forKey: lastSelectedKey)
-        
+        selectionStore.lastSelectedID = meditation.id
     }
-    
+
     private func restoreLastSelectedMeditation() {
-        guard let lastSelectedId = UserDefaults.standard.string(forKey: lastSelectedKey),
-              let lastMeditation = meditations.first(where: { $0.id == lastSelectedId }) else {
+        guard let lastSelectedID = selectionStore.lastSelectedID,
+              let lastMeditation = meditations.first(where: { $0.id == lastSelectedID }) else {
             if let first = meditations.first {
                 selectedMeditation = first
                 saveLastSelectedMeditation(first)

@@ -23,3 +23,26 @@ final class SampleMeditationService: MeditationService {
         ]
     }
 }
+
+// MARK: - MeditationSelectionStore
+
+final class MeditationSelectionStore {
+    private static let storageKey = "lastSelectedMeditationId"
+
+    private let defaults: UserDefaults
+
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+    }
+
+    var lastSelectedID: MeditationID? {
+        get { defaults.string(forKey: Self.storageKey).map(MeditationID.init(rawValue:)) }
+        set {
+            if let newValue {
+                defaults.set(newValue.rawValue, forKey: Self.storageKey)
+            } else {
+                defaults.removeObject(forKey: Self.storageKey)
+            }
+        }
+    }
+}

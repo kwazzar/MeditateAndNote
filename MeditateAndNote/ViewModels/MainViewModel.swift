@@ -9,43 +9,39 @@ import SwiftUI
 
 final class MainViewModel: ObservableObject {
     private let meditationService: MeditationService
-    private let noteRepository: NoteRepository
-    @Published var visibleNotes: [Note] = MockNotes
+    private let selectionStore: MeditationSelectionStore
+    private let notes: any NoteProvidable & NoteManagable
+    @Published var visibleNotes: [Note] = []
     @Published var last10Notes: [Note] = []
     @Published var errorMessage: String?
 
-    init(meditationService: MeditationService, noteRepository: NoteRepository) {
+    init(meditationService: MeditationService,
+         selectionStore: MeditationSelectionStore,
+         notes: any NoteProvidable & NoteManagable) {
         self.meditationService = meditationService
-        self.noteRepository = noteRepository
+        self.selectionStore = selectionStore
+        self.notes = notes
 
         last10Notes = Array(visibleNotes.suffix(10))
     }
-    
-    func getMeditation() throws -> Meditation {
-        let lastSelectedId = UserDefaults.standard.string(forKey: "lastSelectedMeditationId") ?? "default_meditation_id"
 
-        guard let meditation = meditationService.getMeditations().first(where: { $0.id == lastSelectedId }) else {
-            throw MeditationError.notFound(id: lastSelectedId)
-        }
-        return meditation
+    func lastSelectedMeditation() -> Meditation? {
+        guard let id = selectionStore.lastSelectedID else { return nil }
+        return meditationService.getMeditations().first(where: { $0.id == id })
     }
 
     private func loadNotes() async {
-        do {
-            visibleNotes = try await noteRepository.all()
-        } catch {
-            errorMessage = error.localizedDescription
-            print("Error loading notes: \(error)")
-        }
+        await notes.refresh()
+        visibleNotes = await notes.currentItems
     }
 
     func refreshNotes() async {
         await loadNotes()
     }
 
-    func deleteNote(id: UUID) async {
+    func deleteNote(id: NoteID) async {
         do {
-            try await noteRepository.delete(NoteID(rawValue: id))
+            try await notes.deleteItem(with: id)
             await refreshNotes()
         } catch {
             errorMessage = error.localizedDescription

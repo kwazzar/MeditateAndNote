@@ -35,7 +35,7 @@ struct NoteID: Hashable, Codable {
 
 struct MeditationTitle: Hashable, Codable {
     let rawValue: String
-    
+
     init(_ rawValue: String) {
         self.rawValue = rawValue.isEmpty ? "Untitled" : rawValue
     }
@@ -60,6 +60,35 @@ extension MeditationTitle {
     }
 }
 
+//MARK: - NoteTitle
+
+struct NoteTitle: Hashable, Codable {
+    let rawValue: String
+
+    init(_ rawValue: String) {
+        self.rawValue = rawValue.isEmpty ? "Untitled" : rawValue
+    }
+}
+
+extension NoteTitle: ExpressibleByStringLiteral {
+    init(stringLiteral value: String) { self.rawValue = value.isEmpty ? "Untitled" : value }
+    init(extendedGraphemeClusterLiteral value: String) { self.rawValue = value.isEmpty ? "Untitled" : value }
+    init(unicodeScalarLiteral value: String) { self.rawValue = value.isEmpty ? "Untitled" : value }
+}
+
+extension NoteTitle {
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let value = try container.decode(String.self)
+        self.init(value)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(rawValue)
+    }
+}
+
 //MARK: - Note
 
 struct Note: Codable, Identifiable, Equatable {
@@ -71,24 +100,24 @@ struct Note: Codable, Identifiable, Equatable {
     }
     
     var id: NoteID
-    var title: MeditationTitle
+    var title: NoteTitle
     var content: String
     var date: Date
-    
-    init(id: NoteID = NoteID(), title: MeditationTitle = MeditationTitle(""), content: String = "", date: Date = Date()) {
+
+    init(id: NoteID = NoteID(), title: NoteTitle = NoteTitle(""), content: String = "", date: Date = Date()) {
         self.id = id
         self.title = title
         self.content = content
         self.date = date
     }
-    
+
     // Codable
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let uuid = try container.decode(UUID.self, forKey: .id)
         self.id = NoteID(rawValue: uuid)
         let titleString = try container.decode(String.self, forKey: .title)
-        self.title = MeditationTitle(titleString)
+        self.title = NoteTitle(titleString)
         self.content = try container.decode(String.self, forKey: .content)
         self.date = try container.decode(Date.self, forKey: .date)
     }
@@ -99,6 +128,18 @@ struct Note: Codable, Identifiable, Equatable {
         try container.encode(title.rawValue, forKey: .title)
         try container.encode(content, forKey: .content)
         try container.encode(date, forKey: .date)
+    }
+}
+
+//MARK: - NoteCore (pure domain logic)
+
+struct NoteCore {
+    func makeNote(id: NoteID, title: String, body: String, date: Date) -> Note {
+        Note(id: id, title: NoteTitle(title), content: body, date: date)
+    }
+
+    mutating func normalizeTitle(_ title: inout String) {
+        if NoteFilter.normalized(title).isEmpty { title = "Untitled" }
     }
 }
 

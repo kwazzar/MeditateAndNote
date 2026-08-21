@@ -16,7 +16,7 @@ enum Destination: Hashable {
 }
 
 extension Destination: CustomStringConvertible {
-    public var description: String {
+    var description: String {
         switch self {
         case let .tab(destination): 
             return ".tab(\(destination))"
@@ -31,99 +31,94 @@ extension Destination: CustomStringConvertible {
 }
 
 enum PushDestination: Hashable, CustomStringConvertible {
-//    case meditationDetails(id: String)
-    case noteDetails(noteId: UUID?, id: String)
-    case readingView(id: String)
+    case newNote
+    case noteDetails(noteId: NoteID)
+    case readingView
     case meditation(_ meditation: Meditation)
     case streakDetail
 
-    public var description: String {
+    var description: String {
         switch self {
-//        case let .meditationDetails(id): 
-//            return ".meditationDetails(\(id))"
-        case let .noteDetails(_, id):
-            return ".noteDetails(\(id))"
-        case let .readingView(id): 
-            return ".readingView(\(id))"
-        case .meditation(id: let id):
-            return ".meditation(\(id))"
+        case .newNote:
+            return ".newNote"
+        case let .noteDetails(noteId):
+            return ".noteDetails(\(noteId))"
+        case .readingView:
+            return ".readingView"
+        case let .meditation(meditation):
+            return ".meditation(\(meditation))"
         case .streakDetail:
             return ".streakDetail"
         }
     }
 }
 
-public enum TabDestination: String, Hashable {
+enum TabDestination: String, Hashable {
     case home
     case notes
     case meditations
 }
 
-public enum SheetDestination: Hashable, CustomStringConvertible {
+enum SheetDestination: Hashable, CustomStringConvertible {
     case newNote
     case meditationSettings
-    case noteEditor(id: String)
     case timeMeditation(onSelection: (MeditationDuration) -> Void)
 
-    public var description: String {
+    var description: String {
         switch self {
-        case .newNote: 
+        case .newNote:
             return ".newNote"
-        case .meditationSettings: 
+        case .meditationSettings:
             return ".meditationSettings"
-        case let .noteEditor(id): 
-            return ".noteEditor(\(id))"
         case .timeMeditation:
             return ".timeMeditation"
         }
     }
 
-    public static func == (lhs: SheetDestination, rhs: SheetDestination) -> Bool {
+    static func == (lhs: SheetDestination, rhs: SheetDestination) -> Bool {
         lhs.id == rhs.id
     }
 
-    public func hash(into hasher: inout Hasher) {
+    func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
 }
 
 extension SheetDestination: Identifiable {
-    public var id: String {
+    var id: String {
         switch self {
-        case .newNote: 
+        case .newNote:
             return "newNote"
-        case .meditationSettings: 
+        case .meditationSettings:
             return "meditationSettings"
-        case let .noteEditor(id): 
-            return "noteEditor_\(id)"
         case .timeMeditation:
             return ".timeMeditation"
         }
     }
 }
 
-public enum FullScreenDestination: Hashable {
-    case meditationSession(id: String)
-    case fullScreenNote(id: String)
+enum FullScreenDestination: Hashable {
+    case meditationSession(id: MeditationID)
+    case fullScreenNote(id: NoteID)
 }
 
 extension FullScreenDestination: CustomStringConvertible {
-    public var description: String {
+    var description: String {
         switch self {
-        case let .meditationSession(id): 
+        case let .meditationSession(id):
             return ".meditationSession(\(id))"
-        case let .fullScreenNote(id): 
+        case let .fullScreenNote(id):
             return ".fullScreenNote(\(id))"
         }
     }
 }
 
 extension FullScreenDestination: Identifiable {
-    public var id: String {
+    var id: String {
         switch self {
-        case let .meditationSession(id): 
+        case let .meditationSession(id):
             return "meditationSession_\(id)"
-        case let .fullScreenNote(id): 
+        case let .fullScreenNote(id):
             return "fullScreenNote_\(id)"
         }
     }

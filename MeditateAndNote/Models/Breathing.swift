@@ -76,3 +76,57 @@ enum BreathingStyle: String, CaseIterable, Identifiable {
         }
     }
 }
+
+//MARK: - BreathingClock
+
+struct BreathingClock {
+    enum RunState {
+        case running(phaseStart: Date)
+        case paused(elapsed: TimeInterval)
+    }
+
+    let pattern: BreathingPattern
+    private(set) var phaseIndex: Int
+    private(set) var runState: RunState
+
+    init(pattern: BreathingPattern) {
+        self.pattern = pattern
+        self.phaseIndex = 0
+        self.runState = .running(phaseStart: Date())
+    }
+
+    var currentPhase: BreathingPhase? {
+        pattern.phases.indices.contains(phaseIndex) ? pattern.phases[phaseIndex] : nil
+    }
+
+    mutating func pause(now: Date = Date()) {
+        if case let .running(phaseStart) = runState {
+            runState = .paused(elapsed: now.timeIntervalSince(phaseStart))
+        }
+    }
+
+    mutating func resume(now: Date = Date()) {
+        if case let .paused(elapsed) = runState {
+            runState = .running(phaseStart: now.addingTimeInterval(-elapsed))
+        }
+    }
+
+    func phaseProgress(now: Date = Date()) -> Double {
+        guard let phase = currentPhase else { return 0 }
+        let elapsed: TimeInterval
+        switch runState {
+        case let .running(phaseStart):
+            elapsed = now.timeIntervalSince(phaseStart)
+        case let .paused(frozen):
+            elapsed = frozen
+        }
+        return min(max(elapsed / phase.duration, 0), 1)
+    }
+
+    mutating func advanceIfPhaseCompleted(now: Date = Date()) -> Bool {
+        guard phaseProgress(now: now) >= 1 else { return false }
+        phaseIndex = (phaseIndex + 1) % max(pattern.phases.count, 1)
+        runState = .running(phaseStart: now)
+        return phaseIndex == 0
+    }
+}

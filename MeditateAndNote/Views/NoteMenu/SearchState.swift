@@ -8,28 +8,14 @@
 import SwiftUI
 
 //MARK: - SearchState
-struct SearchQuery {
-    let text: String
-}
-
-enum NoteFilter {
-    static func normalized(_ text: String) -> String {
-        text.trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-
-    static func matches(_ note: Note, query: String) -> Bool {
-        let trimmedQuery = normalized(query)
-        guard !trimmedQuery.isEmpty else { return true }
-        return note.title.rawValue.localizedCaseInsensitiveContains(trimmedQuery)
-            || note.content.localizedCaseInsensitiveContains(trimmedQuery)
-    }
-}
-
 @Observable
 final class SearchState {
     var searchText: SearchQuery = SearchQuery(text: "")
-    var isSearching = false
     var filteredItems: [Note] = []
+
+    var isSearching: Bool {
+        !NoteFilter.normalized(searchText.text).isEmpty
+    }
 
     private let itemProvider: any NoteProvidable
     private var availableItems: [Note] = []
@@ -44,7 +30,6 @@ final class SearchState {
     }
 
     func updateFilteredItems(for query: SearchQuery) {
-        isSearching = !NoteFilter.normalized(query.text).isEmpty
         filteredItems = availableItems.filter { NoteFilter.matches($0, query: query.text) }
     }
 }
@@ -52,7 +37,6 @@ final class SearchState {
 extension SearchState {
     func resetSearch() {
         searchText = SearchQuery(text: "")
-        isSearching = false
-        updateFilteredItems(for: SearchQuery(text: ""))
+        updateFilteredItems(for: searchText)
     }
 }

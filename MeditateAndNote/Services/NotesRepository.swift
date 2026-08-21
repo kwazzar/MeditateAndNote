@@ -6,21 +6,13 @@
 //
 
 import Foundation
-
-// MARK: - Repository Protocol (Pure CRUD, no sync strategy)
-
-protocol NoteRepository {
-    func all() async throws -> [Note]
-    func find(_ id: NoteID) async throws -> Note?
-    func save(_ note: Note) async throws
-    func delete(_ id: NoteID) async throws
-}
+import OSLog
 
 // MARK: - DataSource Protocol (Low-level storage)
 
 protocol NoteDataSource {
     associatedtype Item where Item == Note
-    
+
     func fetchAll() async throws -> [Note]
     func fetch(id: UUID) async throws -> Note?
     func save(_ note: Note) async throws
@@ -28,39 +20,11 @@ protocol NoteDataSource {
     func deleteAll() async throws
 }
 
-// MARK: - Concrete Repository Implementation
-
-final class DefaultNoteRepository: NoteRepository {
-    private let dataSource: any NoteDataSource
-    
-    init(dataSource: any NoteDataSource) {
-        self.dataSource = dataSource
-    }
-    
-    func all() async throws -> [Note] {
-        try await dataSource.fetchAll()
-    }
-    
-    func find(_ id: NoteID) async throws -> Note? {
-        try await dataSource.fetch(id: id.rawValue)
-    }
-    
-    func save(_ note: Note) async throws {
-        try await dataSource.save(note)
-    }
-    
-    func delete(_ id: NoteID) async throws {
-        try await dataSource.delete(id: id.rawValue)
-    }
-}
-
 // MARK: - Errors
 
 enum RepositoryError: Error {
-    case invalidID
-    case notFound
-    case saveFailed
     case invalidURL
+    case saveFailed
 }
 
 // MARK: - In-Memory Implementation
@@ -93,24 +57,64 @@ final class InMemoryNoteDataSource: NoteDataSource {
     }
 }
 
+// MARK: - Storage DTO (ACL between domain Note and persistence format)
+
+private struct CodableNoteDTO: Codable {
+    let id: UUID
+    let title: String
+    let content: String
+    let date: Date
+}
+
 // MARK: - UserDefaults Implementation
 
 final class UserDefaultsNoteDataSource: NoteDataSource {
-    private let key = "saved_notes"
+    private static let key = "saved_notes"
+
+    private let logger = Logger(subsystem: Config.bundleID, category: "NotesPersistence")
     private let defaults = UserDefaults.standard
-    
-    func fetchAll() async throws -> [Note] {
-        guard let data = defaults.data(forKey: key),
-              let notes = try? JSONDecoder().decode([Note].self, from: data) else {
-            return []
+    private var lastKnownGood: [Note]?
+
+    private func decodeNotes(from data: Data) throws -> [Note] {
+        let dtos = try JSONDecoder().decode([CodableNoteDTO].self, from: data)
+        return dtos.map { dto in
+            Note(
+                id: NoteID(rawValue: dto.id),
+                title: NoteTitle(dto.title),
+                content: dto.content,
+                date: dto.date
+            )
         }
-        return notes
     }
-    
+
+    private func encodeNotes(_ notes: [Note]) -> Data? {
+        let dtos = notes.map { note in
+            CodableNoteDTO(id: note.id.rawValue, title: note.title.rawValue, content: note.content, date: note.date)
+        }
+        do {
+            return try JSONEncoder().encode(dtos)
+        } catch {
+            logger.error("Failed to encode notes for storage — \(error.localizedDescription)")
+            return nil
+        }
+    }
+
+    func fetchAll() async throws -> [Note] {
+        guard let data = defaults.data(forKey: Self.key) else { return lastKnownGood ?? [] }
+        do {
+            let notes = try decodeNotes(from: data)
+            lastKnownGood = notes
+            return notes
+        } catch {
+            logger.error("Failed to decode stored notes, keeping last known good state — \(error.localizedDescription)")
+            return lastKnownGood ?? []
+        }
+    }
+
     func fetch(id: UUID) async throws -> Note? {
         try await fetchAll().first { $0.id.rawValue == id }
     }
-    
+
     func save(_ note: Note) async throws {
         var notes = try await fetchAll()
         if let index = notes.firstIndex(where: { $0.id.rawValue == note.id.rawValue }) {
@@ -118,21 +122,22 @@ final class UserDefaultsNoteDataSource: NoteDataSource {
         } else {
             notes.append(note)
         }
-        if let data = try? JSONEncoder().encode(notes) {
-            defaults.set(data, forKey: key)
-        }
+        guard let data = encodeNotes(notes) else { throw RepositoryError.saveFailed }
+        defaults.set(data, forKey: Self.key)
+        lastKnownGood = notes
     }
-    
+
     func delete(id: UUID) async throws {
         var notes = try await fetchAll()
         notes.removeAll { $0.id.rawValue == id }
-        if let data = try? JSONEncoder().encode(notes) {
-            defaults.set(data, forKey: key)
-        }
+        guard let data = encodeNotes(notes) else { throw RepositoryError.saveFailed }
+        defaults.set(data, forKey: Self.key)
+        lastKnownGood = notes
     }
-    
+
     func deleteAll() async throws {
-        defaults.removeObject(forKey: key)
+        defaults.removeObject(forKey: Self.key)
+        lastKnownGood = []
     }
 }
 

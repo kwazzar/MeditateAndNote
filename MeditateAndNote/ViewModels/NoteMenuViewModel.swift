@@ -9,15 +9,15 @@ import Foundation
 
 @Observable
 final class NoteMenuViewModel {
-    private let itemManager: AnyItemManager
+    private let itemManager: AnyNoteManager
 
-    var visibleNotes: [Note] = MockNotes
+    var visibleNotes: [Note] = []
     var errorMessage: String?
     var last10Notes: [Note] = []
 
     let searchState: SearchState
 
-    init(itemManager: AnyItemManager) {
+    init(itemManager: AnyNoteManager) {
         self.itemManager = itemManager
         self.searchState = SearchState(itemProvider: itemManager)
         self.searchState.setAvailableItems(visibleNotes)
@@ -44,7 +44,7 @@ final class NoteMenuViewModel {
 
     func deleteNote(_ note: Note) async {
         do {
-            try await itemManager.deleteItem(note)
+            try await itemManager.deleteItem(with: note.id)
             await refreshNotes()
         } catch {
             errorMessage = error.localizedDescription

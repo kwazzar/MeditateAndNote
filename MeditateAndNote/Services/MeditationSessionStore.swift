@@ -4,19 +4,28 @@
 //
 
 import Foundation
+import OSLog
 
 @Observable
-final class MeditationSessionStore: Sendable {
+final class MeditationSessionStore {
     private static let storageKey = "meditationSessions"
+
+    private let logger = Logger(subsystem: Config.bundleID, category: "SessionPersistence")
+    private let defaults: UserDefaults
 
     private(set) var sessions: [MeditationSession]
 
-    init() {
-        if let data = UserDefaults.standard.data(forKey: Self.storageKey),
-           let decoded = try? JSONDecoder().decode([MeditationSession].self, from: data) {
-            self.sessions = decoded
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+        if let data = defaults.data(forKey: Self.storageKey) {
+            do {
+                sessions = try JSONDecoder().decode([MeditationSession].self, from: data)
+            } catch {
+                logger.error("Failed to decode stored meditation sessions — \(error.localizedDescription)")
+                sessions = []
+            }
         } else {
-            self.sessions = []
+            sessions = []
         }
     }
 
@@ -38,8 +47,11 @@ final class MeditationSessionStore: Sendable {
     // MARK: - Private
 
     private func persist() {
-        if let data = try? JSONEncoder().encode(sessions) {
-            UserDefaults.standard.set(data, forKey: Self.storageKey)
+        do {
+            let data = try JSONEncoder().encode(sessions)
+            defaults.set(data, forKey: Self.storageKey)
+        } catch {
+            logger.error("Failed to persist meditation sessions — \(error.localizedDescription)")
         }
     }
 }

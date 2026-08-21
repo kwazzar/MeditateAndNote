@@ -31,12 +31,10 @@ protocol NoteSyncCoordinator {
 final class DefaultNoteSyncCoordinator: NoteSyncCoordinator {
     private let localDataSource: any NoteDataSource
     private let remoteDataSource: any NoteDataSource
-    private let eventBus: DomainEventPublisher
-    
-    init(local: any NoteDataSource, remote: any NoteDataSource, eventBus: DomainEventPublisher = DomainEventBus.shared) {
+
+    init(local: any NoteDataSource, remote: any NoteDataSource) {
         self.localDataSource = local
         self.remoteDataSource = remote
-        self.eventBus = eventBus
     }
     
     // MARK: - Fetch All
@@ -109,9 +107,6 @@ final class DefaultNoteSyncCoordinator: NoteSyncCoordinator {
             try await localDataSource.save(note)
             try await remoteDataSource.save(note)
         }
-        
-        // Publish domain event
-        eventBus.publish(NoteCreated(note: note))
     }
     
     // MARK: - Delete
@@ -128,16 +123,14 @@ final class DefaultNoteSyncCoordinator: NoteSyncCoordinator {
             try await localDataSource.delete(id: id.rawValue)
             try await remoteDataSource.delete(id: id.rawValue)
         }
-        
-        // Publish domain event
-        eventBus.publish(NoteDeleted(noteId: id))
     }
     
     // MARK: - Private Helpers
     
     private func mergeDeduplicating(local: [Note], remote: [Note]) -> [Note] {
         var merged = [UUID: Note]()
-        (local + remote).forEach { note in
+        for note in local + remote {
+            if let existing = merged[note.id.rawValue], existing.date >= note.date { continue }
             merged[note.id.rawValue] = note
         }
         return Array(merged.values)

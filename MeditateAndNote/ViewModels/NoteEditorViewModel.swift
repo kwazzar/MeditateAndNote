@@ -8,27 +8,12 @@
 import Foundation
 import Observation
 
-//MARK: - NoteCore (pure domain logic)
+//MARK: - EditTarget (draft state machine)
 
-struct NoteCore {
-    func makeNote(id: NoteID, title: String, body: String, date: Date) -> Note {
-        Note(id: id, title: MeditationTitle(title), content: body, date: date)
-    }
-    
-    func isValid(_ note: Note) -> Bool {
-        !note.title.rawValue.isEmpty(trim: true) && !note.content.isEmpty
-    }
-    
-    mutating func normalizeTitle(_ title: inout String) {
-        if title.isEmpty(trim: true) { title = "Untitled" }
-    }
-}
-
-// Helper extension for string trimming check
-private extension String {
-    func isEmpty(trim: Bool = false) -> Bool {
-        trim ? self.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty : self.isEmpty
-    }
+enum EditTarget {
+    case new
+    case loading(id: NoteID)
+    case loaded(id: NoteID, persisted: Note?)
 }
 
 //MARK: - NoteEditorViewModel
@@ -37,28 +22,35 @@ private extension String {
 final class NoteEditorViewModel {
     var title: String = ""
     var body: String = ""
-    var isDirty: Bool = false
 
-    private let noteRepository: NoteRepository
-    private let syncCoordinator: NoteSyncCoordinator
-    private let eventBus: DomainEventPublisher
-    private var noteId: NoteID?
-    private var noteDate: Date?
+    private let notes: any NoteProvidable & NoteManagable
+    private var target: EditTarget
     private var saveTask: Task<Void, Never>?
     private var autosaveWorkItem: DispatchWorkItem?
 
-    var isNewNote: Bool { noteId == nil }
-
     private var noteCore = NoteCore()
 
+    var isNewNote: Bool {
+        if case .new = target { return true }
+        return false
+    }
+
+    var isDirty: Bool {
+        switch target {
+        case .loading:
+            return false
+        case .new:
+            return !(title.isEmpty && body.isEmpty)
+        case let .loaded(_, persisted):
+            guard let persisted else { return !(title.isEmpty && body.isEmpty) }
+            return persisted.title.rawValue != title || persisted.content != body
+        }
+    }
+
     init(noteId: NoteID? = nil,
-         noteRepository: NoteRepository,
-         syncCoordinator: NoteSyncCoordinator,
-         eventBus: DomainEventPublisher = DomainEventBus.shared) {
-        self.noteId = noteId
-        self.noteRepository = noteRepository
-        self.syncCoordinator = syncCoordinator
-        self.eventBus = eventBus
+         notes: any NoteProvidable & NoteManagable) {
+        self.target = noteId.map(EditTarget.loading) ?? .new
+        self.notes = notes
 
         if let noteId {
             Task { await loadNote(noteId) }
@@ -74,47 +66,70 @@ final class NoteEditorViewModel {
 
     private func loadNote(_ id: NoteID) async {
         do {
-            let note = try await noteRepository.find(id)
-            if let note = note {
-                title = note.title.rawValue
-                body = note.content
-                noteDate = note.date
-            }
-            isDirty = false
+            let note = try await notes.item(with: id)
+            title = note?.title.rawValue ?? ""
+            body = note?.content ?? ""
+            target = .loaded(id: id, persisted: note)
         } catch {
             print("NoteEditorViewModel: failed to load note — \(error)")
+            target = .loaded(id: id, persisted: nil)
         }
     }
-    
+
     // MARK: - Autosave (debounced)
-    
+
     func onTextChanged() {
-        isDirty = true
         autosaveWorkItem?.cancel()
-        
+
         let workItem = DispatchWorkItem { [weak self] in
             guard let self, self.isDirty else { return }
-            Task { await self.save() }
+            saveTask?.cancel()
+            saveTask = Task { await self.save() }
         }
         autosaveWorkItem = workItem
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.8, execute: workItem)
     }
-    
+
     // MARK: - Save
-    
+
     func save() async {
-        let isNew = noteId == nil
-        let id = noteId ?? NoteID()
+        switch target {
+        case .loading:
+            return
+
+        case .new:
+            await saveNewNote()
+
+        case let .loaded(id, persisted):
+            await saveExisting(id: id, persisted: persisted)
+        }
+    }
+
+    private func saveNewNote() async {
         noteCore.normalizeTitle(&title)
-        let date = noteDate ?? Date()
+        let date = Date()
+        let id = NoteID()
         let note = noteCore.makeNote(id: id, title: title, body: body, date: date)
 
         do {
-            try await syncCoordinator.save(note, strategy: .hybrid)
-            noteId = id
-            noteDate = date
-            isDirty = false
-            eventBus.publish(isNew ? NoteCreated(note: note) : NoteUpdated(note: note))
+            try await notes.addItem(note)
+            target = .loaded(id: id, persisted: note)
+        } catch {
+            print("NoteEditorViewModel: save failed — \(error)")
+        }
+    }
+
+    private func saveExisting(id: NoteID, persisted: Note?) async {
+        noteCore.normalizeTitle(&title)
+        let date = persisted?.date ?? Date()
+        let note = noteCore.makeNote(id: id, title: title, body: body, date: date)
+
+        do {
+            if let persisted, persisted == note {
+                return
+            }
+            try await notes.updateItem(note)
+            target = .loaded(id: id, persisted: note)
         } catch {
             print("NoteEditorViewModel: save failed — \(error)")
         }
@@ -123,12 +138,21 @@ final class NoteEditorViewModel {
     // MARK: - Delete
 
     func delete() async {
-        guard let id = noteId else { return }
+        switch target {
+        case .new:
+            return
+        case let .loading(id):
+            await performDelete(id)
+        case let .loaded(id, _):
+            await performDelete(id)
+        }
+    }
+
+    private func performDelete(_ id: NoteID) async {
         do {
-            try await syncCoordinator.delete(id, strategy: .hybrid)
+            try await notes.deleteItem(with: id)
         } catch {
             print("NoteEditorViewModel: delete failed — \(error)")
         }
     }
 }
-

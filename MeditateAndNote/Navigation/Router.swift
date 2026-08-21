@@ -8,30 +8,30 @@
 import Foundation
 import OSLog
 
-public final class Router: ObservableObject {
+final class Router: ObservableObject {
     let id = UUID()
     let level: Int
     
     /// Specifies which tab the router was build for
-    public let identifierTab: TabDestination?
+    let identifierTab: TabDestination?
     
     /// Only relevant for the `level 0` root router. Defines the tab to select
-    @Published public var selectedTab: TabDestination?
+    @Published var selectedTab: TabDestination?
     
     /// Values presented in the navigation stack
     @Published var navigationStackPath: [PushDestination] = []
     
     /// Current presented sheet
-    @Published public var presentingSheet: SheetDestination?
+    @Published var presentingSheet: SheetDestination?
     
     /// Current presented full screen
-    @Published public var presentingFullScreen: FullScreenDestination?
+    @Published var presentingFullScreen: FullScreenDestination?
     
     //MARK: - isDetailPresented
     /// Indicates whether a detail view is pushed in any child navigation stack
-    @Published public var isDetailPresented: Bool = false
+    @Published var isDetailPresented: Bool = false
     
-    public let logger = Logger(subsystem: Config.bundleID, category: "Navigation")
+    let logger = Logger(subsystem: Config.bundleID, category: "Navigation")
     
     /// Reference to the parent router to form a hierarchy
     /// Router levels increase for the children
@@ -41,7 +41,7 @@ public final class Router: ObservableObject {
     /// Used for deep link resolution
     private(set) var isActive: Bool = false
     
-    public init(level: Int, identifierTab: TabDestination?) {
+    init(level: Int, identifierTab: TabDestination?) {
         self.level = level
         self.identifierTab = identifierTab
         self.parent = nil
@@ -61,7 +61,7 @@ public final class Router: ObservableObject {
 }
 
 // MARK: - Router Management
-public extension Router {
+extension Router {
     func childRouter(for tab: TabDestination? = nil) -> Router {
         let router = Router(level: level + 1, identifierTab: tab ?? identifierTab)
         router.parent = self
@@ -137,7 +137,7 @@ extension Router {
 }
 
 extension Router: CustomDebugStringConvertible {
-    public var debugDescription: String {
+    var debugDescription: String {
         "Router[\(shortId) - \(identifierTabName) - Level: \(level)]"
     }
     

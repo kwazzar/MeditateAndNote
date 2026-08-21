@@ -207,6 +207,47 @@ final class StreakTrackerTests: XCTestCase {
         XCTAssertTrue(tracker.activity(for: day).isComplete)
     }
 
+    func testDuplicateMarksOnConsecutiveDays_doNotInflateStreak() {
+        let tracker = makeSUT()
+        let day1 = date(year: 2026, month: 8, day: 19)
+        let day2 = date(year: 2026, month: 8, day: 20)
+
+        tracker.markNoteCreated(date: day1)
+        tracker.markMeditationCompleted(date: day1)
+        XCTAssertEqual(tracker.currentStreak, 1)
+
+        tracker.markNoteCreated(date: day2)
+        tracker.markMeditationCompleted(date: day2)
+        XCTAssertEqual(tracker.currentStreak, 2)
+
+        tracker.markNoteCreated(date: day2) // duplicate after complete predecessor
+        tracker.markMeditationCompleted(date: day2) // duplicate
+        XCTAssertEqual(tracker.currentStreak, 2, "Duplicate marks on an already counted day must not inflate the streak")
+        XCTAssertEqual(tracker.longestStreak, 2)
+    }
+
+    func testDuplicateMarksSurviveRecreation() {
+        let today = date(year: 2026, month: 8, day: 20)
+        let yesterday = date(year: 2026, month: 8, day: 19)
+
+        do {
+            let tracker = makeSUT()
+            tracker.markNoteCreated(date: yesterday)
+            tracker.markMeditationCompleted(date: yesterday)
+            tracker.markNoteCreated(date: today)
+            tracker.markMeditationCompleted(date: today)
+            XCTAssertEqual(tracker.currentStreak, 2)
+        }
+
+        do {
+            let tracker = makeSUT()
+            XCTAssertEqual(tracker.currentStreak, 2)
+            tracker.markNoteCreated(date: today) // duplicate across instance recreation
+            tracker.markMeditationCompleted(date: today)
+            XCTAssertEqual(tracker.currentStreak, 2, "Counted-day memory must persist across instances")
+        }
+    }
+
     // MARK: - fullRecalculation
 
     func testFullRecalculation_rebuildsStreakFromHistory() {

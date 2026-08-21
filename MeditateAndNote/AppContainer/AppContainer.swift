@@ -8,67 +8,61 @@
 import Foundation
 
 final class AppContainer: ObservableObject {
-    
+
     // MARK: - Services (Singletons)
     private let eventBus = DomainEventBus.shared
-    
+
     private lazy var localDataSource: any NoteDataSource = UserDefaultsNoteDataSource()
     private lazy var remoteDataSource: any NoteDataSource = InMemoryNoteDataSource()
-    
-    private lazy var noteRepository: NoteRepository = DefaultNoteRepository(dataSource: localDataSource)
+
     private lazy var syncCoordinator: NoteSyncCoordinator = DefaultNoteSyncCoordinator(
         local: localDataSource,
         remote: remoteDataSource
     )
-    
-    private(set) lazy var streakTracker = StreakTracker()
+
+    private(set) lazy var streakTracker = StreakTracker(eventBus: eventBus)
     private(set) lazy var meditationSessionStore = MeditationSessionStore()
     private let meditationService: MeditationService = SampleMeditationService()
-    
-    private lazy var noteManager = NoteManager(
-        syncCoordinator: syncCoordinator,
-        noteRepository: noteRepository
-    )
+    private(set) lazy var selectionStore = MeditationSelectionStore()
+
+    private lazy var noteManager = NoteManager(syncCoordinator: syncCoordinator, eventBus: eventBus)
+    private lazy var itemManager = AnyNoteManager(noteManager)
 
     init() {
         eventBus.subscribe(streakTracker)
     }
-    
+
     // MARK: - ViewModels Factory Methods
-    
+
     func makeMainViewModel() -> MainViewModel {
-        MainViewModel(meditationService: meditationService, noteRepository: noteRepository)
-    }
-    
-    func makeNoteViewModel(noteId: UUID? = nil) -> NoteViewModel {
-        NoteViewModel(
-            noteId: noteId.map(NoteID.init(rawValue:)),
-            noteRepository: noteRepository,
-            syncCoordinator: syncCoordinator
+        MainViewModel(
+            meditationService: meditationService,
+            selectionStore: selectionStore,
+            notes: itemManager
         )
     }
 
-    func makeNoteEditorViewModel(noteId: UUID? = nil) -> NoteEditorViewModel {
-        NoteEditorViewModel(
-            noteId: noteId.map(NoteID.init(rawValue:)),
-            noteRepository: noteRepository,
-            syncCoordinator: syncCoordinator
-        )
+    func makeNoteViewModel(noteId: NoteID? = nil) -> NoteViewModel {
+        NoteViewModel(noteId: noteId, notes: itemManager)
     }
-    
+
+    func makeNoteEditorViewModel(noteId: NoteID? = nil) -> NoteEditorViewModel {
+        NoteEditorViewModel(noteId: noteId, notes: itemManager)
+    }
+
     func makeMeditateSelectViewModel() -> MeditateSelectViewModel {
-        MeditateSelectViewModel(meditationService: meditationService)
+        MeditateSelectViewModel(meditationService: meditationService, selectionStore: selectionStore)
     }
-    
+
     func makeMeditationViewModel(for meditation: Meditation) -> MeditationViewModel {
         MeditationViewModel(
             meditation: meditation,
-            sessionStore: meditationSessionStore
+            sessionStore: meditationSessionStore,
+            eventBus: eventBus
         )
     }
-    
-func makeNoteMenuViewModel() -> NoteMenuViewModel {
-        NoteMenuViewModel(itemManager: AnyItemManager(noteManager))
+
+    func makeNoteMenuViewModel() -> NoteMenuViewModel {
+        NoteMenuViewModel(itemManager: itemManager)
     }
 }
-

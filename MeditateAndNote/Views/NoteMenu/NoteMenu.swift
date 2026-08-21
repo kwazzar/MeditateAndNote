@@ -34,8 +34,7 @@ struct NoteMenu: View {
                             NoteCard(
                                 note: note,
                                 toNoteAction: { note in
-                                    router.navigate(to: .push(.noteDetails(noteId: note.id.rawValue,
-                                                                           id: "note details \(note.id)")))
+                                    router.navigate(to: .push(.noteDetails(noteId: note.id)))
                                 }
                             )
                         }
@@ -72,8 +71,7 @@ private extension NoteMenu {
     
     var addNoteButton: some View {
         Button(action: {
-            router.navigate(to: .push(.noteDetails(noteId: nil,
-                                                   id: "new note")))
+            router.navigate(to: .push(.newNote))
         }) {
             
             HStack {

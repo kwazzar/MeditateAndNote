@@ -124,7 +124,7 @@ private extension MeditationView {
             case .paused:
                 viewModel.resume()
             case .finished:
-                router.navigate(to: .push(.readingView(id: "read")))
+                router.navigate(to: .push(.readingView))
             }
         }) {
             ZStack {
