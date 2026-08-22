@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import OSLog
 
 // MARK: - Search Query & Note Filter (domain rules)
 
@@ -29,25 +30,41 @@ enum NoteFilter {
 // MARK: - Protocols for ViewModels
 
 protocol NoteProvidable {
-    var currentItems: [Note] { get async }
-    func item(with id: NoteID) async throws -> Note?
-    func filterItems(query: SearchQuery) async -> [Note]
+    var currentNotes: [Note] { get async }
+    func note(with id: NoteID) async throws -> Note?
+    func notes(matching query: SearchQuery) async -> [Note]
     func refresh() async
 }
 
 protocol NoteManagable {
-    func addItem(_ item: Note) async throws
-    func updateItem(_ item: Note) async throws
-    func deleteItem(with id: NoteID) async throws
+    func add(_ note: Note) async throws
+    func update(_ note: Note) async throws
+    func delete(with id: NoteID) async throws
+}
+
+// MARK: - Errors
+
+enum NoteOperationError: Error {
+    case loadFailed(NoteID)
+    case saveFailed
+    case deleteFailed(NoteID)
+
+    var message: String {
+        switch self {
+        case .loadFailed: "Не вдалося завантажити нотатку"
+        case .saveFailed: "Не вдалося зберегти нотатку"
+        case .deleteFailed: "Не вдалося видалити нотатку"
+        }
+    }
 }
 
 // MARK: - Note Manager (Application Service)
 
 final actor NoteManager: NoteProvidable, NoteManagable {
+    private let logger = Logger(subsystem: Config.bundleID, category: "NoteManager")
     private let syncCoordinator: NoteSyncCoordinator
     private let eventBus: DomainEventPublisher
-    private(set) var currentItems: [Note] = []
-    private(set) var lastError: Error?
+    private(set) var currentNotes: [Note] = []
 
     init(syncCoordinator: NoteSyncCoordinator,
          eventBus: DomainEventPublisher = DomainEventBus.shared) {
@@ -61,31 +78,31 @@ final actor NoteManager: NoteProvidable, NoteManagable {
         await refreshFromRemote()
     }
 
-    func item(with id: NoteID) async throws -> Note? {
+    func note(with id: NoteID) async throws -> Note? {
         try await syncCoordinator.find(id, strategy: .localOnly)
     }
 
-    func filterItems(query: SearchQuery) async -> [Note] {
-        currentItems.filter { NoteFilter.matches($0, query: query.text) }
+    func notes(matching query: SearchQuery) async -> [Note] {
+        currentNotes.filter { NoteFilter.matches($0, query: query.text) }
     }
 
     // MARK: - NoteManagable
 
-    func addItem(_ item: Note) async throws {
-        try await syncCoordinator.save(item, strategy: .hybrid)
-        currentItems = try await syncCoordinator.fetchAll(strategy: .hybrid)
-        eventBus.publish(NoteCreated(note: item))
+    func add(_ note: Note) async throws {
+        try await syncCoordinator.save(note, strategy: .hybrid)
+        currentNotes = try await syncCoordinator.fetchAll(strategy: .hybrid)
+        eventBus.publish(NoteCreated(date: note.date))
     }
 
-    func updateItem(_ item: Note) async throws {
-        try await syncCoordinator.save(item, strategy: .hybrid)
-        currentItems = try await syncCoordinator.fetchAll(strategy: .hybrid)
-        eventBus.publish(NoteUpdated(note: item))
+    func update(_ note: Note) async throws {
+        try await syncCoordinator.save(note, strategy: .hybrid)
+        currentNotes = try await syncCoordinator.fetchAll(strategy: .hybrid)
+        eventBus.publish(NoteUpdated(date: note.date))
     }
 
-    func deleteItem(with id: NoteID) async throws {
+    func delete(with id: NoteID) async throws {
         try await syncCoordinator.delete(id, strategy: .hybrid)
-        currentItems = try await syncCoordinator.fetchAll(strategy: .hybrid)
+        currentNotes = try await syncCoordinator.fetchAll(strategy: .hybrid)
         eventBus.publish(NoteDeleted(noteId: id))
     }
 
@@ -93,11 +110,9 @@ final actor NoteManager: NoteProvidable, NoteManagable {
 
     private func refreshFromRemote() async {
         do {
-            currentItems = try await syncCoordinator.fetchAll(strategy: .remoteFirst)
-            lastError = nil
+            currentNotes = try await syncCoordinator.fetchAll(strategy: .remoteFirst)
         } catch {
-            print("Failed to fetch initial notes: \(error)")
-            lastError = error
+            logger.error("Failed to fetch initial notes — \(error.localizedDescription)")
         }
     }
 }

@@ -12,7 +12,7 @@ final class NoteViewModel: ObservableObject {
     @Published var isEditing: Bool = false
     @Published var title: NoteTitle = NoteTitle("")
     @Published var content: String = ""
-    @Published var errorText: String?
+    @Published var error: NoteOperationError?
     @Published var isSaving: Bool = false
 
     private let notes: any NoteProvidable & NoteManagable
@@ -34,12 +34,12 @@ final class NoteViewModel: ObservableObject {
     func loadNoteIfNeeded() async {
         guard let id = noteId, !isNewNote else { return }
         do {
-            let existingNote = try await notes.item(with: id)
+            let existingNote = try await notes.note(with: id)
             self.note = existingNote ?? Note(title: NoteTitle(""), content: "", date: Date())
             self.title = existingNote?.title ?? NoteTitle("")
             self.content = existingNote?.content ?? ""
         } catch {
-            errorText = "Не вдалося завантажити нотатку"
+            self.error = .loadFailed(id)
         }
     }
 
@@ -56,14 +56,14 @@ final class NoteViewModel: ObservableObject {
         )
         do {
             if isNewNote {
-                try await notes.addItem(updatedNote)
+                try await notes.add(updatedNote)
             } else {
-                try await notes.updateItem(updatedNote)
+                try await notes.update(updatedNote)
             }
             note = updatedNote
             isEditing = false
         } catch {
-            errorText = "Не вдалося зберегти нотатку"
+            self.error = .saveFailed
         }
     }
 

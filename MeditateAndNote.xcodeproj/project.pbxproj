@@ -26,7 +26,6 @@
 		AA000011202608200000000C /* DayCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000012202608200000000C /* DayCellView.swift */; };
 		AA0000202026082100000001 /* StreakTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000102026082000000008 /* StreakTrackerTests.swift */; };
 		E320C3ED2E2D1AC9009452DD /* Destination.swift in Sources */ = {isa = PBXBuildFile; fileRef = E320C3EC2E2D1AC9009452DD /* Destination.swift */; };
-		E320C3EF2E2D1C12009452DD /* MeditateAndNoteDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = E320C3EE2E2D1C12009452DD /* MeditateAndNoteDetails.swift */; };
 		E320C3F12E2D1CD6009452DD /* Router.swift in Sources */ = {isa = PBXBuildFile; fileRef = E320C3F02E2D1CD6009452DD /* Router.swift */; };
 		E320C3F32E2D1F67009452DD /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = E320C3F22E2D1F67009452DD /* Config.swift */; };
 		E320C3F52E2DC691009452DD /* Deeplink.swift in Sources */ = {isa = PBXBuildFile; fileRef = E320C3F42E2DC691009452DD /* Deeplink.swift */; };
@@ -90,7 +89,6 @@
 		AA000012202608200000000C /* DayCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayCellView.swift; sourceTree = "<group>"; };
 		AA0000202026082100000002 /* MeditateAndNoteTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MeditateAndNoteTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E320C3EC2E2D1AC9009452DD /* Destination.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Destination.swift; sourceTree = "<group>"; };
-		E320C3EE2E2D1C12009452DD /* MeditateAndNoteDetails.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditateAndNoteDetails.swift; sourceTree = "<group>"; };
 		E320C3F02E2D1CD6009452DD /* Router.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Router.swift; sourceTree = "<group>"; };
 		E320C3F22E2D1F67009452DD /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
 		E320C3F42E2DC691009452DD /* Deeplink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Deeplink.swift; sourceTree = "<group>"; };
@@ -280,7 +278,6 @@
 				E36187802D68D021000E326D /* Note.swift */,
 				E3848D532E3BCAC4001BE8AB /* Meditation.swift */,
 				E34D18AC2E425A01004CCFA8 /* Breathing.swift */,
-				789B7B093010417D0082F0CB /* MainTheme.swift */,
 				AA0000022026082000000001 /* DailyActivity.swift */,
 				AA0000042026082000000002 /* MeditationSession.swift */,
 			);
@@ -294,6 +291,7 @@
 				78C86D8E3037C27500950DB9 /* Main */,
 				788956A33032068B0001D509 /* ThemePickerView.swift */,
 				E3BAF8A52E293D340036E250 /* ReadingView.swift */,
+				AA0000AA2026082200000001 /* Theme */,
 				782A8C0C302D0DE70004249F /* NoteMenu */,
 				E34D18AB2E424CEE004CCFA8 /* Meditation */,
 				78C59AE03036C554007C155E /* NoteEditor */,
@@ -301,6 +299,14 @@
 				E36187842D68D087000E326D /* Components */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		AA0000AA2026082200000001 /* Theme */ = {
+			isa = PBXGroup;
+			children = (
+				789B7B093010417D0082F0CB /* MainTheme.swift */,
+			);
+			path = Theme;
 			sourceTree = "<group>";
 		};
 		E36187842D68D087000E326D /* Components */ = {
@@ -364,7 +370,6 @@
 				E320C3EC2E2D1AC9009452DD /* Destination.swift */,
 				E320C3F82E2DC8E4009452DD /* Destination-ViewMapping.swift */,
 				E320C3F02E2D1CD6009452DD /* Router.swift */,
-				E320C3EE2E2D1C12009452DD /* MeditateAndNoteDetails.swift */,
 				E320C3F22E2D1F67009452DD /* Config.swift */,
 				E320C3F42E2DC691009452DD /* Deeplink.swift */,
 				E320C3F62E2DC6D4009452DD /* DeepLinkParser.swift */,
@@ -482,7 +487,6 @@
 				788956A6303208330001D509 /* MeditateButtonComponents.swift in Sources */,
 				789B7B0A3010417D0082F0CB /* MainTheme.swift in Sources */,
 				78215B573038AB5000DD8F99 /* DomainEvents.swift in Sources */,
-				E320C3EF2E2D1C12009452DD /* MeditateAndNoteDetails.swift in Sources */,
 				78215B553038AB4200DD8F99 /* NoteSyncCoordinator.swift in Sources */,
 				E361876F2D68B221000E326D /* MeditateAndNoteApp.swift in Sources */,
 				E3848D542E3BCAC4001BE8AB /* Meditation.swift in Sources */,

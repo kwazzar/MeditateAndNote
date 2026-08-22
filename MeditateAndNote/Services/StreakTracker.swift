@@ -16,17 +16,61 @@ struct StreakSnapshot {
 }
 
 protocol StreakActivityStore {
+    /// Loads the last saved snapshot, or nil when nothing valid is stored.
+    /// Implementations must never return a partially populated snapshot.
     func load() -> StreakSnapshot?
+    /// Persists the snapshot atomically: either every field lands in storage,
+    /// or none does.
     func save(_ snapshot: StreakSnapshot)
 }
 
 // MARK: - UserDefaults Implementation
 
 final class UserDefaultsStreakStore: StreakActivityStore {
-    private static let activitiesKey = "streakDailyActivities"
-    private static let currentKey = "streakCurrent"
-    private static let longestKey = "streakLongest"
-    private static let lastCountedKey = "streakLastCountedDay"
+    private static let snapshotKey = "streakSnapshot"
+    private static let legacyActivitiesKey = "streakDailyActivities"
+    private static let legacyCurrentKey = "streakCurrent"
+    private static let legacyLongestKey = "streakLongest"
+    private static let legacyLastCountedKey = "streakLastCountedDay"
+
+    private struct CodableDailyActivity: Codable {
+        let date: Date
+        let hasMeditation: Bool
+        let hasNote: Bool
+
+        init(from activity: DailyActivity) {
+            self.date = activity.date
+            self.hasMeditation = activity.hasMeditation
+            self.hasNote = activity.hasNote
+        }
+
+        func toDailyActivity() -> DailyActivity {
+            DailyActivity(date: date, hasMeditation: hasMeditation, hasNote: hasNote)
+        }
+    }
+
+    private struct CodableSnapshot: Codable {
+        let activities: [CodableDailyActivity]
+        let currentStreak: Int
+        let longestStreak: Int
+        let lastCountedDay: Date?
+
+        init(from snapshot: StreakSnapshot) {
+            self.activities = snapshot.activities.map(CodableDailyActivity.init(from:))
+            self.currentStreak = snapshot.currentStreak
+            self.longestStreak = snapshot.longestStreak
+            self.lastCountedDay = snapshot.lastCountedDay
+        }
+
+        func toSnapshot() -> StreakSnapshot {
+            StreakSnapshot(
+                activities: activities.map { $0.toDailyActivity() },
+                currentStreak: currentStreak,
+                longestStreak: longestStreak,
+                lastCountedDay: lastCountedDay
+            )
+        }
+    }
 
     private let logger = Logger(subsystem: Config.bundleID, category: "StreakPersistence")
     private let defaults: UserDefaults
@@ -36,125 +80,120 @@ final class UserDefaultsStreakStore: StreakActivityStore {
     }
 
     func load() -> StreakSnapshot? {
-        guard let data = defaults.data(forKey: Self.activitiesKey) else { return nil }
-        do {
-            let decoded = try JSONDecoder().decode([CodableDailyActivity].self, from: data)
-            return StreakSnapshot(
-                activities: decoded.map { $0.toDailyActivity() },
-                currentStreak: defaults.integer(forKey: Self.currentKey),
-                longestStreak: defaults.integer(forKey: Self.longestKey),
-                lastCountedDay: defaults.object(forKey: Self.lastCountedKey) as? Date
-            )
-        } catch {
-            logger.error("Failed to load streak activities — \(error.localizedDescription)")
-            return nil
+        if let data = defaults.data(forKey: Self.snapshotKey) {
+            do {
+                return try JSONDecoder().decode(CodableSnapshot.self, from: data).toSnapshot()
+            } catch {
+                logger.error("Failed to decode streak snapshot — \(error.localizedDescription)")
+                return nil
+            }
         }
+        return migrateLegacyState()
     }
 
     func save(_ snapshot: StreakSnapshot) {
         do {
-            let codable = snapshot.activities.map { CodableDailyActivity(from: $0) }
-            let data = try JSONEncoder().encode(codable)
-            defaults.set(data, forKey: Self.activitiesKey)
+            let data = try JSONEncoder().encode(CodableSnapshot(from: snapshot))
+            defaults.set(data, forKey: Self.snapshotKey)
         } catch {
-            logger.error("Failed to persist streak activities — \(error.localizedDescription)")
+            logger.error("Failed to persist streak snapshot — \(error.localizedDescription)")
         }
-        defaults.set(snapshot.currentStreak, forKey: Self.currentKey)
-        defaults.set(snapshot.longestStreak, forKey: Self.longestKey)
-        if let day = snapshot.lastCountedDay {
-            defaults.set(day, forKey: Self.lastCountedKey)
-        } else {
-            defaults.removeObject(forKey: Self.lastCountedKey)
+    }
+
+    private func migrateLegacyState() -> StreakSnapshot? {
+        guard let data = defaults.data(forKey: Self.legacyActivitiesKey) else { return nil }
+        do {
+            let activities = try JSONDecoder().decode([CodableDailyActivity].self, from: data)
+                .map { $0.toDailyActivity() }
+            let snapshot = StreakSnapshot(
+                activities: activities,
+                currentStreak: defaults.integer(forKey: Self.legacyCurrentKey),
+                longestStreak: defaults.integer(forKey: Self.legacyLongestKey),
+                lastCountedDay: defaults.object(forKey: Self.legacyLastCountedKey) as? Date
+            )
+            save(snapshot)
+            defaults.removeObject(forKey: Self.legacyActivitiesKey)
+            defaults.removeObject(forKey: Self.legacyCurrentKey)
+            defaults.removeObject(forKey: Self.legacyLongestKey)
+            defaults.removeObject(forKey: Self.legacyLastCountedKey)
+            return snapshot
+        } catch {
+            logger.error("Failed to migrate legacy streak state — \(error.localizedDescription)")
+            return nil
         }
     }
 }
 
-// MARK: - Codable wrapper (Date keys require manual Codable conformance)
+// MARK: - ActivityHistory
 
-private struct CodableDailyActivity: Codable {
-    let date: Date
-    let hasMeditation: Bool
-    let hasNote: Bool
+struct ActivityHistory {
+    let noteDates: [Date]
+    let meditationDates: [Date]
 
-    init(from activity: DailyActivity) {
-        self.date = activity.date
-        self.hasMeditation = activity.hasMeditation
-        self.hasNote = activity.hasNote
-    }
-
-    func toDailyActivity() -> DailyActivity {
-        DailyActivity(date: date, hasMeditation: hasMeditation, hasNote: hasNote)
+    init(noteDates: [Date] = [], meditationDates: [Date] = []) {
+        self.noteDates = noteDates
+        self.meditationDates = meditationDates
     }
 }
 
-// MARK: - StreakTracker (pure domain logic)
+// MARK: - StreakEngine (pure domain logic)
 
-@Observable
-final class StreakTracker: @unchecked Sendable {
-
+struct StreakEngine {
+    private let calendar: Calendar
+    private(set) var dailyActivities: [Date: DailyActivity] = [:]
     private(set) var currentStreak: Int = 0
     private(set) var longestStreak: Int = 0
-    private(set) var dailyActivities: [Date: DailyActivity] = [:]
+    private(set) var lastCountedDay: Date?
 
-    private var lastCountedDay: Date?
-
-    private let calendar: Calendar
-    private let store: StreakActivityStore
-    private let eventBus: DomainEventPublisher
-
-    convenience init(calendar: Calendar = .current,
-                     defaults: UserDefaults = .standard,
-                     eventBus: DomainEventPublisher = DomainEventBus.shared) {
-        self.init(calendar: calendar, eventBus: eventBus, store: UserDefaultsStreakStore(defaults: defaults))
-    }
-
-    init(calendar: Calendar, eventBus: DomainEventPublisher, store: StreakActivityStore) {
+    init(calendar: Calendar, snapshot: StreakSnapshot? = nil) {
         self.calendar = calendar
-        self.eventBus = eventBus
-        self.store = store
-        if let snapshot = store.load() {
+        if let snapshot {
             dailyActivities = Dictionary(uniqueKeysWithValues: snapshot.activities.map { ($0.date, $0) })
             currentStreak = snapshot.currentStreak
             longestStreak = snapshot.longestStreak
             lastCountedDay = snapshot.lastCountedDay.map { startOfDay($0) }
         }
-        checkStreakBreak()
     }
 
-    // MARK: - Public API
+    var snapshot: StreakSnapshot {
+        StreakSnapshot(
+            activities: Array(dailyActivities.values),
+            currentStreak: currentStreak,
+            longestStreak: longestStreak,
+            lastCountedDay: lastCountedDay
+        )
+    }
 
-    func markNoteCreated(date: Date = .now) {
+    mutating func markNoteCreated(on date: Date) -> StreakChanged? {
         let key = startOfDay(date)
         ensureActivityExists(for: key)
         dailyActivities[key]?.hasNote = true
-        updateStreak(today: key)
-        persist()
+        return updateStreak(today: key)
     }
 
-    func markMeditationCompleted(date: Date = .now) {
+    mutating func markMeditationCompleted(on date: Date) -> StreakChanged? {
         let key = startOfDay(date)
         ensureActivityExists(for: key)
         dailyActivities[key]?.hasMeditation = true
-        updateStreak(today: key)
-        persist()
+        return updateStreak(today: key)
     }
 
-    func checkStreakBreak() {
-        let today = startOfDay(.now)
-        let yesterday = startOfDay(today.addingTimeInterval(-86_400))
-        let todayActivity = dailyActivities[today]
+    mutating func checkStreakBreak(now: Date = .now) {
+        let today = startOfDay(now)
+        let yesterday = startOfDay(now.addingTimeInterval(-86_400))
         let yesterdayComplete = dailyActivities[yesterday]?.isComplete ?? false
+        let todayComplete = dailyActivities[today]?.isComplete ?? false
 
-        if !yesterdayComplete && !(todayActivity?.isComplete ?? false) {
+        if !yesterdayComplete && !todayComplete {
             currentStreak = 0
             lastCountedDay = nil
         }
     }
 
-    func fullRecalculation(noteDates: [Date], meditationDates: [Date]) {
+    mutating func recalculate(_ history: ActivityHistory) {
         var activities: [Date: DailyActivity] = [:]
 
-        for raw in noteDates {
+        for raw in history.noteDates {
             let key = startOfDay(raw)
             if activities[key] == nil {
                 activities[key] = DailyActivity(date: key, hasMeditation: false, hasNote: false)
@@ -162,7 +201,7 @@ final class StreakTracker: @unchecked Sendable {
             activities[key]?.hasNote = true
         }
 
-        for raw in meditationDates {
+        for raw in history.meditationDates {
             let key = startOfDay(raw)
             if activities[key] == nil {
                 activities[key] = DailyActivity(date: key, hasMeditation: false, hasNote: false)
@@ -199,7 +238,6 @@ final class StreakTracker: @unchecked Sendable {
         currentStreak = running
         if currentStreak > longestStreak { longestStreak = currentStreak }
         lastCountedDay = sortedDays.last(where: { activities[$0]?.isComplete ?? false })
-        persist()
     }
 
     func activity(for date: Date) -> DailyActivity {
@@ -207,15 +245,13 @@ final class StreakTracker: @unchecked Sendable {
         return dailyActivities[key] ?? DailyActivity(date: key, hasMeditation: false, hasNote: false)
     }
 
-    var isTodayComplete: Bool {
-        activity(for: Date()).isComplete
+    func isTodayComplete(now: Date = .now) -> Bool {
+        activity(for: now).isComplete
     }
 
-    // MARK: - Private
-
-    private func updateStreak(today: Date) {
-        guard dailyActivities[today]?.isComplete ?? false else { return }
-        guard lastCountedDay != today else { return }
+    private mutating func updateStreak(today: Date) -> StreakChanged? {
+        guard dailyActivities[today]?.isComplete ?? false else { return nil }
+        guard lastCountedDay != today else { return nil }
 
         let yesterday = startOfDay(today.addingTimeInterval(-86_400))
         let yesterdayComplete = dailyActivities[yesterday]?.isComplete ?? false
@@ -223,10 +259,10 @@ final class StreakTracker: @unchecked Sendable {
         currentStreak = (yesterdayComplete && currentStreak > 0) ? currentStreak + 1 : 1
         if currentStreak > longestStreak { longestStreak = currentStreak }
         lastCountedDay = today
-        eventBus.publish(StreakChanged(currentStreak: currentStreak, longestStreak: longestStreak))
+        return StreakChanged(currentStreak: currentStreak, longestStreak: longestStreak)
     }
 
-    private func ensureActivityExists(for date: Date) {
+    private mutating func ensureActivityExists(for date: Date) {
         guard dailyActivities[date] == nil else { return }
         dailyActivities[date] = DailyActivity(date: date, hasMeditation: false, hasNote: false)
     }
@@ -234,28 +270,104 @@ final class StreakTracker: @unchecked Sendable {
     private func startOfDay(_ date: Date) -> Date {
         calendar.startOfDay(for: date)
     }
+}
+
+// MARK: - StreakTracker (observable adapter over the domain engine)
+
+@Observable
+final class StreakTracker {
+
+    private(set) var currentStreak: Int = 0
+    private(set) var longestStreak: Int = 0
+    private(set) var dailyActivities: [Date: DailyActivity] = [:]
+
+    private var engine: StreakEngine
+    private let store: StreakActivityStore
+    private let eventBus: DomainEventPublisher
+
+    convenience init(calendar: Calendar = .current,
+                     defaults: UserDefaults = .standard,
+                     eventBus: DomainEventPublisher = DomainEventBus.shared) {
+        self.init(calendar: calendar, eventBus: eventBus, store: UserDefaultsStreakStore(defaults: defaults))
+    }
+
+    init(calendar: Calendar, eventBus: DomainEventPublisher, store: StreakActivityStore) {
+        self.store = store
+        self.eventBus = eventBus
+        self.engine = StreakEngine(calendar: calendar, snapshot: store.load())
+        engine.checkStreakBreak()
+        mirrorEngine()
+    }
+
+    // MARK: - Public API
+
+    func markNoteCreated(date: Date = .now) {
+        apply { $0.markNoteCreated(on: date) }
+    }
+
+    func markMeditationCompleted(date: Date = .now) {
+        apply { $0.markMeditationCompleted(on: date) }
+    }
+
+    func checkStreakBreak() {
+        engine.checkStreakBreak()
+        mirrorEngine()
+    }
+
+    func fullRecalculation(_ history: ActivityHistory) {
+        apply {
+            $0.recalculate(history)
+            return nil
+        }
+    }
+
+    func activity(for date: Date) -> DailyActivity {
+        engine.activity(for: date)
+    }
+
+    var isTodayComplete: Bool {
+        engine.isTodayComplete()
+    }
+
+    // MARK: - Private
+
+    private func apply(_ mutation: (inout StreakEngine) -> StreakChanged?) {
+        var next = engine
+        let change = mutation(&next)
+        engine = next
+        mirrorEngine()
+        persist()
+
+        if let change {
+            eventBus.publish(change)
+        }
+    }
+
+    private func mirrorEngine() {
+        currentStreak = engine.currentStreak
+        longestStreak = engine.longestStreak
+        dailyActivities = engine.dailyActivities
+    }
 
     private func persist() {
-        store.save(StreakSnapshot(
-            activities: Array(dailyActivities.values),
-            currentStreak: currentStreak,
-            longestStreak: longestStreak,
-            lastCountedDay: lastCountedDay
-        ))
+        store.save(engine.snapshot)
     }
 }
 
 // MARK: - Domain Event Subscription
 
-extension StreakTracker: DomainEventSubscriber {
-    func handle(_ event: DomainEvent) {
-        switch event {
-        case let event as NoteCreated:
-            markNoteCreated(date: event.note.date)
-        case let event as MeditationCompleted:
-            markMeditationCompleted(date: event.session.completedAt)
-        default:
-            break
-        }
+extension StreakTracker: DomainEventVisitor {
+    func visit(_ event: NoteCreated) {
+        markNoteCreated(date: event.date)
     }
+
+    func visit(_ event: NoteUpdated) {}
+
+    func visit(_ event: NoteDeleted) {}
+
+    func visit(_ event: MeditationCompleted) {
+        markMeditationCompleted(date: event.session.completedAt)
+    }
+
+    func visit(_ event: StreakChanged) {}
 }

@@ -7,19 +7,23 @@
 
 import Foundation
 import Observation
+import OSLog
 
 //MARK: - EditTarget (draft state machine)
 
 enum EditTarget {
     case new
     case loading(id: NoteID)
-    case loaded(id: NoteID, persisted: Note?)
+    case loaded(id: NoteID, persisted: Note)
+    case notFound(id: NoteID)
 }
 
 //MARK: - NoteEditorViewModel
 
 @Observable
 final class NoteEditorViewModel {
+    private let logger = Logger(subsystem: Config.bundleID, category: "NoteEditorViewModel")
+
     var title: String = ""
     var body: String = ""
 
@@ -27,8 +31,6 @@ final class NoteEditorViewModel {
     private var target: EditTarget
     private var saveTask: Task<Void, Never>?
     private var autosaveWorkItem: DispatchWorkItem?
-
-    private var noteCore = NoteCore()
 
     var isNewNote: Bool {
         if case .new = target { return true }
@@ -39,10 +41,9 @@ final class NoteEditorViewModel {
         switch target {
         case .loading:
             return false
-        case .new:
+        case .new, .notFound:
             return !(title.isEmpty && body.isEmpty)
         case let .loaded(_, persisted):
-            guard let persisted else { return !(title.isEmpty && body.isEmpty) }
             return persisted.title.rawValue != title || persisted.content != body
         }
     }
@@ -66,13 +67,16 @@ final class NoteEditorViewModel {
 
     private func loadNote(_ id: NoteID) async {
         do {
-            let note = try await notes.item(with: id)
-            title = note?.title.rawValue ?? ""
-            body = note?.content ?? ""
-            target = .loaded(id: id, persisted: note)
+            if let note = try await notes.note(with: id) {
+                title = note.title.rawValue
+                body = note.content
+                target = .loaded(id: id, persisted: note)
+            } else {
+                target = .notFound(id: id)
+            }
         } catch {
-            print("NoteEditorViewModel: failed to load note — \(error)")
-            target = .loaded(id: id, persisted: nil)
+            logger.error("Failed to load note — \(error.localizedDescription)")
+            target = .notFound(id: id)
         }
     }
 
@@ -102,36 +106,38 @@ final class NoteEditorViewModel {
 
         case let .loaded(id, persisted):
             await saveExisting(id: id, persisted: persisted)
+
+        case let .notFound(id):
+            await saveExisting(id: id, persisted: nil)
         }
     }
 
     private func saveNewNote() async {
-        noteCore.normalizeTitle(&title)
-        let date = Date()
         let id = NoteID()
-        let note = noteCore.makeNote(id: id, title: title, body: body, date: date)
+        let note = Note(id: id, title: NoteTitle(title), content: body, date: Date())
+        title = note.title.rawValue
 
         do {
-            try await notes.addItem(note)
+            try await notes.add(note)
             target = .loaded(id: id, persisted: note)
         } catch {
-            print("NoteEditorViewModel: save failed — \(error)")
+            logger.error("Save failed — \(error.localizedDescription)")
         }
     }
 
     private func saveExisting(id: NoteID, persisted: Note?) async {
-        noteCore.normalizeTitle(&title)
         let date = persisted?.date ?? Date()
-        let note = noteCore.makeNote(id: id, title: title, body: body, date: date)
+        let note = Note(id: id, title: NoteTitle(title), content: body, date: date)
+        title = note.title.rawValue
 
         do {
             if let persisted, persisted == note {
                 return
             }
-            try await notes.updateItem(note)
+            try await notes.update(note)
             target = .loaded(id: id, persisted: note)
         } catch {
-            print("NoteEditorViewModel: save failed — \(error)")
+            logger.error("Save failed — \(error.localizedDescription)")
         }
     }
 
@@ -141,18 +147,20 @@ final class NoteEditorViewModel {
         switch target {
         case .new:
             return
-        case let .loading(id):
-            await performDelete(id)
+        case .loading:
+            return
         case let .loaded(id, _):
+            await performDelete(id)
+        case let .notFound(id):
             await performDelete(id)
         }
     }
 
     private func performDelete(_ id: NoteID) async {
         do {
-            try await notes.deleteItem(with: id)
+            try await notes.delete(with: id)
         } catch {
-            print("NoteEditorViewModel: delete failed — \(error)")
+            logger.error("Delete failed — \(error.localizedDescription)")
         }
     }
 }

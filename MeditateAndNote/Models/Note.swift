@@ -11,15 +11,15 @@ import Foundation
 
 struct NoteID: Hashable, Codable {
     let rawValue: UUID
-    
+
     init() { self.rawValue = UUID() }
     init(rawValue: UUID) { self.rawValue = rawValue }
-    
+
     static func == (lhs: NoteID, rhs: NoteID) -> Bool {
         lhs.rawValue == rhs.rawValue
     }
     func hash(into hasher: inout Hasher) { hasher.combine(rawValue) }
-    
+
     // Codable
     init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
@@ -37,14 +37,13 @@ struct MeditationTitle: Hashable, Codable {
     let rawValue: String
 
     init(_ rawValue: String) {
-        self.rawValue = rawValue.isEmpty ? "Untitled" : rawValue
+        let trimmed = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.rawValue = trimmed.isEmpty ? "Untitled" : trimmed
     }
 }
 
 extension MeditationTitle: ExpressibleByStringLiteral {
-    init(stringLiteral value: String) { self.rawValue = value.isEmpty ? "Untitled" : value }
-    init(extendedGraphemeClusterLiteral value: String) { self.rawValue = value.isEmpty ? "Untitled" : value }
-    init(unicodeScalarLiteral value: String) { self.rawValue = value.isEmpty ? "Untitled" : value }
+    init(stringLiteral value: String) { self.init(value) }
 }
 
 extension MeditationTitle {
@@ -66,14 +65,13 @@ struct NoteTitle: Hashable, Codable {
     let rawValue: String
 
     init(_ rawValue: String) {
-        self.rawValue = rawValue.isEmpty ? "Untitled" : rawValue
+        let trimmed = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.rawValue = trimmed.isEmpty ? "Untitled" : trimmed
     }
 }
 
 extension NoteTitle: ExpressibleByStringLiteral {
-    init(stringLiteral value: String) { self.rawValue = value.isEmpty ? "Untitled" : value }
-    init(extendedGraphemeClusterLiteral value: String) { self.rawValue = value.isEmpty ? "Untitled" : value }
-    init(unicodeScalarLiteral value: String) { self.rawValue = value.isEmpty ? "Untitled" : value }
+    init(stringLiteral value: String) { self.init(value) }
 }
 
 extension NoteTitle {
@@ -98,17 +96,25 @@ struct Note: Codable, Identifiable, Equatable {
         case content
         case date
     }
-    
-    var id: NoteID
-    var title: NoteTitle
-    var content: String
-    var date: Date
+
+    let id: NoteID
+    let title: NoteTitle
+    let content: String
+    let date: Date
 
     init(id: NoteID = NoteID(), title: NoteTitle = NoteTitle(""), content: String = "", date: Date = Date()) {
         self.id = id
         self.title = title
         self.content = content
         self.date = date
+    }
+
+    func updating(content: String) -> Note {
+        Note(id: id, title: title, content: content, date: date)
+    }
+
+    func retitled(_ title: String) -> Note {
+        Note(id: id, title: NoteTitle(title), content: content, date: date)
     }
 
     // Codable
@@ -130,16 +136,3 @@ struct Note: Codable, Identifiable, Equatable {
         try container.encode(date, forKey: .date)
     }
 }
-
-//MARK: - NoteCore (pure domain logic)
-
-struct NoteCore {
-    func makeNote(id: NoteID, title: String, body: String, date: Date) -> Note {
-        Note(id: id, title: NoteTitle(title), content: body, date: date)
-    }
-
-    mutating func normalizeTitle(_ title: inout String) {
-        if NoteFilter.normalized(title).isEmpty { title = "Untitled" }
-    }
-}
-

@@ -22,13 +22,43 @@ struct SessionID: Hashable, Codable {
     }
 }
 
+struct SessionDuration: Hashable, Codable {
+    let seconds: TimeInterval
+
+    init?(seconds: TimeInterval) {
+        guard seconds > 0 else { return nil }
+        self.seconds = seconds
+    }
+
+    init(_ duration: MeditationDuration) {
+        self.seconds = duration.rawValue
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let raw = try container.decode(TimeInterval.self)
+        guard raw > 0 else {
+            throw DecodingError.dataCorruptedError(
+                in: container,
+                debugDescription: "Session duration must be positive"
+            )
+        }
+        self.seconds = raw
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(seconds)
+    }
+}
+
 struct MeditationSession: Codable, Identifiable, Hashable {
     let id: SessionID
     let meditationId: MeditationID
     let completedAt: Date
-    let duration: TimeInterval
+    let duration: SessionDuration
 
-    init(id: SessionID = SessionID(), meditationId: MeditationID, completedAt: Date = .now, duration: TimeInterval) {
+    init(id: SessionID = SessionID(), meditationId: MeditationID, completedAt: Date = .now, duration: SessionDuration) {
         self.id = id
         self.meditationId = meditationId
         self.completedAt = completedAt

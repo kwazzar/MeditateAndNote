@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+#warning("design with existed themes")
 #warning("додати звук до стейтів медитації")
 #warning("вигляд time навігейшн sheet це меню вибору книги")
 struct MeditationView: View {

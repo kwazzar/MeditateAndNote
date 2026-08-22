@@ -55,3 +55,19 @@ final class MeditationSessionStore {
         }
     }
 }
+
+// MARK: - Domain Event Subscription
+
+extension MeditationSessionStore: DomainEventVisitor {
+    func visit(_ event: NoteCreated) {}
+
+    func visit(_ event: NoteUpdated) {}
+
+    func visit(_ event: NoteDeleted) {}
+
+    func visit(_ event: MeditationCompleted) {
+        save(event.session)
+    }
+
+    func visit(_ event: StreakChanged) {}
+}

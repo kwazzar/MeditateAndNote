@@ -30,6 +30,7 @@ final class AppContainer: ObservableObject {
 
     init() {
         eventBus.subscribe(streakTracker)
+        eventBus.subscribe(meditationSessionStore)
     }
 
     // MARK: - ViewModels Factory Methods
@@ -57,7 +58,6 @@ final class AppContainer: ObservableObject {
     func makeMeditationViewModel(for meditation: Meditation) -> MeditationViewModel {
         MeditationViewModel(
             meditation: meditation,
-            sessionStore: meditationSessionStore,
             eventBus: eventBus
         )
     }

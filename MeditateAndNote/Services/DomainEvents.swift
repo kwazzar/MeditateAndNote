@@ -11,34 +11,55 @@ import Foundation
 
 protocol DomainEvent {
     var occurredAt: Date { get }
+    func accept(_ visitor: DomainEventVisitor)
 }
 
 // MARK: - Concrete Domain Events
 
 struct NoteCreated: DomainEvent {
-    let note: Note
+    let date: Date
     let occurredAt: Date = Date()
+
+    func accept(_ visitor: DomainEventVisitor) { visitor.visit(self) }
 }
 
 struct NoteUpdated: DomainEvent {
-    let note: Note
+    let date: Date
     let occurredAt: Date = Date()
+
+    func accept(_ visitor: DomainEventVisitor) { visitor.visit(self) }
 }
 
 struct NoteDeleted: DomainEvent {
     let noteId: NoteID
     let occurredAt: Date = Date()
+
+    func accept(_ visitor: DomainEventVisitor) { visitor.visit(self) }
 }
 
 struct MeditationCompleted: DomainEvent {
     let session: MeditationSession
     let occurredAt: Date = Date()
+
+    func accept(_ visitor: DomainEventVisitor) { visitor.visit(self) }
 }
 
 struct StreakChanged: DomainEvent {
     let currentStreak: Int
     let longestStreak: Int
     let occurredAt: Date = Date()
+
+    func accept(_ visitor: DomainEventVisitor) { visitor.visit(self) }
+}
+
+// MARK: - Event Visitor Protocol
+
+protocol DomainEventVisitor: AnyObject {
+    func visit(_ event: NoteCreated)
+    func visit(_ event: NoteUpdated)
+    func visit(_ event: NoteDeleted)
+    func visit(_ event: MeditationCompleted)
+    func visit(_ event: StreakChanged)
 }
 
 // MARK: - Event Publisher Protocol
@@ -47,33 +68,27 @@ protocol DomainEventPublisher: AnyObject {
     func publish(_ event: DomainEvent)
 }
 
-// MARK: - Event Subscriber Protocol
-
-protocol DomainEventSubscriber: AnyObject {
-    func handle(_ event: DomainEvent)
-}
-
 // MARK: - Simple In-Memory Event Bus
 
 final class DomainEventBus: DomainEventPublisher {
-    private var subscribers: [DomainEventSubscriber] = []
+    private var visitors: [DomainEventVisitor] = []
     private let queue = DispatchQueue(label: "domain.event.bus", attributes: .concurrent)
-    
-    func subscribe(_ subscriber: DomainEventSubscriber) {
+
+    func subscribe(_ visitor: DomainEventVisitor) {
         queue.async(flags: .barrier) { [weak self] in
-            self?.subscribers.append(subscriber)
+            self?.visitors.append(visitor)
         }
     }
-    
-    func unsubscribe(_ subscriber: DomainEventSubscriber) {
+
+    func unsubscribe(_ visitor: DomainEventVisitor) {
         queue.async(flags: .barrier) { [weak self] in
-            self?.subscribers.removeAll { $0 === subscriber }
+            self?.visitors.removeAll { $0 === visitor }
         }
     }
-    
+
     func publish(_ event: DomainEvent) {
-        let snapshot = queue.sync { subscribers }
-        snapshot.forEach { $0.handle(event) }
+        let snapshot = queue.sync { visitors }
+        snapshot.forEach { event.accept($0) }
     }
 }
 

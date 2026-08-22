@@ -27,6 +27,10 @@ final class StreakTrackerTests: XCTestCase {
         StreakTracker(calendar: calendar, defaults: defaults)
     }
 
+    private func startOfToday() -> Date {
+        calendar.startOfDay(for: Date())
+    }
+
     private func date(year: Int, month: Int, day: Int) -> Date {
         var components = DateComponents()
         components.year = year
@@ -227,8 +231,8 @@ final class StreakTrackerTests: XCTestCase {
     }
 
     func testDuplicateMarksSurviveRecreation() {
-        let today = date(year: 2026, month: 8, day: 20)
-        let yesterday = date(year: 2026, month: 8, day: 19)
+        let today = startOfToday()
+        let yesterday = calendar.date(byAdding: .day, value: -1, to: today)!
 
         do {
             let tracker = makeSUT()
@@ -265,7 +269,7 @@ final class StreakTrackerTests: XCTestCase {
             date(year: 2026, month: 8, day: 22),
         ]
 
-        tracker.fullRecalculation(noteDates: noteDates, meditationDates: meditationDates)
+        tracker.fullRecalculation(ActivityHistory(noteDates: noteDates, meditationDates: meditationDates))
 
         XCTAssertTrue(tracker.activity(for: date(year: 2026, month: 8, day: 18)).isComplete)
         XCTAssertTrue(tracker.activity(for: date(year: 2026, month: 8, day: 19)).isComplete)
@@ -281,7 +285,7 @@ final class StreakTrackerTests: XCTestCase {
         let tracker = makeSUT()
 
         let dates = (18...20).map { date(year: 2026, month: 8, day: $0) }
-        tracker.fullRecalculation(noteDates: dates, meditationDates: dates)
+        tracker.fullRecalculation(ActivityHistory(noteDates: dates, meditationDates: dates))
 
         XCTAssertEqual(tracker.currentStreak, 3)
         XCTAssertEqual(tracker.longestStreak, 3)
@@ -290,7 +294,7 @@ final class StreakTrackerTests: XCTestCase {
     func testFullRecalculation_emptyHistory() {
         let tracker = makeSUT()
 
-        tracker.fullRecalculation(noteDates: [], meditationDates: [])
+        tracker.fullRecalculation(ActivityHistory())
 
         XCTAssertEqual(tracker.currentStreak, 0)
         XCTAssertEqual(tracker.longestStreak, 0)
@@ -375,8 +379,7 @@ final class StreakTrackerTests: XCTestCase {
     // MARK: - Persistence round-trip
 
     func testPersistence_survivesRecreation() {
-        let key = "streakDailyActivities"
-        let today = date(year: 2026, month: 8, day: 20)
+        let today = startOfToday()
 
         // Create tracker, record activity
         do {

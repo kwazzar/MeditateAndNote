@@ -89,6 +89,11 @@ struct BreathingClock {
     private(set) var phaseIndex: Int
     private(set) var runState: RunState
 
+    var isPaused: Bool {
+        if case .paused = runState { return true }
+        return false
+    }
+
     init(pattern: BreathingPattern) {
         self.pattern = pattern
         self.phaseIndex = 0

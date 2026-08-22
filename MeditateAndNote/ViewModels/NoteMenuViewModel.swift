@@ -6,13 +6,15 @@
 //
 
 import Foundation
+import OSLog
 
 @Observable
 final class NoteMenuViewModel {
+    private let logger = Logger(subsystem: Config.bundleID, category: "NoteMenuViewModel")
     private let itemManager: AnyNoteManager
 
     var visibleNotes: [Note] = []
-    var errorMessage: String?
+    var error: NoteOperationError?
     var last10Notes: [Note] = []
 
     let searchState: SearchState
@@ -31,7 +33,7 @@ final class NoteMenuViewModel {
     }
 
     private func loadNotes() async {
-        visibleNotes = await itemManager.currentItems
+        visibleNotes = await itemManager.currentNotes
         searchState.setAvailableItems(visibleNotes)
         if !searchState.searchText.text.isEmpty {
             searchState.updateFilteredItems(for: searchState.searchText)
@@ -44,11 +46,11 @@ final class NoteMenuViewModel {
 
     func deleteNote(_ note: Note) async {
         do {
-            try await itemManager.deleteItem(with: note.id)
+            try await itemManager.delete(with: note.id)
             await refreshNotes()
         } catch {
-            errorMessage = error.localizedDescription
-            print("Error deleting note: \(error)")
+            self.error = .deleteFailed(note.id)
+            logger.error("Error deleting note — \(error.localizedDescription)")
         }
     }
 }

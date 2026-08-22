@@ -14,9 +14,9 @@ protocol NoteDataSource {
     associatedtype Item where Item == Note
 
     func fetchAll() async throws -> [Note]
-    func fetch(id: UUID) async throws -> Note?
+    func fetch(id: NoteID) async throws -> Note?
     func save(_ note: Note) async throws
-    func delete(id: UUID) async throws
+    func delete(id: NoteID) async throws
     func deleteAll() async throws
 }
 
@@ -35,23 +35,23 @@ final class InMemoryNoteDataSource: NoteDataSource {
     func fetchAll() async throws -> [Note] {
         notes
     }
-    
-    func fetch(id: UUID) async throws -> Note? {
-        notes.first { $0.id.rawValue == id }
+
+    func fetch(id: NoteID) async throws -> Note? {
+        notes.first { $0.id == id }
     }
-    
+
     func save(_ note: Note) async throws {
-        if let index = notes.firstIndex(where: { $0.id.rawValue == note.id.rawValue }) {
+        if let index = notes.firstIndex(where: { $0.id == note.id }) {
             notes[index] = note
         } else {
             notes.append(note)
         }
     }
-    
-    func delete(id: UUID) async throws {
-        notes.removeAll { $0.id.rawValue == id }
+
+    func delete(id: NoteID) async throws {
+        notes.removeAll { $0.id == id }
     }
-    
+
     func deleteAll() async throws {
         notes.removeAll()
     }
@@ -72,8 +72,12 @@ final class UserDefaultsNoteDataSource: NoteDataSource {
     private static let key = "saved_notes"
 
     private let logger = Logger(subsystem: Config.bundleID, category: "NotesPersistence")
-    private let defaults = UserDefaults.standard
+    private let defaults: UserDefaults
     private var lastKnownGood: [Note]?
+
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+    }
 
     private func decodeNotes(from data: Data) throws -> [Note] {
         let dtos = try JSONDecoder().decode([CodableNoteDTO].self, from: data)
@@ -111,13 +115,13 @@ final class UserDefaultsNoteDataSource: NoteDataSource {
         }
     }
 
-    func fetch(id: UUID) async throws -> Note? {
-        try await fetchAll().first { $0.id.rawValue == id }
+    func fetch(id: NoteID) async throws -> Note? {
+        try await fetchAll().first { $0.id == id }
     }
 
     func save(_ note: Note) async throws {
         var notes = try await fetchAll()
-        if let index = notes.firstIndex(where: { $0.id.rawValue == note.id.rawValue }) {
+        if let index = notes.firstIndex(where: { $0.id == note.id }) {
             notes[index] = note
         } else {
             notes.append(note)
@@ -127,9 +131,9 @@ final class UserDefaultsNoteDataSource: NoteDataSource {
         lastKnownGood = notes
     }
 
-    func delete(id: UUID) async throws {
+    func delete(id: NoteID) async throws {
         var notes = try await fetchAll()
-        notes.removeAll { $0.id.rawValue == id }
+        notes.removeAll { $0.id == id }
         guard let data = encodeNotes(notes) else { throw RepositoryError.saveFailed }
         defaults.set(data, forKey: Self.key)
         lastKnownGood = notes
@@ -144,15 +148,21 @@ final class UserDefaultsNoteDataSource: NoteDataSource {
 // MARK: - API Implementation
 
 final class APINoteDataSource: NoteDataSource {
-    private let baseURL = URL(string: "https://api.example.com/notes")
+    private let session: URLSession
+    private let baseURL: URL?
     private var cachedNotes: [Note] = []
+
+    init(session: URLSession = .shared, baseURL: URL?) {
+        self.session = session
+        self.baseURL = baseURL
+    }
 
     func fetchAll() async throws -> [Note] {
         cachedNotes
     }
 
-    func fetch(id: UUID) async throws -> Note? {
-        cachedNotes.first { $0.id.rawValue == id }
+    func fetch(id: NoteID) async throws -> Note? {
+        cachedNotes.first { $0.id == id }
     }
 
     func save(_ note: Note) async throws {
@@ -162,22 +172,22 @@ final class APINoteDataSource: NoteDataSource {
         request.httpBody = try JSONEncoder().encode(note)
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-        _ = try await URLSession.shared.data(for: request)
+        _ = try await session.data(for: request)
 
-        if let index = cachedNotes.firstIndex(where: { $0.id.rawValue == note.id.rawValue }) {
+        if let index = cachedNotes.firstIndex(where: { $0.id == note.id }) {
             cachedNotes[index] = note
         } else {
             cachedNotes.append(note)
         }
     }
 
-    func delete(id: UUID) async throws {
+    func delete(id: NoteID) async throws {
         guard let base = baseURL else { throw RepositoryError.invalidURL }
-        var request = URLRequest(url: base.appendingPathComponent(id.uuidString))
+        var request = URLRequest(url: base.appendingPathComponent(id.rawValue.uuidString))
         request.httpMethod = "DELETE"
 
-        _ = try await URLSession.shared.data(for: request)
-        cachedNotes.removeAll { $0.id.rawValue == id }
+        _ = try await session.data(for: request)
+        cachedNotes.removeAll { $0.id == id }
     }
 
     func deleteAll() async throws {

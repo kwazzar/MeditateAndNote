@@ -6,14 +6,16 @@
 //
 
 import SwiftUI
+import OSLog
 
 final class MainViewModel: ObservableObject {
+    private let logger = Logger(subsystem: Config.bundleID, category: "MainViewModel")
     private let meditationService: MeditationService
     private let selectionStore: MeditationSelectionStore
     private let notes: any NoteProvidable & NoteManagable
     @Published var visibleNotes: [Note] = []
     @Published var last10Notes: [Note] = []
-    @Published var errorMessage: String?
+    @Published var error: NoteOperationError?
 
     init(meditationService: MeditationService,
          selectionStore: MeditationSelectionStore,
@@ -32,7 +34,7 @@ final class MainViewModel: ObservableObject {
 
     private func loadNotes() async {
         await notes.refresh()
-        visibleNotes = await notes.currentItems
+        visibleNotes = await notes.currentNotes
     }
 
     func refreshNotes() async {
@@ -41,11 +43,11 @@ final class MainViewModel: ObservableObject {
 
     func deleteNote(id: NoteID) async {
         do {
-            try await notes.deleteItem(with: id)
+            try await notes.delete(with: id)
             await refreshNotes()
         } catch {
-            errorMessage = error.localizedDescription
-            print("Error deleting note: \(error)")
+            self.error = .deleteFailed(id)
+            logger.error("Error deleting note — \(error.localizedDescription)")
         }
     }
 }
