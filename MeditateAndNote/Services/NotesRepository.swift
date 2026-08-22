@@ -25,6 +25,7 @@ protocol NoteDataSource {
 enum RepositoryError: Error {
     case invalidURL
     case saveFailed
+    case requestFailed(statusCode: Int)
 }
 
 // MARK: - In-Memory Implementation
@@ -172,7 +173,8 @@ final class APINoteDataSource: NoteDataSource {
         request.httpBody = try JSONEncoder().encode(note)
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-        _ = try await session.data(for: request)
+        let (_, response) = try await session.data(for: request)
+        try Self.validateHTTP(response)
 
         if let index = cachedNotes.firstIndex(where: { $0.id == note.id }) {
             cachedNotes[index] = note
@@ -186,11 +188,19 @@ final class APINoteDataSource: NoteDataSource {
         var request = URLRequest(url: base.appendingPathComponent(id.rawValue.uuidString))
         request.httpMethod = "DELETE"
 
-        _ = try await session.data(for: request)
+        let (_, response) = try await session.data(for: request)
+        try Self.validateHTTP(response)
         cachedNotes.removeAll { $0.id == id }
     }
 
     func deleteAll() async throws {
         cachedNotes.removeAll()
+    }
+
+    private static func validateHTTP(_ response: URLResponse) throws {
+        guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
+            let code = (response as? HTTPURLResponse)?.statusCode ?? -1
+            throw RepositoryError.requestFailed(statusCode: code)
+        }
     }
 }

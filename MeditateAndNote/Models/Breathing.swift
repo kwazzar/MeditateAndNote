@@ -22,7 +22,8 @@ enum BreathingPhaseType: String {
 
 //MARK: - BreathingPhase
 struct BreathingPhase: Identifiable {
-    let id = UUID()
+    var id: String { type.rawValue }
+
     let type: BreathingPhaseType
     let duration: TimeInterval
 }

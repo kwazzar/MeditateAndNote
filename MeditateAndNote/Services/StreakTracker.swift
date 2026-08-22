@@ -148,7 +148,16 @@ struct StreakEngine {
     init(calendar: Calendar, snapshot: StreakSnapshot? = nil) {
         self.calendar = calendar
         if let snapshot {
-            dailyActivities = Dictionary(uniqueKeysWithValues: snapshot.activities.map { ($0.date, $0) })
+            dailyActivities = Dictionary(
+                snapshot.activities.map { ($0.date, $0) },
+                uniquingKeysWith: { current, next in
+                    DailyActivity(
+                        date: current.date,
+                        hasMeditation: current.hasMeditation || next.hasMeditation,
+                        hasNote: current.hasNote || next.hasNote
+                    )
+                }
+            )
             currentStreak = snapshot.currentStreak
             longestStreak = snapshot.longestStreak
             lastCountedDay = snapshot.lastCountedDay.map { startOfDay($0) }
@@ -180,8 +189,8 @@ struct StreakEngine {
 
     mutating func checkStreakBreak(now: Date = .now) {
         let today = startOfDay(now)
-        let yesterday = startOfDay(now.addingTimeInterval(-86_400))
-        let yesterdayComplete = dailyActivities[yesterday]?.isComplete ?? false
+        let yesterday = calendar.date(byAdding: .day, value: -1, to: today)
+        let yesterdayComplete = yesterday.flatMap { dailyActivities[$0] }?.isComplete ?? false
         let todayComplete = dailyActivities[today]?.isComplete ?? false
 
         if !yesterdayComplete && !todayComplete {
@@ -222,8 +231,8 @@ struct StreakEngine {
                 if running == 0 {
                     running = 1
                 } else {
-                    let prevDay = day.addingTimeInterval(-86_400)
-                    if activities[prevDay]?.isComplete ?? false {
+                    let prevDay = calendar.date(byAdding: .day, value: -1, to: day)
+                    if prevDay.flatMap({ activities[$0] })?.isComplete ?? false {
                         running += 1
                     } else {
                         running = 1
@@ -253,8 +262,8 @@ struct StreakEngine {
         guard dailyActivities[today]?.isComplete ?? false else { return nil }
         guard lastCountedDay != today else { return nil }
 
-        let yesterday = startOfDay(today.addingTimeInterval(-86_400))
-        let yesterdayComplete = dailyActivities[yesterday]?.isComplete ?? false
+        let yesterday = calendar.date(byAdding: .day, value: -1, to: today)
+        let yesterdayComplete = yesterday.flatMap { dailyActivities[$0] }?.isComplete ?? false
 
         currentStreak = (yesterdayComplete && currentStreak > 0) ? currentStreak + 1 : 1
         if currentStreak > longestStreak { longestStreak = currentStreak }
@@ -279,7 +288,12 @@ final class StreakTracker {
 
     private(set) var currentStreak: Int = 0
     private(set) var longestStreak: Int = 0
-    private(set) var dailyActivities: [Date: DailyActivity] = [:]
+
+    var totalCompleteDays: Int {
+        engine.dailyActivities.values.filter(\.isComplete).count
+    }
+
+    private var dailyActivities: [Date: DailyActivity] = [:]
 
     private var engine: StreakEngine
     private let store: StreakActivityStore

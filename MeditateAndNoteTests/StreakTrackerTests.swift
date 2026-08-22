@@ -298,7 +298,7 @@ final class StreakTrackerTests: XCTestCase {
 
         XCTAssertEqual(tracker.currentStreak, 0)
         XCTAssertEqual(tracker.longestStreak, 0)
-        XCTAssertTrue(tracker.dailyActivities.isEmpty)
+        XCTAssertEqual(tracker.totalCompleteDays, 0)
     }
 
     // MARK: - Midnight boundary

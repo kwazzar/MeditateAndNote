@@ -27,7 +27,7 @@ final class NoteEditorViewModel {
     var title: String = ""
     var body: String = ""
 
-    private let notes: any NoteProvidable & NoteManagable
+    private let notes: any NoteProvidable & NoteManageable
     private var target: EditTarget
     private var saveTask: Task<Void, Never>?
     private var autosaveWorkItem: DispatchWorkItem?
@@ -44,12 +44,12 @@ final class NoteEditorViewModel {
         case .new, .notFound:
             return !(title.isEmpty && body.isEmpty)
         case let .loaded(_, persisted):
-            return persisted.title.rawValue != title || persisted.content != body
+            return persisted.title != NoteTitle(title) || persisted.content != body
         }
     }
 
     init(noteId: NoteID? = nil,
-         notes: any NoteProvidable & NoteManagable) {
+         notes: any NoteProvidable & NoteManageable) {
         self.target = noteId.map(EditTarget.loading) ?? .new
         self.notes = notes
 

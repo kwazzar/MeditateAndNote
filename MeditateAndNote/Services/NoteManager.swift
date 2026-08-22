@@ -8,25 +8,6 @@
 import Foundation
 import OSLog
 
-// MARK: - Search Query & Note Filter (domain rules)
-
-struct SearchQuery {
-    let text: String
-}
-
-enum NoteFilter {
-    static func normalized(_ text: String) -> String {
-        text.trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-
-    static func matches(_ note: Note, query: String) -> Bool {
-        let trimmedQuery = normalized(query)
-        guard !trimmedQuery.isEmpty else { return true }
-        return note.title.rawValue.localizedCaseInsensitiveContains(trimmedQuery)
-            || note.content.localizedCaseInsensitiveContains(trimmedQuery)
-    }
-}
-
 // MARK: - Protocols for ViewModels
 
 protocol NoteProvidable {
@@ -36,7 +17,7 @@ protocol NoteProvidable {
     func refresh() async
 }
 
-protocol NoteManagable {
+protocol NoteManageable {
     func add(_ note: Note) async throws
     func update(_ note: Note) async throws
     func delete(with id: NoteID) async throws
@@ -48,19 +29,11 @@ enum NoteOperationError: Error {
     case loadFailed(NoteID)
     case saveFailed
     case deleteFailed(NoteID)
-
-    var message: String {
-        switch self {
-        case .loadFailed: "Не вдалося завантажити нотатку"
-        case .saveFailed: "Не вдалося зберегти нотатку"
-        case .deleteFailed: "Не вдалося видалити нотатку"
-        }
-    }
 }
 
 // MARK: - Note Manager (Application Service)
 
-final actor NoteManager: NoteProvidable, NoteManagable {
+final actor NoteManager: NoteProvidable, NoteManageable {
     private let logger = Logger(subsystem: Config.bundleID, category: "NoteManager")
     private let syncCoordinator: NoteSyncCoordinator
     private let eventBus: DomainEventPublisher
@@ -83,10 +56,10 @@ final actor NoteManager: NoteProvidable, NoteManagable {
     }
 
     func notes(matching query: SearchQuery) async -> [Note] {
-        currentNotes.filter { NoteFilter.matches($0, query: query.text) }
+        currentNotes.filter { NoteFilter.matches($0, query: query) }
     }
 
-    // MARK: - NoteManagable
+    // MARK: - NoteManageable
 
     func add(_ note: Note) async throws {
         try await syncCoordinator.save(note, strategy: .hybrid)

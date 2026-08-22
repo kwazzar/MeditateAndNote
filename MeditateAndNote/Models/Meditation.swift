@@ -64,28 +64,9 @@ struct MeditationCore {
         meditation.title.rawValue
     }
 
-    func progress(totalDuration: TimeInterval, currentTime: TimeInterval) -> Float {
-        guard totalDuration > 0 else { return 0 }
-        return Float((totalDuration - currentTime) / totalDuration)
-    }
-
-    func minutes(from duration: TimeInterval) -> Int {
-        Int(duration / 60)
-    }
-
-    func label(for duration: TimeInterval) -> String {
-        let measurement = Measurement(value: Double(minutes(from: duration)), unit: UnitDuration.minutes)
-        let formatter = MeasurementFormatter()
-        formatter.unitOptions = .naturalScale
-        formatter.locale = Locale.current
-        return formatter.string(from: measurement)
-    }
-
-    func nextPhase(after index: Int, in pattern: BreathingPattern) -> (index: Int, phase: BreathingPhase, cycleCountIncreased: Bool)? {
-        let phases = pattern.phases
-        guard !phases.isEmpty else { return nil }
-
-        let newIndex = (index + 1) % phases.count
-        return (newIndex, phases[newIndex], newIndex == 0)
+    func progress(totalDuration: SessionDuration, currentTime: TimeInterval) -> Float {
+        let total = totalDuration.seconds
+        guard total > 0 else { return 0 }
+        return Float((total - currentTime) / total)
     }
 }

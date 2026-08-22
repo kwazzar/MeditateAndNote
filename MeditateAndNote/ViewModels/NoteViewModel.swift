@@ -15,11 +15,11 @@ final class NoteViewModel: ObservableObject {
     @Published var error: NoteOperationError?
     @Published var isSaving: Bool = false
 
-    private let notes: any NoteProvidable & NoteManagable
+    private let notes: any NoteProvidable & NoteManageable
     private let noteId: NoteID?
     var isNewNote: Bool { noteId == nil }
 
-    init(noteId: NoteID? = nil, notes: any NoteProvidable & NoteManagable) {
+    init(noteId: NoteID? = nil, notes: any NoteProvidable & NoteManageable) {
         self.notes = notes
         self.noteId = noteId
         self.note = Note(title: NoteTitle(""), content: "", date: Date())

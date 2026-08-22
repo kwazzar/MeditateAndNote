@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import OSLog
 
 // MARK: - Sync Strategy
 
@@ -29,6 +30,7 @@ protocol NoteSyncCoordinator {
 // MARK: - Implementation
 
 final class DefaultNoteSyncCoordinator: NoteSyncCoordinator {
+    private let logger = Logger(subsystem: Config.bundleID, category: "NoteSync")
     private let localDataSource: any NoteDataSource
     private let remoteDataSource: any NoteDataSource
 
@@ -103,9 +105,11 @@ final class DefaultNoteSyncCoordinator: NoteSyncCoordinator {
             try await remoteDataSource.save(note)
 
         case .localFirst, .remoteFirst, .hybrid:
-            // Write to both, local first for immediate UI feedback
+            // Write to both, local first for immediate UI feedback.
+            // Remote is best-effort: the note is safe locally and the next
+            // hybrid fetch reconciles both sides via mergeDeduplicating.
             try await localDataSource.save(note)
-            try await remoteDataSource.save(note)
+            await bestEffort { try await remoteDataSource.save(note) }
         }
     }
 
@@ -121,11 +125,19 @@ final class DefaultNoteSyncCoordinator: NoteSyncCoordinator {
 
         case .localFirst, .remoteFirst, .hybrid:
             try await localDataSource.delete(id: id)
-            try await remoteDataSource.delete(id: id)
+            await bestEffort { try await self.remoteDataSource.delete(id: id) }
         }
     }
 
     // MARK: - Private Helpers
+
+    private func bestEffort(_ operation: () async throws -> Void) async {
+        do {
+            try await operation()
+        } catch {
+            logger.error("Remote note sync failed — \(error.localizedDescription); will reconcile on next fetch")
+        }
+    }
 
     private func mergeDeduplicating(local: [Note], remote: [Note]) -> [Note] {
         var merged = [NoteID: Note]()

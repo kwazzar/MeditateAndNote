@@ -6,8 +6,14 @@
 import Foundation
 import OSLog
 
+protocol MeditationSessionStoring: AnyObject {
+    func save(_ session: MeditationSession)
+    func sessions(for date: Date) -> [MeditationSession]
+    func allSessionDates() -> Set<Date>
+}
+
 @Observable
-final class MeditationSessionStore {
+final class MeditationSessionStore: MeditationSessionStoring {
     private static let storageKey = "meditationSessions"
 
     private let logger = Logger(subsystem: Config.bundleID, category: "SessionPersistence")

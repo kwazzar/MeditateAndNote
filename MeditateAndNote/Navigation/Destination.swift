@@ -62,7 +62,7 @@ enum TabDestination: String, Hashable {
 enum SheetDestination: Hashable, CustomStringConvertible {
     case newNote
     case meditationSettings
-    case timeMeditation(onSelection: (MeditationDuration) -> Void)
+    case timeMeditation
 
     var description: String {
         switch self {
@@ -73,14 +73,6 @@ enum SheetDestination: Hashable, CustomStringConvertible {
         case .timeMeditation:
             return ".timeMeditation"
         }
-    }
-
-    static func == (lhs: SheetDestination, rhs: SheetDestination) -> Bool {
-        lhs.id == rhs.id
-    }
-
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
     }
 }
 

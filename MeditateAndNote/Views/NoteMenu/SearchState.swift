@@ -14,7 +14,7 @@ final class SearchState {
     var filteredItems: [Note] = []
 
     var isSearching: Bool {
-        !NoteFilter.normalized(searchText.text).isEmpty
+        !searchText.text.isEmpty
     }
 
     private let itemProvider: any NoteProvidable
@@ -30,7 +30,7 @@ final class SearchState {
     }
 
     func updateFilteredItems(for query: SearchQuery) {
-        filteredItems = availableItems.filter { NoteFilter.matches($0, query: query.text) }
+        filteredItems = availableItems.filter { NoteFilter.matches($0, query: query) }
     }
 }
 

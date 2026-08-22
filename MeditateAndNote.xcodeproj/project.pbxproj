@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AA0003112026082200000004 /* SearchQuery.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0003102026082200000003 /* SearchQuery.swift */; };
+		AA0003012026082200000002 /* MeditationDuration.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0003002026082200000001 /* MeditationDuration.swift */; };
 		78215B553038AB4200DD8F99 /* NoteSyncCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78215B543038AB4200DD8F99 /* NoteSyncCoordinator.swift */; };
 		78215B573038AB5000DD8F99 /* DomainEvents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78215B563038AB5000DD8F99 /* DomainEvents.swift */; };
 		78421A37302C1C4E001B52A6 /* ScrollDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78421A36302C1C4C001B52A6 /* ScrollDetector.swift */; };
@@ -60,7 +62,7 @@
 		E3848D562E3BD098001BE8AB /* ContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3848D552E3BD098001BE8AB /* ContainerView.swift */; };
 		E389732B2D7918E700A9A662 /* MeditateSelectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E389732A2D7918E700A9A662 /* MeditateSelectView.swift */; };
 		E389732D2D79191200A9A662 /* MeditateSelectViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E389732C2D79191200A9A662 /* MeditateSelectViewModel.swift */; };
-		E398CE762EDE458C00B96376 /* AnyItemManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E398CE752EDE458C00B96376 /* AnyItemManager.swift */; };
+		E398CE762EDE458C00B96376 /* AnyNoteManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E398CE752EDE458C00B96376 /* AnyNoteManager.swift */; };
 		E398CE782EDE464000B96376 /* NoteManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E398CE772EDE464000B96376 /* NoteManager.swift */; };
 		E3BAF8A62E293D340036E250 /* ReadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3BAF8A52E293D340036E250 /* ReadingView.swift */; };
 		E3BAF8A92E2940380036E250 /* NavigationContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3BAF8A82E2940380036E250 /* NavigationContainer.swift */; };
@@ -81,6 +83,8 @@
 		789B7B093010417D0082F0CB /* MainTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTheme.swift; sourceTree = "<group>"; };
 		AA0000022026082000000001 /* DailyActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyActivity.swift; sourceTree = "<group>"; };
 		AA0000042026082000000002 /* MeditationSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationSession.swift; sourceTree = "<group>"; };
+		AA0003102026082200000003 /* SearchQuery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchQuery.swift; sourceTree = "<group>"; };
+		AA0003002026082200000001 /* MeditationDuration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationDuration.swift; sourceTree = "<group>"; };
 		AA0000062026082000000003 /* MeditationSessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationSessionStore.swift; sourceTree = "<group>"; };
 		AA0000082026082000000004 /* StreakTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakTracker.swift; sourceTree = "<group>"; };
 		AA00000A2026082000000005 /* StreakHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakHeaderView.swift; sourceTree = "<group>"; };
@@ -124,7 +128,7 @@
 		E3848D552E3BD098001BE8AB /* ContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContainerView.swift; sourceTree = "<group>"; };
 		E389732A2D7918E700A9A662 /* MeditateSelectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditateSelectView.swift; sourceTree = "<group>"; };
 		E389732C2D79191200A9A662 /* MeditateSelectViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditateSelectViewModel.swift; sourceTree = "<group>"; };
-		E398CE752EDE458C00B96376 /* AnyItemManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnyItemManager.swift; sourceTree = "<group>"; };
+		E398CE752EDE458C00B96376 /* AnyNoteManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnyNoteManager.swift; sourceTree = "<group>"; };
 		E398CE772EDE464000B96376 /* NoteManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteManager.swift; sourceTree = "<group>"; };
 		E3BAF8A52E293D340036E250 /* ReadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingView.swift; sourceTree = "<group>"; };
 		E3BAF8A82E2940380036E250 /* NavigationContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationContainer.swift; sourceTree = "<group>"; };
@@ -280,6 +284,8 @@
 				E34D18AC2E425A01004CCFA8 /* Breathing.swift */,
 				AA0000022026082000000001 /* DailyActivity.swift */,
 				AA0000042026082000000002 /* MeditationSession.swift */,
+				AA0003102026082200000003 /* SearchQuery.swift */,
+				AA0003002026082200000001 /* MeditationDuration.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -355,7 +361,7 @@
 				788956A13032019E0001D509 /* ThemeManager.swift */,
 				E3848D4F2E3BC9A0001BE8AB /* NotesRepository.swift */,
 				E3848D512E3BCA7F001BE8AB /* MeditationService.swift */,
-				E398CE752EDE458C00B96376 /* AnyItemManager.swift */,
+				E398CE752EDE458C00B96376 /* AnyNoteManager.swift */,
 				E398CE772EDE464000B96376 /* NoteManager.swift */,
 				AA0000062026082000000003 /* MeditationSessionStore.swift */,
 				AA0000082026082000000004 /* StreakTracker.swift */,
@@ -390,6 +396,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				AA0004302026082200000001 /* PBXTargetDependency */,
 			);
 			name = MeditateAndNoteTests;
 			productName = MeditateAndNoteTests;
@@ -414,6 +421,25 @@
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
+
+/* Begin PBXContainerItemProxy section */
+		AA0004202026082200000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E36187632D68B221000E326D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E361876A2D68B221000E326D;
+			remoteInfo = MeditateAndNote;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXTargetDependency section */
+		AA0004302026082200000001 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E361876A2D68B221000E326D /* MeditateAndNote */;
+			targetProxy = AA0004202026082200000001 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 
 /* Begin PBXProject section */
 		E36187632D68B221000E326D /* Project object */ = {
@@ -477,6 +503,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				AA0000012026082000000001 /* DailyActivity.swift in Sources */,
+				AA0003112026082200000004 /* SearchQuery.swift in Sources */,
+				AA0003012026082200000002 /* MeditationDuration.swift in Sources */,
 				AA0000032026082000000002 /* MeditationSession.swift in Sources */,
 				AA0000052026082000000003 /* MeditationSessionStore.swift in Sources */,
 				AA0000072026082000000004 /* StreakTracker.swift in Sources */,
@@ -498,7 +526,7 @@
 				E320C3F52E2DC691009452DD /* Deeplink.swift in Sources */,
 				E320C3F72E2DC6D4009452DD /* DeepLinkParser.swift in Sources */,
 				E320C3F12E2D1CD6009452DD /* Router.swift in Sources */,
-				E398CE762EDE458C00B96376 /* AnyItemManager.swift in Sources */,
+				E398CE762EDE458C00B96376 /* AnyNoteManager.swift in Sources */,
 				E361643F2E41048C00A5DCCF /* MeditationView.swift in Sources */,
 				E32E6CD12D7345CA008529D3 /* NoteCardsView.swift in Sources */,
 				788956A43032068F0001D509 /* ThemePickerView.swift in Sources */,

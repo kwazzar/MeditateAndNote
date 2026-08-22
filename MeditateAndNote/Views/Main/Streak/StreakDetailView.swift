@@ -40,7 +40,7 @@ struct StreakDetailView: View {
             Divider().frame(height: 40).foregroundStyle(themeManager.current.dividerColor)
             StatColumn(
                 title: "Total",
-                value: streakTracker.dailyActivities.values.filter(\.isComplete).count,
+                value: streakTracker.totalCompleteDays,
                 accent: false
             )
         }

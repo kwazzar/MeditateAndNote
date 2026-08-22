@@ -35,8 +35,8 @@ import SwiftUI
                 EmptyView()
             case .meditationSettings:
                 EmptyView()
-            case let .timeMeditation(onSelection):
-                TimeMeditationSheet(onSelection: onSelection)
+            case .timeMeditation:
+                EmptyView()
             }
         }
         .navigationBarTitleDisplayMode(.inline)

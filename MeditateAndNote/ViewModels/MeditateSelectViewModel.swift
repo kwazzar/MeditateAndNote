@@ -8,11 +8,20 @@
 import Foundation
 
 final class MeditateSelectViewModel: ObservableObject {
-    @Published var meditations: [Meditation] = []
+    private enum LoadState {
+        case loading
+        case loaded([Meditation])
+    }
+
+    @Published private var loadState: LoadState = .loading
     @Published var selectedMeditation: Meditation? = nil
-    @Published var isLoading = false
     @Published var selectedMeditationForInfo: Meditation?
-    
+
+    var meditations: [Meditation] {
+        guard case .loaded(let items) = loadState else { return [] }
+        return items
+    }
+
     private let meditationService: MeditationService
     private let selectionStore: MeditationSelectionStore
 
@@ -23,15 +32,14 @@ final class MeditateSelectViewModel: ObservableObject {
         loadMeditations()
 
     }
-    
+
     func loadMeditations() {
-        isLoading = true
-        
+        loadState = .loading
+
         // Simulate loading with sample data
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            self.meditations = self.meditationService.getMeditations()
+            self.loadState = .loaded(self.meditationService.getMeditations())
             self.restoreLastSelectedMeditation()
-            self.isLoading = false
         }
     }
     

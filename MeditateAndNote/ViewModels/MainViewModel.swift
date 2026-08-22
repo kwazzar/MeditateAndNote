@@ -12,14 +12,14 @@ final class MainViewModel: ObservableObject {
     private let logger = Logger(subsystem: Config.bundleID, category: "MainViewModel")
     private let meditationService: MeditationService
     private let selectionStore: MeditationSelectionStore
-    private let notes: any NoteProvidable & NoteManagable
+    private let notes: any NoteProvidable & NoteManageable
     @Published var visibleNotes: [Note] = []
     @Published var last10Notes: [Note] = []
     @Published var error: NoteOperationError?
 
     init(meditationService: MeditationService,
          selectionStore: MeditationSelectionStore,
-         notes: any NoteProvidable & NoteManagable) {
+         notes: any NoteProvidable & NoteManageable) {
         self.meditationService = meditationService
         self.selectionStore = selectionStore
         self.notes = notes

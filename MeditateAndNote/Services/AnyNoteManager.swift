@@ -9,8 +9,8 @@ import Foundation
 
 // Protocols are defined in NoteManager.swift
 
-//MARK: - AnyNoteManager (Type Erasure for NoteProvidable & NoteManagable)
-final class AnyNoteManager: NoteProvidable, NoteManagable {
+//MARK: - AnyNoteManager (Type Erasure for NoteProvidable & NoteManageable)
+final class AnyNoteManager: NoteProvidable, NoteManageable {
     private let _currentNotes: () async -> [Note]
     private let _noteWith: (NoteID) async throws -> Note?
     private let _notesMatching: (SearchQuery) async -> [Note]
@@ -19,7 +19,7 @@ final class AnyNoteManager: NoteProvidable, NoteManagable {
     private let _update: (Note) async throws -> Void
     private let _delete: (NoteID) async throws -> Void
 
-    init<T: NoteProvidable & NoteManagable>(_ manager: T) {
+    init<T: NoteProvidable & NoteManageable>(_ manager: T) {
         _currentNotes = { await manager.currentNotes }
         _noteWith = { try await manager.note(with: $0) }
         _notesMatching = { await manager.notes(matching: $0) }
