@@ -10,33 +10,36 @@ import SwiftUI
 //MARK: - MeditationViewModel
 
 final class MeditationViewModel: ObservableObject {
+
+    // Session state machine: remaining time exists only while active,
+    // so idle/finished states cannot carry stale progress values.
     private enum Session {
         case idle
-        case active(BreathingClock, duration: SessionDuration)
+        case active(BreathingClock, duration: SessionDuration, remaining: TimeInterval)
         case finished
     }
 
     private let meditation: Meditation
     private let eventBus: DomainEventPublisher
     @Published private var session: Session = .idle
-    @Published private var remaining: TimeInterval = 0
-    @Published var phaseProgress: Double = 0
+    @Published private(set) var phaseProgress: Double = 0
 
     private var timer: Timer?
     private var phaseTimer: Timer?
 
     var meditationTitle: String {
-        core.meditationTitle
+        meditation.title.rawValue
     }
 
     var currentPhase: BreathingPhase? {
-        guard case .active(let clock, _) = session else { return nil }
+        guard case .active(let clock, _, _) = session else { return nil }
         return clock.currentPhase
     }
 
     var progress: Float {
-        guard case .active(_, let duration) = session else { return 0 }
-        return core.progress(totalDuration: duration, currentTime: remaining)
+        guard case .active(_, let duration, let remaining) = session else { return 0 }
+        guard duration.seconds > 0 else { return 0 }
+        return Float((duration.seconds - remaining) / duration.seconds)
     }
 
     var meditationState: MeditationState {
@@ -45,67 +48,57 @@ final class MeditationViewModel: ObservableObject {
             return .notStarted
         case .finished:
             return .finished
-        case .active(let clock, _):
+        case .active(let clock, _, _):
             return clock.isPaused ? .paused : .started
         }
     }
 
-    private var core: MeditationCore
-
     init(meditation: Meditation, eventBus: DomainEventPublisher = DomainEventBus.shared) {
         self.meditation = meditation
         self.eventBus = eventBus
-        self.core = MeditationCore(meditation: meditation)
     }
 
     func start(with duration: MeditationDuration) {
         let durationValue = SessionDuration(duration)
-        remaining = durationValue.seconds
-        session = .active(BreathingClock(pattern: meditation.breathingStyle.pattern), duration: durationValue)
+        session = .active(
+            BreathingClock(pattern: meditation.breathingStyle.pattern),
+            duration: durationValue,
+            remaining: durationValue.seconds
+        )
         applyClock()
 
         timer?.invalidate()
         phaseTimer?.invalidate()
 
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
-            guard let self = self else { return }
-            if self.remaining > 0 {
-                withAnimation(.linear(duration: 0.3)) {
-                    self.remaining -= 1
-                }
-                if self.remaining <= 0 {
-                    DispatchQueue.main.async {
-                        self.finish()
-                    }
-                }
-            }
+            guard let self else { return }
+            self.tickSecond()
         }
 
         phaseTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
-            guard let self = self else { return }
-            guard self.meditationState == .started else { return }
+            guard let self else { return }
+            guard case .active(let clock, _, _) = self.session, !clock.isPaused else { return }
             self.tickClock()
         }
     }
 
     func pause() {
-        guard case .active(var clock, let duration) = session, !clock.isPaused else { return }
+        guard case .active(var clock, let duration, let remaining) = session, !clock.isPaused else { return }
         clock.pause()
-        session = .active(clock, duration: duration)
+        session = .active(clock, duration: duration, remaining: remaining)
         applyClock()
     }
 
     func resume() {
-        guard case .active(var clock, let duration) = session, clock.isPaused else { return }
+        guard case .active(var clock, let duration, let remaining) = session, clock.isPaused else { return }
         clock.resume()
-        session = .active(clock, duration: duration)
+        session = .active(clock, duration: duration, remaining: remaining)
     }
 
     func stop() {
         timer?.invalidate()
         phaseTimer?.invalidate()
         session = .idle
-        remaining = 0
         phaseProgress = 0
     }
 
@@ -118,11 +111,24 @@ final class MeditationViewModel: ObservableObject {
 //MARK: - Private methods
 
 private extension MeditationViewModel {
+
+    func tickSecond() {
+        guard case .active(let clock, let duration, let remaining) = session else { return }
+        let nextRemaining = remaining - 1
+        if nextRemaining > 0 {
+            withAnimation(.linear(duration: 0.3)) {
+                session = .active(clock, duration: duration, remaining: nextRemaining)
+            }
+        } else {
+            finish(duration: duration)
+        }
+    }
+
     func tickClock() {
-        guard case .active(var clock, let duration) = session else { return }
+        guard case .active(var clock, let duration, let remaining) = session else { return }
 
         _ = clock.advanceIfPhaseCompleted()
-        session = .active(clock, duration: duration)
+        session = .active(clock, duration: duration, remaining: remaining)
 
         withAnimation(.linear(duration: 0.1)) {
             phaseProgress = clock.phaseProgress()
@@ -130,33 +136,31 @@ private extension MeditationViewModel {
     }
 
     func applyClock() {
-        guard case .active(let clock, _) = session else {
+        guard case .active(let clock, _, _) = session else {
             phaseProgress = 0
             return
         }
         phaseProgress = clock.phaseProgress()
     }
 
-    func finish() {
-       DispatchQueue.main.async {
-           self.timer?.invalidate()
-           self.phaseTimer?.invalidate()
+    func finish(duration: SessionDuration) {
+        DispatchQueue.main.async {
+            self.timer?.invalidate()
+            self.phaseTimer?.invalidate()
 
-           guard case .active(_, let duration) = self.session else { return }
-           let completedSession = MeditationSession(
-               meditationId: self.meditation.id,
-               completedAt: .now,
-               duration: duration
-           )
+            let completedSession = MeditationSession(
+                meditationId: self.meditation.id,
+                completedAt: .now,
+                duration: duration
+            )
 
-           // Single write path: subscribers persist the session and update the streak
-           self.eventBus.publish(MeditationCompleted(session: completedSession))
+            // Single write path: subscribers persist the session and update the streak
+            self.eventBus.publish(.meditationCompleted(completedSession))
 
-           self.session = .finished
-           self.remaining = 0
-           withAnimation(.easeOut(duration: 0.8)) {
-               self.phaseProgress = 0
-           }
-       }
-   }
+            self.session = .finished
+            withAnimation(.easeOut(duration: 0.8)) {
+                self.phaseProgress = 0
+            }
+        }
+    }
 }

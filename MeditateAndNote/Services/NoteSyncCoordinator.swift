@@ -60,7 +60,11 @@ final class DefaultNoteSyncCoordinator: NoteSyncCoordinator {
         case .hybrid:
             let local = try await localDataSource.fetchAll()
             let remote = try await remoteDataSource.fetchAll()
-            return mergeDeduplicating(local: local, remote: remote)
+            let outcome = NoteBook.merged(local: local, remote: remote)
+            if !outcome.conflicts.isEmpty {
+                logger.warning("Sync conflicts resolved last-write-wins: \(outcome.conflicts.count)")
+            }
+            return outcome.notes
         }
     }
 
@@ -137,14 +141,5 @@ final class DefaultNoteSyncCoordinator: NoteSyncCoordinator {
         } catch {
             logger.error("Remote note sync failed — \(error.localizedDescription); will reconcile on next fetch")
         }
-    }
-
-    private func mergeDeduplicating(local: [Note], remote: [Note]) -> [Note] {
-        var merged = [NoteID: Note]()
-        for note in local + remote {
-            if let existing = merged[note.id], existing.date >= note.date { continue }
-            merged[note.id] = note
-        }
-        return Array(merged.values)
     }
 }

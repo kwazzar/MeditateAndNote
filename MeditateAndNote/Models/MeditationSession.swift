@@ -25,11 +25,6 @@ struct SessionID: Hashable, Codable {
 struct SessionDuration: Hashable, Codable {
     let seconds: TimeInterval
 
-    init?(seconds: TimeInterval) {
-        guard seconds > 0 else { return nil }
-        self.seconds = seconds
-    }
-
     init(_ duration: MeditationDuration) {
         self.seconds = duration.rawValue
     }

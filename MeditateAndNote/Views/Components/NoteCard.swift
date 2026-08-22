@@ -39,7 +39,7 @@ private extension NoteCard {
     var cardContent: some View {
         VStack(spacing: 0) {
             VStack(alignment: .leading, spacing: 8) {
-                Text(note.content)
+                Text(note.content.rawValue)
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                 Spacer()

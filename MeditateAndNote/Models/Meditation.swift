@@ -25,6 +25,34 @@ struct MeditationID: Hashable, Codable, ExpressibleByStringLiteral {
     }
 }
 
+//MARK: - MeditationTitle
+
+struct MeditationTitle: Hashable, Codable {
+    let rawValue: String
+
+    init(_ rawValue: String) {
+        let trimmed = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.rawValue = trimmed.isEmpty ? "Untitled" : trimmed
+    }
+}
+
+extension MeditationTitle: ExpressibleByStringLiteral {
+    init(stringLiteral value: String) { self.init(value) }
+}
+
+extension MeditationTitle {
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let value = try container.decode(String.self)
+        self.init(value)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(rawValue)
+    }
+}
+
 //MARK: - Meditation
 struct Meditation: Identifiable, Hashable {
     let id: MeditationID
@@ -53,20 +81,4 @@ enum MeditationCategory: String, CaseIterable {
     case sleep = "Sleep"
     case focus = "Focus"
     case relaxation = "Relaxation"
-}
-
-//MARK: - MeditationCore (pure domain logic)
-
-struct MeditationCore {
-    let meditation: Meditation
-
-    var meditationTitle: String {
-        meditation.title.rawValue
-    }
-
-    func progress(totalDuration: SessionDuration, currentTime: TimeInterval) -> Float {
-        let total = totalDuration.seconds
-        guard total > 0 else { return 0 }
-        return Float((total - currentTime) / total)
-    }
 }

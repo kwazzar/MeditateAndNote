@@ -2,93 +2,60 @@
 //  DomainEvents.swift
 //  MeditateAndNote
 //
-//  Domain Events for decoupling bounded contexts
+//  Domain Events for decoupling bounded contexts.
+//  Events are a closed sum type: every subscriber handles all cases via an
+//  exhaustive switch, so adding a new event is a compile-time decision.
 //
 
 import Foundation
 
-// MARK: - Domain Event Protocol
+// MARK: - Domain Event (sum type)
 
-protocol DomainEvent {
-    var occurredAt: Date { get }
-    func accept(_ visitor: DomainEventVisitor)
+enum DomainEvent: Sendable {
+    case noteCreated(Note)
+    case noteUpdated(Note)
+    case noteDeleted(NoteID)
+    case meditationCompleted(MeditationSession)
 }
 
-// MARK: - Concrete Domain Events
-
-struct NoteCreated: DomainEvent {
-    let date: Date
-    let occurredAt: Date = Date()
-
-    func accept(_ visitor: DomainEventVisitor) { visitor.visit(self) }
-}
-
-struct NoteUpdated: DomainEvent {
-    let date: Date
-    let occurredAt: Date = Date()
-
-    func accept(_ visitor: DomainEventVisitor) { visitor.visit(self) }
-}
-
-struct NoteDeleted: DomainEvent {
-    let noteId: NoteID
-    let occurredAt: Date = Date()
-
-    func accept(_ visitor: DomainEventVisitor) { visitor.visit(self) }
-}
-
-struct MeditationCompleted: DomainEvent {
-    let session: MeditationSession
-    let occurredAt: Date = Date()
-
-    func accept(_ visitor: DomainEventVisitor) { visitor.visit(self) }
-}
-
-struct StreakChanged: DomainEvent {
-    let currentStreak: Int
-    let longestStreak: Int
-    let occurredAt: Date = Date()
-
-    func accept(_ visitor: DomainEventVisitor) { visitor.visit(self) }
-}
-
-// MARK: - Event Visitor Protocol
-
-protocol DomainEventVisitor: AnyObject {
-    func visit(_ event: NoteCreated)
-    func visit(_ event: NoteUpdated)
-    func visit(_ event: NoteDeleted)
-    func visit(_ event: MeditationCompleted)
-    func visit(_ event: StreakChanged)
-}
-
-// MARK: - Event Publisher Protocol
+// MARK: - Publisher Protocol
 
 protocol DomainEventPublisher: AnyObject {
     func publish(_ event: DomainEvent)
 }
 
-// MARK: - Simple In-Memory Event Bus
+// MARK: - Thread-Safe In-Memory Event Bus
 
-final class DomainEventBus: DomainEventPublisher {
-    private var visitors: [DomainEventVisitor] = []
-    private let queue = DispatchQueue(label: "domain.event.bus", attributes: .concurrent)
+final class DomainEventBus: DomainEventPublisher, @unchecked Sendable {
+    typealias Handler = @Sendable (DomainEvent) -> Void
 
-    func subscribe(_ visitor: DomainEventVisitor) {
-        queue.async(flags: .barrier) { [weak self] in
-            self?.visitors.append(visitor)
-        }
+    private struct Subscription {
+        let id: UUID
+        let handler: Handler
     }
 
-    func unsubscribe(_ visitor: DomainEventVisitor) {
+    private var subscriptions: [Subscription] = []
+    private let queue = DispatchQueue(label: "domain.event.bus", attributes: .concurrent)
+
+    /// Subscribes a handler and returns a token for unsubscribing.
+    @discardableResult
+    func subscribe(_ handler: @escaping Handler) -> UUID {
+        let id = UUID()
         queue.async(flags: .barrier) { [weak self] in
-            self?.visitors.removeAll { $0 === visitor }
+            self?.subscriptions.append(Subscription(id: id, handler: handler))
+        }
+        return id
+    }
+
+    func unsubscribe(_ id: UUID) {
+        queue.async(flags: .barrier) { [weak self] in
+            self?.subscriptions.removeAll { $0.id == id }
         }
     }
 
     func publish(_ event: DomainEvent) {
-        let snapshot = queue.sync { visitors }
-        snapshot.forEach { event.accept($0) }
+        let snapshot = queue.sync { subscriptions }
+        snapshot.forEach { $0.handler(event) }
     }
 }
 

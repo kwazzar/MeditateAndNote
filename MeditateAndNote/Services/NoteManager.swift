@@ -64,19 +64,19 @@ final actor NoteManager: NoteProvidable, NoteManageable {
     func add(_ note: Note) async throws {
         try await syncCoordinator.save(note, strategy: .hybrid)
         currentNotes = try await syncCoordinator.fetchAll(strategy: .hybrid)
-        eventBus.publish(NoteCreated(date: note.date))
+        eventBus.publish(.noteCreated(note))
     }
 
     func update(_ note: Note) async throws {
         try await syncCoordinator.save(note, strategy: .hybrid)
         currentNotes = try await syncCoordinator.fetchAll(strategy: .hybrid)
-        eventBus.publish(NoteUpdated(date: note.date))
+        eventBus.publish(.noteUpdated(note))
     }
 
     func delete(with id: NoteID) async throws {
         try await syncCoordinator.delete(id, strategy: .hybrid)
         currentNotes = try await syncCoordinator.fetchAll(strategy: .hybrid)
-        eventBus.publish(NoteDeleted(noteId: id))
+        eventBus.publish(.noteDeleted(id))
     }
 
     // MARK: - Private

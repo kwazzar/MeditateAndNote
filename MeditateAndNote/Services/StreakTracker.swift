@@ -74,6 +74,7 @@ final class UserDefaultsStreakStore: StreakActivityStore {
 
     private let logger = Logger(subsystem: Config.bundleID, category: "StreakPersistence")
     private let defaults: UserDefaults
+    private var lastKnownGood: StreakSnapshot?
 
     init(defaults: UserDefaults) {
         self.defaults = defaults
@@ -82,19 +83,24 @@ final class UserDefaultsStreakStore: StreakActivityStore {
     func load() -> StreakSnapshot? {
         if let data = defaults.data(forKey: Self.snapshotKey) {
             do {
-                return try JSONDecoder().decode(CodableSnapshot.self, from: data).toSnapshot()
+                let snapshot = try JSONDecoder().decode(CodableSnapshot.self, from: data).toSnapshot()
+                lastKnownGood = snapshot
+                return snapshot
             } catch {
-                logger.error("Failed to decode streak snapshot — \(error.localizedDescription)")
-                return nil
+                logger.error("Failed to decode streak snapshot, keeping last known good state — \(error.localizedDescription)")
+                return lastKnownGood
             }
         }
-        return migrateLegacyState()
+        let migrated = migrateLegacyState()
+        lastKnownGood = migrated ?? lastKnownGood
+        return migrated ?? lastKnownGood
     }
 
     func save(_ snapshot: StreakSnapshot) {
         do {
             let data = try JSONEncoder().encode(CodableSnapshot(from: snapshot))
             defaults.set(data, forKey: Self.snapshotKey)
+            lastKnownGood = snapshot
         } catch {
             logger.error("Failed to persist streak snapshot — \(error.localizedDescription)")
         }
@@ -173,18 +179,18 @@ struct StreakEngine {
         )
     }
 
-    mutating func markNoteCreated(on date: Date) -> StreakChanged? {
+    mutating func markNoteCreated(on date: Date) {
         let key = startOfDay(date)
         ensureActivityExists(for: key)
         dailyActivities[key]?.hasNote = true
-        return updateStreak(today: key)
+        updateStreak(today: key)
     }
 
-    mutating func markMeditationCompleted(on date: Date) -> StreakChanged? {
+    mutating func markMeditationCompleted(on date: Date) {
         let key = startOfDay(date)
         ensureActivityExists(for: key)
         dailyActivities[key]?.hasMeditation = true
-        return updateStreak(today: key)
+        updateStreak(today: key)
     }
 
     mutating func checkStreakBreak(now: Date = .now) {
@@ -258,9 +264,9 @@ struct StreakEngine {
         activity(for: now).isComplete
     }
 
-    private mutating func updateStreak(today: Date) -> StreakChanged? {
-        guard dailyActivities[today]?.isComplete ?? false else { return nil }
-        guard lastCountedDay != today else { return nil }
+    private mutating func updateStreak(today: Date) {
+        guard dailyActivities[today]?.isComplete ?? false else { return }
+        guard lastCountedDay != today else { return }
 
         let yesterday = calendar.date(byAdding: .day, value: -1, to: today)
         let yesterdayComplete = yesterday.flatMap { dailyActivities[$0] }?.isComplete ?? false
@@ -268,7 +274,6 @@ struct StreakEngine {
         currentStreak = (yesterdayComplete && currentStreak > 0) ? currentStreak + 1 : 1
         if currentStreak > longestStreak { longestStreak = currentStreak }
         lastCountedDay = today
-        return StreakChanged(currentStreak: currentStreak, longestStreak: longestStreak)
     }
 
     private mutating func ensureActivityExists(for date: Date) {
@@ -297,17 +302,14 @@ final class StreakTracker {
 
     private var engine: StreakEngine
     private let store: StreakActivityStore
-    private let eventBus: DomainEventPublisher
 
     convenience init(calendar: Calendar = .current,
-                     defaults: UserDefaults = .standard,
-                     eventBus: DomainEventPublisher = DomainEventBus.shared) {
-        self.init(calendar: calendar, eventBus: eventBus, store: UserDefaultsStreakStore(defaults: defaults))
+                     defaults: UserDefaults = .standard) {
+        self.init(calendar: calendar, store: UserDefaultsStreakStore(defaults: defaults))
     }
 
-    init(calendar: Calendar, eventBus: DomainEventPublisher, store: StreakActivityStore) {
+    init(calendar: Calendar, store: StreakActivityStore) {
         self.store = store
-        self.eventBus = eventBus
         self.engine = StreakEngine(calendar: calendar, snapshot: store.load())
         engine.checkStreakBreak()
         mirrorEngine()
@@ -331,7 +333,6 @@ final class StreakTracker {
     func fullRecalculation(_ history: ActivityHistory) {
         apply {
             $0.recalculate(history)
-            return nil
         }
     }
 
@@ -345,16 +346,12 @@ final class StreakTracker {
 
     // MARK: - Private
 
-    private func apply(_ mutation: (inout StreakEngine) -> StreakChanged?) {
+    private func apply(_ mutation: (inout StreakEngine) -> Void) {
         var next = engine
-        let change = mutation(&next)
+        mutation(&next)
         engine = next
         mirrorEngine()
         persist()
-
-        if let change {
-            eventBus.publish(change)
-        }
     }
 
     private func mirrorEngine() {
@@ -370,18 +367,19 @@ final class StreakTracker {
 
 // MARK: - Domain Event Subscription
 
-extension StreakTracker: DomainEventVisitor {
-    func visit(_ event: NoteCreated) {
-        markNoteCreated(date: event.date)
+extension StreakTracker {
+    /// Exhaustive switch: adding a new DomainEvent case breaks compilation here,
+    /// forcing an explicit streak decision for it.
+    func handle(_ event: DomainEvent) {
+        switch event {
+        case let .noteCreated(note):
+            markNoteCreated(date: note.date)
+
+        case .noteUpdated, .noteDeleted:
+            break
+
+        case let .meditationCompleted(session):
+            markMeditationCompleted(date: session.completedAt)
+        }
     }
-
-    func visit(_ event: NoteUpdated) {}
-
-    func visit(_ event: NoteDeleted) {}
-
-    func visit(_ event: MeditationCompleted) {
-        markMeditationCompleted(date: event.session.completedAt)
-    }
-
-    func visit(_ event: StreakChanged) {}
 }

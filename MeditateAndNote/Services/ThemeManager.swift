@@ -6,11 +6,13 @@
 //
 
 import SwiftUI
+import OSLog
 
 @Observable
 final class ThemeManager {
     private static let storageKey = "selectedMainTheme"
 
+    private let logger = Logger(subsystem: "MeditateAndNote", category: "ThemeManager")
     private let defaults: UserDefaults
 
     var current: MainTheme {
@@ -22,6 +24,9 @@ final class ThemeManager {
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         let savedRawValue = defaults.string(forKey: Self.storageKey)
+        if let savedRawValue, MainTheme(rawValue: savedRawValue) == nil {
+            logger.warning("Unknown stored theme '\(savedRawValue)' — falling back to default")
+        }
         self.current = MainTheme(rawValue: savedRawValue ?? "") ?? .liquidGlass
     }
 }

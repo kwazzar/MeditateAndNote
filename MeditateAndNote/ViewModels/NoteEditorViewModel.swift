@@ -44,7 +44,7 @@ final class NoteEditorViewModel {
         case .new, .notFound:
             return !(title.isEmpty && body.isEmpty)
         case let .loaded(_, persisted):
-            return persisted.title != NoteTitle(title) || persisted.content != body
+            return persisted.title != NoteTitle(title) || persisted.content != NoteContent(body)
         }
     }
 
@@ -69,7 +69,7 @@ final class NoteEditorViewModel {
         do {
             if let note = try await notes.note(with: id) {
                 title = note.title.rawValue
-                body = note.content
+                body = note.content.rawValue
                 target = .loaded(id: id, persisted: note)
             } else {
                 target = .notFound(id: id)
@@ -114,7 +114,7 @@ final class NoteEditorViewModel {
 
     private func saveNewNote() async {
         let id = NoteID()
-        let note = Note(id: id, title: NoteTitle(title), content: body, date: Date())
+        let note = Note(id: id, title: NoteTitle(title), content: NoteContent(body), date: Date())
         title = note.title.rawValue
 
         do {
@@ -127,7 +127,7 @@ final class NoteEditorViewModel {
 
     private func saveExisting(id: NoteID, persisted: Note?) async {
         let date = persisted?.date ?? Date()
-        let note = Note(id: id, title: NoteTitle(title), content: body, date: date)
+        let note = Note(id: id, title: NoteTitle(title), content: NoteContent(body), date: date)
         title = note.title.rawValue
 
         do {

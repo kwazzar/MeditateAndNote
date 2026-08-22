@@ -62,7 +62,6 @@
 		E3848D562E3BD098001BE8AB /* ContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3848D552E3BD098001BE8AB /* ContainerView.swift */; };
 		E389732B2D7918E700A9A662 /* MeditateSelectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E389732A2D7918E700A9A662 /* MeditateSelectView.swift */; };
 		E389732D2D79191200A9A662 /* MeditateSelectViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E389732C2D79191200A9A662 /* MeditateSelectViewModel.swift */; };
-		E398CE762EDE458C00B96376 /* AnyNoteManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E398CE752EDE458C00B96376 /* AnyNoteManager.swift */; };
 		E398CE782EDE464000B96376 /* NoteManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E398CE772EDE464000B96376 /* NoteManager.swift */; };
 		E3BAF8A62E293D340036E250 /* ReadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3BAF8A52E293D340036E250 /* ReadingView.swift */; };
 		E3BAF8A92E2940380036E250 /* NavigationContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3BAF8A82E2940380036E250 /* NavigationContainer.swift */; };
@@ -128,7 +127,6 @@
 		E3848D552E3BD098001BE8AB /* ContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContainerView.swift; sourceTree = "<group>"; };
 		E389732A2D7918E700A9A662 /* MeditateSelectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditateSelectView.swift; sourceTree = "<group>"; };
 		E389732C2D79191200A9A662 /* MeditateSelectViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditateSelectViewModel.swift; sourceTree = "<group>"; };
-		E398CE752EDE458C00B96376 /* AnyNoteManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnyNoteManager.swift; sourceTree = "<group>"; };
 		E398CE772EDE464000B96376 /* NoteManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteManager.swift; sourceTree = "<group>"; };
 		E3BAF8A52E293D340036E250 /* ReadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingView.swift; sourceTree = "<group>"; };
 		E3BAF8A82E2940380036E250 /* NavigationContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationContainer.swift; sourceTree = "<group>"; };
@@ -361,7 +359,6 @@
 				788956A13032019E0001D509 /* ThemeManager.swift */,
 				E3848D4F2E3BC9A0001BE8AB /* NotesRepository.swift */,
 				E3848D512E3BCA7F001BE8AB /* MeditationService.swift */,
-				E398CE752EDE458C00B96376 /* AnyNoteManager.swift */,
 				E398CE772EDE464000B96376 /* NoteManager.swift */,
 				AA0000062026082000000003 /* MeditationSessionStore.swift */,
 				AA0000082026082000000004 /* StreakTracker.swift */,
@@ -526,7 +523,6 @@
 				E320C3F52E2DC691009452DD /* Deeplink.swift in Sources */,
 				E320C3F72E2DC6D4009452DD /* DeepLinkParser.swift in Sources */,
 				E320C3F12E2D1CD6009452DD /* Router.swift in Sources */,
-				E398CE762EDE458C00B96376 /* AnyNoteManager.swift in Sources */,
 				E361643F2E41048C00A5DCCF /* MeditationView.swift in Sources */,
 				E32E6CD12D7345CA008529D3 /* NoteCardsView.swift in Sources */,
 				788956A43032068F0001D509 /* ThemePickerView.swift in Sources */,

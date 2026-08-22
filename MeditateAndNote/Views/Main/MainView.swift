@@ -48,19 +48,12 @@ private extension MainView {
 
 struct MainView_Previews: PreviewProvider {
     static var previews: some View {
-        let localDataSource = UserDefaultsNoteDataSource()
-        let remoteDataSource = InMemoryNoteDataSource()
-        let syncCoordinator = DefaultNoteSyncCoordinator(local: localDataSource, remote: remoteDataSource)
-        let itemManager = AnyNoteManager(NoteManager(syncCoordinator: syncCoordinator))
-        let streakTracker = StreakTracker()
-
         MainView(viewModel: MainViewModel(
             meditationService: SampleMeditationService(),
-            selectionStore: MeditationSelectionStore(),
-            notes: itemManager
+            selectionStore: MeditationSelectionStore()
         ))
             .environmentObject(Router.previewRouter())
             .environment(ThemeManager())
-            .environment(streakTracker)
+            .environment(StreakTracker())
     }
 }

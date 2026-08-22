@@ -10,11 +10,11 @@ import SwiftUI
 //MARK: - SearchState
 @Observable
 final class SearchState {
-    var searchText: SearchQuery = SearchQuery(text: "")
+    var searchText: SearchQuery = .all
     var filteredItems: [Note] = []
 
     var isSearching: Bool {
-        !searchText.text.isEmpty
+        searchText != .all
     }
 
     private let itemProvider: any NoteProvidable
@@ -36,7 +36,7 @@ final class SearchState {
 
 extension SearchState {
     func resetSearch() {
-        searchText = SearchQuery(text: "")
+        searchText = .all
         updateFilteredItems(for: searchText)
     }
 }

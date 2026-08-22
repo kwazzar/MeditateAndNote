@@ -6,48 +6,21 @@
 //
 
 import SwiftUI
-import OSLog
 
+// Home tab: resolves the last selected meditation and streak display.
+// Note-list responsibilities live in NoteMenuViewModel (Notes tab).
 final class MainViewModel: ObservableObject {
-    private let logger = Logger(subsystem: Config.bundleID, category: "MainViewModel")
     private let meditationService: MeditationService
     private let selectionStore: MeditationSelectionStore
-    private let notes: any NoteProvidable & NoteManageable
-    @Published var visibleNotes: [Note] = []
-    @Published var last10Notes: [Note] = []
-    @Published var error: NoteOperationError?
 
     init(meditationService: MeditationService,
-         selectionStore: MeditationSelectionStore,
-         notes: any NoteProvidable & NoteManageable) {
+         selectionStore: MeditationSelectionStore) {
         self.meditationService = meditationService
         self.selectionStore = selectionStore
-        self.notes = notes
-
-        last10Notes = Array(visibleNotes.suffix(10))
     }
 
     func lastSelectedMeditation() -> Meditation? {
         guard let id = selectionStore.lastSelectedID else { return nil }
         return meditationService.getMeditations().first(where: { $0.id == id })
-    }
-
-    private func loadNotes() async {
-        await notes.refresh()
-        visibleNotes = await notes.currentNotes
-    }
-
-    func refreshNotes() async {
-        await loadNotes()
-    }
-
-    func deleteNote(id: NoteID) async {
-        do {
-            try await notes.delete(with: id)
-            await refreshNotes()
-        } catch {
-            self.error = .deleteFailed(id)
-            logger.error("Error deleting note — \(error.localizedDescription)")
-        }
     }
 }

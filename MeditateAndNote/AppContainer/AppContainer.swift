@@ -20,17 +20,23 @@ final class AppContainer: ObservableObject {
         remote: remoteDataSource
     )
 
-    private(set) lazy var streakTracker = StreakTracker(eventBus: eventBus)
+    private(set) lazy var streakTracker = StreakTracker()
     private(set) lazy var meditationSessionStore = MeditationSessionStore()
     private let meditationService: MeditationService = SampleMeditationService()
     private(set) lazy var selectionStore = MeditationSelectionStore()
 
     private lazy var noteManager = NoteManager(syncCoordinator: syncCoordinator, eventBus: eventBus)
-    private lazy var itemManager = AnyNoteManager(noteManager)
 
     init() {
-        eventBus.subscribe(streakTracker)
-        eventBus.subscribe(meditationSessionStore)
+        let tracker = streakTracker
+        eventBus.subscribe { [weak tracker] event in
+            tracker?.handle(event)
+        }
+
+        let store = meditationSessionStore
+        eventBus.subscribe { [weak store] event in
+            store?.handle(event)
+        }
     }
 
     // MARK: - ViewModels Factory Methods
@@ -38,17 +44,16 @@ final class AppContainer: ObservableObject {
     func makeMainViewModel() -> MainViewModel {
         MainViewModel(
             meditationService: meditationService,
-            selectionStore: selectionStore,
-            notes: itemManager
+            selectionStore: selectionStore
         )
     }
 
     func makeNoteViewModel(noteId: NoteID? = nil) -> NoteViewModel {
-        NoteViewModel(noteId: noteId, notes: itemManager)
+        NoteViewModel(noteId: noteId, notes: noteManager)
     }
 
     func makeNoteEditorViewModel(noteId: NoteID? = nil) -> NoteEditorViewModel {
-        NoteEditorViewModel(noteId: noteId, notes: itemManager)
+        NoteEditorViewModel(noteId: noteId, notes: noteManager)
     }
 
     func makeMeditateSelectViewModel() -> MeditateSelectViewModel {
@@ -63,6 +68,6 @@ final class AppContainer: ObservableObject {
     }
 
     func makeNoteMenuViewModel() -> NoteMenuViewModel {
-        NoteMenuViewModel(itemManager: itemManager)
+        NoteMenuViewModel(notes: noteManager)
     }
 }

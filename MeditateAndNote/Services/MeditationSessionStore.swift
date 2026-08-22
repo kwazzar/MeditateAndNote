@@ -64,16 +64,15 @@ final class MeditationSessionStore: MeditationSessionStoring {
 
 // MARK: - Domain Event Subscription
 
-extension MeditationSessionStore: DomainEventVisitor {
-    func visit(_ event: NoteCreated) {}
+extension MeditationSessionStore {
+    /// Exhaustive switch over the closed event set.
+    func handle(_ event: DomainEvent) {
+        switch event {
+        case .noteCreated, .noteUpdated, .noteDeleted:
+            break
 
-    func visit(_ event: NoteUpdated) {}
-
-    func visit(_ event: NoteDeleted) {}
-
-    func visit(_ event: MeditationCompleted) {
-        save(event.session)
+        case let .meditationCompleted(session):
+            save(session)
+        }
     }
-
-    func visit(_ event: StreakChanged) {}
 }

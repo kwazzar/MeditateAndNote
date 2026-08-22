@@ -31,8 +31,13 @@ enum RepositoryError: Error {
 // MARK: - In-Memory Implementation
 
 final class InMemoryNoteDataSource: NoteDataSource {
-    private var notes: [Note] = MockNotes
-    
+    private var notes: [Note]
+
+    /// Production starts empty; tests and previews seed explicitly.
+    init(seedNotes: [Note] = []) {
+        self.notes = seedNotes
+    }
+
     func fetchAll() async throws -> [Note] {
         notes
     }
@@ -86,7 +91,7 @@ final class UserDefaultsNoteDataSource: NoteDataSource {
             Note(
                 id: NoteID(rawValue: dto.id),
                 title: NoteTitle(dto.title),
-                content: dto.content,
+                content: NoteContent(dto.content),
                 date: dto.date
             )
         }
@@ -94,7 +99,7 @@ final class UserDefaultsNoteDataSource: NoteDataSource {
 
     private func encodeNotes(_ notes: [Note]) -> Data? {
         let dtos = notes.map { note in
-            CodableNoteDTO(id: note.id.rawValue, title: note.title.rawValue, content: note.content, date: note.date)
+            CodableNoteDTO(id: note.id.rawValue, title: note.title.rawValue, content: note.content.rawValue, date: note.date)
         }
         do {
             return try JSONEncoder().encode(dtos)
@@ -170,7 +175,12 @@ final class APINoteDataSource: NoteDataSource {
         guard let url = baseURL else { throw RepositoryError.invalidURL }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.httpBody = try JSONEncoder().encode(note)
+        request.httpBody = try JSONEncoder().encode(
+            CodableNoteDTO(id: note.id.rawValue,
+                           title: note.title.rawValue,
+                           content: note.content.rawValue,
+                           date: note.date)
+        )
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
         let (_, response) = try await session.data(for: request)
