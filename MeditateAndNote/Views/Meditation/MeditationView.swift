@@ -14,13 +14,14 @@ struct MeditationView: View {
     @State var viewModel: MeditationViewModel
     @EnvironmentObject var router: Router
     @State private var showTimeSelection = true
+    @State private var animationStyle: BreathingAnimationStyle = .path
 
     var body: some View {
         VStack {
             navigationBar
             meditationPlan
             Spacer()
-            meditationCircle
+            breathingAnimation
             Spacer()
             progress
         }
@@ -81,6 +82,22 @@ private extension MeditationView {
         }
     }
     
+    @ViewBuilder
+    var breathingAnimation: some View {
+        switch animationStyle {
+        case .rings:
+            meditationCircle
+        case .path:
+            BreathingPathView(
+                phases: viewModel.breathingPhases,
+                phaseIndex: viewModel.currentPhaseIndex,
+                phaseProgress: viewModel.phaseProgress,
+                lineColor: .primary,
+                ballColor: breathingColor
+            )
+        }
+    }
+
     var meditationCircle: some View {
         Circle()
             .stroke(Color.gray.opacity(0.2), lineWidth: 2)

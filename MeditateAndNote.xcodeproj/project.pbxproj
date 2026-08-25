@@ -7,11 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		AA0003112026082200000004 /* SearchQuery.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0003102026082200000003 /* SearchQuery.swift */; };
-		AA0003012026082200000002 /* MeditationDuration.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0003002026082200000001 /* MeditationDuration.swift */; };
 		78215B553038AB4200DD8F99 /* NoteSyncCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78215B543038AB4200DD8F99 /* NoteSyncCoordinator.swift */; };
 		78215B573038AB5000DD8F99 /* DomainEvents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78215B563038AB5000DD8F99 /* DomainEvents.swift */; };
 		78421A37302C1C4E001B52A6 /* ScrollDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78421A36302C1C4C001B52A6 /* ScrollDetector.swift */; };
+		787880CD303E260F004474C4 /* BreathingPathView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 787880CC303E25FE004474C4 /* BreathingPathView.swift */; };
 		788513DC3033D32C0052F4BC /* NoteEditorViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788513DB3033D32C0052F4BC /* NoteEditorViewModel.swift */; };
 		788513DE3033D35D0052F4BC /* FloatingToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788513DD3033D35D0052F4BC /* FloatingToolbar.swift */; };
 		788513E03033D9250052F4BC /* NoteEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788513DF3033D9250052F4BC /* NoteEditorView.swift */; };
@@ -27,6 +26,8 @@
 		AA00000B2026082000000006 /* StreakDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000C2026082000000006 /* StreakDetailView.swift */; };
 		AA000011202608200000000C /* DayCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000012202608200000000C /* DayCellView.swift */; };
 		AA0000202026082100000001 /* StreakTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000102026082000000008 /* StreakTrackerTests.swift */; };
+		AA0003012026082200000002 /* MeditationDuration.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0003002026082200000001 /* MeditationDuration.swift */; };
+		AA0003112026082200000004 /* SearchQuery.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0003102026082200000003 /* SearchQuery.swift */; };
 		E320C3ED2E2D1AC9009452DD /* Destination.swift in Sources */ = {isa = PBXBuildFile; fileRef = E320C3EC2E2D1AC9009452DD /* Destination.swift */; };
 		E320C3F12E2D1CD6009452DD /* Router.swift in Sources */ = {isa = PBXBuildFile; fileRef = E320C3F02E2D1CD6009452DD /* Router.swift */; };
 		E320C3F32E2D1F67009452DD /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = E320C3F22E2D1F67009452DD /* Config.swift */; };
@@ -69,10 +70,21 @@
 		E3FDF77C2ED0CE0F00ACD847 /* MeditationInfoScroll.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3FDF77B2ED0CE0F00ACD847 /* MeditationInfoScroll.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		AA0004202026082200000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E36187632D68B221000E326D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E361876A2D68B221000E326D;
+			remoteInfo = MeditateAndNote;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		78215B543038AB4200DD8F99 /* NoteSyncCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteSyncCoordinator.swift; sourceTree = "<group>"; };
 		78215B563038AB5000DD8F99 /* DomainEvents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DomainEvents.swift; sourceTree = "<group>"; };
 		78421A36302C1C4C001B52A6 /* ScrollDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollDetector.swift; sourceTree = "<group>"; };
+		787880CC303E25FE004474C4 /* BreathingPathView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreathingPathView.swift; sourceTree = "<group>"; };
 		788513DB3033D32C0052F4BC /* NoteEditorViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteEditorViewModel.swift; sourceTree = "<group>"; };
 		788513DD3033D35D0052F4BC /* FloatingToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingToolbar.swift; sourceTree = "<group>"; };
 		788513DF3033D9250052F4BC /* NoteEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteEditorView.swift; sourceTree = "<group>"; };
@@ -82,8 +94,6 @@
 		789B7B093010417D0082F0CB /* MainTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTheme.swift; sourceTree = "<group>"; };
 		AA0000022026082000000001 /* DailyActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyActivity.swift; sourceTree = "<group>"; };
 		AA0000042026082000000002 /* MeditationSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationSession.swift; sourceTree = "<group>"; };
-		AA0003102026082200000003 /* SearchQuery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchQuery.swift; sourceTree = "<group>"; };
-		AA0003002026082200000001 /* MeditationDuration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationDuration.swift; sourceTree = "<group>"; };
 		AA0000062026082000000003 /* MeditationSessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationSessionStore.swift; sourceTree = "<group>"; };
 		AA0000082026082000000004 /* StreakTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakTracker.swift; sourceTree = "<group>"; };
 		AA00000A2026082000000005 /* StreakHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakHeaderView.swift; sourceTree = "<group>"; };
@@ -91,6 +101,8 @@
 		AA0000102026082000000008 /* StreakTrackerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakTrackerTests.swift; sourceTree = "<group>"; };
 		AA000012202608200000000C /* DayCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayCellView.swift; sourceTree = "<group>"; };
 		AA0000202026082100000002 /* MeditateAndNoteTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MeditateAndNoteTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA0003002026082200000001 /* MeditationDuration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationDuration.swift; sourceTree = "<group>"; };
+		AA0003102026082200000003 /* SearchQuery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchQuery.swift; sourceTree = "<group>"; };
 		E320C3EC2E2D1AC9009452DD /* Destination.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Destination.swift; sourceTree = "<group>"; };
 		E320C3F02E2D1CD6009452DD /* Router.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Router.swift; sourceTree = "<group>"; };
 		E320C3F22E2D1F67009452DD /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
@@ -200,6 +212,14 @@
 			path = MeditateAndNoteTests;
 			sourceTree = "<group>";
 		};
+		AA0000AA2026082200000001 /* Theme */ = {
+			isa = PBXGroup;
+			children = (
+				789B7B093010417D0082F0CB /* MainTheme.swift */,
+			);
+			path = Theme;
+			sourceTree = "<group>";
+		};
 		E31DE9A32E6C84EA00C330DC /* MeditationSelect */ = {
 			isa = PBXGroup;
 			children = (
@@ -214,6 +234,7 @@
 			isa = PBXGroup;
 			children = (
 				E361643E2E41048C00A5DCCF /* MeditationView.swift */,
+				787880CC303E25FE004474C4 /* BreathingPathView.swift */,
 				E35B6FBB2E44ECAF00B235AE /* ConcentricRing.swift */,
 				E36164422E410D3D00A5DCCF /* MeditationProgressView.swift */,
 				E34D18AE2E426346004CCFA8 /* TimeMeditationSheet.swift */,
@@ -303,14 +324,6 @@
 				E36187842D68D087000E326D /* Components */,
 			);
 			path = Views;
-			sourceTree = "<group>";
-		};
-		AA0000AA2026082200000001 /* Theme */ = {
-			isa = PBXGroup;
-			children = (
-				789B7B093010417D0082F0CB /* MainTheme.swift */,
-			);
-			path = Theme;
 			sourceTree = "<group>";
 		};
 		E36187842D68D087000E326D /* Components */ = {
@@ -419,25 +432,6 @@
 		};
 /* End PBXNativeTarget section */
 
-/* Begin PBXContainerItemProxy section */
-		AA0004202026082200000001 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = E36187632D68B221000E326D /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = E361876A2D68B221000E326D;
-			remoteInfo = MeditateAndNote;
-		};
-/* End PBXContainerItemProxy section */
-
-/* Begin PBXTargetDependency section */
-		AA0004302026082200000001 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = E361876A2D68B221000E326D /* MeditateAndNote */;
-			targetProxy = AA0004202026082200000001 /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
-
-
 /* Begin PBXProject section */
 		E36187632D68B221000E326D /* Project object */ = {
 			isa = PBXProject;
@@ -503,6 +497,7 @@
 				AA0003112026082200000004 /* SearchQuery.swift in Sources */,
 				AA0003012026082200000002 /* MeditationDuration.swift in Sources */,
 				AA0000032026082000000002 /* MeditationSession.swift in Sources */,
+				787880CD303E260F004474C4 /* BreathingPathView.swift in Sources */,
 				AA0000052026082000000003 /* MeditationSessionStore.swift in Sources */,
 				AA0000072026082000000004 /* StreakTracker.swift in Sources */,
 				AA0000092026082000000005 /* StreakHeaderView.swift in Sources */,
@@ -560,6 +555,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		AA0004302026082200000001 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E361876A2D68B221000E326D /* MeditateAndNote */;
+			targetProxy = AA0004202026082200000001 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		AA0000202026082100000006 /* Debug */ = {
