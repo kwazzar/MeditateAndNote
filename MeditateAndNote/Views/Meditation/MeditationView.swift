@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-#warning("new meditation animation")
 #warning("design with existed themes")
 #warning("додати звук до стейтів медитації")
 #warning("вигляд time навігейшн sheet це меню вибору книги")

@@ -12,26 +12,30 @@ struct BreathingPathView: View {
     let phaseIndex: Int
     let phaseProgress: Double
     var lineColor: Color = .primary
-    var progressColor: Color = .orange
+    var progressColor: Color = .black
     var ballColor: Color = .orange
     var height: CGFloat = 280
-    var widthPerSecond: CGFloat = 25
-    
+
     var body: some View {
-        ZStack {
-            fullPath
-                .stroke(lineColor.opacity(0.35), style: StrokeStyle(lineWidth: 4, lineCap: .round, lineJoin: .round))
-            
-            progressPath
-                .stroke(progressColor, style: StrokeStyle(lineWidth: 4, lineCap: .round, lineJoin: .round))
-            
-            Circle()
-                .fill(ballColor)
-                .frame(width: 40, height: 40)
-                .position(ballPosition)
+        GeometryReader { proxy in
+            let totalSeconds = max(CGFloat(phases.reduce(0) { $0 + $1.duration }), 1)
+            let widthPerSecond = proxy.size.width / totalSeconds
+
+            ZStack {
+                fullPath(widthPerSecond)
+                    .stroke(lineColor.opacity(0.35), style: StrokeStyle(lineWidth: 4, lineCap: .round, lineJoin: .round))
+
+                progressPath(widthPerSecond)
+                    .stroke(progressColor, style: StrokeStyle(lineWidth: 4, lineCap: .round, lineJoin: .round))
+
+                Circle()
+                    .fill(ballColor)
+                    .frame(width: 40, height: 40)
+                    .position(ballPosition(widthPerSecond))
+            }
+            .animation(.linear(duration: 0.1), value: phaseProgress)
         }
-        .frame(width: totalWidth, height: height)
-        .animation(.linear(duration: 0.1), value: phaseProgress)
+        .frame(height: height)
     }
 }
 
@@ -41,12 +45,12 @@ private extension BreathingPathView {
         let end: CGPoint
         let type: BreathingPhaseType
     }
-    
-    private var segments: [PathSegment] {
+
+    private func segments(_ widthPerSecond: CGFloat) -> [PathSegment] {
         var result: [PathSegment] = []
         var x: CGFloat = 0
         var y: CGFloat = height
-        
+
         for phase in phases {
             let startPoint = CGPoint(x: x, y: y)
             x += CGFloat(phase.duration) * widthPerSecond
@@ -60,44 +64,33 @@ private extension BreathingPathView {
         }
         return result
     }
-    
-    private var totalWidth: CGFloat {
-        CGFloat(phases.reduce(0) { $0 + $1.duration }) * widthPerSecond
-    }
-    
+
     /// Повна лінія патерну — завжди видна, статична геометрія.
-    private var fullPath: Path {
+    private func fullPath(_ widthPerSecond: CGFloat) -> Path {
         var path = Path()
-        guard let first = segments.first else { return path }
+        let pathSegments = segments(widthPerSecond)
+        guard let first = pathSegments.first else { return path }
         path.move(to: first.start)
-        for segment in segments {
-            switch segment.type {
-            case .inhale, .exhale:
-                let midX = (segment.start.x + segment.end.x) / 2
-                let control1 = CGPoint(x: midX, y: segment.start.y)
-                let control2 = CGPoint(x: midX, y: segment.end.y)
-                path.addCurve(to: segment.end, control1: control1, control2: control2)
-            case .holdAfterInhale, .holdAfterExhale:
-                path.addLine(to: segment.end)
-            }
+        for segment in pathSegments {
+            addSegment(segment, to: &path)
         }
         return path
     }
-    
+
     /// Прогрес-лінія: точно повторює логіку ballPosition — жодного arc-length trim.
-    private var progressPath: Path {
+    private func progressPath(_ widthPerSecond: CGFloat) -> Path {
         var path = Path()
-        guard segments.indices.contains(phaseIndex) else { return fullPath }
-        path.move(to: segments[0].start)
-        
+        let pathSegments = segments(widthPerSecond)
+        guard pathSegments.indices.contains(phaseIndex) else { return fullPath(widthPerSecond) }
+        path.move(to: pathSegments[0].start)
+
         // Всі попередні сегменти — повністю
         for i in 0..<phaseIndex {
-            let seg = segments[i]
-            addSegment(seg, to: &path)
+            addSegment(pathSegments[i], to: &path)
         }
-        
+
         // Поточний сегмент — лише частина до phaseProgress
-        let current = segments[phaseIndex]
+        let current = pathSegments[phaseIndex]
         switch current.type {
         case .inhale, .exhale:
             let midX = (current.start.x + current.end.x) / 2
@@ -112,10 +105,10 @@ private extension BreathingPathView {
             let x = current.start.x + (current.end.x - current.start.x) * CGFloat(phaseProgress)
             path.addLine(to: CGPoint(x: x, y: current.start.y))
         }
-        
+
         return path
     }
-    
+
     private func addSegment(_ segment: PathSegment, to path: inout Path) {
         switch segment.type {
         case .inhale, .exhale:
@@ -127,12 +120,13 @@ private extension BreathingPathView {
             path.addLine(to: segment.end)
         }
     }
-    
-    private var ballPosition: CGPoint {
-        guard segments.indices.contains(phaseIndex) else {
-            return segments.last?.end ?? .zero
+
+    private func ballPosition(_ widthPerSecond: CGFloat) -> CGPoint {
+        let pathSegments = segments(widthPerSecond)
+        guard pathSegments.indices.contains(phaseIndex) else {
+            return pathSegments.last?.end ?? .zero
         }
-        let seg = segments[phaseIndex]
+        let seg = pathSegments[phaseIndex]
         switch seg.type {
         case .inhale, .exhale:
             let midX = (seg.start.x + seg.end.x) / 2
@@ -144,14 +138,14 @@ private extension BreathingPathView {
             return CGPoint(x: x, y: seg.start.y)
         }
     }
-    
+
     private func cubicPoint(t: Double, p0: CGPoint, p1: CGPoint, p2: CGPoint, p3: CGPoint) -> CGPoint {
         let u = 1 - t
         let x = u*u*u*p0.x + 3*u*u*t*p1.x + 3*u*t*t*p2.x + t*t*t*p3.x
         let y = u*u*u*p0.y + 3*u*u*t*p1.y + 3*u*t*t*p2.y + t*t*t*p3.y
         return CGPoint(x: x, y: y)
     }
-    
+
     /// Розбиває кубічну криву Без'є на [0, t] через алгоритм де Кастельжо —
     /// дає control points і кінцеву точку часткової кривої, точно збігається з ballPosition.
     private func splitCubic(t: Double, p0: CGPoint, p1: CGPoint, p2: CGPoint, p3: CGPoint) -> (CGPoint, CGPoint, CGPoint) {
