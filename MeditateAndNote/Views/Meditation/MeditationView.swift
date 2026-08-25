@@ -6,11 +6,12 @@
 //
 
 import SwiftUI
+#warning("new meditation animation")
 #warning("design with existed themes")
 #warning("додати звук до стейтів медитації")
 #warning("вигляд time навігейшн sheet це меню вибору книги")
 struct MeditationView: View {
-    @StateObject var viewModel: MeditationViewModel
+    @State var viewModel: MeditationViewModel
     @EnvironmentObject var router: Router
     @State private var showTimeSelection = true
 
@@ -81,38 +82,35 @@ private extension MeditationView {
     }
     
     var meditationCircle: some View {
-        ZStack {
-            // Background circle
-            Circle()
-                .stroke(Color.gray.opacity(0.2), lineWidth: 2)
-                .frame(width: 250, height: 250)
-            
-            // Concentric rings animation
-            ForEach(0..<5, id: \.self) { index in
-                ConcentricRing(
-                    index: index,
-                    currentPhase: viewModel.currentPhase,
-                    phaseProgress: viewModel.phaseProgress,
-                    breathingColor: breathingColor
-                )
-            }
-            
-            // Center circle
-            Circle()
-                .fill(breathingColor.opacity(0.8))
-                .frame(width: 80, height: 80)
-                .animation(.easeInOut(duration: 0.3), value: breathingColor)
-            
-            // Center text
-            VStack(spacing: 4) {
-                if let currentPhase = viewModel.currentPhase {
-                    Text(formatTime(currentPhase.duration - (currentPhase.duration * viewModel.phaseProgress)))
-                        .font(.system(size: 24))
-                        .font(.caption)
-                        .foregroundColor(.white)
+        Circle()
+            .stroke(Color.gray.opacity(0.2), lineWidth: 2)
+            .frame(width: 250, height: 250)
+            .overlay(
+                ForEach(0..<5, id: \.self) { index in
+                    ConcentricRing(
+                        index: index,
+                        currentPhase: viewModel.currentPhase,
+                        phaseProgress: viewModel.phaseProgress,
+                        breathingColor: breathingColor
+                    )
                 }
-            }
-        }
+            )
+            .overlay(
+                Circle()
+                    .fill(breathingColor.opacity(0.8))
+                    .frame(width: 80, height: 80)
+                    .animation(.easeInOut(duration: 0.3), value: breathingColor)
+            )
+            .overlay(
+                VStack(spacing: 4) {
+                    if let currentPhase = viewModel.currentPhase {
+                        Text(formatTime(currentPhase.duration - (currentPhase.duration * viewModel.phaseProgress)))
+                            .font(.system(size: 24))
+                            .font(.caption)
+                            .foregroundColor(.white)
+                    }
+                }
+            )
     }
     
     var progress: some View {

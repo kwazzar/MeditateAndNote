@@ -8,8 +8,8 @@
 import SwiftUI
 
 //MARK: - MeditationViewModel
-
-final class MeditationViewModel: ObservableObject {
+@Observable
+final class MeditationViewModel {
 
     // Session state machine: remaining time exists only while active,
     // so idle/finished states cannot carry stale progress values.
@@ -21,8 +21,8 @@ final class MeditationViewModel: ObservableObject {
 
     private let meditation: Meditation
     private let eventBus: DomainEventPublisher
-    @Published private var session: Session = .idle
-    @Published private(set) var phaseProgress: Double = 0
+    private var session: Session = .idle
+    private(set) var phaseProgress: Double = 0
 
     private var timer: Timer?
     private var phaseTimer: Timer?
@@ -112,26 +112,20 @@ final class MeditationViewModel: ObservableObject {
 
 private extension MeditationViewModel {
 
-    func tickSecond() {
-        guard case .active(let clock, let duration, let remaining) = session else { return }
-        let nextRemaining = remaining - 1
-        if nextRemaining > 0 {
-            withAnimation(.linear(duration: 0.3)) {
-                session = .active(clock, duration: duration, remaining: nextRemaining)
-            }
-        } else {
-            finish(duration: duration)
-        }
-    }
-
     func tickClock() {
         guard case .active(var clock, let duration, let remaining) = session else { return }
-
         _ = clock.advanceIfPhaseCompleted()
         session = .active(clock, duration: duration, remaining: remaining)
+        phaseProgress = clock.phaseProgress() // без withAnimation
+    }
 
-        withAnimation(.linear(duration: 0.1)) {
-            phaseProgress = clock.phaseProgress()
+    func tickSecond() {
+        guard case .active(let clock, let duration, let remaining) = session, !clock.isPaused else { return }
+        let nextRemaining = remaining - 1
+        if nextRemaining > 0 {
+            session = .active(clock, duration: duration, remaining: nextRemaining) // без withAnimation
+        } else {
+            finish(duration: duration)
         }
     }
 
@@ -142,25 +136,19 @@ private extension MeditationViewModel {
         }
         phaseProgress = clock.phaseProgress()
     }
-
+    
     func finish(duration: SessionDuration) {
         DispatchQueue.main.async {
             self.timer?.invalidate()
             self.phaseTimer?.invalidate()
-
             let completedSession = MeditationSession(
                 meditationId: self.meditation.id,
                 completedAt: .now,
                 duration: duration
             )
-
-            // Single write path: subscribers persist the session and update the streak
             self.eventBus.publish(.meditationCompleted(completedSession))
-
             self.session = .finished
-            withAnimation(.easeOut(duration: 0.8)) {
-                self.phaseProgress = 0
-            }
+            self.phaseProgress = 0 // без withAnimation
         }
     }
 }
