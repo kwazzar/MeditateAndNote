@@ -27,6 +27,6 @@ final class ThemeManager {
         if let savedRawValue, MainTheme(rawValue: savedRawValue) == nil {
             logger.warning("Unknown stored theme '\(savedRawValue)' — falling back to default")
         }
-        self.current = MainTheme(rawValue: savedRawValue ?? "") ?? .liquidGlass
+        self.current = MainTheme(rawValue: savedRawValue ?? "") ?? .darkZen
     }
 }

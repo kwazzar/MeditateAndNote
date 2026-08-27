@@ -6,22 +6,26 @@
 //
 
 import SwiftUI
-#warning("design with existed themes")
 #warning("вигляд time навігейшн sheet це меню вибору книги")
 struct MeditationView: View {
     @State var viewModel: MeditationViewModel
     @EnvironmentObject var router: Router
+    @Environment(ThemeManager.self) private var themeManager
     @State private var showTimeSelection = true
     @State private var animationStyle: BreathingAnimationStyle = .path
 
     var body: some View {
-        VStack {
-            navigationBar
-            meditationPlan
-            Spacer()
-            breathingAnimation
-            Spacer()
-            progress
+        ZStack {
+            themeManager.current.mainBackground.ignoresSafeArea()
+
+            VStack {
+                navigationBar
+                meditationPlan
+                Spacer()
+                breathingAnimation
+                Spacer()
+                progress
+            }
         }
         .overlay(
             Group {
@@ -61,6 +65,7 @@ private extension MeditationView {
             Text("\(viewModel.meditationTitle)")
                 .font(.headline)
                 .fontWeight(.medium)
+                .foregroundColor(themeManager.current.textPrimary)
             HStack {
                 Spacer()
                 Button(action: {
@@ -68,9 +73,9 @@ private extension MeditationView {
                 }) {
                     Image(systemName: "xmark")
                         .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(.primary)
+                        .foregroundColor(themeManager.current.iconPrimary)
                         .frame(width: 32, height: 32)
-                        .background(Color(.systemGray5))
+                        .background(themeManager.current.toolbarBackground)
                         .clipShape(Circle())
                 }
                 .buttonStyle(PlainButtonStyle())
@@ -86,7 +91,7 @@ private extension MeditationView {
                 Text(currentPhase.type.rawValue)
                     .font(.title2)
                     .fontWeight(.medium)
-                    .foregroundColor(.primary)
+                    .foregroundColor(themeManager.current.textPrimary)
             }
         }
     }
@@ -101,7 +106,7 @@ private extension MeditationView {
                 phases: viewModel.breathingPhases,
                 phaseIndex: viewModel.currentPhaseIndex,
                 phaseProgress: viewModel.phaseProgress,
-                lineColor: .primary,
+                lineColor: themeManager.current.textPrimary,
                 ballColor: breathingColor
             )
         }
@@ -109,7 +114,7 @@ private extension MeditationView {
 
     var meditationCircle: some View {
         Circle()
-            .stroke(Color.gray.opacity(0.2), lineWidth: 2)
+            .stroke(themeManager.current.dividerColor, lineWidth: 2)
             .frame(width: 250, height: 250)
             .overlay(
                 ForEach(0..<5, id: \.self) { index in
@@ -132,8 +137,7 @@ private extension MeditationView {
                     if let currentPhase = viewModel.currentPhase {
                         Text(formatTime(currentPhase.duration - (currentPhase.duration * viewModel.phaseProgress)))
                             .font(.system(size: 24))
-                            .font(.caption)
-                            .foregroundColor(.white)
+                            .foregroundColor(themeManager.current.textPrimary)
                     }
                 }
             )
@@ -153,11 +157,11 @@ private extension MeditationView {
             }
         }) {
             ZStack {
-                MeditationProgressView(progress: viewModel.progress, color: .blue)
+                MeditationProgressView(progress: viewModel.progress, color: breathingColor.opacity(0.8))
                 Text(viewModel.meditationState.progressText)
                     .font(.system(size: 24))
                     .bold()
-                    .foregroundColor(.black)
+                    .foregroundColor(themeManager.current.textPrimary)
             }
         }
     }
@@ -188,5 +192,6 @@ struct MeditationView_Previews: PreviewProvider {
             ?? Meditation(id: "preview", title: MeditationTitle("Preview"), breathingStyle: .fourSevenEight)
         return MeditationView(viewModel: MeditationViewModel(meditation: meditation))
             .environmentObject(Router.previewRouter())
+            .environment(ThemeManager())
     }
 }

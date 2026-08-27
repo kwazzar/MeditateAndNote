@@ -183,5 +183,33 @@ extension MainTheme {
         case .obsidian: Color.white.opacity(0.06)
         }
     }
+
+    /// Color scheme для системних елементів (wheel picker тощо) — dark для темних тем.
+    var colorScheme: ColorScheme {
+        switch self {
+        case .darkZen, .obsidian: .dark
+        case .liquidGlass, .breathing, .softDawn: .light
+        }
+    }
+
+    /// Текст на акцентних кнопках — завжди світлий поверх стабільного акцентного фону.
+    var buttonText: Color {
+        switch self {
+        case .darkZen, .obsidian: .white
+        case .liquidGlass, .breathing, .softDawn: .white
+        }
+    }
+
+    /// Непрозорий акцентний фон для кнопок дій (Start Meditation тощо) —
+    /// без прозорості, щоб під кнопкою нічого не просвічувало.
+    var accentButton: Color {
+        switch self {
+        case .liquidGlass: .purple
+        case .breathing: .purple
+        case .softDawn: .purple
+        case .darkZen: .purple
+        case .obsidian: .purple
+        }
+    }
 }
 

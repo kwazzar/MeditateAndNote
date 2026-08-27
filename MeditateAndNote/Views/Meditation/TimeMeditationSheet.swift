@@ -9,6 +9,7 @@ import SwiftUI
 
 struct TimeMeditationSheet: View {
     @EnvironmentObject var router: Router
+    @Environment(ThemeManager.self) private var themeManager
     @State private var selectedDuration: MeditationDuration = .threeMin
     let onSelection: (MeditationDuration) -> Void
 
@@ -23,6 +24,7 @@ struct TimeMeditationSheet: View {
                 }
             }
             .pickerStyle(WheelPickerStyle())
+            .colorScheme(themeManager.current.colorScheme)
 
             .clipShape(
                 Rectangle()
@@ -38,6 +40,7 @@ struct TimeMeditationSheet: View {
             Text("Select Duration")
                 .font(.title2)
                 .fontWeight(.semibold)
+                .foregroundColor(themeManager.current.textPrimary)
                 .padding(.top, 25)
 
             Button(action: {
@@ -45,10 +48,10 @@ struct TimeMeditationSheet: View {
             }) {
                 Text("Start Meditation")
                     .font(.headline)
-                    .foregroundColor(.white)
+                    .foregroundColor(themeManager.current.buttonText)
                     .frame(maxWidth: .infinity)
                     .frame(height: 50)
-                    .background(Color.blue)
+                    .background(themeManager.current.accentButton)
                     .cornerRadius(12)
             }
             .padding(.horizontal)
@@ -57,10 +60,9 @@ struct TimeMeditationSheet: View {
         .padding(.bottom)
         .background(
             CustomTopRoundedShape()
-                .fill(Color(.systemBackground))
+                .fill(themeManager.current.toolbarBackground)
         )
         .clipShape(CustomTopRoundedShape())
-        .shadow(radius: 10)
     }
 }
 
