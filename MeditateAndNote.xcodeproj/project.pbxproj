@@ -11,6 +11,9 @@
 		78215B573038AB5000DD8F99 /* DomainEvents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78215B563038AB5000DD8F99 /* DomainEvents.swift */; };
 		78421A37302C1C4E001B52A6 /* ScrollDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78421A36302C1C4C001B52A6 /* ScrollDetector.swift */; };
 		787880CD303E260F004474C4 /* BreathingPathView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 787880CC303E25FE004474C4 /* BreathingPathView.swift */; };
+		787880D1303E84ED004474C4 /* meditation_started.wav in Resources */ = {isa = PBXBuildFile; fileRef = 787880D0303E84ED004474C4 /* meditation_started.wav */; };
+		787880D3303E8744004474C4 /* meditation_finished.wav in Resources */ = {isa = PBXBuildFile; fileRef = 787880D2303E8744004474C4 /* meditation_finished.wav */; };
+		787880D5303E883A004474C4 /* meditation_paused.wav in Resources */ = {isa = PBXBuildFile; fileRef = 787880D4303E883A004474C4 /* meditation_paused.wav */; };
 		788513DC3033D32C0052F4BC /* NoteEditorViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788513DB3033D32C0052F4BC /* NoteEditorViewModel.swift */; };
 		788513DE3033D35D0052F4BC /* FloatingToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788513DD3033D35D0052F4BC /* FloatingToolbar.swift */; };
 		788513E03033D9250052F4BC /* NoteEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788513DF3033D9250052F4BC /* NoteEditorView.swift */; };
@@ -18,6 +21,12 @@
 		788956A43032068F0001D509 /* ThemePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788956A33032068B0001D509 /* ThemePickerView.swift */; };
 		788956A6303208330001D509 /* MeditateButtonComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788956A53032081E0001D509 /* MeditateButtonComponents.swift */; };
 		789B7B0A3010417D0082F0CB /* MainTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 789B7B093010417D0082F0CB /* MainTheme.swift */; };
+		78DF5423303F1CB200B1F2C3 /* meditation_resumed.wav in Resources */ = {isa = PBXBuildFile; fileRef = 78DF5422303F1CB200B1F2C3 /* meditation_resumed.wav */; };
+		78DF54253040D09800B1F2C3 /* breath_inhale.wav in Resources */ = {isa = PBXBuildFile; fileRef = 78DF54243040D09800B1F2C3 /* breath_inhale.wav */; };
+		78DF54273040D09E00B1F2C3 /* breath_exhale.wav in Resources */ = {isa = PBXBuildFile; fileRef = 78DF54263040D09E00B1F2C3 /* breath_exhale.wav */; };
+		AA0000312026082700B10003 /* breath_hold_after_exhale.wav in Resources */ = {isa = PBXBuildFile; fileRef = AA0000302026082700B10002 /* breath_hold_after_exhale.wav */; };
+		78DF54293040D0A300B1F2C3 /* breath_hold.wav in Resources */ = {isa = PBXBuildFile; fileRef = 78DF54283040D0A300B1F2C3 /* breath_hold.wav */; };
+		78DF542B3040D34000B1F2C3 /* meditation_countdown.wav in Resources */ = {isa = PBXBuildFile; fileRef = 78DF542A3040D34000B1F2C3 /* meditation_countdown.wav */; };
 		AA0000012026082000000001 /* DailyActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000022026082000000001 /* DailyActivity.swift */; };
 		AA0000032026082000000002 /* MeditationSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000042026082000000002 /* MeditationSession.swift */; };
 		AA0000052026082000000003 /* MeditationSessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000062026082000000003 /* MeditationSessionStore.swift */; };
@@ -26,6 +35,7 @@
 		AA00000B2026082000000006 /* StreakDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000C2026082000000006 /* StreakDetailView.swift */; };
 		AA000011202608200000000C /* DayCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000012202608200000000C /* DayCellView.swift */; };
 		AA0000202026082100000001 /* StreakTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000102026082000000008 /* StreakTrackerTests.swift */; };
+		AA0000222026082600A10002 /* SoundPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000212026082600A10001 /* SoundPlayer.swift */; };
 		AA0003012026082200000002 /* MeditationDuration.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0003002026082200000001 /* MeditationDuration.swift */; };
 		AA0003112026082200000004 /* SearchQuery.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0003102026082200000003 /* SearchQuery.swift */; };
 		E320C3ED2E2D1AC9009452DD /* Destination.swift in Sources */ = {isa = PBXBuildFile; fileRef = E320C3EC2E2D1AC9009452DD /* Destination.swift */; };
@@ -85,6 +95,9 @@
 		78215B563038AB5000DD8F99 /* DomainEvents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DomainEvents.swift; sourceTree = "<group>"; };
 		78421A36302C1C4C001B52A6 /* ScrollDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollDetector.swift; sourceTree = "<group>"; };
 		787880CC303E25FE004474C4 /* BreathingPathView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreathingPathView.swift; sourceTree = "<group>"; };
+		787880D0303E84ED004474C4 /* meditation_started.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = meditation_started.wav; sourceTree = "<group>"; };
+		787880D2303E8744004474C4 /* meditation_finished.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = meditation_finished.wav; sourceTree = "<group>"; };
+		787880D4303E883A004474C4 /* meditation_paused.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = meditation_paused.wav; sourceTree = "<group>"; };
 		788513DB3033D32C0052F4BC /* NoteEditorViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteEditorViewModel.swift; sourceTree = "<group>"; };
 		788513DD3033D35D0052F4BC /* FloatingToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingToolbar.swift; sourceTree = "<group>"; };
 		788513DF3033D9250052F4BC /* NoteEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteEditorView.swift; sourceTree = "<group>"; };
@@ -92,6 +105,12 @@
 		788956A33032068B0001D509 /* ThemePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemePickerView.swift; sourceTree = "<group>"; };
 		788956A53032081E0001D509 /* MeditateButtonComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditateButtonComponents.swift; sourceTree = "<group>"; };
 		789B7B093010417D0082F0CB /* MainTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTheme.swift; sourceTree = "<group>"; };
+		78DF5422303F1CB200B1F2C3 /* meditation_resumed.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = meditation_resumed.wav; sourceTree = "<group>"; };
+		78DF54243040D09800B1F2C3 /* breath_inhale.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = breath_inhale.wav; sourceTree = "<group>"; };
+		78DF54263040D09E00B1F2C3 /* breath_exhale.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = breath_exhale.wav; sourceTree = "<group>"; };
+		AA0000302026082700B10002 /* breath_hold_after_exhale.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = breath_hold_after_exhale.wav; sourceTree = "<group>"; };
+		78DF54283040D0A300B1F2C3 /* breath_hold.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = breath_hold.wav; sourceTree = "<group>"; };
+		78DF542A3040D34000B1F2C3 /* meditation_countdown.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = meditation_countdown.wav; sourceTree = "<group>"; };
 		AA0000022026082000000001 /* DailyActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyActivity.swift; sourceTree = "<group>"; };
 		AA0000042026082000000002 /* MeditationSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationSession.swift; sourceTree = "<group>"; };
 		AA0000062026082000000003 /* MeditationSessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationSessionStore.swift; sourceTree = "<group>"; };
@@ -101,6 +120,7 @@
 		AA0000102026082000000008 /* StreakTrackerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakTrackerTests.swift; sourceTree = "<group>"; };
 		AA000012202608200000000C /* DayCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayCellView.swift; sourceTree = "<group>"; };
 		AA0000202026082100000002 /* MeditateAndNoteTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MeditateAndNoteTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA0000212026082600A10001 /* SoundPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundPlayer.swift; sourceTree = "<group>"; };
 		AA0003002026082200000001 /* MeditationDuration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationDuration.swift; sourceTree = "<group>"; };
 		AA0003102026082200000003 /* SearchQuery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchQuery.swift; sourceTree = "<group>"; };
 		E320C3EC2E2D1AC9009452DD /* Destination.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Destination.swift; sourceTree = "<group>"; };
@@ -173,6 +193,30 @@
 				E32C6BC22ED9CEBB0093F735 /* SearchState.swift */,
 			);
 			path = NoteMenu;
+			sourceTree = "<group>";
+		};
+		787880CE303E847E004474C4 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				787880CF303E84C6004474C4 /* Sounds */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		787880CF303E84C6004474C4 /* Sounds */ = {
+			isa = PBXGroup;
+			children = (
+				787880D0303E84ED004474C4 /* meditation_started.wav */,
+				787880D4303E883A004474C4 /* meditation_paused.wav */,
+				78DF5422303F1CB200B1F2C3 /* meditation_resumed.wav */,
+				787880D2303E8744004474C4 /* meditation_finished.wav */,
+				78DF54243040D09800B1F2C3 /* breath_inhale.wav */,
+				78DF54263040D09E00B1F2C3 /* breath_exhale.wav */,
+				AA0000302026082700B10002 /* breath_hold_after_exhale.wav */,
+				78DF54283040D0A300B1F2C3 /* breath_hold.wav */,
+				78DF542A3040D34000B1F2C3 /* meditation_countdown.wav */,
+			);
+			path = Sounds;
 			sourceTree = "<group>";
 		};
 		78C59AE03036C554007C155E /* NoteEditor */ = {
@@ -280,6 +324,7 @@
 				E36187832D68D05C000E326D /* Views */,
 				E36187822D68D04E000E326D /* Models */,
 				E361878A2D68FED6000E326D /* Mock */,
+				787880CE303E847E004474C4 /* Resources */,
 				E361876E2D68B221000E326D /* MeditateAndNoteApp.swift */,
 				E36187722D68B223000E326D /* Assets.xcassets */,
 				E36187742D68B223000E326D /* Preview Content */,
@@ -375,6 +420,7 @@
 				E398CE772EDE464000B96376 /* NoteManager.swift */,
 				AA0000062026082000000003 /* MeditationSessionStore.swift */,
 				AA0000082026082000000004 /* StreakTracker.swift */,
+				AA0000212026082600A10001 /* SoundPlayer.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -473,7 +519,16 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				78DF5423303F1CB200B1F2C3 /* meditation_resumed.wav in Resources */,
+				78DF54273040D09E00B1F2C3 /* breath_exhale.wav in Resources */,
+				AA0000312026082700B10003 /* breath_hold_after_exhale.wav in Resources */,
+				787880D1303E84ED004474C4 /* meditation_started.wav in Resources */,
+				78DF54293040D0A300B1F2C3 /* breath_hold.wav in Resources */,
+				78DF54253040D09800B1F2C3 /* breath_inhale.wav in Resources */,
 				E36187762D68B223000E326D /* Preview Assets.xcassets in Resources */,
+				78DF542B3040D34000B1F2C3 /* meditation_countdown.wav in Resources */,
+				787880D5303E883A004474C4 /* meditation_paused.wav in Resources */,
+				787880D3303E8744004474C4 /* meditation_finished.wav in Resources */,
 				E36187732D68B223000E326D /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -500,6 +555,7 @@
 				787880CD303E260F004474C4 /* BreathingPathView.swift in Sources */,
 				AA0000052026082000000003 /* MeditationSessionStore.swift in Sources */,
 				AA0000072026082000000004 /* StreakTracker.swift in Sources */,
+				AA0000222026082600A10002 /* SoundPlayer.swift in Sources */,
 				AA0000092026082000000005 /* StreakHeaderView.swift in Sources */,
 				AA000011202608200000000C /* DayCellView.swift in Sources */,
 				AA00000B2026082000000006 /* StreakDetailView.swift in Sources */,

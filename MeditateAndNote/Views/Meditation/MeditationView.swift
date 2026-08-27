@@ -7,7 +7,6 @@
 
 import SwiftUI
 #warning("design with existed themes")
-#warning("додати звук до стейтів медитації")
 #warning("вигляд time навігейшн sheet це меню вибору книги")
 struct MeditationView: View {
     @State var viewModel: MeditationViewModel
@@ -31,13 +30,24 @@ struct MeditationView: View {
                         Spacer()
                         TimeMeditationSheet(onSelection: { duration in
                             showTimeSelection = false
-                            viewModel.start(with: duration)
+                            viewModel.start(with: duration, countdown: 3)
                         })
                         .transition(.move(edge: .bottom))
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .edgesIgnoringSafeArea(.all)
                     .padding(0)
+                }
+            }
+        )
+        .overlay(
+            Group {
+                if let countdown = viewModel.countdownRemaining {
+                    Text("\(countdown)")
+                        .font(.system(size: 120, weight: .light))
+                        .foregroundColor(breathingColor.opacity(0.35))
+                        .transition(.scale.combined(with: .opacity))
+                        .id(countdown)
                 }
             }
         )
