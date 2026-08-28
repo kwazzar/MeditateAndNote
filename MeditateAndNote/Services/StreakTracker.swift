@@ -291,14 +291,15 @@ struct StreakEngine {
 @Observable
 final class StreakTracker {
 
-    private(set) var currentStreak: Int = 0
-    private(set) var longestStreak: Int = 0
+    /// The domain engine is the single source of truth; these computed
+    /// properties are derived projections, so there is no second copy of
+    /// streak state that could drift out of sync.
+    var currentStreak: Int { engine.currentStreak }
+    var longestStreak: Int { engine.longestStreak }
 
     var totalCompleteDays: Int {
         engine.dailyActivities.values.filter(\.isComplete).count
     }
-
-    private var dailyActivities: [Date: DailyActivity] = [:]
 
     private var engine: StreakEngine
     private let store: StreakActivityStore
@@ -312,7 +313,6 @@ final class StreakTracker {
         self.store = store
         self.engine = StreakEngine(calendar: calendar, snapshot: store.load())
         engine.checkStreakBreak()
-        mirrorEngine()
     }
 
     // MARK: - Public API
@@ -327,7 +327,6 @@ final class StreakTracker {
 
     func checkStreakBreak() {
         engine.checkStreakBreak()
-        mirrorEngine()
     }
 
     func fullRecalculation(_ history: ActivityHistory) {
@@ -350,14 +349,7 @@ final class StreakTracker {
         var next = engine
         mutation(&next)
         engine = next
-        mirrorEngine()
         persist()
-    }
-
-    private func mirrorEngine() {
-        currentStreak = engine.currentStreak
-        longestStreak = engine.longestStreak
-        dailyActivities = engine.dailyActivities
     }
 
     private func persist() {

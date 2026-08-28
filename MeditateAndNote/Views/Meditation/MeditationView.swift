@@ -89,7 +89,7 @@ private extension MeditationView {
     var meditationPlan: some View {
         VStack(spacing: 8) {
             if let currentPhase = viewModel.currentPhase {
-                Text(currentPhase.type.rawValue)
+                Text(currentPhase.type.displayName)
                     .font(.title2)
                     .fontWeight(.medium)
                     .foregroundColor(themeManager.current.textPrimary)
@@ -184,6 +184,31 @@ private extension MeditationView {
     
     private func formatTime(_ time: TimeInterval) -> String {
         return String(format: "%d", Int(max(time, 0)))
+    }
+}
+
+// Display-only strings that describe domain states live in the presentation
+// layer, so the Models keep pure identifiers.
+
+extension MeditationState {
+    var progressText: String {
+        switch self {
+        case .notStarted: return "Start"
+        case .started: return "Tap to Pause"
+        case .paused: return "Resume"
+        case .finished: return "Next"
+        }
+    }
+}
+
+extension BreathingPhaseType {
+    var displayName: String {
+        switch self {
+        case .inhale: return "Inhale"
+        case .holdAfterInhale: return "Hold"
+        case .exhale: return "Exhale"
+        case .holdAfterExhale: return "Hold After Exhale"
+        }
     }
 }
 

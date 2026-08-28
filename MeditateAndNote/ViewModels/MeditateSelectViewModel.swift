@@ -7,6 +7,15 @@
 
 import Foundation
 
+/// Presentation value behind the info sheet. Distinct from the selected
+/// meditation so the view model never holds two optionals of the same type
+/// and can't confuse "real" selection with an on-screen info modal.
+struct MeditationInfoItem: Identifiable, Equatable {
+    let meditation: Meditation
+
+    var id: MeditationID { meditation.id }
+}
+
 final class MeditateSelectViewModel: ObservableObject {
     private enum LoadState {
         case loading
@@ -15,7 +24,7 @@ final class MeditateSelectViewModel: ObservableObject {
 
     @Published private var loadState: LoadState = .loading
     @Published var selectedMeditation: Meditation? = nil
-    @Published var selectedMeditationForInfo: Meditation?
+    @Published var infoItem: MeditationInfoItem?
 
     var meditations: [Meditation] {
         guard case .loaded(let items) = loadState else { return [] }
@@ -45,6 +54,7 @@ final class MeditateSelectViewModel: ObservableObject {
     
     func selectMeditation(_ meditation: Meditation) {
         selectedMeditation = meditation
+        infoItem = nil
         saveLastSelectedMeditation(meditation)
     }
     

@@ -17,10 +17,7 @@ final class NoteMenuViewModel {
     private var eventSubscription: UUID?
     private var hasLoaded = false
 
-    #warning("mock notes should be replaced with real implementation or []")
-    var visibleNotes: [Note] = MockNotes
     var error: NoteOperationError?
-    var last10Notes: [Note] = []
 
     let searchState: SearchState
 
@@ -28,7 +25,7 @@ final class NoteMenuViewModel {
          eventBus: DomainEventPublisher = DomainEventBus.shared) {
         self.notes = notes
         self.eventBus = eventBus
-        self.searchState = SearchState(itemProvider: notes)
+        self.searchState = SearchState()
         subscribeToNoteEvents()
     }
 
@@ -50,11 +47,7 @@ final class NoteMenuViewModel {
     private func loadNotes() async {
         let allNotes = await notes.currentNotes
         await MainActor.run {
-            visibleNotes = allNotes
             searchState.setAvailableItems(allNotes)
-            if searchState.searchText != .all {
-                searchState.updateFilteredItems(for: searchState.searchText)
-            }
         }
     }
 

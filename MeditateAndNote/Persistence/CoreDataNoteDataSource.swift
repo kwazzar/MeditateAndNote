@@ -28,7 +28,7 @@ final class CoreDataNoteDataSource: NoteDataSource {
             request.sortDescriptors = [NSSortDescriptor(key: "date", ascending: false)]
 
             let results = try context.fetch(request)
-            return results.map(Self.toNote)
+            return results.compactMap(Self.toNote)
         }
     }
 
@@ -41,7 +41,7 @@ final class CoreDataNoteDataSource: NoteDataSource {
             request.fetchLimit = 1
 
             let result = try context.fetch(request).first
-            return result.map(Self.toNote)
+            return result.flatMap(Self.toNote)
         }
     }
 
@@ -84,12 +84,18 @@ final class CoreDataNoteDataSource: NoteDataSource {
 
     // MARK: - Mapping Helpers
 
-    private static func toNote(_ object: NSManagedObject) -> Note {
-        Note(
-            id: NoteID(rawValue: object.value(forKey: "id") as! UUID),
-            title: NoteTitle(object.value(forKey: "title") as! String),
-            content: NoteContent(object.value(forKey: "content") as! String),
-            date: object.value(forKey: "date") as! Date
+    private static func toNote(_ object: NSManagedObject) -> Note? {
+        guard let id = object.value(forKey: "id") as? UUID,
+              let title = object.value(forKey: "title") as? String,
+              let content = object.value(forKey: "content") as? String,
+              let date = object.value(forKey: "date") as? Date else {
+            return nil
+        }
+        return Note(
+            id: NoteID(rawValue: id),
+            title: NoteTitle(title),
+            content: NoteContent(content),
+            date: date
         )
     }
 

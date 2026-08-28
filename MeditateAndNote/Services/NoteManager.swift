@@ -37,7 +37,11 @@ final actor NoteManager: NoteProvidable, NoteManageable {
     private let logger = Logger(subsystem: Config.bundleID, category: "NoteManager")
     private let syncCoordinator: NoteSyncCoordinator
     private let eventBus: DomainEventPublisher
-    private(set) var currentNotes: [Note] = []
+
+    /// The aggregate owns collection-level invariants (one entry per ID,
+    /// last-write-wins by date); the manager never holds a bare array.
+    private var book = NoteBook()
+    var currentNotes: [Note] { book.notes }
 
     init(syncCoordinator: NoteSyncCoordinator,
          eventBus: DomainEventPublisher = DomainEventBus.shared) {
@@ -56,26 +60,26 @@ final actor NoteManager: NoteProvidable, NoteManageable {
     }
 
     func notes(matching query: SearchQuery) async -> [Note] {
-        currentNotes.filter { NoteFilter.matches($0, query: query) }
+        book.notes.filter { NoteFilter.matches($0, query: query) }
     }
 
     // MARK: - NoteManageable
 
     func add(_ note: Note) async throws {
         try await syncCoordinator.save(note, strategy: .hybrid)
-        currentNotes = try await syncCoordinator.fetchAll(strategy: .hybrid)
+        book = NoteBook(notes: try await syncCoordinator.fetchAll(strategy: .hybrid))
         eventBus.publish(.noteCreated(note))
     }
 
     func update(_ note: Note) async throws {
         try await syncCoordinator.save(note, strategy: .hybrid)
-        currentNotes = try await syncCoordinator.fetchAll(strategy: .hybrid)
+        book = NoteBook(notes: try await syncCoordinator.fetchAll(strategy: .hybrid))
         eventBus.publish(.noteUpdated(note))
     }
 
     func delete(with id: NoteID) async throws {
         try await syncCoordinator.delete(id, strategy: .hybrid)
-        currentNotes = try await syncCoordinator.fetchAll(strategy: .hybrid)
+        book = NoteBook(notes: try await syncCoordinator.fetchAll(strategy: .hybrid))
         eventBus.publish(.noteDeleted(id))
     }
 
@@ -83,7 +87,7 @@ final actor NoteManager: NoteProvidable, NoteManageable {
 
     private func refreshFromRemote() async {
         do {
-            currentNotes = try await syncCoordinator.fetchAll(strategy: .remoteFirst)
+            book = NoteBook(notes: try await syncCoordinator.fetchAll(strategy: .remoteFirst))
         } catch {
             logger.error("Failed to fetch initial notes — \(error.localizedDescription)")
         }

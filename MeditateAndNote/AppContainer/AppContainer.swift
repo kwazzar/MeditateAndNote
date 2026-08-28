@@ -53,10 +53,6 @@ final class AppContainer: ObservableObject {
         )
     }
 
-    func makeNoteViewModel(noteId: NoteID? = nil) -> NoteViewModel {
-        NoteViewModel(noteId: noteId, notes: noteManager)
-    }
-
     func makeNoteEditorViewModel(noteId: NoteID? = nil) -> NoteEditorViewModel {
         NoteEditorViewModel(noteId: noteId, notes: noteManager)
     }

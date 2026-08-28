@@ -10,7 +10,7 @@ import Foundation
 import OSLog
 
 @Observable
-final class CoreDataSessionStore: MeditationSessionStoring {
+final class CoreDataSessionStore {
 
     private let logger = Logger(subsystem: Config.bundleID, category: "CoreDataSessions")
     private let manager: CoreDataManager
@@ -71,17 +71,26 @@ final class CoreDataSessionStore: MeditationSessionStoring {
         var results: [MeditationSession] = []
         context.performAndWait {
             let stored = (try? context.fetch(request)) ?? []
-            results = stored.map(Self.toSession)
+            results = stored.compactMap(Self.toSession)
         }
         return results
     }
 
-    private static func toSession(_ object: NSManagedObject) -> MeditationSession {
-        MeditationSession(
-            id: SessionID(rawValue: object.value(forKey: "id") as! UUID),
-            meditationId: MeditationID(rawValue: object.value(forKey: "meditationId") as! String),
-            completedAt: object.value(forKey: "completedAt") as! Date,
-            duration: SessionDuration(seconds: object.value(forKey: "duration") as! TimeInterval)
+    /// Maps a stored row to a domain session, skipping rows whose typed
+    /// values are corrupted rather than crashing the whole lookup.
+    private static func toSession(_ object: NSManagedObject) -> MeditationSession? {
+        guard let id = object.value(forKey: "id") as? UUID,
+              let meditationId = object.value(forKey: "meditationId") as? String,
+              let completedAt = object.value(forKey: "completedAt") as? Date,
+              let rawDuration = object.value(forKey: "duration") as? TimeInterval,
+              rawDuration > 0 else {
+            return nil
+        }
+        return MeditationSession(
+            id: SessionID(rawValue: id),
+            meditationId: MeditationID(rawValue: meditationId),
+            completedAt: completedAt,
+            duration: SessionDuration(seconds: rawDuration)
         )
     }
 }

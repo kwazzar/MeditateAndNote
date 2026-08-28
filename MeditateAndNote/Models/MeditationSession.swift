@@ -29,7 +29,11 @@ struct SessionDuration: Hashable, Codable {
         self.seconds = duration.rawValue
     }
 
+    /// Keep the invariant on the most direct construction path too:
+    /// `init(from decoder:)` already rejects non-positive values, so a
+    /// programmatic `SessionDuration(seconds: -5)` must not be weaker.
     init(seconds: TimeInterval) {
+        precondition(seconds > 0, "Session duration must be positive")
         self.seconds = seconds
     }
 

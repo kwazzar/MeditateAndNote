@@ -11,32 +11,23 @@ import SwiftUI
 @Observable
 final class SearchState {
     var searchText: SearchQuery = .all
-    var filteredItems: [Note] = []
+    private(set) var availableItems: [Note] = []
 
-    var isSearching: Bool {
-        searchText != .all
-    }
-
-    private let itemProvider: any NoteProvidable
-    private var availableItems: [Note] = []
-
-    init(itemProvider: some NoteProvidable) {
-        self.itemProvider = itemProvider
+    /// Derived view of `availableItems` for the current query — there is no
+    /// second copy of the list that could drift out of sync.
+    var filteredItems: [Note] {
+        searchText == .all
+            ? availableItems
+            : availableItems.filter { NoteFilter.matches($0, query: searchText) }
     }
 
     func setAvailableItems(_ items: [Note]) {
-        self.availableItems = items
-        self.filteredItems = items
-    }
-
-    func updateFilteredItems(for query: SearchQuery) {
-        filteredItems = availableItems.filter { NoteFilter.matches($0, query: query) }
+        availableItems = items
     }
 }
 
 extension SearchState {
     func resetSearch() {
         searchText = .all
-        updateFilteredItems(for: searchText)
     }
 }

@@ -102,9 +102,7 @@ private extension NoteMenu {
             searchText: Binding(
                 get: { viewModel.searchState.searchText.text },
                 set: { newText in
-                    let query = SearchQuery(text: newText)
-                    viewModel.searchState.searchText = query
-                    viewModel.searchState.updateFilteredItems(for: query)
+                    viewModel.searchState.searchText = SearchQuery(text: newText)
                 }
             ),
             onClose: {

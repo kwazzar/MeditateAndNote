@@ -32,7 +32,7 @@ final class CoreDataStreakStore: StreakActivityStore {
             let storedActivities = (try? context.fetch(
                 Self.activityRequest()
             )) ?? []
-            activities = storedActivities.map(Self.toActivity)
+            activities = storedActivities.compactMap(Self.toActivity)
 
             let meta = (try? context.fetch(Self.metaRequest()))?.first
             currentStreak = meta?.value(forKey: "currentStreak") as? Int ?? 0
@@ -85,11 +85,16 @@ final class CoreDataStreakStore: StreakActivityStore {
         NSFetchRequest<NSManagedObject>(entityName: CDEntity.streakMeta)
     }
 
-    private static func toActivity(_ object: NSManagedObject) -> DailyActivity {
-        DailyActivity(
-            date: object.value(forKey: "date") as! Date,
-            hasMeditation: object.value(forKey: "hasMeditation") as! Bool,
-            hasNote: object.value(forKey: "hasNote") as! Bool
+    private static func toActivity(_ object: NSManagedObject) -> DailyActivity? {
+        guard let date = object.value(forKey: "date") as? Date,
+              let hasMeditation = object.value(forKey: "hasMeditation") as? Bool,
+              let hasNote = object.value(forKey: "hasNote") as? Bool else {
+            return nil
+        }
+        return DailyActivity(
+            date: date,
+            hasMeditation: hasMeditation,
+            hasNote: hasNote
         )
     }
 

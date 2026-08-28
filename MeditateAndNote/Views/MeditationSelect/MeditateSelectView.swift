@@ -36,8 +36,8 @@ struct MeditateSelectView: View {
                 endPoint: .bottomTrailing
             )
         )
-        .sheet(item: $viewModel.selectedMeditationForInfo) { meditation in
-            MeditationInfoSheet(meditation)
+        .sheet(item: $viewModel.infoItem) { item in
+            MeditationInfoSheet(item.meditation)
                 .presentationDetents([.medium, .large])
                 .presentationDragIndicator(.visible)
         }
@@ -125,7 +125,7 @@ private extension MeditateSelectView {
                             impactFeedback.impactOccurred()
 
                             // Показуємо інформаційний лист
-                            viewModel.selectedMeditationForInfo = meditation
+                            viewModel.infoItem = MeditationInfoItem(meditation: meditation)
                         }
                     )
                 }

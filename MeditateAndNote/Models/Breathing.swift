@@ -14,10 +14,10 @@ struct BreathingPattern {
 
 //MARK: - BreathingPhaseType
 enum BreathingPhaseType: String {
-    case inhale      = "Inhale"
-    case holdAfterInhale = "Hold"
-    case exhale      = "Exhale"
-    case holdAfterExhale = "Hold After Exhale"
+    case inhale
+    case holdAfterInhale
+    case exhale
+    case holdAfterExhale
 }
 
 //MARK: - BreathingPhase
