@@ -29,6 +29,10 @@ struct SessionDuration: Hashable, Codable {
         self.seconds = duration.rawValue
     }
 
+    init(seconds: TimeInterval) {
+        self.seconds = seconds
+    }
+
     init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         let raw = try container.decode(TimeInterval.self)

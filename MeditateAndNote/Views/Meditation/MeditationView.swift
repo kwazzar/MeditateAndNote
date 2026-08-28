@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+#warning("meditate and note Flow")
 #warning("вигляд time навігейшн sheet це меню вибору книги")
 struct MeditationView: View {
     @State var viewModel: MeditationViewModel

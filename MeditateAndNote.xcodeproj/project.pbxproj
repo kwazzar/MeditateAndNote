@@ -78,6 +78,14 @@
 		E3BAF8A92E2940380036E250 /* NavigationContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3BAF8A82E2940380036E250 /* NavigationContainer.swift */; };
 		E3FC3FC12D75C6FF00D6391D /* NoteViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3FC3FC02D75C6FF00D6391D /* NoteViewModel.swift */; };
 		E3FDF77C2ED0CE0F00ACD847 /* MeditationInfoScroll.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3FDF77B2ED0CE0F00ACD847 /* MeditationInfoScroll.swift */; };
+		CC0000012026082800000005 /* CoreDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000012026082800000001 /* CoreDataManager.swift */; };
+		CC0000022026082800000006 /* CoreDataNoteDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000022026082800000002 /* CoreDataNoteDataSource.swift */; };
+		CC0000032026082800000007 /* CoreDataSessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000032026082800000003 /* CoreDataSessionStore.swift */; };
+		CC0000042026082800000008 /* CoreDataStreakStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000042026082800000004 /* CoreDataStreakStore.swift */; };
+		DD0000012026082800000005 /* CoreDataManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000012026082800000001 /* CoreDataManagerTests.swift */; };
+		DD0000022026082800000006 /* CoreDataNoteDataSourceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000022026082800000002 /* CoreDataNoteDataSourceTests.swift */; };
+		DD0000032026082800000007 /* CoreDataSessionStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000032026082800000003 /* CoreDataSessionStoreTests.swift */; };
+		DD0000042026082800000008 /* CoreDataStreakStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000042026082800000004 /* CoreDataStreakStoreTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -164,6 +172,14 @@
 		E3BAF8A82E2940380036E250 /* NavigationContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationContainer.swift; sourceTree = "<group>"; };
 		E3FC3FC02D75C6FF00D6391D /* NoteViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteViewModel.swift; sourceTree = "<group>"; };
 		E3FDF77B2ED0CE0F00ACD847 /* MeditationInfoScroll.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationInfoScroll.swift; sourceTree = "<group>"; };
+		CC0000012026082800000001 /* CoreDataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataManager.swift; sourceTree = "<group>"; };
+		CC0000022026082800000002 /* CoreDataNoteDataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataNoteDataSource.swift; sourceTree = "<group>"; };
+		CC0000032026082800000003 /* CoreDataSessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataSessionStore.swift; sourceTree = "<group>"; };
+		CC0000042026082800000004 /* CoreDataStreakStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataStreakStore.swift; sourceTree = "<group>"; };
+		DD0000012026082800000001 /* CoreDataManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataManagerTests.swift; sourceTree = "<group>"; };
+		DD0000022026082800000002 /* CoreDataNoteDataSourceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataNoteDataSourceTests.swift; sourceTree = "<group>"; };
+		DD0000032026082800000003 /* CoreDataSessionStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataSessionStoreTests.swift; sourceTree = "<group>"; };
+		DD0000042026082800000004 /* CoreDataStreakStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataStreakStoreTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -252,6 +268,10 @@
 			isa = PBXGroup;
 			children = (
 				AA0000102026082000000008 /* StreakTrackerTests.swift */,
+				DD0000012026082800000001 /* CoreDataManagerTests.swift */,
+				DD0000022026082800000002 /* CoreDataNoteDataSourceTests.swift */,
+				DD0000032026082800000003 /* CoreDataSessionStoreTests.swift */,
+				DD0000042026082800000004 /* CoreDataStreakStoreTests.swift */,
 			);
 			path = MeditateAndNoteTests;
 			sourceTree = "<group>";
@@ -317,6 +337,7 @@
 			isa = PBXGroup;
 			children = (
 				E3848D4E2E3BC984001BE8AB /* Services */,
+				CC0000052026082800000009 /* Persistence */,
 				E34EE7662E3AFD0F0044CDC6 /* AppContainer */,
 				E3BAF8A72E2940120036E250 /* Navigation */,
 				E36187872D68F901000E326D /* Extensions */,
@@ -423,6 +444,17 @@
 				AA0000212026082600A10001 /* SoundPlayer.swift */,
 			);
 			path = Services;
+			sourceTree = "<group>";
+		};
+		CC0000052026082800000009 /* Persistence */ = {
+			isa = PBXGroup;
+			children = (
+				CC0000012026082800000001 /* CoreDataManager.swift */,
+				CC0000022026082800000002 /* CoreDataNoteDataSource.swift */,
+				CC0000032026082800000003 /* CoreDataSessionStore.swift */,
+				CC0000042026082800000004 /* CoreDataStreakStore.swift */,
+			);
+			path = Persistence;
 			sourceTree = "<group>";
 		};
 		E3BAF8A72E2940120036E250 /* Navigation */ = {
@@ -541,6 +573,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				AA0000202026082100000001 /* StreakTrackerTests.swift in Sources */,
+				DD0000012026082800000005 /* CoreDataManagerTests.swift in Sources */,
+				DD0000022026082800000006 /* CoreDataNoteDataSourceTests.swift in Sources */,
+				DD0000032026082800000007 /* CoreDataSessionStoreTests.swift in Sources */,
+				DD0000042026082800000008 /* CoreDataStreakStoreTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -607,6 +643,10 @@
 				788513DC3033D32C0052F4BC /* NoteEditorViewModel.swift in Sources */,
 				E3FDF77C2ED0CE0F00ACD847 /* MeditationInfoScroll.swift in Sources */,
 				E3848D522E3BCA7F001BE8AB /* MeditationService.swift in Sources */,
+				CC0000012026082800000005 /* CoreDataManager.swift in Sources */,
+				CC0000022026082800000006 /* CoreDataNoteDataSource.swift in Sources */,
+				CC0000032026082800000007 /* CoreDataSessionStore.swift in Sources */,
+				CC0000042026082800000008 /* CoreDataStreakStore.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

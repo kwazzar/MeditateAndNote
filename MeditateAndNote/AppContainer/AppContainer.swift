@@ -12,7 +12,7 @@ final class AppContainer: ObservableObject {
     // MARK: - Services (Singletons)
     private let eventBus = DomainEventBus.shared
 
-    private lazy var localDataSource: any NoteDataSource = UserDefaultsNoteDataSource()
+    private lazy var localDataSource: any NoteDataSource = CoreDataNoteDataSource()
     private lazy var remoteDataSource: any NoteDataSource = InMemoryNoteDataSource()
 
     private lazy var syncCoordinator: NoteSyncCoordinator = DefaultNoteSyncCoordinator(
@@ -20,8 +20,8 @@ final class AppContainer: ObservableObject {
         remote: remoteDataSource
     )
 
-    private(set) lazy var streakTracker = StreakTracker()
-    private(set) lazy var meditationSessionStore = MeditationSessionStore()
+    private(set) lazy var streakTracker = StreakTracker(calendar: .current, store: CoreDataStreakStore())
+    private(set) lazy var meditationSessionStore = CoreDataSessionStore()
     private let meditationService: MeditationService = SampleMeditationService()
     private(set) lazy var selectionStore = MeditationSelectionStore()
 
