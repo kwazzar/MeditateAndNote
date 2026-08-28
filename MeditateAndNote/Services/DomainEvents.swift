@@ -21,6 +21,12 @@ enum DomainEvent: Sendable {
 // MARK: - Publisher Protocol
 
 protocol DomainEventPublisher: AnyObject {
+    typealias Handler = @Sendable (DomainEvent) -> Void
+
+    /// Subscribes a handler and returns a token for unsubscribing.
+    @discardableResult
+    func subscribe(_ handler: @escaping Handler) -> UUID
+    func unsubscribe(_ id: UUID)
     func publish(_ event: DomainEvent)
 }
 

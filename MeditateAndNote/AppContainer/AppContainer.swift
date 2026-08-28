@@ -27,6 +27,11 @@ final class AppContainer: ObservableObject {
 
     private lazy var noteManager = NoteManager(syncCoordinator: syncCoordinator, eventBus: eventBus)
 
+    /// Single shared instance: NoteMenu binds one VM for its whole lifetime,
+    /// so the list loads once and stays fresh via domain events. Creating a
+    /// fresh VM per render would leak event-bus subscriptions.
+    private(set) lazy var noteMenuViewModel = NoteMenuViewModel(notes: noteManager)
+
     init() {
         let tracker = streakTracker
         eventBus.subscribe { [weak tracker] event in
@@ -68,6 +73,6 @@ final class AppContainer: ObservableObject {
     }
 
     func makeNoteMenuViewModel() -> NoteMenuViewModel {
-        NoteMenuViewModel(notes: noteManager)
+        noteMenuViewModel
     }
 }
