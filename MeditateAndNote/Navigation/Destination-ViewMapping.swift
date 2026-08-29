@@ -8,7 +8,7 @@
 import SwiftUI
 
 @ViewBuilder func view(for destination: PushDestination) -> some View {
-    ContainerView { container in
+    ContainerView { @MainActor container in
         Group {
             switch destination {
             case .newNote:
@@ -28,7 +28,7 @@ import SwiftUI
 }
 
 @ViewBuilder func view(for destination: SheetDestination) -> some View {
-    ContainerView { container in
+    ContainerView { @MainActor container in
         Group {
             switch destination {
             case .newNote:
@@ -45,7 +45,7 @@ import SwiftUI
 }
 
 @ViewBuilder func view(for destination: FullScreenDestination) -> some View {
-    ContainerView { container in
+    ContainerView { @MainActor container in
         Group {
             switch destination {
             case .meditationSession(_):

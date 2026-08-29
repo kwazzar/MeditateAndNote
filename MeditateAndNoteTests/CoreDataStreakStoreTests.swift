@@ -41,7 +41,7 @@ final class CoreDataStreakStoreTests: XCTestCase {
 
     // MARK: - Save / Load round trip
 
-    func testSaveThenLoad_roundTripsSnapshot() {
+    func testSaveThenLoad_roundTripsSnapshot() async {
         let day1 = day(0)
         let day2 = day(-1)
         let snapshot = StreakSnapshot(
@@ -54,7 +54,7 @@ final class CoreDataStreakStoreTests: XCTestCase {
             lastCountedDay: day1
         )
 
-        sut.save(snapshot)
+        await sut.save(snapshot)
 
         let loaded = sut.load()
         XCTAssertNotNil(loaded)
@@ -66,14 +66,14 @@ final class CoreDataStreakStoreTests: XCTestCase {
 
     // MARK: - Overwrite
 
-    func testSaveTwice_replacesActivities() {
+    func testSaveTwice_replacesActivities() async {
         let first = StreakSnapshot(
             activities: [activity(day(0), meditation: true, note: true)],
             currentStreak: 2,
             longestStreak: 2,
             lastCountedDay: day(0)
         )
-        sut.save(first)
+        await sut.save(first)
 
         let second = StreakSnapshot(
             activities: [activity(day(-1), meditation: true, note: true)],
@@ -81,7 +81,7 @@ final class CoreDataStreakStoreTests: XCTestCase {
             longestStreak: 5,
             lastCountedDay: day(-1)
         )
-        sut.save(second)
+        await sut.save(second)
 
         let loaded = sut.load()
         XCTAssertNotNil(loaded)
@@ -90,7 +90,7 @@ final class CoreDataStreakStoreTests: XCTestCase {
         XCTAssertEqual(loaded!.longestStreak, 5)
     }
 
-    func testSaveEmptyActivitiesWithValidCounters_returnsNonNilSnapshot() {
+    func testSaveEmptyActivitiesWithValidCounters_returnsNonNilSnapshot() async {
         let snapshot = StreakSnapshot(
             activities: [],
             currentStreak: 4,
@@ -98,7 +98,7 @@ final class CoreDataStreakStoreTests: XCTestCase {
             lastCountedDay: day(0)
         )
 
-        sut.save(snapshot)
+        await sut.save(snapshot)
 
         let loaded = sut.load()
         XCTAssertNotNil(loaded)
@@ -108,16 +108,16 @@ final class CoreDataStreakStoreTests: XCTestCase {
 
     // MARK: - Interplay with StreakTracker
 
-    func testStreakTrackerWithCoreDataStore_fullFlow() {
+    func testStreakTrackerWithCoreDataStore_fullFlow() async {
         let today = calendar.startOfDay(for: Date())
         let yesterday = calendar.date(byAdding: .day, value: -1, to: today)!
 
         let tracker = StreakTracker(calendar: calendar, store: sut)
 
-        tracker.markNoteCreated(date: yesterday)
-        tracker.markMeditationCompleted(date: yesterday)
-        tracker.markNoteCreated(date: today)
-        tracker.markMeditationCompleted(date: today)
+        await tracker.markNoteCreated(date: yesterday)
+        await tracker.markMeditationCompleted(date: yesterday)
+        await tracker.markNoteCreated(date: today)
+        await tracker.markMeditationCompleted(date: today)
 
         XCTAssertEqual(tracker.currentStreak, 2)
 

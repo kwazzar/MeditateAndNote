@@ -8,13 +8,13 @@
 import Foundation
 import OSLog
 
+@MainActor
 @Observable
 final class NoteMenuViewModel {
     private let logger = Logger(subsystem: Config.bundleID, category: "NoteMenuViewModel")
     private let notes: any NoteProvidable & NoteManageable
     private let eventBus: DomainEventPublisher
 
-    private var eventSubscription: UUID?
     private var hasLoaded = false
 
     var error: NoteOperationError?
@@ -29,12 +29,6 @@ final class NoteMenuViewModel {
         subscribeToNoteEvents()
     }
 
-    deinit {
-        if let eventSubscription {
-            eventBus.unsubscribe(eventSubscription)
-        }
-    }
-
     /// Loads data exactly once. Subsequent tab appearances do not re-fetch:
     /// updates arrive through domain events instead.
     func loadIfNeeded() async {
@@ -46,9 +40,7 @@ final class NoteMenuViewModel {
 
     private func loadNotes() async {
         let allNotes = await notes.currentNotes
-        await MainActor.run {
-            searchState.setAvailableItems(allNotes)
-        }
+        searchState.setAvailableItems(allNotes)
     }
 
     func refreshNotes() async {
@@ -68,7 +60,7 @@ final class NoteMenuViewModel {
     // MARK: - Domain Events
 
     private func subscribeToNoteEvents() {
-        eventSubscription = eventBus.subscribe { [weak self] event in
+        eventBus.subscribe { [weak self] event in
             switch event {
             case .noteCreated, .noteUpdated, .noteDeleted:
                 // Hop to the main actor: Observable state must be mutated on

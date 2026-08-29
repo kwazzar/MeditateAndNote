@@ -20,6 +20,7 @@ enum EditTarget {
 
 //MARK: - NoteEditorViewModel
 
+@MainActor
 @Observable
 final class NoteEditorViewModel {
     private let logger = Logger(subsystem: Config.bundleID, category: "NoteEditorViewModel")
@@ -29,8 +30,7 @@ final class NoteEditorViewModel {
 
     private let notes: any NoteProvidable & NoteManageable
     private var target: EditTarget
-    private var saveTask: Task<Void, Never>?
-    private var autosaveWorkItem: DispatchWorkItem?
+    private var autosaveTask: Task<Void, Never>?
 
     var isNewNote: Bool {
         if case .new = target { return true }
@@ -58,11 +58,6 @@ final class NoteEditorViewModel {
         }
     }
 
-    deinit {
-        saveTask?.cancel()
-        autosaveWorkItem?.cancel()
-    }
-
     // MARK: - Load
 
     private func loadNote(_ id: NoteID) async {
@@ -83,15 +78,16 @@ final class NoteEditorViewModel {
     // MARK: - Autosave (debounced)
 
     func onTextChanged() {
-        autosaveWorkItem?.cancel()
+        autosaveTask?.cancel()
 
-        let workItem = DispatchWorkItem { [weak self] in
-            guard let self, self.isDirty else { return }
-            saveTask?.cancel()
-            saveTask = Task { await self.save() }
+        guard isDirty else { return }
+
+        autosaveTask = Task { [weak self] in
+            guard let self else { return }
+            try? await Task.sleep(for: .milliseconds(800))
+            guard !Task.isCancelled, self.isDirty else { return }
+            await self.save()
         }
-        autosaveWorkItem = workItem
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8, execute: workItem)
     }
 
     // MARK: - Save

@@ -7,8 +7,9 @@
 
 import SwiftUI
 
+#warning("відповідність дизайну вью відповідно до тем які вже в додатку")
 struct MeditateSelectView: View {
-    @StateObject var viewModel: MeditateSelectViewModel
+    @State var viewModel: MeditateSelectViewModel
     @EnvironmentObject var router: Router
 
     private let columns = [

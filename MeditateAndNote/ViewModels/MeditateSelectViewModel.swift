@@ -16,15 +16,19 @@ struct MeditationInfoItem: Identifiable, Equatable {
     var id: MeditationID { meditation.id }
 }
 
-final class MeditateSelectViewModel: ObservableObject {
+@MainActor
+@Observable
+final class MeditateSelectViewModel {
     private enum LoadState {
         case loading
         case loaded([Meditation])
     }
 
-    @Published private var loadState: LoadState = .loading
-    @Published var selectedMeditation: Meditation? = nil
-    @Published var infoItem: MeditationInfoItem?
+    private var loadState: LoadState = .loading
+    var selectedMeditation: Meditation? = nil
+    var infoItem: MeditationInfoItem?
+
+    private var loadTask: Task<Void, Never>?
 
     var meditations: [Meditation] {
         guard case .loaded(let items) = loadState else { return [] }
@@ -39,14 +43,16 @@ final class MeditateSelectViewModel: ObservableObject {
         self.meditationService = meditationService
         self.selectionStore = selectionStore
         loadMeditations()
-
     }
 
     func loadMeditations() {
+        loadTask?.cancel()
         loadState = .loading
 
         // Simulate loading with sample data
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+        loadTask = Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(500))
+            guard !Task.isCancelled, let self else { return }
             self.loadState = .loaded(self.meditationService.getMeditations())
             self.restoreLastSelectedMeditation()
         }

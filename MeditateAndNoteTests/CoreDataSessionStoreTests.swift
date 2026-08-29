@@ -42,70 +42,74 @@ final class CoreDataSessionStoreTests: XCTestCase {
 
     // MARK: - Save + fetch
 
-    func testSave_thenSessionsForDate_returnsSession() {
+    func testSave_thenSessionsForDate_returnsSession() async {
         let when = day(2026, 8, 20)
         let session = makeSession(completedAt: when)
 
-        sut.save(session)
+        await sut.save(session)
 
-        let result = sut.sessions(for: when)
+        let result = await sut.sessions(for: when)
         XCTAssertEqual(result.count, 1)
         XCTAssertEqual(result.first?.id, session.id)
         XCTAssertEqual(result.first?.duration.seconds, 60)
     }
 
-    func testSessionsForDate_returnsOnlyMatchingDay() {
+    func testSessionsForDate_returnsOnlyMatchingDay() async {
         let when = day(2026, 8, 20)
         let next = calendar.date(byAdding: .day, value: 1, to: when)!
 
-        sut.save(makeSession(completedAt: when, meditationID: "a"))
-        sut.save(makeSession(completedAt: next, meditationID: "b"))
+        await sut.save(makeSession(completedAt: when, meditationID: "a"))
+        await sut.save(makeSession(completedAt: next, meditationID: "b"))
 
-        let result = sut.sessions(for: when)
+        let result = await sut.sessions(for: when)
         XCTAssertEqual(result.count, 1)
         XCTAssertEqual(result.first?.meditationId.rawValue, "a")
     }
 
-    func testSessionsForDate_ignoresTimeOfDay() {
+    func testSessionsForDate_ignoresTimeOfDay() async {
         let when = day(2026, 8, 20)
         let morning = calendar.date(bySettingHour: 2, minute: 0, second: 0, of: when)!
         let evening = calendar.date(bySettingHour: 23, minute: 59, second: 0, of: when)!
 
-        sut.save(makeSession(completedAt: morning, meditationID: "a"))
-        sut.save(makeSession(completedAt: evening, meditationID: "b"))
+        await sut.save(makeSession(completedAt: morning, meditationID: "a"))
+        await sut.save(makeSession(completedAt: evening, meditationID: "b"))
 
-        XCTAssertEqual(sut.sessions(for: when).count, 2)
+        let result = await sut.sessions(for: when)
+        XCTAssertEqual(result.count, 2)
     }
 
-    func testSessionsForDate_noSessions_returnsEmpty() {
-        XCTAssertTrue(sut.sessions(for: day(2026, 8, 20)).isEmpty)
+    func testSessionsForDate_noSessions_returnsEmpty() async {
+        let result = await sut.sessions(for: day(2026, 8, 20))
+        XCTAssertTrue(result.isEmpty)
     }
 
     // MARK: - All session dates
 
-    func testAllSessionDates_normalizesToStartOfDay() {
+    func testAllSessionDates_normalizesToStartOfDay() async {
         let when = day(2026, 8, 20)
         let next = calendar.date(byAdding: .day, value: 1, to: when)!
 
-        sut.save(makeSession(completedAt: calendar.date(bySettingHour: 7, minute: 30, second: 0, of: when)!))
-        sut.save(makeSession(completedAt: calendar.date(bySettingHour: 21, minute: 15, second: 0, of: next)!))
+        await sut.save(makeSession(completedAt: calendar.date(bySettingHour: 7, minute: 30, second: 0, of: when)!))
+        await sut.save(makeSession(completedAt: calendar.date(bySettingHour: 21, minute: 15, second: 0, of: next)!))
 
-        XCTAssertEqual(sut.allSessionDates(), Set([when, next]))
+        let result = await sut.allSessionDates()
+        XCTAssertEqual(result, Set([when, next]))
     }
 
-    func testAllSessionDates_emptyStore_isEmpty() {
-        XCTAssertTrue(sut.allSessionDates().isEmpty)
+    func testAllSessionDates_emptyStore_isEmpty() async {
+        let result = await sut.allSessionDates()
+        XCTAssertTrue(result.isEmpty)
     }
 
     // MARK: - Domain events
 
-    func testHandle_meditationCompleted_savesSession() {
+    func testHandle_meditationCompleted_savesSession() async {
         let when = day(2026, 8, 20)
         let session = makeSession(completedAt: when, meditationID: "5")
 
-        sut.handle(.meditationCompleted(session))
+        await sut.handle(.meditationCompleted(session))
 
-        let result = sut.sessions(for: when)
+        let result = await sut.sessions(for: when)
         XCTAssertEqual(result.count, 1)
         XCTAssertEqual(result.first?.meditationId, session.meditationId)
     }

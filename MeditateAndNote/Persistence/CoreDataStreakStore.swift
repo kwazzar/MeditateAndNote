@@ -5,7 +5,7 @@
 //  Core Data implementation of StreakActivityStore.
 //
 
-import CoreData
+@preconcurrency import CoreData
 import Foundation
 import OSLog
 
@@ -20,6 +20,8 @@ final class CoreDataStreakStore: StreakActivityStore {
 
     // MARK: - Load
 
+    /// Synchronous because `StreakTracker.init` must build its initial engine
+    /// snapshot before any UI observes it; it runs once, on the MainActor.
     func load() -> StreakSnapshot? {
         let context = manager.viewContext
 
@@ -52,17 +54,17 @@ final class CoreDataStreakStore: StreakActivityStore {
 
     // MARK: - Save
 
-    func save(_ snapshot: StreakSnapshot) {
+    func save(_ snapshot: StreakSnapshot) async {
         let context = manager.viewContext
-        context.performAndWait { [logger] in
+        await context.perform { [logger] in
             // Replace all activities
-            self.deleteAllActivities(in: context)
+            Self.deleteAllActivities(in: context)
             for activity in snapshot.activities {
                 Self.insert(activity, into: context)
             }
 
             // Upsert streak metadata (singleton row)
-            let meta = self.findOrCreateMeta(in: context)
+            let meta = Self.findOrCreateMeta(in: context)
             meta.setValue(Int32(snapshot.currentStreak), forKey: "currentStreak")
             meta.setValue(Int32(snapshot.longestStreak), forKey: "longestStreak")
             meta.setValue(snapshot.lastCountedDay, forKey: "lastCountedDay")
@@ -98,7 +100,7 @@ final class CoreDataStreakStore: StreakActivityStore {
         )
     }
 
-    private func deleteAllActivities(in context: NSManagedObjectContext) {
+    private static func deleteAllActivities(in context: NSManagedObjectContext) {
         // Plain object deletes (not NSBatchDeleteRequest) so this works on both
         // the disk-backed store and the in-memory store used by tests.
         if let existing = try? context.fetch(Self.activityRequest()) {
@@ -115,7 +117,7 @@ final class CoreDataStreakStore: StreakActivityStore {
         object.setValue(activity.hasNote, forKey: "hasNote")
     }
 
-    private func findOrCreateMeta(in context: NSManagedObjectContext) -> NSManagedObject {
+    private static func findOrCreateMeta(in context: NSManagedObjectContext) -> NSManagedObject {
         if let existing = try? context.fetch(Self.metaRequest()).first {
             return existing
         }

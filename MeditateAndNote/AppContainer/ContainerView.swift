@@ -9,9 +9,9 @@ import SwiftUI
 
 struct ContainerView<Content: View>: View {
     @EnvironmentObject private var container: AppContainer
-    let content: (AppContainer) -> Content
+    let content: @MainActor (AppContainer) -> Content
 
-    init(@ViewBuilder content: @escaping (AppContainer) -> Content) {
+    init(@ViewBuilder content: @escaping @MainActor (AppContainer) -> Content) {
         self.content = content
     }
 

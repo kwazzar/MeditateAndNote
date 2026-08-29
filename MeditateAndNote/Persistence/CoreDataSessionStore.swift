@@ -5,7 +5,7 @@
 //  Core Data implementation of MeditationSessionStoring.
 //
 
-import CoreData
+@preconcurrency import CoreData
 import Foundation
 import OSLog
 
@@ -21,9 +21,9 @@ final class CoreDataSessionStore {
 
     // MARK: - Save
 
-    func save(_ session: MeditationSession) {
+    func save(_ session: MeditationSession) async {
         let context = manager.viewContext
-        context.performAndWait { [logger] in
+        await context.perform { [logger] in
             let object = NSEntityDescription.insertNewObject(forEntityName: CDEntity.session, into: context)
             object.setValue(session.id.rawValue, forKey: "id")
             object.setValue(session.meditationId.rawValue, forKey: "meditationId")
@@ -39,7 +39,7 @@ final class CoreDataSessionStore {
 
     // MARK: - Fetch for Date
 
-    func sessions(for date: Date) -> [MeditationSession] {
+    func sessions(for date: Date) async -> [MeditationSession] {
         let calendar = Calendar.current
         let start = calendar.startOfDay(for: date)
         guard let end = calendar.date(byAdding: .day, value: 1, to: start) else { return [] }
@@ -49,31 +49,29 @@ final class CoreDataSessionStore {
             start as NSDate,
             end as NSDate
         )
-        return fetch(predicate: predicate)
+        return await fetch(predicate: predicate)
     }
 
     // MARK: - All Session Dates
 
-    func allSessionDates() -> Set<Date> {
-        let all = fetch(predicate: nil)
+    func allSessionDates() async -> Set<Date> {
+        let all = await fetch(predicate: nil)
         let calendar = Calendar.current
         return Set(all.map { calendar.startOfDay(for: $0.completedAt) })
     }
 
     // MARK: - Private Helpers
 
-    private func fetch(predicate: NSPredicate?) -> [MeditationSession] {
+    private func fetch(predicate: NSPredicate?) async -> [MeditationSession] {
         let context = manager.viewContext
         let request = NSFetchRequest<NSManagedObject>(entityName: CDEntity.session)
         request.predicate = predicate
         request.sortDescriptors = [NSSortDescriptor(key: "completedAt", ascending: false)]
 
-        var results: [MeditationSession] = []
-        context.performAndWait {
+        return await context.perform {
             let stored = (try? context.fetch(request)) ?? []
-            results = stored.compactMap(Self.toSession)
+            return stored.compactMap(Self.toSession)
         }
-        return results
     }
 
     /// Maps a stored row to a domain session, skipping rows whose typed
@@ -98,13 +96,13 @@ final class CoreDataSessionStore {
 // MARK: - Domain Event Subscription
 
 extension CoreDataSessionStore {
-    func handle(_ event: DomainEvent) {
+    func handle(_ event: DomainEvent) async {
         switch event {
         case .noteCreated, .noteUpdated, .noteDeleted:
             break
 
         case let .meditationCompleted(session):
-            save(session)
+            await save(session)
         }
     }
 }

@@ -13,6 +13,7 @@ enum BreathingAnimationStyle: String, CaseIterable {
 }
 
 //MARK: - MeditationViewModel
+@MainActor
 @Observable
 final class MeditationViewModel {
     
@@ -22,9 +23,9 @@ final class MeditationViewModel {
     private var engine: MeditationSessionEngine
     private(set) var phaseProgress: Double = 0
     
-    private var timer: Timer?
-    private var phaseTimer: Timer?
-    
+    @ObservationIgnored nonisolated(unsafe) private var timer: Timer?
+    @ObservationIgnored nonisolated(unsafe) private var phaseTimer: Timer?
+
     var meditationTitle: String {
         meditation.title.rawValue
     }
@@ -157,8 +158,14 @@ private extension MeditationViewModel {
         }
     }
     
-    func scheduleTimer(interval: TimeInterval, block: @escaping (Timer) -> Void) -> Timer? {
-        Timer.scheduledTimer(withTimeInterval: interval, repeats: true, block: block)
+    func scheduleTimer(interval: TimeInterval, block: @escaping @MainActor @Sendable (Timer) -> Void) -> Timer? {
+        Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { timer in
+            // Timer.scheduledTimer fires on the run loop it was created on,
+            // which is the main run loop here (this VM is MainActor-isolated).
+            MainActor.assumeIsolated {
+                block(timer)
+            }
+        }
     }
     
     func apply(_ events: [MeditationSessionEngine.Event]) {

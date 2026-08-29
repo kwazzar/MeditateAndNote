@@ -53,24 +53,24 @@ struct ScrollDetector<Content: View>: UIViewRepresentable {
    final class Coordinator: NSObject, UIScrollViewDelegate {
         @Binding var isScrolling: Bool
         var hostingController: UIHostingController<Content>?
-        private var hideWorkItem: DispatchWorkItem?
+        private var hideTask: Task<Void, Never>?
         
         init(isScrolling: Binding<Bool>) {
             self._isScrolling = isScrolling
         }
         
         func scrollViewDidScroll(_ scrollView: UIScrollView) {
-            hideWorkItem?.cancel()
+            hideTask?.cancel()
             
             if !isScrolling {
                 isScrolling = true
             }
             
-            let workItem = DispatchWorkItem { [weak self] in
+            hideTask = Task { @MainActor [weak self] in
+                try? await Task.sleep(for: .milliseconds(200))
+                guard !Task.isCancelled else { return }
                 self?.isScrolling = false
             }
-            hideWorkItem = workItem
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2, execute: workItem)
         }
     }
 }

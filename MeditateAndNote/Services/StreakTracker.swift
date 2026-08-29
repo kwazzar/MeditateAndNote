@@ -21,7 +21,7 @@ protocol StreakActivityStore {
     func load() -> StreakSnapshot?
     /// Persists the snapshot atomically: either every field lands in storage,
     /// or none does.
-    func save(_ snapshot: StreakSnapshot)
+    func save(_ snapshot: StreakSnapshot) async
 }
 
 // MARK: - UserDefaults Implementation
@@ -96,7 +96,14 @@ final class UserDefaultsStreakStore: StreakActivityStore {
         return migrated ?? lastKnownGood
     }
 
-    func save(_ snapshot: StreakSnapshot) {
+    func save(_ snapshot: StreakSnapshot) async {
+        persist(snapshot)
+    }
+
+    /// Synchronous persistence used by both `save` and legacy migration; the
+    /// UserDefaults write is non-blocking so no actor hop is introduced inside
+    /// `load()` (which must stay synchronous for `StreakTracker.init`).
+    private func persist(_ snapshot: StreakSnapshot) {
         do {
             let data = try JSONEncoder().encode(CodableSnapshot(from: snapshot))
             defaults.set(data, forKey: Self.snapshotKey)
@@ -117,7 +124,7 @@ final class UserDefaultsStreakStore: StreakActivityStore {
                 longestStreak: defaults.integer(forKey: Self.legacyLongestKey),
                 lastCountedDay: defaults.object(forKey: Self.legacyLastCountedKey) as? Date
             )
-            save(snapshot)
+            persist(snapshot)
             defaults.removeObject(forKey: Self.legacyActivitiesKey)
             defaults.removeObject(forKey: Self.legacyCurrentKey)
             defaults.removeObject(forKey: Self.legacyLongestKey)
@@ -317,20 +324,20 @@ final class StreakTracker {
 
     // MARK: - Public API
 
-    func markNoteCreated(date: Date = .now) {
-        apply { $0.markNoteCreated(on: date) }
+    func markNoteCreated(date: Date = .now) async {
+        await apply { $0.markNoteCreated(on: date) }
     }
 
-    func markMeditationCompleted(date: Date = .now) {
-        apply { $0.markMeditationCompleted(on: date) }
+    func markMeditationCompleted(date: Date = .now) async {
+        await apply { $0.markMeditationCompleted(on: date) }
     }
 
     func checkStreakBreak() {
         engine.checkStreakBreak()
     }
 
-    func fullRecalculation(_ history: ActivityHistory) {
-        apply {
+    func fullRecalculation(_ history: ActivityHistory) async {
+        await apply {
             $0.recalculate(history)
         }
     }
@@ -345,15 +352,15 @@ final class StreakTracker {
 
     // MARK: - Private
 
-    private func apply(_ mutation: (inout StreakEngine) -> Void) {
+    private func apply(_ mutation: (inout StreakEngine) -> Void) async {
         var next = engine
         mutation(&next)
         engine = next
-        persist()
+        await persist()
     }
 
-    private func persist() {
-        store.save(engine.snapshot)
+    private func persist() async {
+        await store.save(engine.snapshot)
     }
 }
 
@@ -362,16 +369,16 @@ final class StreakTracker {
 extension StreakTracker {
     /// Exhaustive switch: adding a new DomainEvent case breaks compilation here,
     /// forcing an explicit streak decision for it.
-    func handle(_ event: DomainEvent) {
+    func handle(_ event: DomainEvent) async {
         switch event {
         case let .noteCreated(note):
-            markNoteCreated(date: note.date)
+            await markNoteCreated(date: note.date)
 
         case .noteUpdated, .noteDeleted:
             break
 
         case let .meditationCompleted(session):
-            markMeditationCompleted(date: session.completedAt)
+            await markMeditationCompleted(date: session.completedAt)
         }
     }
 }
