@@ -21,7 +21,7 @@ enum BreathingPhaseType: String {
 }
 
 //MARK: - BreathingPhase
-struct BreathingPhase: Identifiable {
+struct BreathingPhase: Identifiable, Equatable {
     var id: String { type.rawValue }
 
     let type: BreathingPhaseType
@@ -95,10 +95,10 @@ struct BreathingClock {
         return false
     }
 
-    init(pattern: BreathingPattern) {
+    init(pattern: BreathingPattern, now: Date = Date()) {
         self.pattern = pattern
         self.phaseIndex = 0
-        self.runState = .running(phaseStart: Date())
+        self.runState = .running(phaseStart: now)
     }
 
     var currentPhase: BreathingPhase? {

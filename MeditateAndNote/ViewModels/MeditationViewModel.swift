@@ -16,19 +16,10 @@ enum BreathingAnimationStyle: String, CaseIterable {
 @Observable
 final class MeditationViewModel {
     
-    // Session state machine: remaining time exists only while active,
-    // so idle/finished states cannot carry stale progress values.
-    private enum Session {
-        case idle
-        case countdown(remaining: Int, duration: SessionDuration)
-        case active(BreathingClock, duration: SessionDuration, remaining: TimeInterval)
-        case finished
-    }
-    
     private let meditation: Meditation
     private let eventBus: DomainEventPublisher
     private let soundPlayer: SoundPlaying
-    private var session: Session = .idle
+    private var engine: MeditationSessionEngine
     private(set) var phaseProgress: Double = 0
     
     private var timer: Timer?
@@ -39,8 +30,7 @@ final class MeditationViewModel {
     }
     
     var currentPhase: BreathingPhase? {
-        guard case .active(let clock, _, _) = session else { return nil }
-        return clock.currentPhase
+        engine.currentPhase
     }
     
     var breathingPhases: [BreathingPhase] {
@@ -48,23 +38,19 @@ final class MeditationViewModel {
     }
     
     var currentPhaseIndex: Int {
-        guard case .active(let clock, _, _) = session else { return 0 }
-        return clock.phaseIndex
+        engine.currentPhaseIndex
     }
     
     var countdownRemaining: Int? {
-        guard case .countdown(let remaining, _) = session else { return nil }
-        return remaining
+        engine.countdownRemaining
     }
     
     var progress: Float {
-        guard case .active(_, let duration, let remaining) = session else { return 0 }
-        guard duration.seconds > 0 else { return 0 }
-        return Float((duration.seconds - remaining) / duration.seconds)
+        engine.progress
     }
     
     var meditationState: MeditationState {
-        switch session {
+        switch engine.state {
         case .idle:
             return .notStarted
         case .finished:
@@ -82,6 +68,7 @@ final class MeditationViewModel {
         self.meditation = meditation
         self.eventBus = eventBus
         self.soundPlayer = soundPlayer
+        self.engine = MeditationSessionEngine(pattern: meditation.breathingStyle.pattern)
     }
     
     deinit {
@@ -96,39 +83,34 @@ extension MeditationViewModel {
         let durationValue = SessionDuration(duration)
         timer?.invalidate()
         phaseTimer?.invalidate()
+        timer = nil
+        phaseTimer = nil
         
-        if countdown > 0 {
-            session = .countdown(remaining: countdown, duration: durationValue)
-            soundPlayer.play(.countdownTick)
-            timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+        apply(engine.start(duration: durationValue, countdown: countdown))
+        if engine.isCountingDown {
+            timer = scheduleTimer(interval: 1.0) { [weak self] _ in
                 guard let self else { return }
                 self.tickCountdown()
             }
         } else {
-            beginSession(durationValue)
+            scheduleSessionTimers()
         }
     }
     
     func pause() {
-        guard case .active(var clock, let duration, let remaining) = session, !clock.isPaused else { return }
-        clock.pause()
-        session = .active(clock, duration: duration, remaining: remaining)
-        applyClock()
-        soundPlayer.play(.paused)
+        apply(engine.pause())
     }
     
     func resume() {
-        guard case .active(var clock, let duration, let remaining) = session, clock.isPaused else { return }
-        clock.resume()
-        session = .active(clock, duration: duration, remaining: remaining)
-        soundPlayer.play(.resumed)
+        apply(engine.resume())
     }
     
     func stop() {
+        apply(engine.stop())
         timer?.invalidate()
         phaseTimer?.invalidate()
-        session = .idle
-        phaseProgress = 0
+        timer = nil
+        phaseTimer = nil
     }
     
 }
@@ -138,84 +120,70 @@ extension MeditationViewModel {
 private extension MeditationViewModel {
     
     func tickCountdown() {
-        guard case .countdown(let remaining, let duration) = session else { return }
-        if remaining > 1 {
-            session = .countdown(remaining: remaining - 1, duration: duration)
-            soundPlayer.play(.countdownTick)
-        } else {
-            beginSession(duration)
-        }
-    }
-    
-    func beginSession(_ duration: SessionDuration) {
-        session = .active(
-            BreathingClock(pattern: meditation.breathingStyle.pattern),
-            duration: duration,
-            remaining: duration.seconds
-        )
-        applyClock()
-        soundPlayer.play(.started)
-        if let phase = currentPhase {
-            soundPlayer.play(.phase(phase.type))
-        }
-        
-        timer?.invalidate()
-        phaseTimer?.invalidate()
-        
-        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
-            guard let self else { return }
-            self.tickSecond()
-        }
-        
-        phaseTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
-            guard let self else { return }
-            guard case .active(let clock, _, _) = self.session, !clock.isPaused else { return }
-            self.tickClock()
+        apply(engine.tickCountdown())
+        if engine.isActive {
+            timer?.invalidate()
+            phaseTimer?.invalidate()
+            timer = nil
+            phaseTimer = nil
+            scheduleSessionTimers()
         }
     }
     
     func tickClock() {
-        guard case .active(var clock, let duration, let remaining) = session, !clock.isPaused else { return }
-        let previousPhaseIndex = clock.phaseIndex
-        _ = clock.advanceIfPhaseCompleted()
-        if clock.phaseIndex != previousPhaseIndex, let phase = clock.currentPhase {
-            soundPlayer.play(.phase(phase.type))
-        }
-        session = .active(clock, duration: duration, remaining: remaining)
-        phaseProgress = clock.phaseProgress()
+        apply(engine.tickClock())
     }
     
     func tickSecond() {
-        guard case .active(let clock, let duration, let remaining) = session, !clock.isPaused else { return }
-        let nextRemaining = remaining - 1
-        if nextRemaining > 0 {
-            session = .active(clock, duration: duration, remaining: nextRemaining)
-        } else {
-            finish(duration: duration)
+        apply(engine.tickSecond())
+        if engine.isFinished {
+            timer?.invalidate()
+            phaseTimer?.invalidate()
+            timer = nil
+            phaseTimer = nil
         }
     }
     
-    func applyClock() {
-        guard case .active(let clock, _, _) = session else {
-            phaseProgress = 0
-            return
+    func scheduleSessionTimers() {
+        guard engine.isActive else { return }
+        timer = scheduleTimer(interval: 1.0) { [weak self] _ in
+            guard let self else { return }
+            self.tickSecond()
         }
-        phaseProgress = clock.phaseProgress()
+        phaseTimer = scheduleTimer(interval: 0.1) { [weak self] _ in
+            guard let self else { return }
+            guard case .active(let clock, _, _) = self.engine.state, !clock.isPaused else { return }
+            self.tickClock()
+        }
     }
     
-    func finish(duration: SessionDuration) {
-        DispatchQueue.main.async {
-            self.timer?.invalidate()
-            self.phaseTimer?.invalidate()
-            let completedSession = MeditationSession(
-                meditationId: self.meditation.id,
-                completedAt: .now,
-                duration: duration
-            )
-            self.eventBus.publish(.meditationCompleted(completedSession))
-            self.soundPlayer.play(.finished)
-            self.session = .finished
-            self.phaseProgress = 0
+    func scheduleTimer(interval: TimeInterval, block: @escaping (Timer) -> Void) -> Timer? {
+        Timer.scheduledTimer(withTimeInterval: interval, repeats: true, block: block)
+    }
+    
+    func apply(_ events: [MeditationSessionEngine.Event]) {
+        for event in events {
+            switch event {
+            case .countdownTick:
+                soundPlayer.play(.countdownTick)
+            case .sessionStarted:
+                soundPlayer.play(.started)
+            case .phaseChanged(let phase):
+                soundPlayer.play(.phase(phase.type))
+            case .sessionPaused:
+                soundPlayer.play(.paused)
+            case .sessionResumed:
+                soundPlayer.play(.resumed)
+            case .completed(let duration):
+                let completedSession = MeditationSession(
+                    meditationId: self.meditation.id,
+                    completedAt: .now,
+                    duration: duration
+                )
+                self.eventBus.publish(.meditationCompleted(completedSession))
+                self.soundPlayer.play(.finished)
+            }
         }
+        phaseProgress = engine.phaseProgress()
     }
 }
