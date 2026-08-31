@@ -18,29 +18,40 @@ struct StreakHeaderView: View {
         }
     }
 
+    private var showNoteReminder: Bool {
+        let todayActivity = streakTracker.activity(for: Date())
+        return todayActivity.hasMeditation && !todayActivity.hasNote
+    }
+
     var body: some View {
-        Button {
-            router.navigate(to: .push(.streakDetail))
-        } label: {
-            HStack(spacing: 0) {
-                streakNumberSection
-                    .frame(minWidth: 72)
+        VStack(spacing: 8) {
+            Button {
+                router.navigate(to: .push(.streakDetail))
+            } label: {
+                HStack(spacing: 0) {
+                    streakNumberSection
+                        .frame(minWidth: 72)
 
-                Rectangle()
-                    .fill(themeManager.current.dividerColor)
-                    .frame(width: 0.5, height: 44)
+                    Rectangle()
+                        .fill(themeManager.current.dividerColor)
+                        .frame(width: 0.5, height: 44)
 
-                dayCellsSection
-                    .padding(.leading, 12)
+                    dayCellsSection
+                        .padding(.leading, 12)
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+                .background(
+                    RoundedRectangle(cornerRadius: 14)
+                        .fill(.ultraThinMaterial)
+                )
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 12)
-            .background(
-                RoundedRectangle(cornerRadius: 14)
-                    .fill(.ultraThinMaterial)
-            )
+            .buttonStyle(.plain)
+
+            if showNoteReminder {
+                noteReminderBanner
+            }
         }
-        .buttonStyle(.plain)
     }
 
     // MARK: - Streak Number
@@ -81,5 +92,37 @@ struct StreakHeaderView: View {
                 .frame(maxWidth: .infinity)
             }
         }
+    }
+
+    // MARK: - Note Reminder
+
+    private var noteReminderBanner: some View {
+        Button(action: {
+            router.navigate(to: .push(.newNote))
+        }) {
+            HStack(spacing: 8) {
+                Image(systemName: "square.and.pencil")
+                    .font(.system(size: 14, weight: .medium))
+
+                Text("Write a note to complete today's streak")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .semibold))
+            }
+            .foregroundStyle(.orange)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .background(
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(.orange.opacity(0.1))
+            )
+        }
+        .buttonStyle(.plain)
+        .transition(.move(edge: .top).combined(with: .opacity))
+        .animation(.snappy(duration: 0.3), value: showNoteReminder)
     }
 }

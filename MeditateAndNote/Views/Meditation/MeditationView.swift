@@ -6,8 +6,7 @@
 //
 
 import SwiftUI
-#warning("meditate and note Flow")
-#warning("вигляд time навігейшн sheet це меню вибору книги")
+
 struct MeditationView: View {
     @State var viewModel: MeditationViewModel
     @EnvironmentObject var router: Router
@@ -16,9 +15,6 @@ struct MeditationView: View {
     @State private var animationStyle: BreathingAnimationStyle = .path
 
     var body: some View {
-        ZStack {
-            themeManager.current.mainBackground.ignoresSafeArea()
-
             VStack {
                 navigationBar
                 meditationPlan
@@ -27,7 +23,7 @@ struct MeditationView: View {
                 Spacer()
                 progress
             }
-        }
+        .background(themeManager.current.mainBackground.ignoresSafeArea())
         .overlay(
             Group {
                 if showTimeSelection {
@@ -154,7 +150,12 @@ private extension MeditationView {
             case .paused:
                 viewModel.resume()
             case .finished:
-                router.navigate(to: .push(.readingView))
+                if let duration = viewModel.completedDuration {
+                    router.navigate(to: .push(.meditationCompletion(
+                        meditation: viewModel.meditation,
+                        duration: duration
+                    )))
+                }
             }
         }) {
             ZStack {
@@ -196,7 +197,7 @@ extension MeditationState {
         case .notStarted: return "Start"
         case .started: return "Tap to Pause"
         case .paused: return "Resume"
-        case .finished: return "Next"
+        case .finished: return "Done"
         }
     }
 }

@@ -6,7 +6,7 @@
 import AVFoundation
 
 //MARK: - MeditationSound
-enum MeditationSound {
+enum MeditationSound: Equatable {
     case started
     case paused
     case resumed

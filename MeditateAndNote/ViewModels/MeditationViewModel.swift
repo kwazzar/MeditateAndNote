@@ -17,11 +17,12 @@ enum BreathingAnimationStyle: String, CaseIterable {
 @Observable
 final class MeditationViewModel {
     
-    private let meditation: Meditation
+    let meditation: Meditation
     private let eventBus: DomainEventPublisher
     private let soundPlayer: SoundPlaying
     private var engine: MeditationSessionEngine
     private(set) var phaseProgress: Double = 0
+    private(set) var completedDuration: MeditationDuration?
     
     @ObservationIgnored nonisolated(unsafe) private var timer: Timer?
     @ObservationIgnored nonisolated(unsafe) private var phaseTimer: Timer?
@@ -113,7 +114,20 @@ extension MeditationViewModel {
         timer = nil
         phaseTimer = nil
     }
-    
+
+    /// Test seam: drives the engine to completion deterministically without
+    /// waiting on real timers.
+    @discardableResult
+    func advanceToCompletion() -> Bool {
+        timer?.invalidate()
+        phaseTimer?.invalidate()
+        timer = nil
+        phaseTimer = nil
+        guard let duration = engine.activeDuration else { return false }
+        apply(engine.forceComplete(duration: duration))
+        return true
+    }
+
 }
 
 //MARK: - Private methods
@@ -187,6 +201,7 @@ private extension MeditationViewModel {
                     completedAt: .now,
                     duration: duration
                 )
+                self.completedDuration = MeditationDuration(rawValue: duration.seconds) ?? .fiveMin
                 self.eventBus.publish(.meditationCompleted(completedSession))
                 self.soundPlayer.play(.finished)
             }

@@ -60,6 +60,12 @@ struct MeditationSessionEngine {
         return false
     }
 
+    /// Duration currently running when the session is active; nil otherwise.
+    var activeDuration: SessionDuration? {
+        guard case .active(_, let duration, _) = state else { return nil }
+        return duration
+    }
+
     var currentPhase: BreathingPhase? {
         guard case .active(let clock, _, _) = state else { return nil }
         return clock.currentPhase
@@ -155,6 +161,17 @@ struct MeditationSessionEngine {
     mutating func stop() -> [Event] {
         state = .idle
         return []
+    }
+
+    /// Forces the active session into the finished state, emitting the
+    /// completion event. Used to drive the UI without waiting for real
+    /// timers (tests and user-facing "I'm done" affordances).
+    @discardableResult
+    mutating func forceComplete(duration: SessionDuration? = nil) -> [Event] {
+        guard case .active(_, let activeDuration, _) = state else { return [] }
+        let completed = duration ?? activeDuration
+        state = .finished
+        return [.completed(completed)]
     }
 
     // MARK: - Private

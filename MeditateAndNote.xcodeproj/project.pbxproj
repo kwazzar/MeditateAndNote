@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4DEA3FE741F1A4530712630B /* StreakReminderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73571B9E27145AED24F2D353 /* StreakReminderTests.swift */; };
 		78215B553038AB4200DD8F99 /* NoteSyncCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78215B543038AB4200DD8F99 /* NoteSyncCoordinator.swift */; };
 		78215B573038AB5000DD8F99 /* DomainEvents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78215B563038AB5000DD8F99 /* DomainEvents.swift */; };
 		78421A37302C1C4E001B52A6 /* ScrollDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78421A36302C1C4C001B52A6 /* ScrollDetector.swift */; };
@@ -18,15 +19,14 @@
 		788513DE3033D35D0052F4BC /* FloatingToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788513DD3033D35D0052F4BC /* FloatingToolbar.swift */; };
 		788513E03033D9250052F4BC /* NoteEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788513DF3033D9250052F4BC /* NoteEditorView.swift */; };
 		788956A2303201A80001D509 /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788956A13032019E0001D509 /* ThemeManager.swift */; };
-		
 		788956A6303208330001D509 /* MeditateButtonComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788956A53032081E0001D509 /* MeditateButtonComponents.swift */; };
 		789B7B0A3010417D0082F0CB /* MainTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 789B7B093010417D0082F0CB /* MainTheme.swift */; };
 		78DF5423303F1CB200B1F2C3 /* meditation_resumed.wav in Resources */ = {isa = PBXBuildFile; fileRef = 78DF5422303F1CB200B1F2C3 /* meditation_resumed.wav */; };
 		78DF54253040D09800B1F2C3 /* breath_inhale.wav in Resources */ = {isa = PBXBuildFile; fileRef = 78DF54243040D09800B1F2C3 /* breath_inhale.wav */; };
 		78DF54273040D09E00B1F2C3 /* breath_exhale.wav in Resources */ = {isa = PBXBuildFile; fileRef = 78DF54263040D09E00B1F2C3 /* breath_exhale.wav */; };
-		AA0000312026082700B10003 /* breath_hold_after_exhale.wav in Resources */ = {isa = PBXBuildFile; fileRef = AA0000302026082700B10002 /* breath_hold_after_exhale.wav */; };
 		78DF54293040D0A300B1F2C3 /* breath_hold.wav in Resources */ = {isa = PBXBuildFile; fileRef = 78DF54283040D0A300B1F2C3 /* breath_hold.wav */; };
 		78DF542B3040D34000B1F2C3 /* meditation_countdown.wav in Resources */ = {isa = PBXBuildFile; fileRef = 78DF542A3040D34000B1F2C3 /* meditation_countdown.wav */; };
+		992C2F67A6302B0D79342F66 /* MeditationCompletionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 648FE2FCBB1DD6E50BB5E61E /* MeditationCompletionView.swift */; };
 		AA0000012026082000000001 /* DailyActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000022026082000000001 /* DailyActivity.swift */; };
 		AA0000032026082000000002 /* MeditationSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000042026082000000002 /* MeditationSession.swift */; };
 		AA0000072026082000000004 /* StreakTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000082026082000000004 /* StreakTracker.swift */; };
@@ -34,10 +34,19 @@
 		AA00000B2026082000000006 /* StreakDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000C2026082000000006 /* StreakDetailView.swift */; };
 		AA000011202608200000000C /* DayCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000012202608200000000C /* DayCellView.swift */; };
 		AA0000202026082100000001 /* StreakTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000102026082000000008 /* StreakTrackerTests.swift */; };
-		E3F0F1A82E5B00000000AB23 /* MeditationEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3F0F1A92E5B00000000AB24 /* MeditationEngineTests.swift */; };
 		AA0000222026082600A10002 /* SoundPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000212026082600A10001 /* SoundPlayer.swift */; };
+		AA0000312026082700B10003 /* breath_hold_after_exhale.wav in Resources */ = {isa = PBXBuildFile; fileRef = AA0000302026082700B10002 /* breath_hold_after_exhale.wav */; };
 		AA0003012026082200000002 /* MeditationDuration.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0003002026082200000001 /* MeditationDuration.swift */; };
 		AA0003112026082200000004 /* SearchQuery.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0003102026082200000003 /* SearchQuery.swift */; };
+		ADCF424E00CF12AEB7374BEA /* MeditationViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2191349DA8C57C98F66164B8 /* MeditationViewModelTests.swift */; };
+		CC0000012026082800000005 /* CoreDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000012026082800000001 /* CoreDataManager.swift */; };
+		CC0000022026082800000006 /* CoreDataNoteDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000022026082800000002 /* CoreDataNoteDataSource.swift */; };
+		CC0000032026082800000007 /* CoreDataSessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000032026082800000003 /* CoreDataSessionStore.swift */; };
+		CC0000042026082800000008 /* CoreDataStreakStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000042026082800000004 /* CoreDataStreakStore.swift */; };
+		DD0000012026082800000005 /* CoreDataManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000012026082800000001 /* CoreDataManagerTests.swift */; };
+		DD0000022026082800000006 /* CoreDataNoteDataSourceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000022026082800000002 /* CoreDataNoteDataSourceTests.swift */; };
+		DD0000032026082800000007 /* CoreDataSessionStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000032026082800000003 /* CoreDataSessionStoreTests.swift */; };
+		DD0000042026082800000008 /* CoreDataStreakStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000042026082800000004 /* CoreDataStreakStoreTests.swift */; };
 		E320C3ED2E2D1AC9009452DD /* Destination.swift in Sources */ = {isa = PBXBuildFile; fileRef = E320C3EC2E2D1AC9009452DD /* Destination.swift */; };
 		E320C3F12E2D1CD6009452DD /* Router.swift in Sources */ = {isa = PBXBuildFile; fileRef = E320C3F02E2D1CD6009452DD /* Router.swift */; };
 		E320C3F32E2D1F67009452DD /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = E320C3F22E2D1F67009452DD /* Config.swift */; };
@@ -48,7 +57,6 @@
 		E32C6BBF2ED9C6600093F735 /* NoteMenuViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E32C6BBE2ED9C6600093F735 /* NoteMenuViewModel.swift */; };
 		E32C6BC12ED9CD6D0093F735 /* SearchBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = E32C6BC02ED9CD6D0093F735 /* SearchBar.swift */; };
 		E32C6BC32ED9CEBB0093F735 /* SearchState.swift in Sources */ = {isa = PBXBuildFile; fileRef = E32C6BC22ED9CEBB0093F735 /* SearchState.swift */; };
-		
 		E34D18AD2E425A01004CCFA8 /* Breathing.swift in Sources */ = {isa = PBXBuildFile; fileRef = E34D18AC2E425A01004CCFA8 /* Breathing.swift */; };
 		E34D18AF2E426346004CCFA8 /* TimeMeditationSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E34D18AE2E426346004CCFA8 /* TimeMeditationSheet.swift */; };
 		E34EE7682E3AFDCE0044CDC6 /* AppContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E34EE7672E3AFDCE0044CDC6 /* AppContainer.swift */; };
@@ -56,7 +64,6 @@
 		E361643F2E41048C00A5DCCF /* MeditationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E361643E2E41048C00A5DCCF /* MeditationView.swift */; };
 		E36164412E41050F00A5DCCF /* MeditationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E36164402E41050F00A5DCCF /* MeditationViewModel.swift */; };
 		E36164432E410D3D00A5DCCF /* MeditationProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E36164422E410D3D00A5DCCF /* MeditationProgressView.swift */; };
-		E3F0F1A62E5B00000000AB21 /* MeditationSessionEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3F0F1A72E5B00000000AB22 /* MeditationSessionEngine.swift */; };
 		E361876F2D68B221000E326D /* MeditateAndNoteApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E361876E2D68B221000E326D /* MeditateAndNoteApp.swift */; };
 		E36187732D68B223000E326D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E36187722D68B223000E326D /* Assets.xcassets */; };
 		E36187762D68B223000E326D /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E36187752D68B223000E326D /* Preview Assets.xcassets */; };
@@ -64,7 +71,6 @@
 		E36187812D68D021000E326D /* Note.swift in Sources */ = {isa = PBXBuildFile; fileRef = E36187802D68D021000E326D /* Note.swift */; };
 		E36187862D68D0A5000E326D /* NoteCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E36187852D68D0A5000E326D /* NoteCard.swift */; };
 		E36187892D68F928000E326D /* Extension+View.swift in Sources */ = {isa = PBXBuildFile; fileRef = E36187882D68F928000E326D /* Extension+View.swift */; };
-		
 		E361878F2D68FF88000E326D /* MainViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E361878E2D68FF88000E326D /* MainViewModel.swift */; };
 		E36366292E3D0AB80026E810 /* MeditationCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E36366282E3D0AB80026E810 /* MeditationCard.swift */; };
 		E36D33912ED33DCC0048B6AC /* RootContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E36D33902ED33DCC0048B6AC /* RootContainer.swift */; };
@@ -77,16 +83,10 @@
 		E398CE782EDE464000B96376 /* NoteManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E398CE772EDE464000B96376 /* NoteManager.swift */; };
 		E3BAF8A62E293D340036E250 /* ReadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3BAF8A52E293D340036E250 /* ReadingView.swift */; };
 		E3BAF8A92E2940380036E250 /* NavigationContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3BAF8A82E2940380036E250 /* NavigationContainer.swift */; };
-		E3FDF77C2ED0CE0F00ACD847 /* MeditationInfoScroll.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3FDF77B2ED0CE0F00ACD847 /* MeditationInfoScroll.swift */; };
-		CC0000012026082800000005 /* CoreDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000012026082800000001 /* CoreDataManager.swift */; };
-		CC0000022026082800000006 /* CoreDataNoteDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000022026082800000002 /* CoreDataNoteDataSource.swift */; };
-		CC0000032026082800000007 /* CoreDataSessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000032026082800000003 /* CoreDataSessionStore.swift */; };
-		CC0000042026082800000008 /* CoreDataStreakStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000042026082800000004 /* CoreDataStreakStore.swift */; };
-		DD0000012026082800000005 /* CoreDataManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000012026082800000001 /* CoreDataManagerTests.swift */; };
-		DD0000022026082800000006 /* CoreDataNoteDataSourceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000022026082800000002 /* CoreDataNoteDataSourceTests.swift */; };
-		DD0000032026082800000007 /* CoreDataSessionStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000032026082800000003 /* CoreDataSessionStoreTests.swift */; };
-		DD0000042026082800000008 /* CoreDataStreakStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000042026082800000004 /* CoreDataStreakStoreTests.swift */; };
 		E3F0F1A12E4600000000AB11 /* NoteManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3F0F1A22E4600000000AB12 /* NoteManagerTests.swift */; };
+		E3F0F1A62E5B00000000AB21 /* MeditationSessionEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3F0F1A72E5B00000000AB22 /* MeditationSessionEngine.swift */; };
+		E3F0F1A82E5B00000000AB23 /* MeditationEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3F0F1A92E5B00000000AB24 /* MeditationEngineTests.swift */; };
+		E3FDF77C2ED0CE0F00ACD847 /* MeditationInfoScroll.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3FDF77B2ED0CE0F00ACD847 /* MeditationInfoScroll.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -100,6 +100,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		2191349DA8C57C98F66164B8 /* MeditationViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MeditationViewModelTests.swift; sourceTree = "<group>"; };
+		648FE2FCBB1DD6E50BB5E61E /* MeditationCompletionView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MeditationCompletionView.swift; sourceTree = "<group>"; };
+		73571B9E27145AED24F2D353 /* StreakReminderTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StreakReminderTests.swift; sourceTree = "<group>"; };
 		78215B543038AB4200DD8F99 /* NoteSyncCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteSyncCoordinator.swift; sourceTree = "<group>"; };
 		78215B563038AB5000DD8F99 /* DomainEvents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DomainEvents.swift; sourceTree = "<group>"; };
 		78421A36302C1C4C001B52A6 /* ScrollDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollDetector.swift; sourceTree = "<group>"; };
@@ -111,13 +114,11 @@
 		788513DD3033D35D0052F4BC /* FloatingToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingToolbar.swift; sourceTree = "<group>"; };
 		788513DF3033D9250052F4BC /* NoteEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteEditorView.swift; sourceTree = "<group>"; };
 		788956A13032019E0001D509 /* ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManager.swift; sourceTree = "<group>"; };
-		
 		788956A53032081E0001D509 /* MeditateButtonComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditateButtonComponents.swift; sourceTree = "<group>"; };
 		789B7B093010417D0082F0CB /* MainTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTheme.swift; sourceTree = "<group>"; };
 		78DF5422303F1CB200B1F2C3 /* meditation_resumed.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = meditation_resumed.wav; sourceTree = "<group>"; };
 		78DF54243040D09800B1F2C3 /* breath_inhale.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = breath_inhale.wav; sourceTree = "<group>"; };
 		78DF54263040D09E00B1F2C3 /* breath_exhale.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = breath_exhale.wav; sourceTree = "<group>"; };
-		AA0000302026082700B10002 /* breath_hold_after_exhale.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = breath_hold_after_exhale.wav; sourceTree = "<group>"; };
 		78DF54283040D0A300B1F2C3 /* breath_hold.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = breath_hold.wav; sourceTree = "<group>"; };
 		78DF542A3040D34000B1F2C3 /* meditation_countdown.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = meditation_countdown.wav; sourceTree = "<group>"; };
 		AA0000022026082000000001 /* DailyActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyActivity.swift; sourceTree = "<group>"; };
@@ -129,8 +130,17 @@
 		AA000012202608200000000C /* DayCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayCellView.swift; sourceTree = "<group>"; };
 		AA0000202026082100000002 /* MeditateAndNoteTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MeditateAndNoteTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA0000212026082600A10001 /* SoundPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundPlayer.swift; sourceTree = "<group>"; };
+		AA0000302026082700B10002 /* breath_hold_after_exhale.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = breath_hold_after_exhale.wav; sourceTree = "<group>"; };
 		AA0003002026082200000001 /* MeditationDuration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationDuration.swift; sourceTree = "<group>"; };
 		AA0003102026082200000003 /* SearchQuery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchQuery.swift; sourceTree = "<group>"; };
+		CC0000012026082800000001 /* CoreDataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataManager.swift; sourceTree = "<group>"; };
+		CC0000022026082800000002 /* CoreDataNoteDataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataNoteDataSource.swift; sourceTree = "<group>"; };
+		CC0000032026082800000003 /* CoreDataSessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataSessionStore.swift; sourceTree = "<group>"; };
+		CC0000042026082800000004 /* CoreDataStreakStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataStreakStore.swift; sourceTree = "<group>"; };
+		DD0000012026082800000001 /* CoreDataManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataManagerTests.swift; sourceTree = "<group>"; };
+		DD0000022026082800000002 /* CoreDataNoteDataSourceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataNoteDataSourceTests.swift; sourceTree = "<group>"; };
+		DD0000032026082800000003 /* CoreDataSessionStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataSessionStoreTests.swift; sourceTree = "<group>"; };
+		DD0000042026082800000004 /* CoreDataStreakStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataStreakStoreTests.swift; sourceTree = "<group>"; };
 		E320C3EC2E2D1AC9009452DD /* Destination.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Destination.swift; sourceTree = "<group>"; };
 		E320C3F02E2D1CD6009452DD /* Router.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Router.swift; sourceTree = "<group>"; };
 		E320C3F22E2D1F67009452DD /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
@@ -141,7 +151,6 @@
 		E32C6BBE2ED9C6600093F735 /* NoteMenuViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteMenuViewModel.swift; sourceTree = "<group>"; };
 		E32C6BC02ED9CD6D0093F735 /* SearchBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchBar.swift; sourceTree = "<group>"; };
 		E32C6BC22ED9CEBB0093F735 /* SearchState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchState.swift; sourceTree = "<group>"; };
-		
 		E34D18AC2E425A01004CCFA8 /* Breathing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Breathing.swift; sourceTree = "<group>"; };
 		E34D18AE2E426346004CCFA8 /* TimeMeditationSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeMeditationSheet.swift; sourceTree = "<group>"; };
 		E34EE7672E3AFDCE0044CDC6 /* AppContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppContainer.swift; sourceTree = "<group>"; };
@@ -149,7 +158,6 @@
 		E361643E2E41048C00A5DCCF /* MeditationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationView.swift; sourceTree = "<group>"; };
 		E36164402E41050F00A5DCCF /* MeditationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationViewModel.swift; sourceTree = "<group>"; };
 		E36164422E410D3D00A5DCCF /* MeditationProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationProgressView.swift; sourceTree = "<group>"; };
-		E3F0F1A72E5B00000000AB22 /* MeditationSessionEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationSessionEngine.swift; sourceTree = "<group>"; };
 		E361876B2D68B221000E326D /* MeditateAndNote.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MeditateAndNote.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E361876E2D68B221000E326D /* MeditateAndNoteApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditateAndNoteApp.swift; sourceTree = "<group>"; };
 		E36187722D68B223000E326D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -158,7 +166,6 @@
 		E36187802D68D021000E326D /* Note.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Note.swift; sourceTree = "<group>"; };
 		E36187852D68D0A5000E326D /* NoteCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteCard.swift; sourceTree = "<group>"; };
 		E36187882D68F928000E326D /* Extension+View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Extension+View.swift"; sourceTree = "<group>"; };
-		
 		E361878E2D68FF88000E326D /* MainViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewModel.swift; sourceTree = "<group>"; };
 		E36366282E3D0AB80026E810 /* MeditationCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationCard.swift; sourceTree = "<group>"; };
 		E36D33902ED33DCC0048B6AC /* RootContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootContainer.swift; sourceTree = "<group>"; };
@@ -171,17 +178,10 @@
 		E398CE772EDE464000B96376 /* NoteManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteManager.swift; sourceTree = "<group>"; };
 		E3BAF8A52E293D340036E250 /* ReadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingView.swift; sourceTree = "<group>"; };
 		E3BAF8A82E2940380036E250 /* NavigationContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationContainer.swift; sourceTree = "<group>"; };
-		E3FDF77B2ED0CE0F00ACD847 /* MeditationInfoScroll.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationInfoScroll.swift; sourceTree = "<group>"; };
-		CC0000012026082800000001 /* CoreDataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataManager.swift; sourceTree = "<group>"; };
-		CC0000022026082800000002 /* CoreDataNoteDataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataNoteDataSource.swift; sourceTree = "<group>"; };
-		CC0000032026082800000003 /* CoreDataSessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataSessionStore.swift; sourceTree = "<group>"; };
-		CC0000042026082800000004 /* CoreDataStreakStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataStreakStore.swift; sourceTree = "<group>"; };
-		DD0000012026082800000001 /* CoreDataManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataManagerTests.swift; sourceTree = "<group>"; };
-		DD0000022026082800000002 /* CoreDataNoteDataSourceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataNoteDataSourceTests.swift; sourceTree = "<group>"; };
-		DD0000032026082800000003 /* CoreDataSessionStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataSessionStoreTests.swift; sourceTree = "<group>"; };
-		DD0000042026082800000004 /* CoreDataStreakStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataStreakStoreTests.swift; sourceTree = "<group>"; };
 		E3F0F1A22E4600000000AB12 /* NoteManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteManagerTests.swift; sourceTree = "<group>"; };
+		E3F0F1A72E5B00000000AB22 /* MeditationSessionEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationSessionEngine.swift; sourceTree = "<group>"; };
 		E3F0F1A92E5B00000000AB24 /* MeditationEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationEngineTests.swift; sourceTree = "<group>"; };
+		E3FDF77B2ED0CE0F00ACD847 /* MeditationInfoScroll.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationInfoScroll.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -276,6 +276,8 @@
 				DD0000042026082800000004 /* CoreDataStreakStoreTests.swift */,
 				E3F0F1A22E4600000000AB12 /* NoteManagerTests.swift */,
 				E3F0F1A92E5B00000000AB24 /* MeditationEngineTests.swift */,
+				2191349DA8C57C98F66164B8 /* MeditationViewModelTests.swift */,
+				73571B9E27145AED24F2D353 /* StreakReminderTests.swift */,
 			);
 			path = MeditateAndNoteTests;
 			sourceTree = "<group>";
@@ -286,6 +288,17 @@
 				789B7B093010417D0082F0CB /* MainTheme.swift */,
 			);
 			path = Theme;
+			sourceTree = "<group>";
+		};
+		CC0000052026082800000009 /* Persistence */ = {
+			isa = PBXGroup;
+			children = (
+				CC0000012026082800000001 /* CoreDataManager.swift */,
+				CC0000022026082800000002 /* CoreDataNoteDataSource.swift */,
+				CC0000032026082800000003 /* CoreDataSessionStore.swift */,
+				CC0000042026082800000004 /* CoreDataStreakStore.swift */,
+			);
+			path = Persistence;
 			sourceTree = "<group>";
 		};
 		E31DE9A32E6C84EA00C330DC /* MeditationSelect */ = {
@@ -306,6 +319,7 @@
 				E35B6FBB2E44ECAF00B235AE /* ConcentricRing.swift */,
 				E36164422E410D3D00A5DCCF /* MeditationProgressView.swift */,
 				E34D18AE2E426346004CCFA8 /* TimeMeditationSheet.swift */,
+				648FE2FCBB1DD6E50BB5E61E /* MeditationCompletionView.swift */,
 			);
 			path = Meditation;
 			sourceTree = "<group>";
@@ -438,17 +452,6 @@
 			path = Services;
 			sourceTree = "<group>";
 		};
-		CC0000052026082800000009 /* Persistence */ = {
-			isa = PBXGroup;
-			children = (
-				CC0000012026082800000001 /* CoreDataManager.swift */,
-				CC0000022026082800000002 /* CoreDataNoteDataSource.swift */,
-				CC0000032026082800000003 /* CoreDataSessionStore.swift */,
-				CC0000042026082800000004 /* CoreDataStreakStore.swift */,
-			);
-			path = Persistence;
-			sourceTree = "<group>";
-		};
 		E3BAF8A72E2940120036E250 /* Navigation */ = {
 			isa = PBXGroup;
 			children = (
@@ -571,6 +574,8 @@
 				DD0000042026082800000008 /* CoreDataStreakStoreTests.swift in Sources */,
 				E3F0F1A12E4600000000AB11 /* NoteManagerTests.swift in Sources */,
 				E3F0F1A82E5B00000000AB23 /* MeditationEngineTests.swift in Sources */,
+				ADCF424E00CF12AEB7374BEA /* MeditationViewModelTests.swift in Sources */,
+				4DEA3FE741F1A4530712630B /* StreakReminderTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -604,7 +609,6 @@
 				E320C3F72E2DC6D4009452DD /* DeepLinkParser.swift in Sources */,
 				E320C3F12E2D1CD6009452DD /* Router.swift in Sources */,
 				E361643F2E41048C00A5DCCF /* MeditationView.swift in Sources */,
-				
 				E398CE782EDE464000B96376 /* NoteManager.swift in Sources */,
 				E3BAF8A62E293D340036E250 /* ReadingView.swift in Sources */,
 				E3BAF8A92E2940380036E250 /* NavigationContainer.swift in Sources */,
@@ -628,7 +632,6 @@
 				E32C6BBD2ED9C39F0093F735 /* NoteMenu.swift in Sources */,
 				E320C3F92E2DC8E4009452DD /* Destination-ViewMapping.swift in Sources */,
 				E36366292E3D0AB80026E810 /* MeditationCard.swift in Sources */,
-				
 				E320C3ED2E2D1AC9009452DD /* Destination.swift in Sources */,
 				E389732B2D7918E700A9A662 /* MeditateSelectView.swift in Sources */,
 				E34D18AD2E425A01004CCFA8 /* Breathing.swift in Sources */,
@@ -639,6 +642,7 @@
 				CC0000022026082800000006 /* CoreDataNoteDataSource.swift in Sources */,
 				CC0000032026082800000007 /* CoreDataSessionStore.swift in Sources */,
 				CC0000042026082800000008 /* CoreDataStreakStore.swift in Sources */,
+				992C2F67A6302B0D79342F66 /* MeditationCompletionView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-
+#warning("searhc bar text change color for themes")
 struct SearchBar: View {
     @FocusState private var isTextFieldFocused: Bool
     @State private var isSearching: Bool = false

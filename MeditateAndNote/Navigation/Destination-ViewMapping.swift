@@ -19,6 +19,8 @@ import SwiftUI
                 ReadingView()
             case .meditation(_ : let meditation):
                 MeditationView(viewModel: container.makeMeditationViewModel(for: meditation))
+            case let .meditationCompletion(meditation, duration):
+                MeditationCompletionView(meditation: meditation, duration: duration)
             case .streakDetail:
                 StreakDetailView(streakTracker: container.streakTracker)
             }

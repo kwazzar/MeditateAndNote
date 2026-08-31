@@ -14,6 +14,7 @@ struct DayCellView: View {
     let isToday: Bool
 
     private var isComplete: Bool { hasMeditation && hasNote }
+    private var needsNote: Bool { hasMeditation && !hasNote && isToday }
 
     private let cellSize: CGFloat = 32
     private let cornerRadius: CGFloat = 10
@@ -27,7 +28,7 @@ struct DayCellView: View {
 
     var body: some View {
         VStack(spacing: 4) {
-            ZStack {
+            ZStack(alignment: .topTrailing) {
                 RoundedRectangle(cornerRadius: cornerRadius)
                     .fill(isComplete ? themeManager.current.streakSuccess.opacity(0.15) : themeManager.current.streakCellBackground)
                     .frame(width: cellSize, height: cellSize)
@@ -50,6 +51,14 @@ struct DayCellView: View {
                         .font(.system(size: 9, weight: .medium))
                         .foregroundStyle(hasNote ? themeManager.current.streakActiveNote : themeManager.current.streakMuted)
                 }
+
+                if needsNote {
+                    Circle()
+                        .fill(.orange)
+                        .frame(width: 6, height: 6)
+                        .offset(x: 3, y: -3)
+                        .transition(.scale.combined(with: .opacity))
+                }
             }
 
             Text(weekdayLabel)
@@ -59,5 +68,18 @@ struct DayCellView: View {
         .frame(width: 40)
         .scaleEffect(isComplete ? 1.0 : 0.92)
         .animation(.snappy(duration: 0.2), value: isComplete)
+        .accessibilityLabel(accessibilityDescription)
+    }
+
+    private var accessibilityDescription: String {
+        if isComplete {
+            return "\(weekdayLabel): completed"
+        } else if needsNote {
+            return "\(weekdayLabel): meditation done, note missing"
+        } else if hasMeditation {
+            return "\(weekdayLabel): meditation done"
+        } else {
+            return "\(weekdayLabel): no activity"
+        }
     }
 }
