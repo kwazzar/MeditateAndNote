@@ -7,10 +7,10 @@
 
 import SwiftUI
 
-#warning("відповідність дизайну вью відповідно до тем які вже в додатку")
 struct MeditateSelectView: View {
     @State var viewModel: MeditateSelectViewModel
     @EnvironmentObject var router: Router
+    @Environment(ThemeManager.self) private var themeManager
 
     private let columns = [
         GridItem(.flexible()),
@@ -18,25 +18,21 @@ struct MeditateSelectView: View {
     ]
 
     var body: some View {
-        VStack(spacing: 24) {
-            headerSection
+        ScrollView {
+            VStack(spacing: 24) {
+                headerSection
 
-            if viewModel.meditations.isEmpty {
-                emptyStateView
-            } else {
-                meditationGridSection
+                if viewModel.meditations.isEmpty {
+                    emptyStateView
+                } else {
+                    meditationGridSection
+                }
+                actionButtonsSection
             }
-            actionButtonsSection
-                .padding(.bottom, 45)
+            .padding()
+            .padding(.bottom, 24)
         }
-        .padding()
-        .background(
-            LinearGradient(
-                colors: [Color.blue.opacity(0.1), Color.purple.opacity(0.05)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        )
+        .background(themeManager.current.mainBackground)
         .sheet(item: $viewModel.infoItem) { item in
             MeditationInfoSheet(item.meditation)
                 .presentationDetents([.medium, .large])
@@ -55,18 +51,18 @@ private extension MeditateSelectView {
             VStack(spacing: 12) {
                 Image(systemName: "leaf.fill")
                     .font(.system(size: 40))
-                    .foregroundColor(.green)
+                    .foregroundColor(themeManager.current.streakActiveMeditation)
 
                 Text(viewModel.selectedMeditation?.title.rawValue ?? "Meditation Session")
                     .font(.largeTitle)
                     .fontWeight(.bold)
-                    .foregroundColor(.primary)
+                    .foregroundColor(themeManager.current.textPrimary)
 
                 Text(viewModel.selectedMeditation != nil ?
                      "Ready to begin your journey" :
                         "Choose your path to inner peace")
                 .font(.body)
-                .foregroundColor(.secondary)
+                .foregroundColor(themeManager.current.textSecondary)
                 .multilineTextAlignment(.center)
             }
             //            VStack {
@@ -101,14 +97,14 @@ private extension MeditateSelectView {
                 Text("Available Meditations")
                     .font(.headline)
                     .fontWeight(.semibold)
+                    .foregroundColor(themeManager.current.textPrimary)
                     .padding(.horizontal, 4)
 
                 Spacer()
 
-                // Підказка для користувача
                 Text("Long press for details")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(themeManager.current.textSecondary)
                     .italic()
             }
 
@@ -144,22 +140,23 @@ private extension MeditateSelectView {
 
                     HStack {
                         Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(.green)
+                            .foregroundColor(themeManager.current.streakSuccess)
 
                         VStack(alignment: .leading) {
                             Text(selectedMeditation.title.rawValue)
                                 .font(.body)
                                 .fontWeight(.medium)
+                                .foregroundColor(themeManager.current.textPrimary)
 
                             Text("empty here")
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(themeManager.current.textSecondary)
                         }
 
                         Spacer()
                     }
                     .padding()
-                    .background(Color.green.opacity(0.1))
+                    .background(themeManager.current.streakSuccess.opacity(0.1))
                     .cornerRadius(12)
                 }
             }
@@ -179,13 +176,13 @@ private extension MeditateSelectView {
                 router.presentingSheet = nil
             }
             .font(.headline)
-            .foregroundColor(.white)
+            .foregroundColor(themeManager.current.buttonText)
             .frame(maxWidth: .infinity)
             .padding()
             .background(
                 viewModel.selectedMeditation != nil || !viewModel.meditations.isEmpty
-                ? Color.blue
-                : Color.gray
+                ? themeManager.current.accentButton
+                : themeManager.current.dividerColor
             )
             .cornerRadius(12)
             .disabled(viewModel.meditations.isEmpty)
@@ -196,16 +193,16 @@ private extension MeditateSelectView {
         VStack(spacing: 16) {
             Image(systemName: "moon.zzz")
                 .font(.system(size: 60))
-                .foregroundColor(.gray)
+                .foregroundColor(themeManager.current.textSecondary)
 
             Text("No Meditations Available")
                 .font(.title2)
                 .fontWeight(.medium)
-                .foregroundColor(.primary)
+                .foregroundColor(themeManager.current.textPrimary)
 
             Text("Check back later for guided meditation sessions")
                 .font(.body)
-                .foregroundColor(.secondary)
+                .foregroundColor(themeManager.current.textSecondary)
                 .multilineTextAlignment(.center)
         }
         .padding(.vertical, 40)

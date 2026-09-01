@@ -12,26 +12,28 @@ struct MeditationCard: View {
     let isSelected: Bool
     let onSelect: () -> Void
     let onLongPress: (() -> Void)?
+
+    @Environment(ThemeManager.self) private var themeManager
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Image(systemName: meditationIcon(for: meditation.title.rawValue))
                     .font(.title2)
-                    .foregroundColor(.blue)
+                    .foregroundColor(themeManager.current.streakActiveNote)
 
                 Spacer()
 
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.green)
+                        .foregroundColor(themeManager.current.streakSuccess)
                 }
             }
 
             Text(meditation.title.rawValue)
                 .font(.headline)
                 .fontWeight(.semibold)
-                .foregroundColor(.primary)
+                .foregroundColor(themeManager.current.textPrimary)
                 .multilineTextAlignment(.leading)
                 .lineLimit(2)
                 .fixedSize(horizontal: false, vertical: true)
@@ -39,11 +41,11 @@ struct MeditationCard: View {
             HStack(alignment: .top, spacing: 4) {
                 Image(systemName: "clock")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(themeManager.current.textSecondary)
 
                 Text("\(meditation.breathingStyle.pattern.name) pattern")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(themeManager.current.textSecondary)
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
@@ -55,12 +57,12 @@ struct MeditationCard: View {
         .frame(minHeight: 120)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(isSelected ? Color.blue.opacity(0.1) : Color.white)
+                .fill(isSelected ? themeManager.current.streakActiveNote.opacity(0.1) : themeManager.current.streakCellBackground)
                 .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 12)
-                .stroke(isSelected ? Color.blue : Color.clear, lineWidth: 2)
+                .stroke(isSelected ? themeManager.current.streakActiveNote : Color.clear, lineWidth: 2)
         )
         .contentShape(Rectangle())
         .onTapGesture {

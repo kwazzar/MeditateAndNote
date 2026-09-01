@@ -11,6 +11,7 @@ import SwiftUI
 struct MeditationInfoSheet: View {
     let meditation: Meditation
     @Environment(\.dismiss) private var dismiss
+    @Environment(ThemeManager.self) private var themeManager
 
     init(_ meditation: Meditation) {
         self.meditation = meditation
@@ -19,11 +20,11 @@ struct MeditationInfoSheet: View {
     var body: some View {
         Group {
             VStack(spacing: 0) {
-                // Custom Header
                 HStack {
                     Text("Meditation Info")
                         .font(.title2)
                         .fontWeight(.bold)
+                        .foregroundColor(themeManager.current.textPrimary)
 
                     Spacer()
 
@@ -32,15 +33,16 @@ struct MeditationInfoSheet: View {
                     }
                     .font(.body)
                     .fontWeight(.medium)
+                    .foregroundColor(themeManager.current.textSecondary)
                 }
                 .padding()
-                .background(Color(UIColor.systemGray6))
-                
-                // ScrollView content
+                .background(themeManager.current.toolbarBackground)
+
                 MeditationInfoScroll(meditation: meditation)
-                .padding()
+                    .padding()
             }
         }
+        .background(themeManager.current.mainBackground.ignoresSafeArea())
     }
 
     private func meditationIcon(for title: String) -> String {
@@ -65,25 +67,22 @@ struct MeditationInfoSheet: View {
 // MARK: - Meditation Info Scroll
 struct MeditationInfoScroll: View {
     let meditation: Meditation
+    @Environment(ThemeManager.self) private var themeManager
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                // Header з іконкою та заголовком
                 headerScroll
 
                 Divider()
+                    .foregroundStyle(themeManager.current.dividerColor)
 
-                // Дихальний патерн
+                categoryBadge
                 breathPattern
-
-                // Детальна інформація про дихальний патерн
                 detailScroll
-
-                // Стиль дихання
+                cycleDuration
                 styleOfBreating
 
-                //                     Опис (якщо є)
                 if let description = meditation.description, !description.isEmpty {
                     descriptionView(description)
                 }
@@ -91,52 +90,77 @@ struct MeditationInfoScroll: View {
                 Spacer(minLength: 20)
             }
         }
-                    .padding(.horizontal)
-        // Optional: add horizontal padding to the entire content
+        .padding(.horizontal)
     }
 }
 
 private extension MeditationInfoScroll {
+    func phaseDuration(for type: BreathingPhaseType) -> TimeInterval? {
+        meditation.breathingStyle.pattern.phases.first { $0.type == type }?.duration
+    }
+
+    func formatDuration(_ duration: TimeInterval) -> String {
+        let seconds = Int(duration)
+        return "\(seconds) s"
+    }
+
     @ViewBuilder
     var headerScroll: some View {
         HStack(spacing: 16) {
             Image(systemName: meditationIcon(for: meditation.title.rawValue))
                 .font(.system(size: 40))
-                .foregroundColor(.blue)
+                .foregroundColor(themeManager.current.streakActiveNote)
                 .frame(width: 60, height: 60)
-                .background(Color.blue.opacity(0.1))
+                .background(themeManager.current.streakActiveNote.opacity(0.1))
                 .clipShape(Circle())
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(meditation.title.rawValue)
                     .font(.title2)
                     .fontWeight(.bold)
-                    .foregroundColor(.primary)
+                    .foregroundColor(themeManager.current.textPrimary)
 
-                Text("Meditation Session")
+                Text(meditation.breathingStyle.pattern.name)
                     .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(themeManager.current.textSecondary)
             }
 
             Spacer()
         }
     }
 
+    var categoryBadge: some View {
+        HStack {
+            Image(systemName: "tag.fill")
+                .foregroundColor(themeManager.current.streakActiveMeditation)
+            Text(meditation.category.rawValue.capitalized)
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .foregroundColor(themeManager.current.textPrimary)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background(themeManager.current.streakActiveMeditation.opacity(0.1))
+        .cornerRadius(8)
+    }
+
     var breathPattern: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Image(systemName: "wind")
-                    .foregroundColor(.blue)
+                    .foregroundColor(themeManager.current.streakActiveNote)
                 Text("Breathing Pattern")
                     .font(.headline)
                     .fontWeight(.semibold)
+                    .foregroundColor(themeManager.current.textPrimary)
             }
 
             Text(meditation.breathingStyle.pattern.name)
                 .font(.body)
+                .foregroundColor(themeManager.current.textPrimary)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
-                .background(Color.gray.opacity(0.1))
+                .background(themeManager.current.dividerColor)
                 .cornerRadius(8)
         }
     }
@@ -146,17 +170,19 @@ private extension MeditationInfoScroll {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Image(systemName: "heart.circle")
-                    .foregroundColor(.blue)
+                    .foregroundColor(themeManager.current.streakActiveMeditation)
                 Text("Breathing Style")
                     .font(.headline)
                     .fontWeight(.semibold)
+                    .foregroundColor(themeManager.current.textPrimary)
             }
 
             Text(meditation.breathingStyle.rawValue)
                 .font(.body)
+                .foregroundColor(themeManager.current.textPrimary)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
-                .background(Color.green.opacity(0.1))
+                .background(themeManager.current.streakActiveMeditation.opacity(0.1))
                 .cornerRadius(8)
         }
     }
@@ -166,15 +192,16 @@ private extension MeditationInfoScroll {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Image(systemName: "text.alignleft")
-                    .foregroundColor(.blue)
+                    .foregroundColor(themeManager.current.streakActiveNote)
                 Text("Description")
                     .font(.headline)
                     .fontWeight(.semibold)
+                    .foregroundColor(themeManager.current.textPrimary)
             }
 
             Text(description)
                 .font(.body)
-                .foregroundColor(.secondary)
+                .foregroundColor(themeManager.current.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -183,39 +210,69 @@ private extension MeditationInfoScroll {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Image(systemName: "info.circle")
-                    .foregroundColor(.blue)
+                    .foregroundColor(themeManager.current.streakActiveNote)
                 Text("Pattern Details")
                     .font(.headline)
                     .fontWeight(.semibold)
+                    .foregroundColor(themeManager.current.textPrimary)
             }
 
             VStack(alignment: .leading, spacing: 8) {
-                PatternDetailRow(
-                    title: "Inhale",
-                    value: "s",
-                    icon: "arrow.down.circle"
-                )
+                if let inhale = phaseDuration(for: .inhale) {
+                    PatternDetailRow(
+                        title: "Inhale",
+                        value: formatDuration(inhale),
+                        icon: "arrow.down.circle"
+                    )
+                }
 
-                PatternDetailRow(
-                    title: "Hold In",
-                    value: "s",
-                    icon: "pause.circle"
-                )
+                if let holdIn = phaseDuration(for: .holdAfterInhale) {
+                    PatternDetailRow(
+                        title: "Hold In",
+                        value: formatDuration(holdIn),
+                        icon: "pause.circle"
+                    )
+                }
 
-                PatternDetailRow(
-                    title: "Exhale",
-                    value: "s",
-                    icon: "arrow.up.circle"
-                )
+                if let exhale = phaseDuration(for: .exhale) {
+                    PatternDetailRow(
+                        title: "Exhale",
+                        value: formatDuration(exhale),
+                        icon: "arrow.up.circle"
+                    )
+                }
 
-                PatternDetailRow(
-                    title: "Hold Out",
-                    value: "s",
-                    icon: "pause.circle"
-                )
+                if let holdOut = phaseDuration(for: .holdAfterExhale) {
+                    PatternDetailRow(
+                        title: "Hold Out",
+                        value: formatDuration(holdOut),
+                        icon: "pause.circle"
+                    )
+                }
             }
             .padding(.leading, 16)
         }
+    }
+
+    var cycleDuration: some View {
+        let total = meditation.breathingStyle.pattern.phases.reduce(0) { $0 + $1.duration }
+        return HStack {
+            Image(systemName: "clock.badge.checkmark")
+                .foregroundColor(themeManager.current.streakSuccess)
+            Text("Full Cycle")
+                .font(.headline)
+                .fontWeight(.semibold)
+                .foregroundColor(themeManager.current.textPrimary)
+            Spacer()
+            Text(formatDuration(total))
+                .font(.body)
+                .fontWeight(.medium)
+                .foregroundColor(themeManager.current.streakSuccess)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(themeManager.current.streakSuccess.opacity(0.1))
+        .cornerRadius(8)
     }
 
     func meditationIcon(for title: String) -> String {
@@ -243,22 +300,24 @@ struct PatternDetailRow: View {
     let value: String
     let icon: String
 
+    @Environment(ThemeManager.self) private var themeManager
+
     var body: some View {
         HStack {
             Image(systemName: icon)
-                .foregroundColor(.secondary)
+                .foregroundColor(themeManager.current.textSecondary)
                 .frame(width: 20)
 
             Text(title)
                 .font(.body)
-                .foregroundColor(.primary)
+                .foregroundColor(themeManager.current.textPrimary)
 
             Spacer()
 
             Text(value)
                 .font(.body)
                 .fontWeight(.medium)
-                .foregroundColor(.blue)
+                .foregroundColor(themeManager.current.streakActiveNote)
         }
         .padding(.vertical, 4)
     }
