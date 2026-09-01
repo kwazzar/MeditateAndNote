@@ -42,15 +42,18 @@ struct DayCellView: View {
                     )
                     .frame(width: cellSize, height: cellSize)
 
-                HStack(spacing: 3) {
-                    Text("M")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(hasMeditation ? themeManager.current.streakActiveMeditation : themeManager.current.streakMuted)
+                ZStack {
+                    HStack(spacing: 3) {
+                        Text("M")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(hasMeditation ? themeManager.current.streakActiveMeditation : themeManager.current.streakMuted)
 
-                    Image(systemName: "note.text")
-                        .font(.system(size: 9, weight: .medium))
-                        .foregroundStyle(hasNote ? themeManager.current.streakActiveNote : themeManager.current.streakMuted)
+                        Image(systemName: "note.text")
+                            .font(.system(size: 9, weight: .medium))
+                            .foregroundStyle(hasNote ? themeManager.current.streakActiveNote : themeManager.current.streakMuted)
+                    }
                 }
+                .frame(width: cellSize, height: cellSize)
 
                 if needsNote {
                     Circle()
