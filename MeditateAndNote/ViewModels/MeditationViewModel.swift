@@ -59,7 +59,7 @@ final class MeditationViewModel {
             return .finished
         case .countdown:
             return .started
-        case .active(let clock, _, _):
+        case .active(let clock, _, _, _, _):
             return clock.isPaused ? .paused : .started
         }
     }
@@ -81,14 +81,20 @@ final class MeditationViewModel {
 
 //MARK: - Timer methods
 extension MeditationViewModel {
+    /// Starts a session from a preset duration (the current picker UI).
     func start(with duration: MeditationDuration, countdown: Int = 3) {
-        let durationValue = SessionDuration(duration)
+        start(with: SessionDuration(duration), countdown: countdown)
+    }
+
+    /// Starts a session from any positive duration. Wall-clock aligned, so
+    /// custom durations are supported without any extra bookkeeping.
+    func start(with duration: SessionDuration, countdown: Int = 3) {
         timer?.invalidate()
         phaseTimer?.invalidate()
         timer = nil
         phaseTimer = nil
-        
-        apply(engine.start(duration: durationValue, countdown: countdown))
+
+        apply(engine.start(duration: duration, countdown: countdown))
         if engine.isCountingDown {
             timer = scheduleTimer(interval: 1.0) { [weak self] _ in
                 guard let self else { return }
@@ -147,6 +153,12 @@ private extension MeditationViewModel {
     
     func tickClock() {
         apply(engine.tickClock())
+        if engine.isFinished {
+            timer?.invalidate()
+            phaseTimer?.invalidate()
+            timer = nil
+            phaseTimer = nil
+        }
     }
     
     func tickSecond() {
@@ -167,7 +179,7 @@ private extension MeditationViewModel {
         }
         phaseTimer = scheduleTimer(interval: 0.1) { [weak self] _ in
             guard let self else { return }
-            guard case .active(let clock, _, _) = self.engine.state, !clock.isPaused else { return }
+            guard case .active(let clock, _, _, _, _) = self.engine.state, !clock.isPaused else { return }
             self.tickClock()
         }
     }
@@ -188,7 +200,7 @@ private extension MeditationViewModel {
             case .countdownTick:
                 soundPlayer.play(.countdownTick)
             case .sessionStarted:
-                soundPlayer.play(.started)
+                break
             case .phaseChanged(let phase):
                 soundPlayer.play(.phase(phase.type))
             case .sessionPaused:

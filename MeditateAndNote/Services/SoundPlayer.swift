@@ -7,7 +7,6 @@ import AVFoundation
 
 //MARK: - MeditationSound
 enum MeditationSound: Equatable {
-    case started
     case paused
     case resumed
     case finished
@@ -65,7 +64,6 @@ final class SoundPlayer: SoundPlaying {
 
     private func resourceName(for sound: MeditationSound) -> String {
         switch sound {
-        case .started: return "meditation_started"
         case .paused: return "meditation_paused"
         case .resumed: return "meditation_resumed"
         case .finished: return "meditation_finished"
