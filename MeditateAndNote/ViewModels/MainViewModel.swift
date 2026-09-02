@@ -9,7 +9,8 @@ import SwiftUI
 
 // Home tab: resolves the last selected meditation and streak display.
 // Note-list responsibilities live in NoteMenuViewModel (Notes tab).
-final class MainViewModel: ObservableObject {
+@Observable
+final class MainViewModel {
     private let meditationService: MeditationService
     private let selectionStore: MeditationSelectionStore
 
