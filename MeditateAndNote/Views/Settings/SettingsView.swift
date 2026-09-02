@@ -12,8 +12,12 @@ import SwiftUI
 struct SettingsView: View {
     @Bindable var animationSettings: AnimationSettings
     @Bindable var soundSettings: SoundSettings
+    let container: AppContainer
     @Environment(ThemeManager.self) private var themeManager
     @Environment(\.dismiss) private var dismiss
+
+    @State private var showsOnboardingDemo = false
+    @State private var onboardingDemoViewModel: OnboardingViewModel?
 
     var body: some View {
         ZStack {
@@ -24,10 +28,19 @@ struct SettingsView: View {
                     animationSection
                     themeSection
                     volumeSection
+                    #if DEBUG
+                    devSection
+                    #endif
                 }
                 .padding(16)
             }
             .scrollIndicators(.hidden)
+        }
+        .fullScreenCover(isPresented: $showsOnboardingDemo) {
+            if let onboardingDemoViewModel {
+                OnboardingView(viewModel: onboardingDemoViewModel)
+                    .environment(themeManager)
+            }
         }
         .safeAreaInset(edge: .top) {
             navigationBar
@@ -146,6 +159,38 @@ private extension SettingsView {
         .cornerRadius(16)
     }
 
+    #if DEBUG
+    var devSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            sectionHeader("Developer", icon: "wrench.and.screwdriver.fill")
+
+            Button {
+                onboardingDemoViewModel = container.makeOnboardingViewModel {
+                    showsOnboardingDemo = false
+                }
+                showsOnboardingDemo = true
+            } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: "hand.wave.fill")
+                        .foregroundColor(themeManager.current.streakActiveMeditation)
+                    Text("Show onboarding again")
+                        .font(.body)
+                        .foregroundColor(themeManager.current.textPrimary)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(themeManager.current.textSecondary)
+                }
+                .padding(.vertical, 8)
+            }
+            .buttonStyle(PlainButtonStyle())
+        }
+        .padding(20)
+        .background(themeManager.current.editorBackground)
+        .cornerRadius(16)
+    }
+    #endif
+
     func sectionHeader(_ title: String, icon: String) -> some View {
         HStack(spacing: 8) {
             Image(systemName: icon)
@@ -185,7 +230,8 @@ struct SettingsView_Previews: PreviewProvider {
     static var previews: some View {
         SettingsView(
             animationSettings: AnimationSettings(),
-            soundSettings: SoundSettings()
+            soundSettings: SoundSettings(),
+            container: AppContainer()
         )
         .environment(ThemeManager())
     }

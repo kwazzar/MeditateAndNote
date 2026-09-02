@@ -26,7 +26,8 @@ import SwiftUI
             case .settings:
                 SettingsView(
                     animationSettings: container.animationSettings,
-                    soundSettings: container.soundSettings
+                    soundSettings: container.soundSettings,
+                    container: container
                 )
             }
         }
