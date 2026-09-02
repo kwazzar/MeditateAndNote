@@ -21,6 +21,7 @@
 		788956A2303201A80001D509 /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788956A13032019E0001D509 /* ThemeManager.swift */; };
 		788956A6303208330001D509 /* MeditateButtonComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788956A53032081E0001D509 /* MeditateButtonComponents.swift */; };
 		789B7B0A3010417D0082F0CB /* MainTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 789B7B093010417D0082F0CB /* MainTheme.swift */; };
+		78DA4DAE3047B4A900A36E6A /* CustomTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78DA4DAD3047B4A600A36E6A /* CustomTabBar.swift */; };
 		78DF5423303F1CB200B1F2C3 /* meditation_resumed.wav in Resources */ = {isa = PBXBuildFile; fileRef = 78DF5422303F1CB200B1F2C3 /* meditation_resumed.wav */; };
 		78DF54253040D09800B1F2C3 /* breath_inhale.wav in Resources */ = {isa = PBXBuildFile; fileRef = 78DF54243040D09800B1F2C3 /* breath_inhale.wav */; };
 		78DF54273040D09E00B1F2C3 /* breath_exhale.wav in Resources */ = {isa = PBXBuildFile; fileRef = 78DF54263040D09E00B1F2C3 /* breath_exhale.wav */; };
@@ -28,6 +29,10 @@
 		78DF542B3040D34000B1F2C3 /* meditation_countdown.wav in Resources */ = {isa = PBXBuildFile; fileRef = 78DF542A3040D34000B1F2C3 /* meditation_countdown.wav */; };
 		992C2F67A6302B0D79342F66 /* MeditationCompletionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 648FE2FCBB1DD6E50BB5E61E /* MeditationCompletionView.swift */; };
 		AA0000012026082000000001 /* DailyActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000022026082000000001 /* DailyActivity.swift */; };
+		AA00000220260903C00002 /* BreathingAnimationStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000220260903C00001 /* BreathingAnimationStyle.swift */; };
+		AA00000220260903C00004 /* AnimationSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000220260903C00003 /* AnimationSettings.swift */; };
+		AA00000220260903C00006 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000220260903C00005 /* SettingsView.swift */; };
+		AA00000220260903C00008 /* AnimationSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000220260903C00007 /* AnimationSettingsTests.swift */; };
 		AA0000032026082000000002 /* MeditationSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000042026082000000002 /* MeditationSession.swift */; };
 		AA0000072026082000000004 /* StreakTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000082026082000000004 /* StreakTracker.swift */; };
 		AA0000092026082000000005 /* StreakHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000A2026082000000005 /* StreakHeaderView.swift */; };
@@ -90,10 +95,13 @@
 		E3F0F1A62E5B00000000AB21 /* MeditationSessionEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3F0F1A72E5B00000000AB22 /* MeditationSessionEngine.swift */; };
 		E3F0F1A82E5B00000000AB23 /* MeditationEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3F0F1A92E5B00000000AB24 /* MeditationEngineTests.swift */; };
 		E3FDF77C2ED0CE0F00ACD847 /* MeditationInfoScroll.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3FDF77B2ED0CE0F00ACD847 /* MeditationInfoScroll.swift */; };
-		AA00000220260903C00002 /* BreathingAnimationStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000220260903C00001 /* BreathingAnimationStyle.swift */; };
-		AA00000220260903C00004 /* AnimationSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000220260903C00003 /* AnimationSettings.swift */; };
-		AA00000220260903C00006 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000220260903C00005 /* SettingsView.swift */; };
-		AA00000220260903C00008 /* AnimationSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000220260903C00007 /* AnimationSettingsTests.swift */; };
+		OB0100010000000000000001 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0000010000000000000001 /* OnboardingView.swift */; };
+		OB0100020000000000000002 /* OnboardingPageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0000020000000000000002 /* OnboardingPageView.swift */; };
+		OB0100030000000000000003 /* OnboardingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0000030000000000000003 /* OnboardingViewModel.swift */; };
+		OB0100040000000000000004 /* OnboardingPageModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0000040000000000000004 /* OnboardingPageModel.swift */; };
+		OB0100050000000000000005 /* OnboardingCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0000050000000000000005 /* OnboardingCoordinator.swift */; };
+		OB0100060000000000000006 /* OnboardingStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0000060000000000000006 /* OnboardingStore.swift */; };
+		OB0100070000000000000007 /* OnboardingViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0000070000000000000007 /* OnboardingViewModelTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -123,12 +131,17 @@
 		788956A13032019E0001D509 /* ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManager.swift; sourceTree = "<group>"; };
 		788956A53032081E0001D509 /* MeditateButtonComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditateButtonComponents.swift; sourceTree = "<group>"; };
 		789B7B093010417D0082F0CB /* MainTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTheme.swift; sourceTree = "<group>"; };
+		78DA4DAD3047B4A600A36E6A /* CustomTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomTabBar.swift; sourceTree = "<group>"; };
 		78DF5422303F1CB200B1F2C3 /* meditation_resumed.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = meditation_resumed.wav; sourceTree = "<group>"; };
 		78DF54243040D09800B1F2C3 /* breath_inhale.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = breath_inhale.wav; sourceTree = "<group>"; };
 		78DF54263040D09E00B1F2C3 /* breath_exhale.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = breath_exhale.wav; sourceTree = "<group>"; };
 		78DF54283040D0A300B1F2C3 /* breath_hold.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = breath_hold.wav; sourceTree = "<group>"; };
 		78DF542A3040D34000B1F2C3 /* meditation_countdown.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = meditation_countdown.wav; sourceTree = "<group>"; };
 		AA0000022026082000000001 /* DailyActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyActivity.swift; sourceTree = "<group>"; };
+		AA00000220260903C00001 /* BreathingAnimationStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreathingAnimationStyle.swift; sourceTree = "<group>"; };
+		AA00000220260903C00003 /* AnimationSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimationSettings.swift; sourceTree = "<group>"; };
+		AA00000220260903C00005 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		AA00000220260903C00007 /* AnimationSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimationSettingsTests.swift; sourceTree = "<group>"; };
 		AA0000042026082000000002 /* MeditationSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationSession.swift; sourceTree = "<group>"; };
 		AA0000082026082000000004 /* StreakTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakTracker.swift; sourceTree = "<group>"; };
 		AA00000A2026082000000005 /* StreakHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakHeaderView.swift; sourceTree = "<group>"; };
@@ -141,10 +154,6 @@
 		AA00010020260902C00002 /* SoundSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundSettings.swift; sourceTree = "<group>"; };
 		AA00012020260902C00004 /* SoundSettingsSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundSettingsSheet.swift; sourceTree = "<group>"; };
 		AA00014020260902C00006 /* SoundSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundSettingsTests.swift; sourceTree = "<group>"; };
-		AA00000220260903C00001 /* BreathingAnimationStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreathingAnimationStyle.swift; sourceTree = "<group>"; };
-		AA00000220260903C00003 /* AnimationSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimationSettings.swift; sourceTree = "<group>"; };
-		AA00000220260903C00005 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
-		AA00000220260903C00007 /* AnimationSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimationSettingsTests.swift; sourceTree = "<group>"; };
 		AA0003002026082200000001 /* MeditationDuration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationDuration.swift; sourceTree = "<group>"; };
 		AA0003102026082200000003 /* SearchQuery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchQuery.swift; sourceTree = "<group>"; };
 		CC0000012026082800000001 /* CoreDataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataManager.swift; sourceTree = "<group>"; };
@@ -196,6 +205,13 @@
 		E3F0F1A72E5B00000000AB22 /* MeditationSessionEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationSessionEngine.swift; sourceTree = "<group>"; };
 		E3F0F1A92E5B00000000AB24 /* MeditationEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationEngineTests.swift; sourceTree = "<group>"; };
 		E3FDF77B2ED0CE0F00ACD847 /* MeditationInfoScroll.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationInfoScroll.swift; sourceTree = "<group>"; };
+		OB0000010000000000000001 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		OB0000020000000000000002 /* OnboardingPageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingPageView.swift; sourceTree = "<group>"; };
+		OB0000030000000000000003 /* OnboardingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewModel.swift; sourceTree = "<group>"; };
+		OB0000040000000000000004 /* OnboardingPageModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingPageModel.swift; sourceTree = "<group>"; };
+		OB0000050000000000000005 /* OnboardingCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingCoordinator.swift; sourceTree = "<group>"; };
+		OB0000060000000000000006 /* OnboardingStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingStore.swift; sourceTree = "<group>"; };
+		OB0000070000000000000007 /* OnboardingViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewModelTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -270,6 +286,23 @@
 			path = Main;
 			sourceTree = "<group>";
 		};
+		78DA4DAF3047BAFF00A36E6A /* Root */ = {
+			isa = PBXGroup;
+			children = (
+				E36D33902ED33DCC0048B6AC /* RootContainer.swift */,
+				78DA4DAD3047B4A600A36E6A /* CustomTabBar.swift */,
+			);
+			path = Root;
+			sourceTree = "<group>";
+		};
+		AA00000220260903C00009 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				AA00000220260903C00005 /* SettingsView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
 		AA0000122026082000000009 /* Streak */ = {
 			isa = PBXGroup;
 			children = (
@@ -294,6 +327,7 @@
 				73571B9E27145AED24F2D353 /* StreakReminderTests.swift */,
 				AA00014020260902C00006 /* SoundSettingsTests.swift */,
 				AA00000220260903C00007 /* AnimationSettingsTests.swift */,
+				OB0000070000000000000007 /* OnboardingViewModelTests.swift */,
 			);
 			path = MeditateAndNoteTests;
 			sourceTree = "<group>";
@@ -414,13 +448,14 @@
 		E36187832D68D05C000E326D /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				E36D33902ED33DCC0048B6AC /* RootContainer.swift */,
+				78DA4DAF3047BAFF00A36E6A /* Root */,
 				78C86D8E3037C27500950DB9 /* Main */,
 				E3BAF8A52E293D340036E250 /* ReadingView.swift */,
 				AA0000AA2026082200000001 /* Theme */,
 				782A8C0C302D0DE70004249F /* NoteMenu */,
 				E34D18AB2E424CEE004CCFA8 /* Meditation */,
 				78C59AE03036C554007C155E /* NoteEditor */,
+				OB0001000000000000000001 /* Onboarding */,
 				E31DE9A32E6C84EA00C330DC /* MeditationSelect */,
 				E36187842D68D087000E326D /* Components */,
 				AA00000220260903C00009 /* Settings */,
@@ -434,14 +469,6 @@
 				E36187852D68D0A5000E326D /* NoteCard.swift */,
 			);
 			path = Components;
-			sourceTree = "<group>";
-		};
-		AA00000220260903C00009 /* Settings */ = {
-			isa = PBXGroup;
-			children = (
-				AA00000220260903C00005 /* SettingsView.swift */,
-			);
-			path = Settings;
 			sourceTree = "<group>";
 		};
 		E36187872D68F901000E326D /* Extensions */ = {
@@ -460,6 +487,7 @@
 				E32C6BBE2ED9C6600093F735 /* NoteMenuViewModel.swift */,
 				E389732C2D79191200A9A662 /* MeditateSelectViewModel.swift */,
 				E36164402E41050F00A5DCCF /* MeditationViewModel.swift */,
+				OB0000030000000000000003 /* OnboardingViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -477,6 +505,7 @@
 				AA0000212026082600A10001 /* SoundPlayer.swift */,
 				AA00010020260902C00002 /* SoundSettings.swift */,
 				AA00000220260903C00003 /* AnimationSettings.swift */,
+				OB0000060000000000000006 /* OnboardingStore.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -491,8 +520,19 @@
 				E320C3F22E2D1F67009452DD /* Config.swift */,
 				E320C3F42E2DC691009452DD /* Deeplink.swift */,
 				E320C3F62E2DC6D4009452DD /* DeepLinkParser.swift */,
+				OB0000050000000000000005 /* OnboardingCoordinator.swift */,
 			);
 			path = Navigation;
+			sourceTree = "<group>";
+		};
+		OB0001000000000000000001 /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				OB0000010000000000000001 /* OnboardingView.swift */,
+				OB0000020000000000000002 /* OnboardingPageView.swift */,
+				OB0000040000000000000004 /* OnboardingPageModel.swift */,
+			);
+			path = Onboarding;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -607,6 +647,7 @@
 				4DEA3FE741F1A4530712630B /* StreakReminderTests.swift in Sources */,
 				AA00014120260902C00005 /* SoundSettingsTests.swift in Sources */,
 				AA00000220260903C00008 /* AnimationSettingsTests.swift in Sources */,
+				OB0100070000000000000007 /* OnboardingViewModelTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -618,6 +659,7 @@
 				AA0003112026082200000004 /* SearchQuery.swift in Sources */,
 				AA0003012026082200000002 /* MeditationDuration.swift in Sources */,
 				AA0000032026082000000002 /* MeditationSession.swift in Sources */,
+				78DA4DAE3047B4A900A36E6A /* CustomTabBar.swift in Sources */,
 				787880CD303E260F004474C4 /* BreathingPathView.swift in Sources */,
 				AA0000072026082000000004 /* StreakTracker.swift in Sources */,
 				AA0000222026082600A10002 /* SoundPlayer.swift in Sources */,
@@ -679,6 +721,12 @@
 				AA00000220260903C00002 /* BreathingAnimationStyle.swift in Sources */,
 				AA00000220260903C00004 /* AnimationSettings.swift in Sources */,
 				AA00000220260903C00006 /* SettingsView.swift in Sources */,
+				OB0100010000000000000001 /* OnboardingView.swift in Sources */,
+				OB0100020000000000000002 /* OnboardingPageView.swift in Sources */,
+				OB0100030000000000000003 /* OnboardingViewModel.swift in Sources */,
+				OB0100040000000000000004 /* OnboardingPageModel.swift in Sources */,
+				OB0100050000000000000005 /* OnboardingCoordinator.swift in Sources */,
+				OB0100060000000000000006 /* OnboardingStore.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

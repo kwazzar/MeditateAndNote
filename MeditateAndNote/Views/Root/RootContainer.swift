@@ -11,7 +11,18 @@ struct RootContainer: View {
     @EnvironmentObject var router: Router
     @EnvironmentObject var container: AppContainer
     @Environment(ThemeManager.self) private var themeManager
-    
+
+    /// Launch-time gating: onboarding runs before the tab bar is mounted
+    /// (see `OnboardingCoordinator` for the Router transition on completion).
+    private enum StartupFlow {
+        case undecided
+        case onboarding
+        case tabs
+    }
+
+    @State private var startupFlow: StartupFlow = .undecided
+    @State private var onboardingViewModel: OnboardingViewModel?
+
     private var bindingSelectedTab: Binding<TabDestination> {
         Binding(
             get: { router.selectedTab ?? .home },
@@ -20,6 +31,52 @@ struct RootContainer: View {
     }
     
     var body: some View {
+        Group {
+            switch startupFlow {
+            case .undecided:
+                Color.clear
+                    .onAppear(perform: decideStartupFlow)
+            case .onboarding:
+                if let onboardingViewModel {
+                    OnboardingView(viewModel: onboardingViewModel)
+                        .environment(themeManager)
+                        .transition(.opacity)
+                } else {
+                    Color.clear
+                }
+            case .tabs:
+                mainTabBar
+                    .transition(.opacity)
+            }
+        }
+        .animation(.easeInOut(duration: 0.35), value: startupFlow)
+    }
+
+    /// Decides once whether to show onboarding or jump straight to the tabs.
+    private func decideStartupFlow() {
+        guard startupFlow == .undecided else { return }
+        let coordinator = OnboardingCoordinator(store: container.onboardingStore)
+
+        // Dev tool: the `-showOnboarding` launch argument reopens onboarding
+        // even after it was completed, without touching the persisted flag.
+        // Usage: `xcrun simctl launch <SIM> nazar.MeditateAndNote -showOnboarding`
+        let showsOnboardingOnDemand = ProcessInfo.processInfo.arguments.contains("-showOnboarding")
+
+        guard coordinator.shouldShowOnboarding || showsOnboardingOnDemand else {
+            startupFlow = .tabs
+            return
+        }
+
+        onboardingViewModel = container.makeOnboardingViewModel {
+            coordinator.onOnboardingCompleted(router: router)
+            startupFlow = .tabs
+        }
+        startupFlow = .onboarding
+    }
+}
+
+extension RootContainer {
+    private var mainTabBar: some View {
         ZStack(alignment: .bottom) {
             TabView(selection: bindingSelectedTab) {
                 NavigationContainer(parentRouter: router, tab: .home) {
@@ -51,50 +108,6 @@ struct RootContainer: View {
                 .animation(.snappy(duration: 0.25), value: router.isDetailPresented)
         }
         .ignoresSafeArea(.keyboard, edges: .bottom)
-    }
-}
-
-struct CustomTabBar: View {
-    @Binding var selectedTab: TabDestination
-    
-    var body: some View {
-        HStack(spacing: 32) {
-            tabButton(.notes, systemImage: "note.text", title: "Notes")
-            tabButton(.home, systemImage: "house", title: "Home")
-            tabButton(.meditations, systemImage: "leaf", title: "Meditations")
-            // додаси інші, якщо будуть
-        }
-        .padding(.horizontal, 16)
-        .background(
-            Capsule()
-                .fill(.ultraThinMaterial)
-                .shadow(radius: 8)
-        )
-    }
-    
-    private func tabButton(_ tab: TabDestination,
-                           systemImage: String,
-                           title: String) -> some View {
-        let isSelected = selectedTab == tab
-        
-        return Button {
-            selectedTab = tab
-        } label: {
-            VStack(spacing: 4) {
-                Image(systemName: systemImage)
-                    .font(.system(size: 18, weight: .semibold))
-                Text(title)
-                    .font(.caption2)
-            }
-            .foregroundColor(isSelected ? .blue : .secondary)
-            .padding(.vertical, 6)
-            .frame(maxWidth: .infinity)
-            .background(
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(isSelected ? Color.blue.opacity(0.12) : .clear)
-            )
-        }
-        .buttonStyle(.plain)
     }
 }
 

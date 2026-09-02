@@ -26,6 +26,7 @@ final class AppContainer: ObservableObject {
     private(set) lazy var selectionStore = MeditationSelectionStore()
     private(set) lazy var soundSettings = SoundSettings.shared
     private(set) lazy var animationSettings = AnimationSettings.shared
+    private(set) lazy var onboardingStore: any OnboardingStore = UserDefaultsOnboardingStore()
 
     private lazy var noteManager = NoteManager(syncCoordinator: syncCoordinator, eventBus: eventBus)
 
@@ -84,5 +85,14 @@ final class AppContainer: ObservableObject {
     @MainActor
     func makeNoteMenuViewModel() -> NoteMenuViewModel {
         noteMenuViewModel
+    }
+
+    @MainActor
+    func makeOnboardingViewModel(onCompletion: @escaping () -> Void) -> OnboardingViewModel {
+        OnboardingViewModel(
+            store: onboardingStore,
+            pages: OnboardingPage.appSlides,
+            onCompletion: onCompletion
+        )
     }
 }
