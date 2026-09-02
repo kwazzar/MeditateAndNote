@@ -10,6 +10,7 @@ import SwiftUI
 struct MeditateSelectView: View {
     @State var viewModel: MeditateSelectViewModel
     @EnvironmentObject var router: Router
+    @EnvironmentObject var container: AppContainer
     @Environment(ThemeManager.self) private var themeManager
     @State private var showSoundSettings = false
 
@@ -40,7 +41,7 @@ struct MeditateSelectView: View {
                 .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $showSoundSettings) {
-            SoundSettingsSheet(soundSettings: SoundSettings.shared)
+            SoundSettingsSheet(soundSettings: container.soundSettings)
         }
         .onAppear {
             viewModel.loadMeditations()
@@ -229,5 +230,6 @@ struct MeditateSelectView_Previews: PreviewProvider {
     static var previews: some View {
         MeditateSelectView(viewModel: AppContainer().makeMeditateSelectViewModel())
             .environmentObject(Router.previewRouter())
+            .environmentObject(AppContainer())
     }
 }

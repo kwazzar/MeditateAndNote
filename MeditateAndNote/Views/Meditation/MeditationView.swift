@@ -12,7 +12,6 @@ struct MeditationView: View {
     @EnvironmentObject var router: Router
     @Environment(ThemeManager.self) private var themeManager
     @State private var showTimeSelection = true
-    @State private var animationStyle: BreathingAnimationStyle = .path
 
     var body: some View {
             VStack {
@@ -95,7 +94,7 @@ private extension MeditationView {
     
     @ViewBuilder
     var breathingAnimation: some View {
-        switch animationStyle {
+        switch AnimationSettings.shared.style {
         case .rings:
             meditationCircle
         case .path:

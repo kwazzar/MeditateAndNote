@@ -24,6 +24,8 @@ final class AppContainer: ObservableObject {
     private(set) lazy var meditationSessionStore = CoreDataSessionStore()
     private let meditationService: MeditationService = SampleMeditationService()
     private(set) lazy var selectionStore = MeditationSelectionStore()
+    private(set) lazy var soundSettings = SoundSettings.shared
+    private(set) lazy var animationSettings = AnimationSettings.shared
 
     private lazy var noteManager = NoteManager(syncCoordinator: syncCoordinator, eventBus: eventBus)
 

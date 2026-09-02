@@ -7,11 +7,6 @@
 
 import SwiftUI
 
-enum BreathingAnimationStyle: String, CaseIterable {
-    case rings = "Rings"
-    case path = "Path"
-}
-
 //MARK: - MeditationViewModel
 @MainActor
 @Observable

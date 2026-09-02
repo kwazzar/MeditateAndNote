@@ -7,8 +7,30 @@
 
 import SwiftUI
 
-enum MainTheme: String {
+enum MainTheme: String, CaseIterable {
     case liquidGlass, breathing, softDawn, darkZen, obsidian
+}
+
+extension MainTheme {
+    var displayName: String {
+        switch self {
+        case .liquidGlass: "Liquid Glass"
+        case .breathing: "Breathing"
+        case .softDawn: "Soft Dawn"
+        case .darkZen: "Dark Zen"
+        case .obsidian: "Obsidian"
+        }
+    }
+
+    var iconName: String {
+        switch self {
+        case .liquidGlass: "drop.fill"
+        case .breathing: "wind"
+        case .softDawn: "sunrise.fill"
+        case .darkZen: "moon.stars.fill"
+        case .obsidian: "flame.fill"
+        }
+    }
 }
 
 extension MainTheme {

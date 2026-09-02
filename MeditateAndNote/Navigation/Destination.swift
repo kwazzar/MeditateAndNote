@@ -37,6 +37,7 @@ enum PushDestination: Hashable, CustomStringConvertible {
     case meditation(_ meditation: Meditation)
     case meditationCompletion(meditation: Meditation, duration: MeditationDuration)
     case streakDetail
+    case settings
 
     var description: String {
         switch self {
@@ -52,6 +53,8 @@ enum PushDestination: Hashable, CustomStringConvertible {
             return ".meditationCompletion(\(meditation), \(duration.rawValue)s)"
         case .streakDetail:
             return ".streakDetail"
+        case .settings:
+            return ".settings"
         }
     }
 }

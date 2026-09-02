@@ -23,6 +23,11 @@ import SwiftUI
                 MeditationCompletionView(meditation: meditation, duration: duration)
             case .streakDetail:
                 StreakDetailView(streakTracker: container.streakTracker)
+            case .settings:
+                SettingsView(
+                    animationSettings: container.animationSettings,
+                    soundSettings: container.soundSettings
+                )
             }
         }
         .navigationBarBackButtonHidden(true)
