@@ -56,6 +56,10 @@ struct StreakHeaderView: View {
 
     // MARK: - Streak Number
 
+    private var dayLabel: String {
+        streakTracker.currentStreak == 1 ? "day" : "days"
+    }
+
     private var streakNumberSection: some View {
         VStack(spacing: 2) {
             HStack(alignment: .firstTextBaseline, spacing: 4) {
@@ -70,7 +74,7 @@ struct StreakHeaderView: View {
                     .animation(.snappy, value: streakTracker.currentStreak)
             }
 
-            Text("днів")
+            Text(dayLabel)
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(themeManager.current.textSecondary)
         }

@@ -129,8 +129,10 @@ struct StreakDetailView: View {
     }
 
     private var weekdaySymbols: [String] {
-        let symbols = Calendar.current.veryShortWeekdaySymbols
-        let first = Calendar.current.firstWeekday - 1
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.locale = Locale(identifier: "en_US")
+        let symbols = calendar.veryShortWeekdaySymbols
+        let first = calendar.firstWeekday - 1
         return (0..<7).map { symbols[($0 + first) % symbols.count] }
     }
 

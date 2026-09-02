@@ -21,7 +21,7 @@ struct DayCellView: View {
 
     private var weekdayLabel: String {
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "uk")
+        formatter.locale = Locale(identifier: "en_US")
         formatter.dateFormat = "EEE"
         return formatter.string(from: date).prefix(2).capitalized
     }
