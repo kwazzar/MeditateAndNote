@@ -11,6 +11,7 @@ struct MeditateSelectView: View {
     @State var viewModel: MeditateSelectViewModel
     @EnvironmentObject var router: Router
     @Environment(ThemeManager.self) private var themeManager
+    @State private var showSoundSettings = false
 
     private let columns = [
         GridItem(.flexible()),
@@ -37,6 +38,9 @@ struct MeditateSelectView: View {
             MeditationInfoSheet(item.meditation)
                 .presentationDetents([.medium, .large])
                 .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $showSoundSettings) {
+            SoundSettingsSheet(soundSettings: SoundSettings.shared)
         }
         .onAppear {
             viewModel.loadMeditations()
@@ -106,6 +110,18 @@ private extension MeditateSelectView {
                     .font(.caption)
                     .foregroundColor(themeManager.current.textSecondary)
                     .italic()
+
+                Button {
+                    showSoundSettings = true
+                } label: {
+                    Image(systemName: "speaker.wave.2.fill")
+                        .font(.system(size: 16))
+                        .foregroundColor(themeManager.current.textPrimary)
+                        .frame(width: 32, height: 32)
+                        .background(themeManager.current.toolbarBackground)
+                        .clipShape(Circle())
+                }
+                .buttonStyle(PlainButtonStyle())
             }
 
             LazyVGrid(columns: columns, spacing: 16) {

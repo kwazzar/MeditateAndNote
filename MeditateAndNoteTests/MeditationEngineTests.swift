@@ -144,6 +144,18 @@ final class MeditationEngineTests: XCTestCase {
         XCTAssertTrue(closing.contains(.completed(sec(3))))
     }
 
+    func testClosingExhaleDoesNotEmmitPhaseChange() {
+        var engine = makeEngine()
+        _ = engine.start(duration: sec(1), countdown: 0, now: base)
+
+        _ = engine.tickSecond(now: base.addingTimeInterval(1)) // → finishing
+        _ = engine.tickClock(now: base.addingTimeInterval(1))  // inhale → exhale
+        let closing = engine.tickClock(now: base.addingTimeInterval(2)) // exhale ends → finished
+
+        XCTAssertEqual(closing, [.completed(sec(1))],
+                       "The closing exhale must not emit a phase change for the next breath")
+    }
+
     // MARK: - Wall-clock alignment
 
     func testTickSecondUsesRealElapsedTime_notCountingTicks() {

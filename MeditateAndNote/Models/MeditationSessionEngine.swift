@@ -133,14 +133,17 @@ struct MeditationSessionEngine {
         _ = clock.advanceIfPhaseCompleted(now: now)
         let phaseCompleted = clock.phaseIndex != previousPhaseIndex
         var events: [Event] = []
-        if phaseCompleted, let phase = clock.currentPhase {
-            events.append(.phaseChanged(phase))
-        }
         // Once the time has elapsed (finishing), close the session as soon as
         // an exhale rounds out — never mid-inhale/hold and not on a random
         // phase. Ramping down on the breath-out feels natural and avoids a
-        // held breath right at the end.
-        if finishing, wasExhale, phaseCompleted {
+        // held breath right at the end. The closing exhale must not announce
+        // the next phase: the session is over, so no inhale/hold chime may
+        // play after the finished sound.
+        let closingSession = finishing && wasExhale && phaseCompleted
+        if phaseCompleted, !closingSession, let phase = clock.currentPhase {
+            events.append(.phaseChanged(phase))
+        }
+        if closingSession {
             state = .finished
             events.append(.completed(duration))
             return events

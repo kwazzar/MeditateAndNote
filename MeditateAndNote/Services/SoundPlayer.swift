@@ -24,15 +24,18 @@ final class SoundPlayer: SoundPlaying {
 
     static let shared = SoundPlayer()
 
+    private let soundSettings: SoundSettings
     private var players: [String: AVAudioPlayer] = [:]
     private let resourceExtensions = ["caf", "wav", "m4a"]
 
-    private init() {
+    init(soundSettings: SoundSettings = .shared) {
+        self.soundSettings = soundSettings
         configureAudioSession()
     }
 
     func play(_ sound: MeditationSound) {
         guard let player = player(for: sound) else { return }
+        player.volume = soundSettings.volume
         player.currentTime = 0
         player.play()
     }
@@ -49,6 +52,7 @@ final class SoundPlayer: SoundPlaying {
         guard let url = bundleURL(named: name),
               let player = try? AVAudioPlayer(contentsOf: url) else { return nil }
         player.prepareToPlay()
+        player.volume = soundSettings.volume
         players[name] = player
         return player
     }

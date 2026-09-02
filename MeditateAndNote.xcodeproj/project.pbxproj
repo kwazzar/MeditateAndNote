@@ -36,6 +36,9 @@
 		AA0000202026082100000001 /* StreakTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000102026082000000008 /* StreakTrackerTests.swift */; };
 		AA0000222026082600A10002 /* SoundPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000212026082600A10001 /* SoundPlayer.swift */; };
 		AA0000312026082700B10003 /* breath_hold_after_exhale.wav in Resources */ = {isa = PBXBuildFile; fileRef = AA0000302026082700B10002 /* breath_hold_after_exhale.wav */; };
+		AA00010120260902C00001 /* SoundSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00010020260902C00002 /* SoundSettings.swift */; };
+		AA00012120260902C00003 /* SoundSettingsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00012020260902C00004 /* SoundSettingsSheet.swift */; };
+		AA00014120260902C00005 /* SoundSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00014020260902C00006 /* SoundSettingsTests.swift */; };
 		AA0003012026082200000002 /* MeditationDuration.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0003002026082200000001 /* MeditationDuration.swift */; };
 		AA0003112026082200000004 /* SearchQuery.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0003102026082200000003 /* SearchQuery.swift */; };
 		ADCF424E00CF12AEB7374BEA /* MeditationViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2191349DA8C57C98F66164B8 /* MeditationViewModelTests.swift */; };
@@ -131,6 +134,9 @@
 		AA0000202026082100000002 /* MeditateAndNoteTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MeditateAndNoteTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA0000212026082600A10001 /* SoundPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundPlayer.swift; sourceTree = "<group>"; };
 		AA0000302026082700B10002 /* breath_hold_after_exhale.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = breath_hold_after_exhale.wav; sourceTree = "<group>"; };
+		AA00010020260902C00002 /* SoundSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundSettings.swift; sourceTree = "<group>"; };
+		AA00012020260902C00004 /* SoundSettingsSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundSettingsSheet.swift; sourceTree = "<group>"; };
+		AA00014020260902C00006 /* SoundSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundSettingsTests.swift; sourceTree = "<group>"; };
 		AA0003002026082200000001 /* MeditationDuration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationDuration.swift; sourceTree = "<group>"; };
 		AA0003102026082200000003 /* SearchQuery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchQuery.swift; sourceTree = "<group>"; };
 		CC0000012026082800000001 /* CoreDataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataManager.swift; sourceTree = "<group>"; };
@@ -278,6 +284,7 @@
 				E3F0F1A92E5B00000000AB24 /* MeditationEngineTests.swift */,
 				2191349DA8C57C98F66164B8 /* MeditationViewModelTests.swift */,
 				73571B9E27145AED24F2D353 /* StreakReminderTests.swift */,
+				AA00014020260902C00006 /* SoundSettingsTests.swift */,
 			);
 			path = MeditateAndNoteTests;
 			sourceTree = "<group>";
@@ -307,6 +314,7 @@
 				E389732A2D7918E700A9A662 /* MeditateSelectView.swift */,
 				E3FDF77B2ED0CE0F00ACD847 /* MeditationInfoScroll.swift */,
 				E36366282E3D0AB80026E810 /* MeditationCard.swift */,
+				AA00012020260902C00004 /* SoundSettingsSheet.swift */,
 			);
 			path = MeditationSelect;
 			sourceTree = "<group>";
@@ -448,6 +456,7 @@
 				E398CE772EDE464000B96376 /* NoteManager.swift */,
 				AA0000082026082000000004 /* StreakTracker.swift */,
 				AA0000212026082600A10001 /* SoundPlayer.swift */,
+				AA00010020260902C00002 /* SoundSettings.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -576,6 +585,7 @@
 				E3F0F1A82E5B00000000AB23 /* MeditationEngineTests.swift in Sources */,
 				ADCF424E00CF12AEB7374BEA /* MeditationViewModelTests.swift in Sources */,
 				4DEA3FE741F1A4530712630B /* StreakReminderTests.swift in Sources */,
+				AA00014120260902C00005 /* SoundSettingsTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -590,6 +600,7 @@
 				787880CD303E260F004474C4 /* BreathingPathView.swift in Sources */,
 				AA0000072026082000000004 /* StreakTracker.swift in Sources */,
 				AA0000222026082600A10002 /* SoundPlayer.swift in Sources */,
+				AA00010120260902C00001 /* SoundSettings.swift in Sources */,
 				AA0000092026082000000005 /* StreakHeaderView.swift in Sources */,
 				AA000011202608200000000C /* DayCellView.swift in Sources */,
 				AA00000B2026082000000006 /* StreakDetailView.swift in Sources */,
@@ -634,6 +645,7 @@
 				E36366292E3D0AB80026E810 /* MeditationCard.swift in Sources */,
 				E320C3ED2E2D1AC9009452DD /* Destination.swift in Sources */,
 				E389732B2D7918E700A9A662 /* MeditateSelectView.swift in Sources */,
+				AA00012120260902C00003 /* SoundSettingsSheet.swift in Sources */,
 				E34D18AD2E425A01004CCFA8 /* Breathing.swift in Sources */,
 				788513DC3033D32C0052F4BC /* NoteEditorViewModel.swift in Sources */,
 				E3FDF77C2ED0CE0F00ACD847 /* MeditationInfoScroll.swift in Sources */,
