@@ -16,7 +16,7 @@
 
 ---
 
-## Phase 1 — Критичні business-логіки (найвищий ризик)
+## Phase 1 — Критичні business-логіки (найвищий ризик) ✅ DONE 2026-09-04
 
 ### 1.1 NoteEditorViewModel (0% → ціль 80%+)
 - Файл: `ViewModels/NoteEditorViewModel.swift` (128 LOC, 24 func)
@@ -40,7 +40,7 @@
 - Тести: нормалізація рядка, filtering по title/body, empty query = всі, регістрочутливість
 - Новий файл: `SearchQueryTests.swift`
 
-## Phase 2 — Незакриті сервіси
+## Phase 2 — Незакриті сервіси ✅ DONE 2026-09-04
 
 ### 2.1 StreakInsightManager (0% → ціль 80%+)
 - Товсткий engine (`StreakInsightEngine`, 95%) вже накритий — менеджеру потрібні тонкі тести:
@@ -58,7 +58,7 @@
 ### 2.3 SoundPlayer (0%)
 - Ізолювати авдіо- side effects за protocol (`AudioPlaying`), протестувати lifecycle (play/stop/fade) через mock; сам `AVAudioPlayer` лишити в тонкій адаптер-реалізації без тестів.
 
-## Phase 3 — Підвищення існуючих ViewModel
+## Phase 3 — Підвищення існуючих ViewModel ✅ DONE 2026-09-04
 
 | ViewModel | Зараз | Домашні кейси |
 |---|---|---|
