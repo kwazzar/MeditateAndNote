@@ -19,7 +19,9 @@ struct MeditationView: View {
                 navigationBar
                 meditationPlan
                 Spacer()
-                breathingAnimation
+                if !showTimeSelection {
+                    breathingAnimation
+                }
                 Spacer()
                 progress
             }
