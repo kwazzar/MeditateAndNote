@@ -156,6 +156,48 @@ final class DailyActivityTests: XCTestCase {
         let now = Date()
         XCTAssertEqual(DailyActivity(date: now, hasMeditation: false, hasNote: false).id, now)
     }
+
+    func testMarkNote_setsFlagAndTimeAtomically() {
+        var activity = activity(meditation: false, note: false)
+        let when = Date(timeIntervalSince1970: 1_000)
+
+        activity.markNote(at: when)
+
+        XCTAssertTrue(activity.hasNote)
+        XCTAssertEqual(activity.noteTime, when)
+    }
+
+    func testMarkMeditation_setsFlagAndTimeAtomically() {
+        var activity = activity(meditation: false, note: false)
+        let when = Date(timeIntervalSince1970: 2_000)
+
+        activity.markMeditation(at: when)
+
+        XCTAssertTrue(activity.hasMeditation)
+        XCTAssertEqual(activity.meditationTime, when)
+    }
+
+    func testMarkNote_thenMarkMeditation_makesComplete() {
+        var activity = activity(meditation: false, note: false)
+
+        activity.markNote(at: Date(timeIntervalSince1970: 1))
+        activity.markMeditation(at: Date(timeIntervalSince1970: 2))
+
+        XCTAssertTrue(activity.isComplete)
+        XCTAssertNotNil(activity.noteTime)
+        XCTAssertNotNil(activity.meditationTime)
+    }
+
+    func testReMarking_overwritesTimeLastWriteWins() {
+        var activity = activity(meditation: false, note: false)
+        let first = Date(timeIntervalSince1970: 1)
+        let second = Date(timeIntervalSince1970: 2)
+
+        activity.markNote(at: first)
+        activity.markNote(at: second)
+
+        XCTAssertEqual(activity.noteTime, second)
+    }
 }
 
 // MARK: - StreakInsight value objects

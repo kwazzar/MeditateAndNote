@@ -199,16 +199,14 @@ struct StreakEngine {
     mutating func markNoteCreated(on date: Date) {
         let key = startOfDay(date)
         ensureActivityExists(for: key)
-        dailyActivities[key]?.hasNote = true
-        dailyActivities[key]?.noteTime = date
+        dailyActivities[key]?.markNote(at: date)
         updateStreak(today: key)
     }
 
     mutating func markMeditationCompleted(on date: Date) {
         let key = startOfDay(date)
         ensureActivityExists(for: key)
-        dailyActivities[key]?.hasMeditation = true
-        dailyActivities[key]?.meditationTime = date
+        dailyActivities[key]?.markMeditation(at: date)
         updateStreak(today: key)
     }
 
@@ -232,7 +230,7 @@ struct StreakEngine {
             if activities[key] == nil {
                 activities[key] = DailyActivity(date: key, hasMeditation: false, hasNote: false)
             }
-            activities[key]?.hasNote = true
+            activities[key]?.markNote(at: raw)
         }
 
         for raw in history.meditationDates {
@@ -240,7 +238,7 @@ struct StreakEngine {
             if activities[key] == nil {
                 activities[key] = DailyActivity(date: key, hasMeditation: false, hasNote: false)
             }
-            activities[key]?.hasMeditation = true
+            activities[key]?.markMeditation(at: raw)
         }
 
         dailyActivities = activities
