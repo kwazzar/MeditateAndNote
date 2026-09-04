@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct MeditationView: View {
     @State var viewModel: MeditationViewModel
@@ -51,6 +52,11 @@ struct MeditationView: View {
                 }
             }
         )
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.willResignActiveNotification)) { _ in
+            if viewModel.meditationState == .started {
+                viewModel.pause()
+            }
+        }
     }
 }
 
