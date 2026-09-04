@@ -91,7 +91,9 @@ struct StreakHeaderView: View {
                     date: day,
                     hasMeditation: activity.hasMeditation,
                     hasNote: activity.hasNote,
-                    isToday: Calendar.current.isDateInToday(day)
+                    isToday: Calendar.current.isDateInToday(day),
+                    showPartialIndicatorForRecentDays: true,
+                    onTap: {}
                 )
                 .frame(maxWidth: .infinity)
             }

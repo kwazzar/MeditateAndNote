@@ -198,6 +198,104 @@ final class DailyActivityTests: XCTestCase {
 
         XCTAssertEqual(activity.noteTime, second)
     }
+
+    // MARK: - CoreDayState
+
+    func testCoreDayState_empty_whenBothFlagsFalse() {
+        XCTAssertEqual(
+            activity(meditation: false, note: false).coreDayState,
+            .empty
+        )
+    }
+
+    func testCoreDayState_meditationOnly_whenOnlyMeditationFlag() {
+        XCTAssertEqual(
+            activity(meditation: true, note: false).coreDayState,
+            .meditationOnly
+        )
+    }
+
+    func testCoreDayState_noteOnly_whenOnlyNoteFlag() {
+        XCTAssertEqual(
+            activity(meditation: false, note: true).coreDayState,
+            .noteOnly
+        )
+    }
+
+    func testCoreDayState_complete_whenBothFlagsTrue() {
+        XCTAssertEqual(
+            activity(meditation: true, note: true).coreDayState,
+            .complete
+        )
+    }
+
+    func testCoreDayState_isStreakDay_onlyWhenComplete() {
+        XCTAssertFalse(CoreDayState.empty.isStreakDay)
+        XCTAssertFalse(CoreDayState.meditationOnly.isStreakDay)
+        XCTAssertFalse(CoreDayState.noteOnly.isStreakDay)
+        XCTAssertTrue(CoreDayState.complete.isStreakDay)
+    }
+
+    func testCoreDayState_streakContributing_isOnlyComplete() {
+        XCTAssertEqual(CoreDayState.streakContributing, [.complete])
+    }
+
+    func testCoreDayState_matchesIsComplete() {
+        // coreDayState == .complete must be equivalent to isComplete — the
+        // engine and the UI both rely on this.
+        let cases: [(Bool, Bool)] = [
+            (false, false), (true, false), (false, true), (true, true)
+        ]
+        for (m, n) in cases {
+            let a = activity(meditation: m, note: n)
+            XCTAssertEqual(
+                a.isComplete,
+                a.coreDayState == .complete,
+                "m=\(m) n=\(n)"
+            )
+        }
+    }
+}
+
+// MARK: - StreakDayDetail
+
+final class StreakDayDetailTests: XCTestCase {
+
+    private func detail(
+        state: CoreDayState,
+        meditationTime: Date? = nil,
+        noteTime: Date? = nil
+    ) -> StreakDayDetail {
+        StreakDayDetail(
+            date: Date(timeIntervalSince1970: 0),
+            state: state,
+            meditationTime: meditationTime,
+            noteTime: noteTime
+        )
+    }
+
+    func testMissingAction_isNilForEmptyAndComplete() {
+        XCTAssertNil(detail(state: .empty).missingAction)
+        XCTAssertNil(detail(state: .complete).missingAction)
+    }
+
+    func testMissingAction_isNoteForMeditationOnly() {
+        XCTAssertEqual(detail(state: .meditationOnly).missingAction, .note)
+    }
+
+    func testMissingAction_isMeditationForNoteOnly() {
+        XCTAssertEqual(detail(state: .noteOnly).missingAction, .meditation)
+    }
+
+    func testMissingAction_isHashable() {
+        XCTAssertEqual(Set([StreakDayDetail.MissingAction.note, .note, .meditation]).count, 2)
+    }
+
+    func testIdentity_isTheDate() {
+        let date = Date(timeIntervalSince1970: 42)
+        let d = StreakDayDetail(date: date, state: .empty, meditationTime: nil, noteTime: nil)
+        XCTAssertEqual(d.id, date)
+    }
 }
 
 // MARK: - StreakInsight value objects

@@ -357,6 +357,19 @@ final class StreakTracker {
         engine.activity(for: date)
     }
 
+    /// Snapshot of a single calendar day for the day-detail sheet. Goes
+    /// through the engine so `startOfDay` normalization matches the rest
+    /// of the streak surface.
+    func dayDetail(for date: Date) -> StreakDayDetail {
+        let activity = engine.activity(for: date)
+        return StreakDayDetail(
+            date: activity.date,
+            state: activity.coreDayState,
+            meditationTime: activity.meditationTime,
+            noteTime: activity.noteTime
+        )
+    }
+
     var isTodayComplete: Bool {
         engine.isTodayComplete()
     }

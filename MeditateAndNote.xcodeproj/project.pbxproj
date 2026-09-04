@@ -47,6 +47,7 @@
 		AA0000092026082000000005 /* StreakHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000A2026082000000005 /* StreakHeaderView.swift */; };
 		AA00000B2026082000000006 /* StreakDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000C2026082000000006 /* StreakDetailView.swift */; };
 		AA000011202608200000000C /* DayCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000012202608200000000C /* DayCellView.swift */; };
+		BB00D11120260905000001 /* StreakDayDetailSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB00D11220260905000002 /* StreakDayDetailSheet.swift */; };
 		AA0000202026082100000001 /* StreakTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000102026082000000008 /* StreakTrackerTests.swift */; };
 		AA0000222026082600A10002 /* SoundPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000212026082600A10001 /* SoundPlayer.swift */; };
 		AA0000312026082700B10003 /* breath_hold_after_exhale.wav in Resources */ = {isa = PBXBuildFile; fileRef = AA0000302026082700B10002 /* breath_hold_after_exhale.wav */; };
@@ -193,6 +194,7 @@
 		AA00000C2026082000000006 /* StreakDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakDetailView.swift; sourceTree = "<group>"; };
 		AA0000102026082000000008 /* StreakTrackerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakTrackerTests.swift; sourceTree = "<group>"; };
 		AA000012202608200000000C /* DayCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayCellView.swift; sourceTree = "<group>"; };
+		BB00D11220260905000002 /* StreakDayDetailSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakDayDetailSheet.swift; sourceTree = "<group>"; };
 		AA0000202026082100000002 /* MeditateAndNoteTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MeditateAndNoteTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA0000212026082600A10001 /* SoundPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundPlayer.swift; sourceTree = "<group>"; };
 		AA0000302026082700B10002 /* breath_hold_after_exhale.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = breath_hold_after_exhale.wav; sourceTree = "<group>"; };
@@ -358,6 +360,7 @@
 			isa = PBXGroup;
 			children = (
 				AA000012202608200000000C /* DayCellView.swift */,
+				BB00D11220260905000002 /* StreakDayDetailSheet.swift */,
 				AA00000A2026082000000005 /* StreakHeaderView.swift */,
 				AA00000C2026082000000006 /* StreakDetailView.swift */,
 				AC3C8D0C08E6E9153624093E /* InsightsSection.swift */,
@@ -755,6 +758,7 @@
 				AA00010120260902C00001 /* SoundSettings.swift in Sources */,
 				AA0000092026082000000005 /* StreakHeaderView.swift in Sources */,
 				AA000011202608200000000C /* DayCellView.swift in Sources */,
+				BB00D11120260905000001 /* StreakDayDetailSheet.swift in Sources */,
 				AA00000B2026082000000006 /* StreakDetailView.swift in Sources */,
 				E361878F2D68FF88000E326D /* MainViewModel.swift in Sources */,
 				788956A6303208330001D509 /* MeditateButtonComponents.swift in Sources */,

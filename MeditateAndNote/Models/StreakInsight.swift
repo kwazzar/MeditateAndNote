@@ -88,6 +88,40 @@ struct WeeklyBucket: Hashable, Identifiable {
     }
 }
 
+// MARK: - Streak Day Detail (value object)
+
+/// Snapshot of a single calendar day used by the day-detail sheet. Lifted
+/// out of `StreakTracker` so the View depends on a pure value object rather
+/// than reaching into the engine. `meditationTime` and `noteTime` are
+/// optional even when the corresponding flag is true, since the original
+/// event timestamp is not always preserved across migrations.
+struct StreakDayDetail: Hashable, Identifiable {
+    let date: Date
+    let state: CoreDayState
+    let meditationTime: Date?
+    let noteTime: Date?
+
+    var id: Date { date }
+    var isToday: Bool { Calendar.current.isDateInToday(date) }
+
+    /// The single missing action for a partial day, if any. The UI uses
+    /// this to render a tappable CTA ("Write a note", "Meditate") without
+    /// inspecting the state directly.
+    var missingAction: StreakDayDetail.MissingAction? {
+        switch state {
+        case .empty: return nil
+        case .complete: return nil
+        case .meditationOnly: return .note
+        case .noteOnly: return .meditation
+        }
+    }
+
+    enum MissingAction: Hashable {
+        case meditation
+        case note
+    }
+}
+
 // MARK: - Streak Insight (value object)
 
 struct StreakInsight: Identifiable, Hashable {

@@ -396,4 +396,82 @@ final class StreakTrackerTests: XCTestCase {
             XCTAssertEqual(tracker.activity(for: today).hasMeditation, true)
         }
     }
+
+    // MARK: - dayDetail(for:)
+
+    func testDayDetail_emptyDay_returnsEmptyState() {
+        let tracker = makeSUT()
+
+        let detail = tracker.dayDetail(for: startOfToday())
+
+        XCTAssertEqual(detail.state, .empty)
+        XCTAssertNil(detail.missingAction)
+    }
+
+    func testDayDetail_meditationOnly_returnsMeditationOnlyState() async {
+        let tracker = makeSUT()
+        let today = startOfToday()
+
+        await tracker.markMeditationCompleted(date: today)
+
+        let detail = tracker.dayDetail(for: today)
+        XCTAssertEqual(detail.state, .meditationOnly)
+        XCTAssertEqual(detail.missingAction, .note)
+        XCTAssertNotNil(detail.meditationTime)
+        XCTAssertNil(detail.noteTime)
+    }
+
+    func testDayDetail_noteOnly_returnsNoteOnlyState() async {
+        let tracker = makeSUT()
+        let today = startOfToday()
+
+        await tracker.markNoteCreated(date: today)
+
+        let detail = tracker.dayDetail(for: today)
+        XCTAssertEqual(detail.state, .noteOnly)
+        XCTAssertEqual(detail.missingAction, .meditation)
+        XCTAssertNil(detail.meditationTime)
+        XCTAssertNotNil(detail.noteTime)
+    }
+
+    func testDayDetail_completeDay_returnsCompleteState() async {
+        let tracker = makeSUT()
+        let today = startOfToday()
+
+        await tracker.markNoteCreated(date: today)
+        await tracker.markMeditationCompleted(date: today)
+
+        let detail = tracker.dayDetail(for: today)
+        XCTAssertEqual(detail.state, .complete)
+        XCTAssertNil(detail.missingAction)
+        XCTAssertNotNil(detail.meditationTime)
+        XCTAssertNotNil(detail.noteTime)
+    }
+
+    func testDayDetail_normalizesDateToStartOfDay() async {
+        let tracker = makeSUT()
+        let today = startOfToday()
+
+        await tracker.markNoteCreated(date: today)
+
+        // Any time during the day should resolve to today's snapshot.
+        var comps = calendar.dateComponents([.year, .month, .day], from: today)
+        comps.hour = 18
+        comps.minute = 0
+        let eveningToday = calendar.date(from: comps)!
+
+        let detail = tracker.dayDetail(for: eveningToday)
+        XCTAssertEqual(detail.state, .noteOnly)
+        XCTAssertEqual(detail.date, today)
+    }
+
+    func testDayDetail_pastDayIsNotToday() async {
+        let tracker = makeSUT()
+        let past = startOfToday().addingTimeInterval(-3 * 86_400)
+        await tracker.markMeditationCompleted(date: past)
+
+        let detail = tracker.dayDetail(for: past)
+        XCTAssertEqual(detail.state, .meditationOnly)
+        XCTAssertFalse(detail.isToday, "past days must report isToday == false")
+    }
 }

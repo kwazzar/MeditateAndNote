@@ -12,8 +12,8 @@ explicit user approval.
 | S1 | Streak header, calendar grid, progress pills, insight engine | ✅ `34e12e3` |
 | S2 | Weekday heatmap, drill-down detail view, animated transitions | ✅ `c9dd79b` |
 | S3 | Date-range filtering (7/30/90 days) + weekly drill-down bars | ✅ `8607926` |
+| S4 | Core day invariant (meditation + note) + partial-day surface | ✅ `d3b58a9` |
 | S5 | Local notification reminders + Settings UI + navigation fix | ✅ `46a9b4a` |
-| S4 | Core day (meditation + note same day = streak day) | ⏳ planned |
 | S6 | Trend line / extended stats | ⏳ planned |
 
 ## S1 — Foundations (done)
@@ -48,12 +48,27 @@ explicit user approval.
   by completion rate, with "best week" callout.
 - 21 new tests. **337/337 passing.**
 
-## S4 — Core Day
+## S4 — Core Day (done)
 
-- Enforce the invariant that a streak day requires **both** a meditation
-  session and a note on the same calendar day.
-- Surface partial-day state in the UI (meditation done, note pending, and
-  vice versa) — see existing `todayProgress` pills in `StreakDetailView`.
+- The streak invariant was already centralized in
+  `DailyActivity.isComplete = hasMeditation && hasNote` and enforced by
+  every `StreakEngine.updateStreak / recalculate / checkStreakBreak`
+  consumer.
+- New `CoreDayState` enum (`.empty / .meditationOnly / .noteOnly / .complete`)
+  makes the four valid day-states first-class instead of two booleans +
+  one computed bool. `coreDayState` is derived on `DailyActivity`.
+- New `StreakDayDetail` value object (`date / state / meditationTime /
+  noteTime / isToday / missingAction`) plus `StreakTracker.dayDetail(for:)`
+  so the day-detail sheet depends on a value object rather than the engine.
+- `DayCellView`: bidirectional partial indicator — orange dot for
+  `.meditationOnly`, note-color dot for `.noteOnly` — shown for today
+  AND the last 7 days so the user can see *where* the streak broke.
+- `StreakDetailView.todayProgress`: pills are now tappable CTAs that
+  navigate to Meditation / Note when the day is partial, with a hint
+  label explaining what to do. `coreDayState` is observed via animation.
+- New `StreakDayDetailSheet`: tap any day cell → opens a sheet with
+  state, both timestamps, and a "Complete the day" action button.
+- 18 new tests. **355/355 passing.**
 
 ## S5 — Reminders (done)
 
@@ -74,7 +89,7 @@ explicit user approval.
 
 ## Definition of done
 
-1. Build + tests are green (`337` currently).
+1. Build + tests are green (`355` currently).
 2. Domain files stay free of `CoreData` / `SwiftUI`.
 3. Navigation changes don't leak concrete Views into ViewModels.
 4. `ddd-audit` review passes for significant features.

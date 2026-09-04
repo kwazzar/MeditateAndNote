@@ -12,9 +12,35 @@ struct DayCellView: View {
     let hasMeditation: Bool
     let hasNote: Bool
     let isToday: Bool
+    /// When true, the cell shows its partial-state dot indicator for the
+    /// past 7 days in addition to today, so the user can see where the
+    /// streak was broken.
+    let showPartialIndicatorForRecentDays: Bool
+    let onTap: () -> Void
 
-    private var isComplete: Bool { hasMeditation && hasNote }
-    private var needsNote: Bool { hasMeditation && !hasNote && isToday }
+    private var state: CoreDayState {
+        switch (hasMeditation, hasNote) {
+        case (true, true): return .complete
+        case (true, false): return .meditationOnly
+        case (false, true): return .noteOnly
+        case (false, false): return .empty
+        }
+    }
+
+    /// Show the partial indicator for today, and (optionally) for any
+    /// partial day in the recent past — that is the only signal that tells
+    /// the user *where* the streak broke.
+    private var shouldShowPartialIndicator: Bool {
+        switch state {
+        case .complete, .empty: return false
+        case .meditationOnly, .noteOnly:
+            if isToday { return true }
+            return showPartialIndicatorForRecentDays
+                && Calendar.current.isDate(date, equalTo: Date(), toGranularity: .day)
+                == false
+                && abs(date.timeIntervalSinceNow) <= 7 * 86_400
+        }
+    }
 
     private let cellSize: CGFloat = 32
     private let cornerRadius: CGFloat = 10
@@ -30,16 +56,11 @@ struct DayCellView: View {
         VStack(spacing: 4) {
             ZStack(alignment: .topTrailing) {
                 RoundedRectangle(cornerRadius: cornerRadius)
-                    .fill(isComplete ? themeManager.current.streakSuccess.opacity(0.15) : themeManager.current.streakCellBackground)
+                    .fill(state == .complete ? themeManager.current.streakSuccess.opacity(0.15) : themeManager.current.streakCellBackground)
                     .frame(width: cellSize, height: cellSize)
 
                 RoundedRectangle(cornerRadius: cornerRadius)
-                    .strokeBorder(
-                        isToday
-                        ? (isComplete ? themeManager.current.streakSuccess : themeManager.current.streakActiveMeditation)
-                        : (isComplete ? themeManager.current.streakSuccess.opacity(0.5) : themeManager.current.dividerColor),
-                        lineWidth: isToday ? 1.5 : 0.5
-                    )
+                    .strokeBorder(borderColor, lineWidth: isToday ? 1.5 : 0.5)
                     .frame(width: cellSize, height: cellSize)
 
                 ZStack {
@@ -55,9 +76,9 @@ struct DayCellView: View {
                 }
                 .frame(width: cellSize, height: cellSize)
 
-                if needsNote {
+                if shouldShowPartialIndicator {
                     Circle()
-                        .fill(.orange)
+                        .fill(partialIndicatorColor)
                         .frame(width: 6, height: 6)
                         .offset(x: 3, y: -3)
                         .transition(.scale.combined(with: .opacity))
@@ -69,18 +90,32 @@ struct DayCellView: View {
                 .foregroundStyle(themeManager.current.textSecondary)
         }
         .frame(width: 40)
+        .contentShape(Rectangle())
+        .onTapGesture(perform: onTap)
         .accessibilityLabel(accessibilityDescription)
     }
 
+    private var borderColor: Color {
+        if isToday {
+            return state == .complete ? themeManager.current.streakSuccess : themeManager.current.streakActiveMeditation
+        }
+        return state == .complete ? themeManager.current.streakSuccess.opacity(0.5) : themeManager.current.dividerColor
+    }
+
+    private var partialIndicatorColor: Color {
+        switch state {
+        case .meditationOnly: return .orange
+        case .noteOnly: return themeManager.current.streakActiveNote
+        default: return .clear
+        }
+    }
+
     private var accessibilityDescription: String {
-        if isComplete {
-            return "\(weekdayLabel): completed"
-        } else if needsNote {
-            return "\(weekdayLabel): meditation done, note missing"
-        } else if hasMeditation {
-            return "\(weekdayLabel): meditation done"
-        } else {
-            return "\(weekdayLabel): no activity"
+        switch state {
+        case .complete: return "\(weekdayLabel): completed"
+        case .meditationOnly: return "\(weekdayLabel): meditation done, note missing"
+        case .noteOnly: return "\(weekdayLabel): note done, meditation missing"
+        case .empty: return "\(weekdayLabel): no activity"
         }
     }
 }

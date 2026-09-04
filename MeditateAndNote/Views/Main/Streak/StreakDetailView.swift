@@ -8,8 +8,11 @@ import SwiftUI
 struct StreakDetailView: View {
     @Environment(ThemeManager.self) private var themeManager
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var router: Router
     let streakTracker: StreakTracker
     let insightsViewModel: InsightsViewModel
+
+    @State private var selectedDayDetail: StreakDayDetail?
 
     var body: some View {
         ScrollView {
@@ -29,6 +32,12 @@ struct StreakDetailView: View {
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Done") { dismiss() }
             }
+        }
+        .sheet(item: $selectedDayDetail) { detail in
+            StreakDayDetailSheet(
+                detail: detail,
+                onMissingAction: { handleMissingAction(detail.missingAction) }
+            )
         }
     }
 
@@ -57,6 +66,7 @@ struct StreakDetailView: View {
 
     private var todayProgress: some View {
         let activity = streakTracker.activity(for: Date())
+        let state = activity.coreDayState
 
         return VStack(alignment: .leading, spacing: 10) {
             Text("Today")
@@ -68,24 +78,33 @@ struct StreakDetailView: View {
                     glyph: "M",
                     label: "Meditation",
                     isDone: activity.hasMeditation,
-                    activeColor: themeManager.current.streakActiveMeditation
+                    activeColor: themeManager.current.streakActiveMeditation,
+                    onTap: state == .noteOnly ? { handleMissingAction(.meditation) } : nil
                 )
 
                 ProgressPill(
                     glyph: "note.text",
                     label: "Note",
                     isDone: activity.hasNote,
-                    activeColor: themeManager.current.streakActiveNote
+                    activeColor: themeManager.current.streakActiveNote,
+                    onTap: state == .meditationOnly ? { handleMissingAction(.note) } : nil
                 )
 
                 Spacer()
 
-                if activity.isComplete {
+                if state == .complete {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.system(size: 20))
                         .foregroundStyle(themeManager.current.streakSuccess)
                         .transition(.scale.combined(with: .opacity))
                 }
+            }
+
+            if let hint = partialDayHint(for: state) {
+                Text(hint)
+                    .font(.caption)
+                    .foregroundStyle(themeManager.current.textSecondary)
+                    .transition(.opacity)
             }
         }
         .padding(14)
@@ -93,6 +112,25 @@ struct StreakDetailView: View {
             RoundedRectangle(cornerRadius: 14)
                 .fill(.ultraThinMaterial)
         )
+        .animation(.snappy, value: state)
+    }
+
+    private func partialDayHint(for state: CoreDayState) -> String? {
+        switch state {
+        case .meditationOnly: return "Tap the Note pill to write today's note and complete the day."
+        case .noteOnly: return "Tap the Meditation pill to meditate and complete the day."
+        case .complete, .empty: return nil
+        }
+    }
+
+    private func handleMissingAction(_ action: StreakDayDetail.MissingAction?) {
+        guard let action else { return }
+        switch action {
+        case .meditation:
+            router.navigate(to: .tab(.meditations))
+        case .note:
+            router.navigate(to: .push(.newNote))
+        }
     }
 
     // MARK: - Calendar Grid (current month, week rows)
@@ -108,7 +146,13 @@ struct StreakDetailView: View {
             VStack(spacing: 8) {
                 weekdayHeader
                 ForEach(weeks.indices, id: \.self) { weekIndex in
-                    WeekRow(days: weeks[weekIndex], streakTracker: streakTracker)
+                    WeekRow(
+                        days: weeks[weekIndex],
+                        streakTracker: streakTracker,
+                        onSelect: { date in
+                            selectedDayDetail = streakTracker.dayDetail(for: date)
+                        }
+                    )
                 }
             }
         }
@@ -212,6 +256,7 @@ private struct ProgressPill: View {
     let label: String
     let isDone: Bool
     let activeColor: Color
+    let onTap: (() -> Void)?
 
     var body: some View {
         HStack(spacing: 6) {
@@ -232,6 +277,12 @@ private struct ProgressPill: View {
             Text(label)
                 .font(.caption)
                 .foregroundStyle(themeManager.current.textPrimary)
+
+            if onTap != nil && !isDone {
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundStyle(themeManager.current.textSecondary)
+            }
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
@@ -239,6 +290,10 @@ private struct ProgressPill: View {
             Capsule()
                 .fill(isDone ? activeColor.opacity(0.12) : themeManager.current.toolbarBackground)
         )
+        .contentShape(Capsule())
+        .onTapGesture {
+            onTap?()
+        }
     }
 }
 
@@ -247,6 +302,7 @@ private struct ProgressPill: View {
 private struct WeekRow: View {
     let days: [Date?]
     let streakTracker: StreakTracker
+    let onSelect: (Date) -> Void
 
     var body: some View {
         HStack(spacing: 0) {
@@ -258,7 +314,9 @@ private struct WeekRow: View {
                         date: day,
                         hasMeditation: activity.hasMeditation,
                         hasNote: activity.hasNote,
-                        isToday: Calendar.current.isDateInToday(day)
+                        isToday: Calendar.current.isDateInToday(day),
+                        showPartialIndicatorForRecentDays: true,
+                        onTap: { onSelect(day) }
                     )
                     .frame(maxWidth: .infinity)
                 } else {
