@@ -58,6 +58,8 @@
 		ADCF424E00CF12AEB7374BEA /* MeditationViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2191349DA8C57C98F66164B8 /* MeditationViewModelTests.swift */; };
 		C14230B1AABCB77064DE1389 /* ReminderSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 965AB13C80C9D60F37F232D7 /* ReminderSettingsTests.swift */; };
 		CBD7ED78394EBA2ECBDB72A6 /* StreakInsightEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70119D3AECE1D5E2F27AEAF9 /* StreakInsightEngineTests.swift */; };
+		AA77522E74F540C896C65CA6 /* NoteSyncCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBE42B0AC10B4DD48C852B91 /* NoteSyncCoordinatorTests.swift */; };
+		6A8A939804634FC7B8D8A527 /* OnboardingCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C1F31185E4F418DA3FCAF90 /* OnboardingCoordinatorTests.swift */; };
 		385A8D4039D4420D85CBFFF1 /* MeditateSelectViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AF6A1460BA24AA596E512D2 /* MeditateSelectViewModelTests.swift */; };
 		DD2A01627A7343278DE8A05B /* MainViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 103E1801162647CA91378FED /* MainViewModelTests.swift */; };
 		F3D3C6379B3241BC96485A7E /* InsightsViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38F6895E04174D1A9BFEA320 /* InsightsViewModelTests.swift */; };
@@ -146,6 +148,8 @@
 		44A99826A1EEEB59657443E1 /* ReminderSettingsSection.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReminderSettingsSection.swift; sourceTree = "<group>"; };
 		648FE2FCBB1DD6E50BB5E61E /* MeditationCompletionView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MeditationCompletionView.swift; sourceTree = "<group>"; };
 		70119D3AECE1D5E2F27AEAF9 /* StreakInsightEngineTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StreakInsightEngineTests.swift; sourceTree = "<group>"; };
+		CBE42B0AC10B4DD48C852B91 /* NoteSyncCoordinatorTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NoteSyncCoordinatorTests.swift; sourceTree = "<group>"; };
+		7C1F31185E4F418DA3FCAF90 /* OnboardingCoordinatorTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OnboardingCoordinatorTests.swift; sourceTree = "<group>"; };
 		5AF6A1460BA24AA596E512D2 /* MeditateSelectViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MeditateSelectViewModelTests.swift; sourceTree = "<group>"; };
 		103E1801162647CA91378FED /* MainViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MainViewModelTests.swift; sourceTree = "<group>"; };
 		38F6895E04174D1A9BFEA320 /* InsightsViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InsightsViewModelTests.swift; sourceTree = "<group>"; };
@@ -378,6 +382,8 @@
 				AA00000220260903C00007 /* AnimationSettingsTests.swift */,
 				OB0000070000000000000007 /* OnboardingViewModelTests.swift */,
 				70119D3AECE1D5E2F27AEAF9 /* StreakInsightEngineTests.swift */,
+				CBE42B0AC10B4DD48C852B91 /* NoteSyncCoordinatorTests.swift */,
+				7C1F31185E4F418DA3FCAF90 /* OnboardingCoordinatorTests.swift */,
 				5AF6A1460BA24AA596E512D2 /* MeditateSelectViewModelTests.swift */,
 				103E1801162647CA91378FED /* MainViewModelTests.swift */,
 				38F6895E04174D1A9BFEA320 /* InsightsViewModelTests.swift */,
@@ -718,6 +724,8 @@
 				AA00000220260903C00008 /* AnimationSettingsTests.swift in Sources */,
 				OB0100070000000000000007 /* OnboardingViewModelTests.swift in Sources */,
 				CBD7ED78394EBA2ECBDB72A6 /* StreakInsightEngineTests.swift in Sources */,
+				AA77522E74F540C896C65CA6 /* NoteSyncCoordinatorTests.swift in Sources */,
+				6A8A939804634FC7B8D8A527 /* OnboardingCoordinatorTests.swift in Sources */,
 				385A8D4039D4420D85CBFFF1 /* MeditateSelectViewModelTests.swift in Sources */,
 				DD2A01627A7343278DE8A05B /* MainViewModelTests.swift in Sources */,
 				F3D3C6379B3241BC96485A7E /* InsightsViewModelTests.swift in Sources */,

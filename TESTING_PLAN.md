@@ -70,7 +70,13 @@
 
 ## Phase 4 — Структурні рішення (за потреби)
 
-- **View-логіка без UI-тестів**: `SearchBar` (0/119), `MeditateButtonComponents` (17%), `ScrollDetector` — винести умови у small pure-тип (як зроблено з `SearchState`) і крить його; самі View-ли не тестувати.
+> **Re-eval 2026-09-04:** SearchBar / MeditateButtonComponents / ScrollDetector — це **чисто рендеринг SwiftUI**, без прихованої domain-логіки. Витягати нема що. Тому Phase 4.1 замінено на raise coverage для сервісів/навігації, що мають реальну логіку.
+
+- **4.1 Підняти coverage сервісів/навігації** ✅ DONE 2026-09-04
+  - `OnboardingCoordinator` 60 → 100%
+  - `NoteSyncCoordinator` 59 → 90%
+  - `Router` 67 → 70% (залишок — `logger.debug` галуження)
+  - `Meditation` 71 → 71% (додано category / description / notFound)
 - **UI-тести (XCUI)**: рішення окремо — дорогі в підтримці; робити лише якщо потрібна регресія на flow "онбординг → медитація → нота".
 - **CI**: додати `xcodebuild test -enableCodeCoverage YES` + поріг (напр. не нижчий за поточний %) у пайплайн.
 

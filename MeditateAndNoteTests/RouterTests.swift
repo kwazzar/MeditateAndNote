@@ -115,6 +115,46 @@ final class RouterTests: XCTestCase {
         child.deepLinkOpen(to: .push(.noteDetails(noteId: NoteID())))
         XCTAssertEqual(child.navigationStackPath.count, 1)
     }
+
+    func testNavigate_tab_routesToSelectedTab() {
+        let root = makeRoot()
+
+        root.navigate(to: .tab(.meditations))
+
+        XCTAssertEqual(root.selectedTab, .meditations)
+    }
+
+    func testPresent_sheet_directly_setsPresentingSheet() {
+        let router = Router(level: 1, identifierTab: .home)
+
+        router.present(sheet: .newNote)
+
+        XCTAssertEqual(router.presentingSheet, .newNote)
+    }
+
+    func testPresent_fullScreen_directly_setsPresentingFullScreen() {
+        let router = Router(level: 1, identifierTab: .home)
+        let session = FullScreenDestination.meditationSession(id: MeditationID(rawValue: "x"))
+
+        router.present(fullScreen: session)
+
+        XCTAssertEqual(router.presentingFullScreen, session)
+    }
+
+    func testPreviewRouter_isLevelZero() {
+        let router = Router.previewRouter()
+        XCTAssertEqual(router.level, 0)
+        XCTAssertNil(router.identifierTab)
+    }
+
+    func testResignActive_topLevel_isNoOp() {
+        let root = makeRoot()
+        root.setActive()
+
+        root.resignActive()
+
+        XCTAssertFalse(root.isActive, "Top level has no parent to fall back to")
+    }
 }
 
 // MARK: - DeepLink parsing

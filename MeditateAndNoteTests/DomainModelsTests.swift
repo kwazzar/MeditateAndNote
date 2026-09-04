@@ -234,4 +234,26 @@ final class MeditationModelTests: XCTestCase {
         XCTAssertEqual(a, b)
         XCTAssertEqual(Set([a, b]).count, 1, "Meditation identity is value-based, not UUID-generated")
     }
+
+    func testMeditation_carriesDescription_whenProvided() {
+        let m = Meditation(id: "x", title: "T", breathingStyle: .box, description: "details")
+        XCTAssertEqual(m.description, "details")
+    }
+
+    func testMeditationCategory_hasExpectedCases() {
+        XCTAssertEqual(MeditationCategory.allCases.map(\.rawValue), [
+            "Mindfulness", "Breathing", "Sleep", "Focus", "Relaxation",
+        ])
+    }
+
+    func testMeditationError_notFound_carriesId() {
+        let id = MeditationID(rawValue: "missing")
+        let error = MeditationError.notFound(id: id)
+
+        guard case .notFound(let captured) = error else {
+            XCTFail("Expected .notFound")
+            return
+        }
+        XCTAssertEqual(captured, id)
+    }
 }
