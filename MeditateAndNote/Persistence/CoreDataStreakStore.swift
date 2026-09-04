@@ -96,7 +96,9 @@ final class CoreDataStreakStore: StreakActivityStore {
         return DailyActivity(
             date: date,
             hasMeditation: hasMeditation,
-            hasNote: hasNote
+            hasNote: hasNote,
+            meditationTime: object.value(forKey: "meditationTime") as? Date,
+            noteTime: object.value(forKey: "noteTime") as? Date
         )
     }
 
@@ -115,6 +117,8 @@ final class CoreDataStreakStore: StreakActivityStore {
         object.setValue(activity.date, forKey: "date")
         object.setValue(activity.hasMeditation, forKey: "hasMeditation")
         object.setValue(activity.hasNote, forKey: "hasNote")
+        object.setValue(activity.meditationTime, forKey: "meditationTime")
+        object.setValue(activity.noteTime, forKey: "noteTime")
     }
 
     private static func findOrCreateMeta(in context: NSManagedObjectContext) -> NSManagedObject {

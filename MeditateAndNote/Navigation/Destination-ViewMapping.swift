@@ -22,7 +22,10 @@ import SwiftUI
             case let .meditationCompletion(meditation, duration):
                 MeditationCompletionView(meditation: meditation, duration: duration)
             case .streakDetail:
-                StreakDetailView(streakTracker: container.streakTracker)
+                StreakDetailView(
+                    streakTracker: container.streakTracker,
+                    insightsViewModel: container.makeInsightsViewModel()
+                )
             case .settings:
                 SettingsView(
                     animationSettings: container.animationSettings,

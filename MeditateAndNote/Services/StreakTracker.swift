@@ -37,15 +37,25 @@ final class UserDefaultsStreakStore: StreakActivityStore {
         let date: Date
         let hasMeditation: Bool
         let hasNote: Bool
+        let meditationTime: Date?
+        let noteTime: Date?
 
         init(from activity: DailyActivity) {
             self.date = activity.date
             self.hasMeditation = activity.hasMeditation
             self.hasNote = activity.hasNote
+            self.meditationTime = activity.meditationTime
+            self.noteTime = activity.noteTime
         }
 
         func toDailyActivity() -> DailyActivity {
-            DailyActivity(date: date, hasMeditation: hasMeditation, hasNote: hasNote)
+            DailyActivity(
+                date: date,
+                hasMeditation: hasMeditation,
+                hasNote: hasNote,
+                meditationTime: meditationTime,
+                noteTime: noteTime
+            )
         }
     }
 
@@ -190,6 +200,7 @@ struct StreakEngine {
         let key = startOfDay(date)
         ensureActivityExists(for: key)
         dailyActivities[key]?.hasNote = true
+        dailyActivities[key]?.noteTime = date
         updateStreak(today: key)
     }
 
@@ -197,6 +208,7 @@ struct StreakEngine {
         let key = startOfDay(date)
         ensureActivityExists(for: key)
         dailyActivities[key]?.hasMeditation = true
+        dailyActivities[key]?.meditationTime = date
         updateStreak(today: key)
     }
 
@@ -303,6 +315,7 @@ final class StreakTracker {
     /// streak state that could drift out of sync.
     var currentStreak: Int { engine.currentStreak }
     var longestStreak: Int { engine.longestStreak }
+    var snapshot: StreakSnapshot { engine.snapshot }
 
     var totalCompleteDays: Int {
         engine.dailyActivities.values.filter(\.isComplete).count

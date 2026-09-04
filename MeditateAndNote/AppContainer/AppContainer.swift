@@ -95,4 +95,10 @@ final class AppContainer: ObservableObject {
             onCompletion: onCompletion
         )
     }
+
+    @MainActor
+    func makeInsightsViewModel() -> InsightsViewModel {
+        let manager = StreakInsightManager(streakTracker: streakTracker)
+        return InsightsViewModel(manager: manager)
+    }
 }

@@ -9,12 +9,14 @@ struct StreakDetailView: View {
     @Environment(ThemeManager.self) private var themeManager
     @Environment(\.dismiss) private var dismiss
     let streakTracker: StreakTracker
+    let insightsViewModel: InsightsViewModel
 
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
                 statsHeader
                 todayProgress
+                InsightsSection(viewModel: insightsViewModel)
                 calendarGrid
             }
             .padding(.horizontal, 16)
@@ -273,7 +275,12 @@ private struct WeekRow: View {
 
 struct StreakDetailView_Previews: PreviewProvider {
     static var previews: some View {
-        StreakDetailView(streakTracker: StreakTracker())
-            .environment(ThemeManager())
+        let tracker = StreakTracker()
+        let manager = StreakInsightManager(streakTracker: tracker)
+        StreakDetailView(
+            streakTracker: tracker,
+            insightsViewModel: InsightsViewModel(manager: manager)
+        )
+        .environment(ThemeManager())
     }
 }

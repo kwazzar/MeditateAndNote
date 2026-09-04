@@ -165,7 +165,17 @@ final class CoreDataManager {
         activityHasNote.isOptional = false
         activityHasNote.defaultValue = false
 
-        activityEntity.properties = [activityDate, activityHasMeditation, activityHasNote]
+        let activityMeditationTime = NSAttributeDescription()
+        activityMeditationTime.name = "meditationTime"
+        activityMeditationTime.attributeType = .dateAttributeType
+        activityMeditationTime.isOptional = true
+
+        let activityNoteTime = NSAttributeDescription()
+        activityNoteTime.name = "noteTime"
+        activityNoteTime.attributeType = .dateAttributeType
+        activityNoteTime.isOptional = true
+
+        activityEntity.properties = [activityDate, activityHasMeditation, activityHasNote, activityMeditationTime, activityNoteTime]
 
         // Uniqueness constraint: one row per calendar day
         activityEntity.uniquenessConstraints = [[activityDate]]

@@ -11,6 +11,8 @@ struct DailyActivity: Identifiable, Hashable {
     let date: Date
     var hasMeditation: Bool
     var hasNote: Bool
+    var meditationTime: Date?
+    var noteTime: Date?
 
     var isComplete: Bool { hasMeditation && hasNote }
 }

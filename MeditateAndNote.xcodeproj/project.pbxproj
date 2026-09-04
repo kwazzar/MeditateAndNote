@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		053967EF78BB7B14A4784118 /* StreakInsight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D672486C798B4CC2DBFF322 /* StreakInsight.swift */; };
+		15FFC3DA90DB701D4E0E2632 /* StreakInsightManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBAB63B4D20C32569B0BAE55 /* StreakInsightManager.swift */; };
+		3221E85D880F3E3F3CC7D7E5 /* StreakInsightEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C2C893562EB1C321CF1B273 /* StreakInsightEngine.swift */; };
+		47C7FEEF91D17CEB73589285 /* InsightsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09E4AAB15B1383604B747363 /* InsightsViewModel.swift */; };
 		4DEA3FE741F1A4530712630B /* StreakReminderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73571B9E27145AED24F2D353 /* StreakReminderTests.swift */; };
 		78215B553038AB4200DD8F99 /* NoteSyncCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78215B543038AB4200DD8F99 /* NoteSyncCoordinator.swift */; };
 		78215B573038AB5000DD8F99 /* DomainEvents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78215B563038AB5000DD8F99 /* DomainEvents.swift */; };
@@ -51,6 +55,7 @@
 		CC0000022026082800000006 /* CoreDataNoteDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000022026082800000002 /* CoreDataNoteDataSource.swift */; };
 		CC0000032026082800000007 /* CoreDataSessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000032026082800000003 /* CoreDataSessionStore.swift */; };
 		CC0000042026082800000008 /* CoreDataStreakStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000042026082800000004 /* CoreDataStreakStore.swift */; };
+		DC587FE4027CE73A16A27FD0 /* InsightsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC3C8D0C08E6E9153624093E /* InsightsSection.swift */; };
 		DD0000012026082800000005 /* CoreDataManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000012026082800000001 /* CoreDataManagerTests.swift */; };
 		DD0000022026082800000006 /* CoreDataNoteDataSourceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000022026082800000002 /* CoreDataNoteDataSourceTests.swift */; };
 		DD0000032026082800000007 /* CoreDataSessionStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000032026082800000003 /* CoreDataSessionStoreTests.swift */; };
@@ -115,6 +120,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		09E4AAB15B1383604B747363 /* InsightsViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = InsightsViewModel.swift; path = MeditateAndNote/ViewModels/InsightsViewModel.swift; sourceTree = "<group>"; };
+		1D672486C798B4CC2DBFF322 /* StreakInsight.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = StreakInsight.swift; path = MeditateAndNote/Models/StreakInsight.swift; sourceTree = "<group>"; };
 		2191349DA8C57C98F66164B8 /* MeditationViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MeditationViewModelTests.swift; sourceTree = "<group>"; };
 		648FE2FCBB1DD6E50BB5E61E /* MeditationCompletionView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MeditationCompletionView.swift; sourceTree = "<group>"; };
 		73571B9E27145AED24F2D353 /* StreakReminderTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StreakReminderTests.swift; sourceTree = "<group>"; };
@@ -137,6 +144,7 @@
 		78DF54263040D09E00B1F2C3 /* breath_exhale.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = breath_exhale.wav; sourceTree = "<group>"; };
 		78DF54283040D0A300B1F2C3 /* breath_hold.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = breath_hold.wav; sourceTree = "<group>"; };
 		78DF542A3040D34000B1F2C3 /* meditation_countdown.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = meditation_countdown.wav; sourceTree = "<group>"; };
+		8C2C893562EB1C321CF1B273 /* StreakInsightEngine.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = StreakInsightEngine.swift; path = MeditateAndNote/Services/StreakInsightEngine.swift; sourceTree = "<group>"; };
 		AA0000022026082000000001 /* DailyActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyActivity.swift; sourceTree = "<group>"; };
 		AA00000220260903C00001 /* BreathingAnimationStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreathingAnimationStyle.swift; sourceTree = "<group>"; };
 		AA00000220260903C00003 /* AnimationSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimationSettings.swift; sourceTree = "<group>"; };
@@ -156,6 +164,7 @@
 		AA00014020260902C00006 /* SoundSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundSettingsTests.swift; sourceTree = "<group>"; };
 		AA0003002026082200000001 /* MeditationDuration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationDuration.swift; sourceTree = "<group>"; };
 		AA0003102026082200000003 /* SearchQuery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchQuery.swift; sourceTree = "<group>"; };
+		AC3C8D0C08E6E9153624093E /* InsightsSection.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = InsightsSection.swift; path = MeditateAndNote/Views/Main/Streak/InsightsSection.swift; sourceTree = "<group>"; };
 		CC0000012026082800000001 /* CoreDataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataManager.swift; sourceTree = "<group>"; };
 		CC0000022026082800000002 /* CoreDataNoteDataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataNoteDataSource.swift; sourceTree = "<group>"; };
 		CC0000032026082800000003 /* CoreDataSessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataSessionStore.swift; sourceTree = "<group>"; };
@@ -205,6 +214,7 @@
 		E3F0F1A72E5B00000000AB22 /* MeditationSessionEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationSessionEngine.swift; sourceTree = "<group>"; };
 		E3F0F1A92E5B00000000AB24 /* MeditationEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationEngineTests.swift; sourceTree = "<group>"; };
 		E3FDF77B2ED0CE0F00ACD847 /* MeditationInfoScroll.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationInfoScroll.swift; sourceTree = "<group>"; };
+		FBAB63B4D20C32569B0BAE55 /* StreakInsightManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = StreakInsightManager.swift; path = MeditateAndNote/Services/StreakInsightManager.swift; sourceTree = "<group>"; };
 		OB0000010000000000000001 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		OB0000020000000000000002 /* OnboardingPageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingPageView.swift; sourceTree = "<group>"; };
 		OB0000030000000000000003 /* OnboardingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewModel.swift; sourceTree = "<group>"; };
@@ -309,6 +319,7 @@
 				AA000012202608200000000C /* DayCellView.swift */,
 				AA00000A2026082000000005 /* StreakHeaderView.swift */,
 				AA00000C2026082000000006 /* StreakDetailView.swift */,
+				AC3C8D0C08E6E9153624093E /* InsightsSection.swift */,
 			);
 			path = Streak;
 			sourceTree = "<group>";
@@ -390,6 +401,11 @@
 				E361876D2D68B221000E326D /* MeditateAndNote */,
 				E361876C2D68B221000E326D /* Products */,
 				AA000014202608200000000A /* MeditateAndNoteTests */,
+				8C2C893562EB1C321CF1B273 /* StreakInsightEngine.swift */,
+				FBAB63B4D20C32569B0BAE55 /* StreakInsightManager.swift */,
+				1D672486C798B4CC2DBFF322 /* StreakInsight.swift */,
+				09E4AAB15B1383604B747363 /* InsightsViewModel.swift */,
+				AC3C8D0C08E6E9153624093E /* InsightsSection.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -441,6 +457,7 @@
 				AA0000042026082000000002 /* MeditationSession.swift */,
 				AA0003102026082200000003 /* SearchQuery.swift */,
 				AA0003002026082200000001 /* MeditationDuration.swift */,
+				1D672486C798B4CC2DBFF322 /* StreakInsight.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -488,6 +505,7 @@
 				E389732C2D79191200A9A662 /* MeditateSelectViewModel.swift */,
 				E36164402E41050F00A5DCCF /* MeditationViewModel.swift */,
 				OB0000030000000000000003 /* OnboardingViewModel.swift */,
+				09E4AAB15B1383604B747363 /* InsightsViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -506,6 +524,8 @@
 				AA00010020260902C00002 /* SoundSettings.swift */,
 				AA00000220260903C00003 /* AnimationSettings.swift */,
 				OB0000060000000000000006 /* OnboardingStore.swift */,
+				8C2C893562EB1C321CF1B273 /* StreakInsightEngine.swift */,
+				FBAB63B4D20C32569B0BAE55 /* StreakInsightManager.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -727,6 +747,11 @@
 				OB0100040000000000000004 /* OnboardingPageModel.swift in Sources */,
 				OB0100050000000000000005 /* OnboardingCoordinator.swift in Sources */,
 				OB0100060000000000000006 /* OnboardingStore.swift in Sources */,
+				3221E85D880F3E3F3CC7D7E5 /* StreakInsightEngine.swift in Sources */,
+				15FFC3DA90DB701D4E0E2632 /* StreakInsightManager.swift in Sources */,
+				053967EF78BB7B14A4784118 /* StreakInsight.swift in Sources */,
+				47C7FEEF91D17CEB73589285 /* InsightsViewModel.swift in Sources */,
+				DC587FE4027CE73A16A27FD0 /* InsightsSection.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
