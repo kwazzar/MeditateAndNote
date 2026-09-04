@@ -10,8 +10,9 @@ import Foundation
 // MARK: - Protocol for ViewModels
 
 protocol StreakInsightProvidable {
-    func insights() -> [StreakInsight]
-    func recommendations() -> [UserRecommendation]
+    func insights(for range: StreakRange) -> [StreakInsight]
+    func recommendations(for range: StreakRange) -> [UserRecommendation]
+    func weeklyBreakdown(for range: StreakRange) -> [WeeklyBucket]
 }
 
 // MARK: - Streak Insight Manager
@@ -20,40 +21,52 @@ final class StreakInsightManager: StreakInsightProvidable {
     private let streakTracker: StreakTracker
     private let engine = StreakInsightEngine()
 
-    private var cachedInsights: [StreakInsight]?
-    private var cachedRecommendations: [UserRecommendation]?
+    private struct CacheKey: Hashable {
+        let range: StreakRange
+        let signature: Int
+    }
+
+    private var cachedInsights: [CacheKey: [StreakInsight]] = [:]
+    private var cachedRecommendations: [CacheKey: [UserRecommendation]] = [:]
     private var lastSnapshotSignature: Int?
 
     init(streakTracker: StreakTracker) {
         self.streakTracker = streakTracker
     }
 
-    func insights() -> [StreakInsight] {
-        let signature = snapshotSignature(streakTracker.snapshot)
-        if signature == lastSnapshotSignature, let cached = cachedInsights {
+    func insights(for range: StreakRange) -> [StreakInsight] {
+        let key = cacheKey(for: range)
+        if let cached = cachedInsights[key] {
             return cached
         }
-        let result = engine.generateInsights(from: streakTracker.snapshot)
-        cachedInsights = result
-        lastSnapshotSignature = signature
+        let result = engine.generateInsights(from: streakTracker.snapshot, range: range)
+        cachedInsights[key] = result
         return result
     }
 
-    func recommendations() -> [UserRecommendation] {
-        let signature = snapshotSignature(streakTracker.snapshot)
-        if signature == lastSnapshotSignature, let cached = cachedRecommendations {
+    func recommendations(for range: StreakRange) -> [UserRecommendation] {
+        let key = cacheKey(for: range)
+        if let cached = cachedRecommendations[key] {
             return cached
         }
-        let currentInsights = insights()
+        let currentInsights = insights(for: range)
         let result = engine.generateRecommendations(from: currentInsights)
-        cachedRecommendations = result
+        cachedRecommendations[key] = result
         return result
+    }
+
+    func weeklyBreakdown(for range: StreakRange) -> [WeeklyBucket] {
+        engine.weeklyBreakdown(from: streakTracker.snapshot, range: range)
     }
 
     func invalidateCache() {
-        cachedInsights = nil
-        cachedRecommendations = nil
+        cachedInsights.removeAll()
+        cachedRecommendations.removeAll()
         lastSnapshotSignature = nil
+    }
+
+    private func cacheKey(for range: StreakRange) -> CacheKey {
+        CacheKey(range: range, signature: snapshotSignature(streakTracker.snapshot))
     }
 
     private func snapshotSignature(_ snapshot: StreakSnapshot) -> Int {

@@ -63,6 +63,8 @@ struct InsightDetailView: View {
     @Environment(ThemeManager.self) private var themeManager
     @Environment(\.dismiss) private var dismiss
     let insight: StreakInsight
+    let range: StreakRange
+    let weeklyBreakdown: [WeeklyBucket]
 
     @State private var appeared = false
 
@@ -78,6 +80,13 @@ struct InsightDetailView: View {
                         .offset(y: appeared ? 0 : 20)
                         .opacity(appeared ? 1 : 0)
                         .animation(.snappy(duration: 0.4).delay(0.1), value: appeared)
+                }
+
+                if !weeklyBreakdown.isEmpty {
+                    weeklyBreakdownSection
+                        .offset(y: appeared ? 0 : 20)
+                        .opacity(appeared ? 1 : 0)
+                        .animation(.snappy(duration: 0.4).delay(0.12), value: appeared)
                 }
 
                 if let value = insight.value {
@@ -171,6 +180,51 @@ struct InsightDetailView: View {
         )
     }
 
+    // MARK: - Weekly Breakdown (drill-down bars)
+
+    private var weeklyBreakdownSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("Weekly Completion")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(themeManager.current.textPrimary)
+
+                Spacer()
+
+                Text(range.shortLabel)
+                    .font(.caption2.weight(.semibold))
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(
+                        Capsule().fill(themeManager.current.streakActiveMeditation.opacity(0.18))
+                    )
+                    .foregroundStyle(themeManager.current.streakActiveMeditation)
+            }
+
+            WeeklyBreakdownChart(buckets: weeklyBreakdown, range: range)
+
+            if let best = weeklyBreakdown.max(by: { $0.completionRate < $1.completionRate }),
+               best.completionRate > 0 {
+                Text("Best week: \(formatWeek(best.weekStart)) — \(Int(best.completionRate * 100))% complete")
+                    .font(.caption)
+                    .foregroundStyle(themeManager.current.textSecondary)
+            }
+        }
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 14)
+                .fill(.ultraThinMaterial)
+        )
+        .animation(.snappy, value: range)
+        .animation(.snappy, value: weeklyBreakdown)
+    }
+
+    private func formatWeek(_ start: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d"
+        return formatter.string(from: start)
+    }
+
     // MARK: - Value Section
 
     private func valueSection(_ value: Double) -> some View {
@@ -242,5 +296,86 @@ extension InsightCategory {
         case .trend: return "Trend"
         case .risk: return "Risk"
         }
+    }
+}
+
+// MARK: - Weekly Breakdown Chart (drill-down bars)
+
+private struct WeeklyBreakdownChart: View {
+    @Environment(ThemeManager.self) private var themeManager
+    let buckets: [WeeklyBucket]
+    let range: StreakRange
+
+    @State private var appeared = false
+
+    var body: some View {
+        GeometryReader { geo in
+            HStack(alignment: .bottom, spacing: barSpacing(for: buckets.count)) {
+                ForEach(buckets.indices, id: \.self) { index in
+                    bucketView(at: index, in: geo.size.height)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .frame(height: chartHeight)
+        .onAppear { appeared = true }
+        .animation(.snappy, value: buckets.count)
+        .animation(.snappy, value: range)
+    }
+
+    private var chartHeight: CGFloat {
+        switch range {
+        case .last7: return 96
+        case .last30: return 96
+        case .last90: return 96
+        }
+    }
+
+    private func barSpacing(for count: Int) -> CGFloat {
+        max(2, min(8, CGFloat(48 / max(count, 1))))
+    }
+
+    private func bucketView(at index: Int, in height: CGFloat) -> some View {
+        let bucket = buckets[index]
+        let rate = max(0, min(1, bucket.completionRate))
+        let barHeight = height * CGFloat(rate)
+        let delay = Double(index) * 0.04
+
+        return VStack(spacing: 4) {
+            RoundedRectangle(cornerRadius: 4)
+                .fill(barColor(for: rate))
+                .frame(maxWidth: .infinity)
+                .frame(height: appeared ? max(4, barHeight) : 4, alignment: .bottom)
+                .animation(.snappy(duration: 0.4).delay(delay), value: appeared)
+                .animation(.snappy, value: rate)
+
+            Text(shortLabel(for: bucket.weekStart))
+                .font(.system(size: 8, weight: .medium))
+                .foregroundStyle(themeManager.current.textSecondary)
+        }
+    }
+
+    private func barColor(for rate: Double) -> Color {
+        switch rate {
+        case 0.75...1.0: return .green
+        case 0.50..<0.75: return .green.opacity(0.6)
+        case 0.25..<0.50: return .orange
+        case 0.01..<0.25: return .red.opacity(0.6)
+        default: return themeManager.current.toolbarBackground
+        }
+    }
+
+    private func shortLabel(for weekStart: Date) -> String {
+        switch range {
+        case .last7: return ""
+        case .last30: return "\(calendar.component(.day, from: weekStart))"
+        case .last90: return "\(calendar.component(.day, from: weekStart))"
+        }
+    }
+
+    private var calendar: Calendar {
+        var cal = Calendar(identifier: .gregorian)
+        cal.locale = Locale(identifier: "en_US")
+        return cal
     }
 }

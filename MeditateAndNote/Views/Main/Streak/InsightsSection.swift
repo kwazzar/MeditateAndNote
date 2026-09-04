@@ -29,9 +29,14 @@ struct InsightsSection: View {
         }
         .animation(.snappy(duration: 0.3), value: viewModel.insights.count)
         .animation(.snappy(duration: 0.3), value: viewModel.recommendations.count)
+        .animation(.snappy(duration: 0.3), value: viewModel.selectedRange)
         .sheet(item: $selectedInsight) { insight in
             NavigationStack {
-                InsightDetailView(insight: insight)
+                InsightDetailView(
+                    insight: insight,
+                    range: viewModel.selectedRange,
+                    weeklyBreakdown: viewModel.weeklyBreakdown
+                )
             }
         }
         .alert("Set Reminder", isPresented: $showReminderAlert) {
@@ -66,9 +71,15 @@ struct InsightsSection: View {
 
     private var insightsBlock: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Insights")
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(themeManager.current.textPrimary)
+            HStack {
+                Text("Insights")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(themeManager.current.textPrimary)
+
+                Spacer()
+
+                rangePicker
+            }
 
             ForEach(viewModel.insights) { insight in
                 if insight.heatmapData != nil {
@@ -80,6 +91,23 @@ struct InsightsSection: View {
                 }
             }
         }
+    }
+
+    private var rangePicker: some View {
+        Picker("Range", selection: rangeBinding) {
+            ForEach(StreakRange.allCases) { range in
+                Text(range.shortLabel).tag(range)
+            }
+        }
+        .pickerStyle(.segmented)
+        .tint(themeManager.current.streakActiveMeditation)
+    }
+
+    private var rangeBinding: Binding<StreakRange> {
+        Binding(
+            get: { viewModel.selectedRange },
+            set: { viewModel.selectedRange = $0 }
+        )
     }
 
     // MARK: - Action Handling

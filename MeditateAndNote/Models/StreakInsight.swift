@@ -28,6 +28,66 @@ struct WeekdayHeatmapData: Hashable {
     let days: [Day]
 }
 
+// MARK: - Streak Range (value object)
+
+/// Window the user is currently viewing insights over. The engine is
+/// range-aware: completion rate, weekly breakdown, and trend insights all
+/// re-derive when the range changes. Invariant: `dayCount > 0`.
+enum StreakRange: Hashable, CaseIterable, Identifiable {
+    case last7
+    case last30
+    case last90
+
+    var id: Self { self }
+
+    var dayCount: Int {
+        switch self {
+        case .last7: return 7
+        case .last30: return 30
+        case .last90: return 90
+        }
+    }
+
+    var shortLabel: String {
+        switch self {
+        case .last7: return "7D"
+        case .last30: return "30D"
+        case .last90: return "90D"
+        }
+    }
+
+    var title: String {
+        switch self {
+        case .last7: return "Last 7 Days"
+        case .last30: return "Last 30 Days"
+        case .last90: return "Last 90 Days"
+        }
+    }
+}
+
+// MARK: - Weekly Bucket (value object)
+
+/// One bucket in the weekly drill-down bar graph. Buckets are always
+/// week-aligned (Monday→Sunday in the engine's calendar) and `completeDays
+/// <= totalDays` by construction.
+struct WeeklyBucket: Hashable, Identifiable {
+    let id: Date
+    let weekStart: Date
+    let weekEnd: Date
+    let totalDays: Int
+    let completeDays: Int
+    let completionRate: Double
+
+    init(weekStart: Date, weekEnd: Date, totalDays: Int, completeDays: Int) {
+        self.id = weekStart
+        self.weekStart = weekStart
+        self.weekEnd = weekEnd
+        self.totalDays = totalDays
+        self.completeDays = completeDays
+        self.completionRate = totalDays > 0 ? Double(completeDays) / Double(totalDays) : 0
+    }
+}
+
 // MARK: - Streak Insight (value object)
 
 struct StreakInsight: Identifiable, Hashable {

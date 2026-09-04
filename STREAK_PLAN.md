@@ -11,8 +11,8 @@ explicit user approval.
 | ------ | ----- | ------ |
 | S1 | Streak header, calendar grid, progress pills, insight engine | ✅ `34e12e3` |
 | S2 | Weekday heatmap, drill-down detail view, animated transitions | ✅ `c9dd79b` |
+| S3 | Date-range filtering (7/30/90 days) + weekly drill-down bars | ✅ `8607926` |
 | S5 | Local notification reminders + Settings UI + navigation fix | ✅ `46a9b4a` |
-| S3 | Date-range filtering (7/30/90 days) + weekly drill-down | ⏳ planned |
 | S4 | Core day (meditation + note same day = streak day) | ⏳ planned |
 | S6 | Trend line / extended stats | ⏳ planned |
 
@@ -30,11 +30,23 @@ explicit user approval.
 - Staggered bar entrance + fade/slide transitions.
 - Insights caching and recommendation actions (`StreakInsightManager`).
 
-## S3 — Date Ranges & Deeper Drill-down
+## S3 — Date Ranges & Deeper Drill-down (done)
 
-- Range selector on the heatmap/detail view: 7 / 30 / 90 days.
-- Weekly aggregation graph (drill-down from the weekday heatmap).
-- Preserve S2 animations when switching ranges.
+- `StreakRange` value object (`.last7` / `.last30` / `.last90`) — pure
+  domain, no CoreData / SwiftUI.
+- `StreakInsightEngine` re-derived with `range:` parameter: completion rate,
+  weekly heatmap, partial-day gap, time-of-day, trend, and balance insights
+  all filter to the selected window.
+- New `WeeklyBucket` value object + `engine.weeklyBreakdown(from:range:today:)`
+  producing week-aligned buckets whose totals sum exactly to `range.dayCount`.
+- Range-aware `StreakInsightManager` with per-`(range, signature)` caching.
+- `InsightsViewModel.selectedRange` (`@Observable` `didSet`) re-derives
+  insights, recommendations, and weekly breakdown on change; same-range writes
+  are a no-op.
+- Segmented `Picker` in `InsightsSection` (7D / 30D / 90D).
+- `WeeklyBreakdownChart` in `InsightDetailView`: animated bars, color-coded
+  by completion rate, with "best week" callout.
+- 21 new tests. **337/337 passing.**
 
 ## S4 — Core Day
 
@@ -62,7 +74,7 @@ explicit user approval.
 
 ## Definition of done
 
-1. Build + tests are green (`146` currently).
+1. Build + tests are green (`337` currently).
 2. Domain files stay free of `CoreData` / `SwiftUI`.
 3. Navigation changes don't leak concrete Views into ViewModels.
 4. `ddd-audit` review passes for significant features.

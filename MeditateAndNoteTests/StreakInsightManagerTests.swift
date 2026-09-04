@@ -64,18 +64,18 @@ final class StreakInsightManagerTests: XCTestCase {
     func testInsights_emptyTracker_returnsOnlyCompletionBaselines() {
         let (manager, _, _) = makeManager()
 
-        // The engine always reports 7/30-day completion (0% when empty),
+        // The engine always reports the 30-day completion (0% when empty),
         // but a 0% baseline never converts into a recommendation.
-        XCTAssertEqual(manager.insights().map(\.title), ["7-Day Completion", "30-Day Completion"])
-        XCTAssertTrue(manager.recommendations().isEmpty)
+        XCTAssertEqual(manager.insights(for: .last30).map(\.title), ["Last 30 Days Completion"])
+        XCTAssertTrue(manager.recommendations(for: .last30).isEmpty)
     }
 
     func testInsights_matchesEngineOutputForTrackerSnapshot() {
         let (manager, tracker, _) = makeManager(activities: completeRun(count: 10))
         let engine = StreakInsightEngine(calendar: calendar)
 
-        let fromManager = manager.insights()
-        let direct = engine.generateInsights(from: tracker.snapshot)
+        let fromManager = manager.insights(for: .last30)
+        let direct = engine.generateInsights(from: tracker.snapshot, range: .last30)
 
         XCTAssertFalse(fromManager.isEmpty, "10 complete days must produce insights")
         XCTAssertEqual(fromManager.count, direct.count)
@@ -87,8 +87,8 @@ final class StreakInsightManagerTests: XCTestCase {
     func testInsights_unchangedSnapshot_returnsCachedInstances() {
         let (manager, _, _) = makeManager(activities: completeRun(count: 10))
 
-        let first = manager.insights()
-        let second = manager.insights()
+        let first = manager.insights(for: .last30)
+        let second = manager.insights(for: .last30)
 
         // StreakInsight identity is its UUID: equal ids mean the same
         // cached array, not a freshly generated copy.
@@ -97,20 +97,30 @@ final class StreakInsightManagerTests: XCTestCase {
 
     func testInsights_afterSnapshotChange_regenerates() async {
         let (manager, tracker, _) = makeManager(activities: completeRun(count: 5))
-        let before = manager.insights()
+        let before = manager.insights(for: .last30)
 
         await tracker.markNoteCreated(date: day(-20))
-        let after = manager.insights()
+        let after = manager.insights(for: .last30)
 
         XCTAssertNotEqual(before.map(\.id), after.map(\.id),
                           "a changed snapshot must invalidate the cache")
     }
 
+    func testInsights_changingRange_returnsNewInstances() {
+        let (manager, _, _) = makeManager(activities: completeRun(count: 10))
+
+        let for7 = manager.insights(for: .last7)
+        let for30 = manager.insights(for: .last30)
+
+        XCTAssertNotEqual(for7.map(\.title), for30.map(\.title),
+                          "different ranges must produce different insight sets")
+    }
+
     func testRecommendations_unchangedSnapshot_returnsCachedInstances() {
         let (manager, _, _) = makeManager(activities: completeRun(count: 10))
 
-        let first = manager.recommendations()
-        let second = manager.recommendations()
+        let first = manager.recommendations(for: .last30)
+        let second = manager.recommendations(for: .last30)
 
         XCTAssertEqual(first.map(\.id), second.map(\.id))
     }
@@ -121,7 +131,7 @@ final class StreakInsightManagerTests: XCTestCase {
         let skewed = (0..<10).map { DailyActivity(date: day(-$0), hasMeditation: true, hasNote: false) }
         let (manager, _, _) = makeManager(activities: skewed)
 
-        let recommendations = manager.recommendations()
+        let recommendations = manager.recommendations(for: .last30)
 
         XCTAssertFalse(recommendations.isEmpty)
         XCTAssertEqual(recommendations, recommendations.sorted { $0.priority < $1.priority },
@@ -131,10 +141,10 @@ final class StreakInsightManagerTests: XCTestCase {
 
     func testInvalidateCache_forcesRegenerationWithoutSnapshotChange() {
         let (manager, _, _) = makeManager(activities: completeRun(count: 10))
-        let before = manager.insights()
+        let before = manager.insights(for: .last30)
 
         manager.invalidateCache()
-        let after = manager.insights()
+        let after = manager.insights(for: .last30)
 
         XCTAssertNotEqual(before.map(\.id), after.map(\.id),
                           "invalidateCache must drop memoized insights")

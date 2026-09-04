@@ -56,35 +56,35 @@ final class StreakInsightEngineTests: XCTestCase {
 
     // MARK: - Completion Rate
 
-    func testCompletionRate_allDaysComplete_7Day100Percent() {
+    func testCompletionRate_allDaysComplete_last7_100Percent() {
         let sut = makeSUT()
         let activities = (0..<7).map { offset in
             makeActivity(2026, 9, 4 - offset, meditation: true, note: true)
         }
         let snapshot = makeSnapshot(activities: activities)
 
-        let insights = sut.generateInsights(from: snapshot)
-        let rate7 = insights.first { $0.title == "7-Day Completion" }
+        let insights = sut.generateInsights(from: snapshot, range: .last7)
+        let rate = insights.first { $0.title == "Last 7 Days Completion" }
 
-        XCTAssertNotNil(rate7)
-        XCTAssertEqual(rate7?.value, 1.0)
+        XCTAssertNotNil(rate)
+        XCTAssertEqual(rate?.value, 1.0)
     }
 
-    func testCompletionRate_noDaysComplete_7Day0Percent() {
+    func testCompletionRate_noDaysComplete_last30_0Percent() {
         let sut = makeSUT()
-        let activities = (0..<7).map { offset in
+        let activities = (0..<30).map { offset in
             makeActivity(2026, 9, 4 - offset, meditation: false, note: false)
         }
         let snapshot = makeSnapshot(activities: activities)
 
-        let insights = sut.generateInsights(from: snapshot)
-        let rate7 = insights.first { $0.title == "7-Day Completion" }
+        let insights = sut.generateInsights(from: snapshot, range: .last30)
+        let rate = insights.first { $0.title == "Last 30 Days Completion" }
 
-        XCTAssertNotNil(rate7)
-        XCTAssertEqual(rate7?.value, 0.0)
+        XCTAssertNotNil(rate)
+        XCTAssertEqual(rate?.value, 0.0)
     }
 
-    func testCompletionRate_halfDaysComplete_7DayRoughlyHalf() {
+    func testCompletionRate_halfDaysComplete_last7_roughlyHalf() {
         let sut = makeSUT()
         var activities: [DailyActivity] = []
         for offset in 0..<7 {
@@ -94,13 +94,39 @@ final class StreakInsightEngineTests: XCTestCase {
         }
         let snapshot = makeSnapshot(activities: activities)
 
-        let insights = sut.generateInsights(from: snapshot)
-        let rate7 = insights.first { $0.title == "7-Day Completion" }
+        let insights = sut.generateInsights(from: snapshot, range: .last7)
+        let rate = insights.first { $0.title == "Last 7 Days Completion" }
 
-        XCTAssertNotNil(rate7)
-        XCTAssertNotNil(rate7?.value)
+        XCTAssertNotNil(rate)
+        XCTAssertNotNil(rate?.value)
         // 4 out of 7 days complete (offsets 0,2,4,6)
-        XCTAssertEqual(rate7!.value!, 4.0 / 7.0, accuracy: 0.01)
+        XCTAssertEqual(rate!.value!, 4.0 / 7.0, accuracy: 0.01)
+    }
+
+    func testCompletionRate_last90_usesAll90Days() {
+        let sut = makeSUT()
+        // 60 complete days out of 90
+        let activities = (0..<90).map { offset in
+            makeActivity(2026, 9, 4 - offset,
+                         meditation: offset < 60,
+                         note: offset < 60)
+        }
+        let snapshot = makeSnapshot(activities: activities)
+
+        let rate = sut.completionRate(in: .last90, snapshot: snapshot, today: date(2026, 9, 4))
+        XCTAssertEqual(rate, 60.0 / 90.0, accuracy: 0.001)
+    }
+
+    func testCompletionRate_rangeExcludesOlderActivities() {
+        let sut = makeSUT()
+        // 30 complete days, but the older 25 fall outside the 7-day window.
+        let activities = (0..<30).map { offset in
+            makeActivity(2026, 9, 4 - offset, meditation: true, note: true)
+        }
+        let snapshot = makeSnapshot(activities: activities)
+
+        let rate7 = sut.completionRate(in: .last7, snapshot: snapshot, today: date(2026, 9, 4))
+        XCTAssertEqual(rate7, 1.0, "the 7 most-recent activities are all complete")
     }
 
     // MARK: - Weak Days
@@ -245,18 +271,18 @@ final class StreakInsightEngineTests: XCTestCase {
         let sut = makeSUT()
         var activities: [DailyActivity] = []
 
-        // This week: 5 complete
+        // This half (last 15 days): 5 complete
         for offset in 0..<5 {
             activities.append(makeActivity(2026, 9, 4 - offset, meditation: true, note: true))
         }
-        // Last week: 2 complete
-        for offset in 7..<9 {
+        // Previous half (15–29 days back): 2 complete
+        for offset in 15..<17 {
             activities.append(makeActivity(2026, 9, 4 - offset, meditation: true, note: true))
         }
 
         let snapshot = makeSnapshot(activities: activities)
-        let insights = sut.generateInsights(from: snapshot)
-        let trend = insights.first { $0.title == "Weekly Trend" }
+        let insights = sut.generateInsights(from: snapshot, range: .last30)
+        let trend = insights.first { $0.title == "30D Trend" }
 
         XCTAssertNotNil(trend)
         XCTAssertTrue(trend?.icon == "arrow.up.right")
@@ -266,18 +292,18 @@ final class StreakInsightEngineTests: XCTestCase {
         let sut = makeSUT()
         var activities: [DailyActivity] = []
 
-        // This week: 2 complete
+        // This half: 2 complete
         for offset in 0..<2 {
             activities.append(makeActivity(2026, 9, 4 - offset, meditation: true, note: true))
         }
-        // Last week: 5 complete
-        for offset in 7..<12 {
+        // Previous half: 5 complete
+        for offset in 15..<20 {
             activities.append(makeActivity(2026, 9, 4 - offset, meditation: true, note: true))
         }
 
         let snapshot = makeSnapshot(activities: activities)
-        let insights = sut.generateInsights(from: snapshot)
-        let trend = insights.first { $0.title == "Weekly Trend" }
+        let insights = sut.generateInsights(from: snapshot, range: .last30)
+        let trend = insights.first { $0.title == "30D Trend" }
 
         XCTAssertNotNil(trend)
         XCTAssertTrue(trend?.icon == "arrow.down.right")
@@ -335,8 +361,8 @@ final class StreakInsightEngineTests: XCTestCase {
         }
         let snapshot = makeSnapshot(activities: activities)
 
-        let insights = sut.generateInsights(from: snapshot)
-        let balance = insights.first { $0.title == "Balance" }
+        let insights = sut.generateInsights(from: snapshot, range: .last30)
+        let balance = insights.first { $0.title == "30D Balance" }
 
         XCTAssertNotNil(balance)
         XCTAssertTrue(balance?.message.contains("Notes") ?? false)
@@ -350,8 +376,8 @@ final class StreakInsightEngineTests: XCTestCase {
         }
         let snapshot = makeSnapshot(activities: activities)
 
-        let insights = sut.generateInsights(from: snapshot)
-        let balance = insights.first { $0.title == "Balance" }
+        let insights = sut.generateInsights(from: snapshot, range: .last30)
+        let balance = insights.first { $0.title == "30D Balance" }
 
         XCTAssertNil(balance)
     }
@@ -481,5 +507,169 @@ final class StreakInsightEngineTests: XCTestCase {
 
         let recs = sut.generateRecommendations(from: [insight])
         XCTAssertEqual(recs.first?.action, .setReminder)
+    }
+
+    // MARK: - Range awareness
+
+    func testCompletionRate_last7DayTitle_reflectsRange() {
+        let sut = makeSUT()
+        let snapshot = makeSnapshot(activities: [])
+        let insights = sut.generateInsights(from: snapshot, range: .last7)
+        XCTAssertEqual(insights.first?.title, "Last 7 Days Completion")
+    }
+
+    func testCompletionRate_last90DayTitle_reflectsRange() {
+        let sut = makeSUT()
+        let snapshot = makeSnapshot(activities: [])
+        let insights = sut.generateInsights(from: snapshot, range: .last90)
+        XCTAssertEqual(insights.first?.title, "Last 90 Days Completion")
+    }
+
+    func testWeakDay_window7_excludesOlderHistory() {
+        let sut = makeSUT()
+        var activitiesByDate: [Date: DailyActivity] = [:]
+
+        // Older history: every Saturday in the *previous* month was complete.
+        // Without range-filtering, those would inflate Saturday's rate.
+        for offset in 0..<28 {
+            let d = date(2026, 8, 7 + offset)
+            let weekday = calendar.component(.weekday, from: d)
+            let complete = weekday == 7
+            activitiesByDate[d] = DailyActivity(date: d, hasMeditation: complete, hasNote: complete)
+        }
+        // Last 7 days (08-29..09-04): complete on every day except Saturday (08-29).
+        for offset in 0..<7 {
+            let d = date(2026, 9, 4 - offset)
+            let weekday = calendar.component(.weekday, from: d)
+            let complete = weekday != 7
+            activitiesByDate[d] = DailyActivity(date: d, hasMeditation: complete, hasNote: complete)
+        }
+
+        let activities = Array(activitiesByDate.values)
+        let snapshot = makeSnapshot(activities: activities)
+        let heatmap = sut.generateInsights(from: snapshot, range: .last7)
+            .first { $0.title == "Weekly Heatmap" }
+
+        XCTAssertNotNil(heatmap?.heatmapData)
+        let saturday = heatmap?.heatmapData?.days.first { $0.shortName == "Sa" }
+        XCTAssertEqual(saturday?.completionRate ?? 1.0, 0.0, accuracy: 0.01,
+                       "the 7-day window must report Saturday's rate from the last 7 days only")
+    }
+
+    func testTrendTitle_reflectsRange() {
+        let sut = makeSUT()
+        let activities = (0..<60).map { offset in
+            makeActivity(2026, 9, 4 - offset, meditation: true, note: true)
+        }
+        let snapshot = makeSnapshot(activities: activities)
+
+        XCTAssertEqual(
+            sut.generateInsights(from: snapshot, range: .last7).first { $0.category == .trend }?.title,
+            "7D Trend"
+        )
+        XCTAssertEqual(
+            sut.generateInsights(from: snapshot, range: .last30).first { $0.category == .trend }?.title,
+            "30D Trend"
+        )
+        XCTAssertEqual(
+            sut.generateInsights(from: snapshot, range: .last90).first { $0.category == .trend }?.title,
+            "90D Trend"
+        )
+    }
+
+    // MARK: - Weekly Breakdown
+
+    func testWeeklyBreakdown_last7_returnsAtLeastOneBucket() {
+        let sut = makeSUT()
+        let activities = (0..<7).map { offset in
+            makeActivity(2026, 9, 4 - offset, meditation: true, note: true)
+        }
+        let snapshot = makeSnapshot(activities: activities)
+
+        let buckets = sut.weeklyBreakdown(from: snapshot, range: .last7, today: date(2026, 9, 4))
+
+        XCTAssertGreaterThanOrEqual(buckets.count, 1)
+        let totalComplete = buckets.reduce(0) { $0 + $1.completeDays }
+        XCTAssertEqual(totalComplete, 7, "all 7 complete days must appear in the buckets")
+    }
+
+    func testWeeklyBreakdown_last30_alignsByWeek() {
+        let sut = makeSUT()
+        let snapshot = makeSnapshot(activities: [])
+
+        let buckets = sut.weeklyBreakdown(from: snapshot, range: .last30, today: date(2026, 9, 4))
+
+        // 30 days spans ~5 partial-or-full weeks.
+        XCTAssertGreaterThanOrEqual(buckets.count, 4)
+        XCTAssertLessThanOrEqual(buckets.count, 6)
+    }
+
+    func testWeeklyBreakdown_last90_has13Buckets() {
+        let sut = makeSUT()
+        let snapshot = makeSnapshot(activities: [])
+
+        let buckets = sut.weeklyBreakdown(from: snapshot, range: .last90, today: date(2026, 9, 4))
+
+        // 90 days / 7 ≈ 13 buckets.
+        XCTAssertGreaterThanOrEqual(buckets.count, 12)
+        XCTAssertLessThanOrEqual(buckets.count, 14)
+    }
+
+    func testWeeklyBreakdown_bucketsAreChronological() {
+        let sut = makeSUT()
+        let snapshot = makeSnapshot(activities: [])
+
+        let buckets = sut.weeklyBreakdown(from: snapshot, range: .last90, today: date(2026, 9, 4))
+
+        for i in 1..<buckets.count {
+            XCTAssertLessThan(buckets[i - 1].weekStart, buckets[i].weekStart,
+                              "buckets must be ordered oldest→newest")
+        }
+    }
+
+    func testWeeklyBreakdown_lastBucketNeverExtendsBeyondToday() {
+        let sut = makeSUT()
+        let snapshot = makeSnapshot(activities: [])
+
+        let buckets = sut.weeklyBreakdown(from: snapshot, range: .last30, today: date(2026, 9, 4))
+        let last = buckets.last
+
+        XCTAssertNotNil(last)
+        XCTAssertLessThanOrEqual(last?.weekEnd ?? .distantFuture, date(2026, 9, 4))
+    }
+
+    func testWeeklyBreakdown_totalDaysAreWithinRange() {
+        let sut = makeSUT()
+        let snapshot = makeSnapshot(activities: [])
+
+        let buckets = sut.weeklyBreakdown(from: snapshot, range: .last30, today: date(2026, 9, 4))
+
+        let totalDays = buckets.reduce(0) { $0 + $1.totalDays }
+        XCTAssertEqual(totalDays, 30, "all 30 days in the window must be accounted for")
+    }
+
+    func testWeeklyBreakdown_completesForCompleteActivities() {
+        let sut = makeSUT()
+        // 14 complete days, then 14 empty days within a 30-day window.
+        var activities: [DailyActivity] = []
+        for offset in 0..<14 {
+            activities.append(makeActivity(2026, 9, 4 - offset, meditation: true, note: true))
+        }
+        let snapshot = makeSnapshot(activities: activities)
+
+        let buckets = sut.weeklyBreakdown(from: snapshot, range: .last30, today: date(2026, 9, 4))
+
+        let totalComplete = buckets.reduce(0) { $0 + $1.completeDays }
+        XCTAssertEqual(totalComplete, 14)
+    }
+
+    func testWeeklyBreakdown_emptyRange_90DayWindow_returnsEmptyWhenNoActivities() {
+        let sut = makeSUT()
+        let snapshot = makeSnapshot(activities: [])
+
+        let buckets = sut.weeklyBreakdown(from: snapshot, range: .last90, today: date(2026, 9, 4))
+
+        let totalComplete = buckets.reduce(0) { $0 + $1.completeDays }
+        XCTAssertEqual(totalComplete, 0)
     }
 }

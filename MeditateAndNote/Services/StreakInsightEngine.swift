@@ -17,20 +17,90 @@ struct StreakInsightEngine {
 
     // MARK: - Public API
 
-    func generateInsights(from snapshot: StreakSnapshot) -> [StreakInsight] {
+    func generateInsights(from snapshot: StreakSnapshot, range: StreakRange = .last30) -> [StreakInsight] {
         var insights: [StreakInsight] = []
         let today = calendar.startOfDay(for: Date())
 
-        insights.append(contentsOf: completionRateInsights(snapshot: snapshot, today: today))
-        insights.append(contentsOf: weakDayInsights(snapshot: snapshot))
-        insights.append(contentsOf: partialDayInsights(snapshot: snapshot))
-        insights.append(contentsOf: timeOfDayInsights(snapshot: snapshot))
-        insights.append(contentsOf: trendInsights(snapshot: snapshot, today: today))
+        insights.append(contentsOf: completionRateInsights(snapshot: snapshot, today: today, range: range))
+        insights.append(contentsOf: weakDayInsights(snapshot: snapshot, range: range))
+        insights.append(contentsOf: partialDayInsights(snapshot: snapshot, range: range))
+        insights.append(contentsOf: timeOfDayInsights(snapshot: snapshot, range: range))
+        insights.append(contentsOf: trendInsights(snapshot: snapshot, today: today, range: range))
         insights.append(contentsOf: streakBreakRiskInsight(snapshot: snapshot, today: today))
-        insights.append(contentsOf: balanceInsights(snapshot: snapshot))
+        insights.append(contentsOf: balanceInsights(snapshot: snapshot, range: range))
         insights.append(contentsOf: milestoneInsight(snapshot: snapshot))
 
         return insights
+    }
+
+    /// Weekly buckets over the given range, newest bucket last.
+    /// Buckets are aligned to the engine's `firstWeekday` and trimmed so the
+    /// trailing bucket never extends past `today`.
+    func weeklyBreakdown(from snapshot: StreakSnapshot, range: StreakRange, today: Date = Date()) -> [WeeklyBucket] {
+        let startDay = calendar.startOfDay(for: today)
+        guard let rangeStart = calendar.date(byAdding: .day, value: -(range.dayCount - 1), to: startDay) else {
+            return []
+        }
+        let activitiesByDay = Dictionary(
+            snapshot.activities.map { (calendar.startOfDay(for: $0.date), $0) },
+            uniquingKeysWith: { _, next in next }
+        )
+
+        // Walk backwards from the start-of-week containing `startDay`, in
+        // steps of one week. A week is emitted only if any day in it falls
+        // within the [rangeStart, startDay] window — this keeps the trailing
+        // partial week, leading partial week, and full middle weeks all
+        // represented without extending past the window.
+        let firstWeekday = calendar.firstWeekday
+        var currentWeekStart = startOfWeek(containing: startDay, firstWeekday: firstWeekday)
+        var buckets: [WeeklyBucket] = []
+
+        while true {
+            guard let weekEnd = calendar.date(byAdding: .day, value: 6, to: currentWeekStart) else { break }
+            guard weekEnd >= rangeStart else { break }
+            let lowerBound = max(currentWeekStart, rangeStart)
+            let upperBound = min(weekEnd, startDay)
+            let bucketWeekEnd = upperBound
+            guard upperBound >= lowerBound else {
+                guard let prev = calendar.date(byAdding: .day, value: -7, to: currentWeekStart) else { break }
+                currentWeekStart = prev
+                continue
+            }
+
+            var total = 0
+            var complete = 0
+            var cursor = lowerBound
+            while cursor <= upperBound {
+                if let activity = activitiesByDay[cursor] {
+                    total += 1
+                    if activity.isComplete { complete += 1 }
+                } else {
+                    // A day with no activity still counts toward the window's
+                    // total days for an honest completion-rate.
+                    total += 1
+                }
+                guard let next = calendar.date(byAdding: .day, value: 1, to: cursor) else { break }
+                cursor = next
+            }
+
+            buckets.append(WeeklyBucket(
+                weekStart: currentWeekStart,
+                weekEnd: bucketWeekEnd,
+                totalDays: total,
+                completeDays: complete
+            ))
+
+            guard let prev = calendar.date(byAdding: .day, value: -7, to: currentWeekStart) else { break }
+            currentWeekStart = prev
+        }
+
+        return buckets.reversed()
+    }
+
+    private func startOfWeek(containing date: Date, firstWeekday: Int) -> Date {
+        let weekday = calendar.component(.weekday, from: date)
+        let offset = ((weekday - firstWeekday) + 7) % 7
+        return calendar.date(byAdding: .day, value: -offset, to: date) ?? date
     }
 
     func generateRecommendations(from insights: [StreakInsight]) -> [UserRecommendation] {
@@ -62,34 +132,25 @@ struct StreakInsightEngine {
 
     // MARK: - Completion Rate
 
-    private func completionRateInsights(snapshot: StreakSnapshot, today: Date) -> [StreakInsight] {
+    private func completionRateInsights(snapshot: StreakSnapshot, today: Date, range: StreakRange) -> [StreakInsight] {
         var insights: [StreakInsight] = []
 
-        let last7 = completionRate(in: 7, snapshot: snapshot, today: today)
+        let rate = completionRate(in: range, snapshot: snapshot, today: today)
         insights.append(StreakInsight(
             category: .completion,
-            title: "7-Day Completion",
-            message: "\(Int(last7 * 100))% of the last 7 days were complete",
-            value: last7,
-            icon: "chart.bar.fill"
-        ))
-
-        let last30 = completionRate(in: 30, snapshot: snapshot, today: today)
-        insights.append(StreakInsight(
-            category: .completion,
-            title: "30-Day Completion",
-            message: "\(Int(last30 * 100))% of the last 30 days were complete",
-            value: last30,
+            title: "\(range.title) Completion",
+            message: "\(Int(rate * 100))% of the last \(range.dayCount) days were complete",
+            value: rate,
             icon: "chart.bar.fill"
         ))
 
         return insights
     }
 
-    private func completionRate(in days: Int, snapshot: StreakSnapshot, today: Date) -> Double {
+    func completionRate(in range: StreakRange, snapshot: StreakSnapshot, today: Date) -> Double {
         let activities = snapshot.activities
         var completeCount = 0
-        for offset in 0..<days {
+        for offset in 0..<range.dayCount {
             guard let date = calendar.date(byAdding: .day, value: -offset, to: today) else { continue }
             let key = calendar.startOfDay(for: date)
             if let activity = activities.first(where: { calendar.isDate($0.date, inSameDayAs: key) }),
@@ -97,13 +158,13 @@ struct StreakInsightEngine {
                 completeCount += 1
             }
         }
-        return Double(completeCount) / Double(days)
+        return Double(completeCount) / Double(range.dayCount)
     }
 
     // MARK: - Weak Days + Heatmap
 
-    private func weakDayInsights(snapshot: StreakSnapshot) -> [StreakInsight] {
-        let weekdayStats = weekdayCompletionStats(snapshot: snapshot)
+    private func weakDayInsights(snapshot: StreakSnapshot, range: StreakRange) -> [StreakInsight] {
+        let weekdayStats = weekdayCompletionStats(snapshot: snapshot, range: range)
         guard !weekdayStats.isEmpty else { return [] }
 
         let heatmapData = buildHeatmapData(from: weekdayStats)
@@ -158,11 +219,13 @@ struct StreakInsightEngine {
         return WeekdayHeatmapData(days: days)
     }
 
-    private func weekdayCompletionStats(snapshot: StreakSnapshot) -> [Int: Double] {
+    private func weekdayCompletionStats(snapshot: StreakSnapshot, range: StreakRange) -> [Int: Double] {
+        let cutoff = calendar.date(byAdding: .day, value: -(range.dayCount - 1), to: calendar.startOfDay(for: Date())) ?? .distantPast
         var totals: [Int: Int] = [:]
         var completes: [Int: Int] = [:]
 
         for activity in snapshot.activities {
+            guard activity.date >= cutoff else { continue }
             let weekday = calendar.component(.weekday, from: activity.date)
             totals[weekday, default: 0] += 1
             if activity.isComplete {
@@ -180,11 +243,12 @@ struct StreakInsightEngine {
 
     // MARK: - Partial Day Pattern
 
-    private func partialDayInsights(snapshot: StreakSnapshot) -> [StreakInsight] {
+    private func partialDayInsights(snapshot: StreakSnapshot, range: StreakRange) -> [StreakInsight] {
+        let cutoff = calendar.date(byAdding: .day, value: -(range.dayCount - 1), to: calendar.startOfDay(for: Date())) ?? .distantPast
         var meditationOnly = 0
         var noteOnly = 0
 
-        for activity in snapshot.activities {
+        for activity in snapshot.activities where activity.date >= cutoff {
             if activity.hasMeditation && !activity.hasNote {
                 meditationOnly += 1
             } else if !activity.hasMeditation && activity.hasNote {
@@ -218,11 +282,12 @@ struct StreakInsightEngine {
 
     // MARK: - Time of Day
 
-    private func timeOfDayInsights(snapshot: StreakSnapshot) -> [StreakInsight] {
+    private func timeOfDayInsights(snapshot: StreakSnapshot, range: StreakRange) -> [StreakInsight] {
+        let cutoff = calendar.date(byAdding: .day, value: -(range.dayCount - 1), to: calendar.startOfDay(for: Date())) ?? .distantPast
         var meditationHours: [Int] = []
         var noteHours: [Int] = []
 
-        for activity in snapshot.activities {
+        for activity in snapshot.activities where activity.date >= cutoff {
             if let time = activity.meditationTime {
                 meditationHours.append(calendar.component(.hour, from: time))
             }
@@ -260,32 +325,35 @@ struct StreakInsightEngine {
 
     // MARK: - Trend
 
-    private func trendInsights(snapshot: StreakSnapshot, today: Date) -> [StreakInsight] {
+    private func trendInsights(snapshot: StreakSnapshot, today: Date, range: StreakRange) -> [StreakInsight] {
         guard !snapshot.activities.isEmpty else { return [] }
 
-        let thisWeek = completeDaysCount(in: 7, snapshot: snapshot, today: today)
-        let lastWeek = completeDaysCount(in: 7, snapshot: snapshot,
-                                         today: calendar.date(byAdding: .day, value: -7, to: today) ?? today)
+        // The window is split into halves; first-half vs second-half completion
+        // counts become the trend arrow regardless of the selected range.
+        let half = max(1, range.dayCount / 2)
+        let secondHalf = completeDaysCount(in: half, snapshot: snapshot, today: today)
+        let firstHalfStart = calendar.date(byAdding: .day, value: -half, to: today) ?? today
+        let firstHalf = completeDaysCount(in: half, snapshot: snapshot, today: firstHalfStart)
 
-        let diff = thisWeek - lastWeek
+        let diff = secondHalf - firstHalf
         let trend: String
         let icon: String
         if diff > 0 {
-            trend = "↑ +\(diff) from last week"
+            trend = "↑ +\(diff) from previous \(half) days"
             icon = "arrow.up.right"
         } else if diff < 0 {
-            trend = "↓ \(diff) from last week"
+            trend = "↓ \(diff) from previous \(half) days"
             icon = "arrow.down.right"
         } else {
-            trend = "→ Same as last week"
+            trend = "→ Same as previous \(half) days"
             icon = "arrow.right"
         }
 
         return [StreakInsight(
             category: .trend,
-            title: "Weekly Trend",
-            message: "\(thisWeek)/7 this week — \(trend)",
-            value: Double(thisWeek) / 7.0,
+            title: "\(range.shortLabel) Trend",
+            message: "\(secondHalf)/\(half) recent days — \(trend)",
+            value: Double(secondHalf) / Double(half),
             icon: icon
         )]
     }
@@ -326,12 +394,14 @@ struct StreakInsightEngine {
 
     // MARK: - Balance
 
-    private func balanceInsights(snapshot: StreakSnapshot) -> [StreakInsight] {
-        let totalDays = snapshot.activities.count
+    private func balanceInsights(snapshot: StreakSnapshot, range: StreakRange) -> [StreakInsight] {
+        let cutoff = calendar.date(byAdding: .day, value: -(range.dayCount - 1), to: calendar.startOfDay(for: Date())) ?? .distantPast
+        let windowed = snapshot.activities.filter { $0.date >= cutoff }
+        let totalDays = windowed.count
         guard totalDays > 0 else { return [] }
 
-        let meditationDays = snapshot.activities.filter(\.hasMeditation).count
-        let noteDays = snapshot.activities.filter(\.hasNote).count
+        let meditationDays = windowed.filter(\.hasMeditation).count
+        let noteDays = windowed.filter(\.hasNote).count
 
         let meditationRatio = Double(meditationDays) / Double(totalDays)
         let noteRatio = Double(noteDays) / Double(totalDays)
@@ -348,7 +418,7 @@ struct StreakInsightEngine {
 
         return [StreakInsight(
             category: .completion,
-            title: "Balance",
+            title: "\(range.shortLabel) Balance",
             message: message,
             value: noteRatio,
             icon: "scalemass.fill"
