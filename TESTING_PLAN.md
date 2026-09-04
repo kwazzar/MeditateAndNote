@@ -78,8 +78,7 @@
   - `Router` 67 → 70% (залишок — `logger.debug` галуження)
   - `Meditation` 71 → 71% (додано category / description / notFound)
 - **UI-тести (XCUI)**: рішення окремо — дорогі в підтримці; робити лише якщо потрібна регресія на flow "онбординг → медитація → нота".
-- **CI**: додати `xcodebuild test -enableCodeCoverage YES` + поріг (напр. не нижчий за поточний %) у пайплайн. ✅ DONE 2026-09-04
-  - `.github/workflows/test.yml`: запускає `xcodebuild test` з coverage на `macos-latest`, парсить `xcrun xccov` через Python і падає, якщо `MeditateAndNote.app` coverage < 33.0%. Піднімати поріг разом з ростом coverage.
+- **CI**: додати `xcodebuild test -enableCodeCoverage YES` + поріг (напр. не нижчий за поточний %) у пайплайн.
 
 ## Порядок виконання
 
