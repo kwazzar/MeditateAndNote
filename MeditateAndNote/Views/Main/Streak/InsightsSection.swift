@@ -9,6 +9,7 @@ import SwiftUI
 
 struct InsightsSection: View {
     @Environment(ThemeManager.self) private var themeManager
+    @EnvironmentObject private var router: Router
     let viewModel: InsightsViewModel
 
     var body: some View {
@@ -32,7 +33,9 @@ struct InsightsSection: View {
                 .foregroundStyle(themeManager.current.textPrimary)
 
             ForEach(viewModel.recommendations) { rec in
-                RecommendationRow(recommendation: rec)
+                RecommendationRow(recommendation: rec) {
+                    handleRecommendationAction(rec.action)
+                }
             }
         }
         .padding(14)
@@ -58,6 +61,20 @@ struct InsightsSection: View {
                     InsightCard(insight: insight)
                 }
             }
+        }
+    }
+
+    // MARK: - Action Handling
+
+    private func handleRecommendationAction(_ action: RecommendationAction?) {
+        guard let action else { return }
+        switch action {
+        case .navigateToMeditation:
+            router.navigate(to: .tab(.meditations))
+        case .navigateToNote:
+            router.navigate(to: .push(.newNote))
+        case .setReminder:
+            router.navigate(to: .push(.settings))
         }
     }
 }
@@ -134,39 +151,43 @@ private struct InsightCard: View {
 private struct RecommendationRow: View {
     @Environment(ThemeManager.self) private var themeManager
     let recommendation: UserRecommendation
+    let onTap: () -> Void
 
     var body: some View {
-        HStack(spacing: 10) {
-            Image(systemName: recommendation.icon)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(priorityColor)
-                .frame(width: 24)
+        Button(action: onTap) {
+            HStack(spacing: 10) {
+                Image(systemName: recommendation.icon)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(priorityColor)
+                    .frame(width: 24)
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text(recommendation.title)
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(themeManager.current.textPrimary)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(recommendation.title)
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(themeManager.current.textPrimary)
 
-                Text(recommendation.message)
-                    .font(.caption)
-                    .foregroundStyle(themeManager.current.textSecondary)
-                    .lineLimit(2)
+                    Text(recommendation.message)
+                        .font(.caption)
+                        .foregroundStyle(themeManager.current.textSecondary)
+                        .lineLimit(2)
+                }
+
+                Spacer()
+
+                if recommendation.action != nil {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(themeManager.current.textSecondary)
+                }
             }
-
-            Spacer()
-
-            if recommendation.action != nil {
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(themeManager.current.textSecondary)
-            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(priorityColor.opacity(0.08))
+            )
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-        .background(
-            RoundedRectangle(cornerRadius: 10)
-                .fill(priorityColor.opacity(0.08))
-        )
+        .buttonStyle(.plain)
     }
 
     private var priorityColor: Color {

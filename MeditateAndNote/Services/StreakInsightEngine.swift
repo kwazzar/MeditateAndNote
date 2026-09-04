@@ -225,6 +225,8 @@ struct StreakInsightEngine {
     // MARK: - Trend
 
     private func trendInsights(snapshot: StreakSnapshot, today: Date) -> [StreakInsight] {
+        guard !snapshot.activities.isEmpty else { return [] }
+
         let thisWeek = completeDaysCount(in: 7, snapshot: snapshot, today: today)
         let lastWeek = completeDaysCount(in: 7, snapshot: snapshot,
                                          today: calendar.date(byAdding: .day, value: -7, to: today) ?? today)
