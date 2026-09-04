@@ -33,6 +33,11 @@ struct InsightsSection: View {
                 InsightDetailView(insight: insight)
             }
         }
+        .alert("Set Reminder", isPresented: $showReminderAlert) {
+            Button("OK") {}
+        } message: {
+            Text("You can set reminders in Settings to stay consistent on your weak days.")
+        }
     }
 
     // MARK: - Recommendations
@@ -78,6 +83,8 @@ struct InsightsSection: View {
 
     // MARK: - Action Handling
 
+    @State private var showReminderAlert = false
+
     private func handleRecommendationAction(_ action: RecommendationAction?) {
         guard let action else { return }
         switch action {
@@ -86,7 +93,7 @@ struct InsightsSection: View {
         case .navigateToNote:
             router.navigate(to: .push(.newNote))
         case .setReminder:
-            router.navigate(to: .push(.settings))
+            showReminderAlert = true
         }
     }
 }
