@@ -14,7 +14,7 @@ explicit user approval.
 | S3 | Date-range filtering (7/30/90 days) + weekly drill-down bars | ✅ `8607926` |
 | S4 | Core day invariant (meditation + note) + partial-day surface | ✅ `d3b58a9` |
 | S5 | Local notification reminders + Settings UI + navigation fix | ✅ `46a9b4a` |
-| S6 | Trend line / extended stats | ⏳ planned |
+| S6 | Lifetime patterns — distribution, resilience, break pattern | ✅ `a5cddae` |
 
 ## S1 — Foundations (done)
 
@@ -81,15 +81,46 @@ explicit user approval.
 - Fixed SettingsView back navigation (native toolbar item).
 - 18 new tests. **146/146 passing.**
 
-## S6 — Trends
+## S6 — Lifetime Patterns (done)
 
-- Trend line / longer-horizon statistics on top of the streak data.
-- Concrete scope to be finalized (e.g. streak length distribution,
-  completion-rate by weekday, average streak recovery time).
+Three range-independent insights that describe the *shape* of the user's
+streak history, not a windowed metric. They share an engine helper and
+are cached by snapshot signature (no range key), so they stay stable as
+the user toggles 7D / 30D / 90D.
+
+- New domain value objects in `Models/StreakInsight.swift`:
+  `StreakLengthDistribution(buckets:, totalStreaks:, medianLength:)` —
+  histogram of streak runs into the fixed buckets
+  `[1 / 2 / 3 / 4-6 / 7-13 / 14+]`.
+  `StreakResilience(avgRecoveryDays:, longestRecoveryDays:,
+  totalRecoveries:, survivalByDay:)` — recovery profile and
+  P(>=n+1 | >=n) survival curve.
+  `WeekdayHeatmapData.Day` gains `breakRate: Double` (0 for
+  range-windowed heatmaps, populated only by the lifetime path).
+- `StreakInsightEngine` gets a private `extractStreakRuns(from:)`
+  helper (segments activities into consecutive complete-day runs and
+  records the weekday of the first missing day after each run). Three
+  public methods feed off it:
+  `streakLengthDistribution(from:)`,
+  `resilience(from:)`,
+  `weekdayBreakPattern(from:)`,
+  `weekdayBreakHeatmapData(from:)`.
+- `StreakInsightProvidable` exposes the lifetime surface (4 methods);
+  `StreakInsightManager` caches the results keyed by snapshot signature
+  — no range pollution.
+- `InsightsViewModel` splits `refresh()` into `refreshRangeAware()`
+  (re-derived on `selectedRange` change) and `refreshLifetime()`
+  (snapshot-driven only). New private-set properties:
+  `streakLengthDistribution`, `resilience`, `weekdayBreakPattern`,
+  `weekdayBreakHeatmap`.
+- New `LifetimePatternsSection` view hosts three custom cards
+  (distribution histogram, resilience tiles, break-pattern bars),
+  rendered below `InsightsSection` in `StreakDetailView`.
+- 8 new tests. **363/363 passing.**
 
 ## Definition of done
 
-1. Build + tests are green (`355` currently).
+1. Build + tests are green (`363` currently).
 2. Domain files stay free of `CoreData` / `SwiftUI`.
 3. Navigation changes don't leak concrete Views into ViewModels.
 4. `ddd-audit` review passes for significant features.
