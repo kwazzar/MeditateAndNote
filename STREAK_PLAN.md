@@ -15,6 +15,7 @@ explicit user approval.
 | S4 | Core day invariant (meditation + note) + partial-day surface | ✅ `d3b58a9` |
 | S5 | Local notification reminders + Settings UI + navigation fix | ✅ `46a9b4a` |
 | S6 | Lifetime patterns — distribution, resilience, break pattern | ✅ `a5cddae` |
+| S7 | DDD cleanup — protocol boundaries, cache invalidation, concrete leaks | ⏳ planned |
 
 ## S1 — Foundations (done)
 
@@ -118,7 +119,39 @@ the user toggles 7D / 30D / 90D.
   rendered below `InsightsSection` in `StreakDetailView`.
 - 8 new tests. **363/363 passing.**
 
-## Definition of done
+## S7 — DDD Cleanup (planned)
+
+Align the streak module with the project's DDD conventions (per AGENTS.md and ddd-audit):
+
+1. **StreakInsightManager → protocol dependency**  
+   Introduce `StreakSnapshotProvidable` protocol (`func snapshot() -> StreakSnapshot`).  
+   `StreakTracker` already has `var snapshot: StreakSnapshot` — conform trivially.  
+   `StreakInsightManager` takes `any StreakSnapshotProvidable` instead of concrete `StreakTracker`.  
+   Enables mocked `StreakInsightManagerTests` without a real engine.
+
+2. **Cache invalidation wired to production flow**  
+   `StreakTracker` (or `StreakEngine`) emits a `DomainEvent` on mutation (`markNoteCreated`, `markMeditationCompleted`, `recalculate`, `checkStreakBreak`).  
+   `StreakInsightManager` subscribes via `handle(_: DomainEvent)` → calls `invalidateCache()`.  
+   Eliminates the stale-cache bug where views show outdated insights after streak mutations.
+
+3. **StreakDetailView drops concrete `StreakTracker` injection**  
+   Read `@Environment(StreakTracker.self)` (consistent with `MainView`, `StreakHeaderView`).  
+   Remove `let streakTracker: StreakTracker` parameter and its wiring from `Destination-ViewMapping.swift`.  
+   Router no longer leaks concrete manager into View signature.
+
+4. **Previews use `AppContainer.preview()` or stubs**  
+   Remove manual `StreakTracker()` / `StreakInsightManager(streakTracker:)` construction in `StreakDetailView`, `MainView`, `RootContainer`.  
+   Either inject via `AppContainer` preview factory or provide a `StubInsightManager` / `StubStreakTracker` conforming to the new protocols.
+
+5. **`StreakTracker.checkStreakBreak()` made private**  
+   It is only called from `init`; no external caller needs it.  
+   Removes the foot-gun where a public mutating method bypasses `apply { }` persistence.
+
+6. **Housekeeping**  
+   - Move `StreakSnapshot` from `Services/StreakTracker.swift` → `Models/StreakInsight.swift` (or new `Models/StreakSnapshot.swift`).  
+   - Move `UserDefaultsStreakStore` from `Services/StreakTracker.swift` → `Persistence/UserDefaultsStreakStore.swift` (mirrors `UserDefaultsReminderSettingsStore`).  
+   - Engine helpers that bake `Date()` (`weekdayCompletionStats`, `partialDayInsights`, `timeOfDayInsights`, `balanceInsights`) take `today: Date = Date()` parameter like `weeklyBreakdown` does.  
+   - Consider `StreakInsight` / `UserRecommendation` identity by `(category, title)` instead of `UUID()` for stable SwiftUI animations on range toggle. (Lower priority.)
 
 1. Build + tests are green (`363` currently).
 2. Domain files stay free of `CoreData` / `SwiftUI`.
