@@ -8,8 +8,12 @@
 
 /* Begin PBXBuildFile section */
 		053967EF78BB7B14A4784118 /* StreakInsight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D672486C798B4CC2DBFF322 /* StreakInsight.swift */; };
+		096B78E3E88B87EA5E3E59B7 /* UserDefaultsReminderSettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1C20BEA552DE5FA2D6680E4 /* UserDefaultsReminderSettingsStore.swift */; };
+		1319DD5B5051A8A4C9C10470 /* ReminderManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA2A9BB90A0B40656AE57601 /* ReminderManager.swift */; };
 		15FFC3DA90DB701D4E0E2632 /* StreakInsightManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBAB63B4D20C32569B0BAE55 /* StreakInsightManager.swift */; };
+		2FC28D69C78D5561F2B28F30 /* NotificationScheduling.swift in Sources */ = {isa = PBXBuildFile; fileRef = D35E3DCB24F352F1C7D834E8 /* NotificationScheduling.swift */; };
 		3221E85D880F3E3F3CC7D7E5 /* StreakInsightEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C2C893562EB1C321CF1B273 /* StreakInsightEngine.swift */; };
+		3648450FC97396F2224840CD /* ReminderSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1797E6BA050E651155BE0B60 /* ReminderSettings.swift */; };
 		47C7FEEF91D17CEB73589285 /* InsightsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09E4AAB15B1383604B747363 /* InsightsViewModel.swift */; };
 		4DEA3FE741F1A4530712630B /* StreakReminderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73571B9E27145AED24F2D353 /* StreakReminderTests.swift */; };
 		78215B553038AB4200DD8F99 /* NoteSyncCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78215B543038AB4200DD8F99 /* NoteSyncCoordinator.swift */; };
@@ -52,6 +56,7 @@
 		AA0003012026082200000002 /* MeditationDuration.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0003002026082200000001 /* MeditationDuration.swift */; };
 		AA0003112026082200000004 /* SearchQuery.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0003102026082200000003 /* SearchQuery.swift */; };
 		ADCF424E00CF12AEB7374BEA /* MeditationViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2191349DA8C57C98F66164B8 /* MeditationViewModelTests.swift */; };
+		C14230B1AABCB77064DE1389 /* ReminderSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 965AB13C80C9D60F37F232D7 /* ReminderSettingsTests.swift */; };
 		CBD7ED78394EBA2ECBDB72A6 /* StreakInsightEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70119D3AECE1D5E2F27AEAF9 /* StreakInsightEngineTests.swift */; };
 		CC0000012026082800000005 /* CoreDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000012026082800000001 /* CoreDataManager.swift */; };
 		CC0000022026082800000006 /* CoreDataNoteDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000022026082800000002 /* CoreDataNoteDataSource.swift */; };
@@ -62,6 +67,7 @@
 		DD0000022026082800000006 /* CoreDataNoteDataSourceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000022026082800000002 /* CoreDataNoteDataSourceTests.swift */; };
 		DD0000032026082800000007 /* CoreDataSessionStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000032026082800000003 /* CoreDataSessionStoreTests.swift */; };
 		DD0000042026082800000008 /* CoreDataStreakStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000042026082800000004 /* CoreDataStreakStoreTests.swift */; };
+		E2972A3FC4C853E0382811E2 /* ReminderSettingsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A99826A1EEEB59657443E1 /* ReminderSettingsSection.swift */; };
 		E320C3ED2E2D1AC9009452DD /* Destination.swift in Sources */ = {isa = PBXBuildFile; fileRef = E320C3EC2E2D1AC9009452DD /* Destination.swift */; };
 		E320C3F12E2D1CD6009452DD /* Router.swift in Sources */ = {isa = PBXBuildFile; fileRef = E320C3F02E2D1CD6009452DD /* Router.swift */; };
 		E320C3F32E2D1F67009452DD /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = E320C3F22E2D1F67009452DD /* Config.swift */; };
@@ -102,6 +108,7 @@
 		E3F0F1A62E5B00000000AB21 /* MeditationSessionEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3F0F1A72E5B00000000AB22 /* MeditationSessionEngine.swift */; };
 		E3F0F1A82E5B00000000AB23 /* MeditationEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3F0F1A92E5B00000000AB24 /* MeditationEngineTests.swift */; };
 		E3FDF77C2ED0CE0F00ACD847 /* MeditationInfoScroll.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3FDF77B2ED0CE0F00ACD847 /* MeditationInfoScroll.swift */; };
+		E918FB33F6CC56F39066F7DA /* ReminderManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FC0FF6183D64D88B5E241EC /* ReminderManagerTests.swift */; };
 		OB0100010000000000000001 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0000010000000000000001 /* OnboardingView.swift */; };
 		OB0100020000000000000002 /* OnboardingPageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0000020000000000000002 /* OnboardingPageView.swift */; };
 		OB0100030000000000000003 /* OnboardingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0000030000000000000003 /* OnboardingViewModel.swift */; };
@@ -123,8 +130,11 @@
 
 /* Begin PBXFileReference section */
 		09E4AAB15B1383604B747363 /* InsightsViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = InsightsViewModel.swift; path = MeditateAndNote/ViewModels/InsightsViewModel.swift; sourceTree = "<group>"; };
+		1797E6BA050E651155BE0B60 /* ReminderSettings.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReminderSettings.swift; sourceTree = "<group>"; };
 		1D672486C798B4CC2DBFF322 /* StreakInsight.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = StreakInsight.swift; path = MeditateAndNote/Models/StreakInsight.swift; sourceTree = "<group>"; };
 		2191349DA8C57C98F66164B8 /* MeditationViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MeditationViewModelTests.swift; sourceTree = "<group>"; };
+		3FC0FF6183D64D88B5E241EC /* ReminderManagerTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReminderManagerTests.swift; sourceTree = "<group>"; };
+		44A99826A1EEEB59657443E1 /* ReminderSettingsSection.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReminderSettingsSection.swift; sourceTree = "<group>"; };
 		648FE2FCBB1DD6E50BB5E61E /* MeditationCompletionView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MeditationCompletionView.swift; sourceTree = "<group>"; };
 		70119D3AECE1D5E2F27AEAF9 /* StreakInsightEngineTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = StreakInsightEngineTests.swift; path = MeditateAndNoteTests/StreakInsightEngineTests.swift; sourceTree = "<group>"; };
 		73571B9E27145AED24F2D353 /* StreakReminderTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StreakReminderTests.swift; sourceTree = "<group>"; };
@@ -148,6 +158,7 @@
 		78DF54283040D0A300B1F2C3 /* breath_hold.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = breath_hold.wav; sourceTree = "<group>"; };
 		78DF542A3040D34000B1F2C3 /* meditation_countdown.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = meditation_countdown.wav; sourceTree = "<group>"; };
 		8C2C893562EB1C321CF1B273 /* StreakInsightEngine.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = StreakInsightEngine.swift; path = MeditateAndNote/Services/StreakInsightEngine.swift; sourceTree = "<group>"; };
+		965AB13C80C9D60F37F232D7 /* ReminderSettingsTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReminderSettingsTests.swift; sourceTree = "<group>"; };
 		9DF1D116F571072F70488A4F /* WeekdayHeatmapView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = WeekdayHeatmapView.swift; path = MeditateAndNote/Views/Main/Streak/WeekdayHeatmapView.swift; sourceTree = "<group>"; };
 		AA0000022026082000000001 /* DailyActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyActivity.swift; sourceTree = "<group>"; };
 		AA00000220260903C00001 /* BreathingAnimationStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreathingAnimationStyle.swift; sourceTree = "<group>"; };
@@ -168,11 +179,14 @@
 		AA00014020260902C00006 /* SoundSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundSettingsTests.swift; sourceTree = "<group>"; };
 		AA0003002026082200000001 /* MeditationDuration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationDuration.swift; sourceTree = "<group>"; };
 		AA0003102026082200000003 /* SearchQuery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchQuery.swift; sourceTree = "<group>"; };
+		AA2A9BB90A0B40656AE57601 /* ReminderManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReminderManager.swift; sourceTree = "<group>"; };
 		AC3C8D0C08E6E9153624093E /* InsightsSection.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = InsightsSection.swift; path = MeditateAndNote/Views/Main/Streak/InsightsSection.swift; sourceTree = "<group>"; };
+		C1C20BEA552DE5FA2D6680E4 /* UserDefaultsReminderSettingsStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UserDefaultsReminderSettingsStore.swift; sourceTree = "<group>"; };
 		CC0000012026082800000001 /* CoreDataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataManager.swift; sourceTree = "<group>"; };
 		CC0000022026082800000002 /* CoreDataNoteDataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataNoteDataSource.swift; sourceTree = "<group>"; };
 		CC0000032026082800000003 /* CoreDataSessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataSessionStore.swift; sourceTree = "<group>"; };
 		CC0000042026082800000004 /* CoreDataStreakStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataStreakStore.swift; sourceTree = "<group>"; };
+		D35E3DCB24F352F1C7D834E8 /* NotificationScheduling.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NotificationScheduling.swift; sourceTree = "<group>"; };
 		DD0000012026082800000001 /* CoreDataManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataManagerTests.swift; sourceTree = "<group>"; };
 		DD0000022026082800000002 /* CoreDataNoteDataSourceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataNoteDataSourceTests.swift; sourceTree = "<group>"; };
 		DD0000032026082800000003 /* CoreDataSessionStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataSessionStoreTests.swift; sourceTree = "<group>"; };
@@ -313,6 +327,7 @@
 			isa = PBXGroup;
 			children = (
 				AA00000220260903C00005 /* SettingsView.swift */,
+				44A99826A1EEEB59657443E1 /* ReminderSettingsSection.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -345,6 +360,8 @@
 				AA00000220260903C00007 /* AnimationSettingsTests.swift */,
 				OB0000070000000000000007 /* OnboardingViewModelTests.swift */,
 				70119D3AECE1D5E2F27AEAF9 /* StreakInsightEngineTests.swift */,
+				965AB13C80C9D60F37F232D7 /* ReminderSettingsTests.swift */,
+				3FC0FF6183D64D88B5E241EC /* ReminderManagerTests.swift */,
 			);
 			path = MeditateAndNoteTests;
 			sourceTree = "<group>";
@@ -364,6 +381,7 @@
 				CC0000022026082800000002 /* CoreDataNoteDataSource.swift */,
 				CC0000032026082800000003 /* CoreDataSessionStore.swift */,
 				CC0000042026082800000004 /* CoreDataStreakStore.swift */,
+				C1C20BEA552DE5FA2D6680E4 /* UserDefaultsReminderSettingsStore.swift */,
 			);
 			path = Persistence;
 			sourceTree = "<group>";
@@ -466,6 +484,7 @@
 				AA0003102026082200000003 /* SearchQuery.swift */,
 				AA0003002026082200000001 /* MeditationDuration.swift */,
 				1D672486C798B4CC2DBFF322 /* StreakInsight.swift */,
+				1797E6BA050E651155BE0B60 /* ReminderSettings.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -534,6 +553,8 @@
 				OB0000060000000000000006 /* OnboardingStore.swift */,
 				8C2C893562EB1C321CF1B273 /* StreakInsightEngine.swift */,
 				FBAB63B4D20C32569B0BAE55 /* StreakInsightManager.swift */,
+				D35E3DCB24F352F1C7D834E8 /* NotificationScheduling.swift */,
+				AA2A9BB90A0B40656AE57601 /* ReminderManager.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -677,6 +698,8 @@
 				AA00000220260903C00008 /* AnimationSettingsTests.swift in Sources */,
 				OB0100070000000000000007 /* OnboardingViewModelTests.swift in Sources */,
 				CBD7ED78394EBA2ECBDB72A6 /* StreakInsightEngineTests.swift in Sources */,
+				C14230B1AABCB77064DE1389 /* ReminderSettingsTests.swift in Sources */,
+				E918FB33F6CC56F39066F7DA /* ReminderManagerTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -762,6 +785,11 @@
 				47C7FEEF91D17CEB73589285 /* InsightsViewModel.swift in Sources */,
 				DC587FE4027CE73A16A27FD0 /* InsightsSection.swift in Sources */,
 				8BF4C46227BAE479017286E0 /* WeekdayHeatmapView.swift in Sources */,
+				3648450FC97396F2224840CD /* ReminderSettings.swift in Sources */,
+				096B78E3E88B87EA5E3E59B7 /* UserDefaultsReminderSettingsStore.swift in Sources */,
+				2FC28D69C78D5561F2B28F30 /* NotificationScheduling.swift in Sources */,
+				1319DD5B5051A8A4C9C10470 /* ReminderManager.swift in Sources */,
+				E2972A3FC4C853E0382811E2 /* ReminderSettingsSection.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

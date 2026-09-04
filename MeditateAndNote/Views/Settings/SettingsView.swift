@@ -12,6 +12,7 @@ import SwiftUI
 struct SettingsView: View {
     @Bindable var animationSettings: AnimationSettings
     @Bindable var soundSettings: SoundSettings
+    @Bindable var reminderManager: ReminderManager
     let container: AppContainer
     @Environment(ThemeManager.self) private var themeManager
     @Environment(\.dismiss) private var dismiss
@@ -25,6 +26,7 @@ struct SettingsView: View {
 
             ScrollView {
                 VStack(spacing: 20) {
+                    ReminderSettingsSection(manager: reminderManager)
                     animationSection
                     themeSection
                     volumeSection
@@ -42,22 +44,10 @@ struct SettingsView: View {
                     .environment(themeManager)
             }
         }
-        .safeAreaInset(edge: .top) {
-            navigationBar
-        }
-    }
-}
-
-//MARK: - Extension
-private extension SettingsView {
-    var navigationBar: some View {
-        ZStack {
-            Text("Settings")
-                .font(.headline)
-                .fontWeight(.medium)
-                .foregroundColor(themeManager.current.textPrimary)
-
-            HStack {
+        .navigationTitle("Settings")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
                 Button(action: { dismiss() }) {
                     Image(systemName: "chevron.left")
                         .font(.system(size: 16, weight: .semibold))
@@ -65,12 +55,13 @@ private extension SettingsView {
                         .frame(width: 36, height: 36)
                 }
                 .buttonStyle(PlainButtonStyle())
-                Spacer()
             }
         }
-        .padding(.horizontal)
-        .frame(height: 44)
     }
+}
+
+//MARK: - Extension
+private extension SettingsView {
 
     var animationSection: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -231,6 +222,10 @@ struct SettingsView_Previews: PreviewProvider {
         SettingsView(
             animationSettings: AnimationSettings(),
             soundSettings: SoundSettings(),
+            reminderManager: ReminderManager(
+                store: UserDefaultsReminderSettingsStore(),
+                scheduler: SystemNotificationScheduler()
+            ),
             container: AppContainer()
         )
         .environment(ThemeManager())

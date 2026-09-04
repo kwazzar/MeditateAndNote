@@ -30,6 +30,7 @@ import SwiftUI
                 SettingsView(
                     animationSettings: container.animationSettings,
                     soundSettings: container.soundSettings,
+                    reminderManager: container.reminderManager,
                     container: container
                 )
             }

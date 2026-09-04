@@ -9,6 +9,7 @@ import SwiftUI
 
 struct InsightsSection: View {
     @Environment(ThemeManager.self) private var themeManager
+    @Environment(ReminderManager.self) private var reminderManager
     @EnvironmentObject private var router: Router
     let viewModel: InsightsViewModel
 
@@ -36,7 +37,7 @@ struct InsightsSection: View {
         .alert("Set Reminder", isPresented: $showReminderAlert) {
             Button("OK") {}
         } message: {
-            Text("You can set reminders in Settings to stay consistent on your weak days.")
+            Text(reminderAlertMessage)
         }
     }
 
@@ -84,6 +85,7 @@ struct InsightsSection: View {
     // MARK: - Action Handling
 
     @State private var showReminderAlert = false
+    @State private var reminderAlertMessage = ""
 
     private func handleRecommendationAction(_ action: RecommendationAction?) {
         guard let action else { return }
@@ -93,8 +95,39 @@ struct InsightsSection: View {
         case .navigateToNote:
             router.navigate(to: .push(.newNote))
         case .setReminder:
+            enableReminderForWeakestDay()
+        }
+    }
+
+    private func enableReminderForWeakestDay() {
+        let weakest = weakestWeekday()
+        Task {
+            await reminderManager.enableReminder(
+                hour: 20,
+                minute: 0,
+                weekdays: Set(weakest.map { [$0.weekday] } ?? Array(1...7))
+            )
+            if reminderManager.isAuthorized {
+                if let weakest {
+                    reminderAlertMessage = "Reminder enabled for \(weakest.name)s at 20:00."
+                } else {
+                    reminderAlertMessage = "Daily reminder enabled at 20:00."
+                }
+            } else {
+                reminderAlertMessage = "Notifications are turned off. Enable them in Settings to receive reminders."
+            }
             showReminderAlert = true
         }
+    }
+
+    /// Returns the (weekday, name) pair for the day with the lowest completion
+    /// rate from the weekly heatmap, if any.
+    private func weakestWeekday() -> (weekday: Int, name: String)? {
+        let heatmapDays = viewModel.insights.first { $0.heatmapData != nil }?.heatmapData?.days
+        guard let days = heatmapDays,
+              let index = days.indices.min(by: { days[$0].completionRate < days[$1].completionRate })
+        else { return nil }
+        return (index + 1, days[index].name)
     }
 }
 

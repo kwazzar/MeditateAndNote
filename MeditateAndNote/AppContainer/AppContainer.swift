@@ -27,6 +27,10 @@ final class AppContainer: ObservableObject {
     private(set) lazy var soundSettings = SoundSettings.shared
     private(set) lazy var animationSettings = AnimationSettings.shared
     private(set) lazy var onboardingStore: any OnboardingStore = UserDefaultsOnboardingStore()
+    private(set) lazy var reminderManager = ReminderManager(
+        store: UserDefaultsReminderSettingsStore(),
+        scheduler: SystemNotificationScheduler()
+    )
 
     private lazy var noteManager = NoteManager(syncCoordinator: syncCoordinator, eventBus: eventBus)
 
