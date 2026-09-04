@@ -12,14 +12,25 @@ struct InsightsSection: View {
     @EnvironmentObject private var router: Router
     let viewModel: InsightsViewModel
 
+    @State private var selectedInsight: StreakInsight?
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             if !viewModel.recommendations.isEmpty {
                 recommendationsBlock
+                    .transition(.move(edge: .top).combined(with: .opacity))
             }
 
             if !viewModel.insights.isEmpty {
                 insightsBlock
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
+        .animation(.snappy(duration: 0.3), value: viewModel.insights.count)
+        .animation(.snappy(duration: 0.3), value: viewModel.recommendations.count)
+        .sheet(item: $selectedInsight) { insight in
+            NavigationStack {
+                InsightDetailView(insight: insight)
             }
         }
     }
@@ -53,12 +64,13 @@ struct InsightsSection: View {
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(themeManager.current.textPrimary)
 
-            LazyVGrid(columns: [
-                GridItem(.flexible(), spacing: 10),
-                GridItem(.flexible(), spacing: 10)
-            ], spacing: 10) {
-                ForEach(viewModel.insights) { insight in
+            ForEach(viewModel.insights) { insight in
+                if insight.heatmapData != nil {
+                    HeatmapInsightRow(insight: insight)
+                        .onTapGesture { selectedInsight = insight }
+                } else {
                     InsightCard(insight: insight)
+                        .onTapGesture { selectedInsight = insight }
                 }
             }
         }
@@ -79,6 +91,47 @@ struct InsightsSection: View {
     }
 }
 
+// MARK: - Heatmap Insight Row (full-width)
+
+private struct HeatmapInsightRow: View {
+    @Environment(ThemeManager.self) private var themeManager
+    let insight: StreakInsight
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                Image(systemName: insight.icon)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(.blue)
+
+                Text(insight.title)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(themeManager.current.textSecondary)
+
+                Spacer()
+
+                Image(systemName: "arrow.up.right")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(themeManager.current.textSecondary)
+            }
+
+            if let heatmap = insight.heatmapData {
+                WeekdayHeatmapView(data: heatmap)
+            }
+
+            Text(insight.message)
+                .font(.caption)
+                .foregroundStyle(themeManager.current.textPrimary)
+                .lineLimit(2)
+        }
+        .padding(10)
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(.ultraThinMaterial)
+        )
+    }
+}
+
 // MARK: - Insight Card
 
 private struct InsightCard: View {
@@ -96,6 +149,12 @@ private struct InsightCard: View {
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(themeManager.current.textSecondary)
                     .lineLimit(1)
+
+                Spacer()
+
+                Image(systemName: "arrow.up.right")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(themeManager.current.textSecondary)
             }
 
             Text(insight.message)
@@ -114,6 +173,7 @@ private struct InsightCard: View {
                         Capsule()
                             .fill(accentColor)
                             .frame(width: geo.size.width * min(max(value, 0), 1), height: 4)
+                            .animation(.snappy, value: value)
                     }
                 }
                 .frame(height: 4)

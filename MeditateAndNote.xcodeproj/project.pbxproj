@@ -31,6 +31,7 @@
 		78DF54273040D09E00B1F2C3 /* breath_exhale.wav in Resources */ = {isa = PBXBuildFile; fileRef = 78DF54263040D09E00B1F2C3 /* breath_exhale.wav */; };
 		78DF54293040D0A300B1F2C3 /* breath_hold.wav in Resources */ = {isa = PBXBuildFile; fileRef = 78DF54283040D0A300B1F2C3 /* breath_hold.wav */; };
 		78DF542B3040D34000B1F2C3 /* meditation_countdown.wav in Resources */ = {isa = PBXBuildFile; fileRef = 78DF542A3040D34000B1F2C3 /* meditation_countdown.wav */; };
+		8BF4C46227BAE479017286E0 /* WeekdayHeatmapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DF1D116F571072F70488A4F /* WeekdayHeatmapView.swift */; };
 		992C2F67A6302B0D79342F66 /* MeditationCompletionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 648FE2FCBB1DD6E50BB5E61E /* MeditationCompletionView.swift */; };
 		AA0000012026082000000001 /* DailyActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000022026082000000001 /* DailyActivity.swift */; };
 		AA00000220260903C00002 /* BreathingAnimationStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000220260903C00001 /* BreathingAnimationStyle.swift */; };
@@ -147,6 +148,7 @@
 		78DF54283040D0A300B1F2C3 /* breath_hold.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = breath_hold.wav; sourceTree = "<group>"; };
 		78DF542A3040D34000B1F2C3 /* meditation_countdown.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = meditation_countdown.wav; sourceTree = "<group>"; };
 		8C2C893562EB1C321CF1B273 /* StreakInsightEngine.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = StreakInsightEngine.swift; path = MeditateAndNote/Services/StreakInsightEngine.swift; sourceTree = "<group>"; };
+		9DF1D116F571072F70488A4F /* WeekdayHeatmapView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = WeekdayHeatmapView.swift; path = MeditateAndNote/Views/Main/Streak/WeekdayHeatmapView.swift; sourceTree = "<group>"; };
 		AA0000022026082000000001 /* DailyActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyActivity.swift; sourceTree = "<group>"; };
 		AA00000220260903C00001 /* BreathingAnimationStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreathingAnimationStyle.swift; sourceTree = "<group>"; };
 		AA00000220260903C00003 /* AnimationSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimationSettings.swift; sourceTree = "<group>"; };
@@ -322,6 +324,7 @@
 				AA00000A2026082000000005 /* StreakHeaderView.swift */,
 				AA00000C2026082000000006 /* StreakDetailView.swift */,
 				AC3C8D0C08E6E9153624093E /* InsightsSection.swift */,
+				9DF1D116F571072F70488A4F /* WeekdayHeatmapView.swift */,
 			);
 			path = Streak;
 			sourceTree = "<group>";
@@ -410,6 +413,7 @@
 				09E4AAB15B1383604B747363 /* InsightsViewModel.swift */,
 				AC3C8D0C08E6E9153624093E /* InsightsSection.swift */,
 				70119D3AECE1D5E2F27AEAF9 /* StreakInsightEngineTests.swift */,
+				9DF1D116F571072F70488A4F /* WeekdayHeatmapView.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -757,6 +761,7 @@
 				053967EF78BB7B14A4784118 /* StreakInsight.swift in Sources */,
 				47C7FEEF91D17CEB73589285 /* InsightsViewModel.swift in Sources */,
 				DC587FE4027CE73A16A27FD0 /* InsightsSection.swift in Sources */,
+				8BF4C46227BAE479017286E0 /* WeekdayHeatmapView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

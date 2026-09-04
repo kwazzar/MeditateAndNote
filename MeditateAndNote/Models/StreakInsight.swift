@@ -14,6 +14,20 @@ enum InsightCategory: Hashable {
     case risk
 }
 
+// MARK: - Weekday Heatmap Data
+
+struct WeekdayHeatmapData: Hashable {
+    struct Day: Hashable {
+        let name: String
+        let shortName: String
+        let completionRate: Double
+        let totalDays: Int
+        let completeDays: Int
+    }
+
+    let days: [Day]
+}
+
 // MARK: - Streak Insight (value object)
 
 struct StreakInsight: Identifiable, Hashable {
@@ -23,6 +37,7 @@ struct StreakInsight: Identifiable, Hashable {
     let message: String
     let value: Double?
     let icon: String
+    var heatmapData: WeekdayHeatmapData?
 
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)

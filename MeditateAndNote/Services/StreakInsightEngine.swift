@@ -100,14 +100,25 @@ struct StreakInsightEngine {
         return Double(completeCount) / Double(days)
     }
 
-    // MARK: - Weak Days
+    // MARK: - Weak Days + Heatmap
 
     private func weakDayInsights(snapshot: StreakSnapshot) -> [StreakInsight] {
         let weekdayStats = weekdayCompletionStats(snapshot: snapshot)
         guard !weekdayStats.isEmpty else { return [] }
 
+        let heatmapData = buildHeatmapData(from: weekdayStats)
+
         let sorted = weekdayStats.sorted { $0.value < $1.value }
-        guard let weakest = sorted.first, weakest.value < 0.5 else { return [] }
+        guard let weakest = sorted.first, weakest.value < 0.5 else {
+            return [StreakInsight(
+                category: .pattern,
+                title: "Weekly Heatmap",
+                message: "Your completion rate by day of week",
+                value: nil,
+                icon: "calendar",
+                heatmapData: heatmapData
+            )]
+        }
 
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US")
@@ -115,11 +126,36 @@ struct StreakInsightEngine {
 
         return [StreakInsight(
             category: .pattern,
-            title: "Weak Day",
-            message: "\(dayName) — \(Int(weakest.value * 100))% completion rate",
-            value: weakest.value,
-            icon: "calendar.badge.exclamationmark"
+            title: "Weekly Heatmap",
+            message: "\(dayName) is your weakest day — \(Int(weakest.value * 100))% completion",
+            value: nil,
+            icon: "calendar",
+            heatmapData: heatmapData
         )]
+    }
+
+    private func buildHeatmapData(from stats: [Int: Double]) -> WeekdayHeatmapData {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US")
+
+        let shortSymbols = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]
+        guard let fullSymbols = formatter.weekdaySymbols else {
+            return WeekdayHeatmapData(days: [])
+        }
+
+        let days: [WeekdayHeatmapData.Day] = (1...7).map { weekday in
+            let rate = stats[weekday] ?? 0
+            let idx = weekday - 1
+            return WeekdayHeatmapData.Day(
+                name: idx < fullSymbols.count ? fullSymbols[idx] : "Day",
+                shortName: idx < shortSymbols.count ? shortSymbols[idx] : "?",
+                completionRate: rate,
+                totalDays: 0,
+                completeDays: 0
+            )
+        }
+
+        return WeekdayHeatmapData(days: days)
     }
 
     private func weekdayCompletionStats(snapshot: StreakSnapshot) -> [Int: Double] {
@@ -352,11 +388,14 @@ struct StreakInsightEngine {
 
     private func recommendationFromPattern(_ insight: StreakInsight) -> UserRecommendation? {
         switch insight.icon {
-        case "calendar.badge.exclamationmark":
+        case "calendar.badge.exclamationmark", "calendar":
+            guard let heatmap = insight.heatmapData,
+                  let weakest = heatmap.days.min(by: { $0.completionRate < $1.completionRate }),
+                  weakest.completionRate < 0.5 else { return nil }
             return UserRecommendation(
                 priority: .medium,
-                title: "Plan ahead for weak days",
-                message: "Set a reminder for \(insight.title.lowercased()) to stay consistent",
+                title: "Plan ahead for \(weakest.name)s",
+                message: "\(weakest.name) is your weakest day — set a reminder",
                 action: .setReminder,
                 icon: "bell.fill"
             )

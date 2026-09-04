@@ -119,17 +119,17 @@ final class StreakInsightEngineTests: XCTestCase {
 
         let snapshot = makeSnapshot(activities: activities)
         let insights = sut.generateInsights(from: snapshot)
-        let weakDay = insights.first { $0.title == "Weak Day" }
+        let heatmap = insights.first { $0.title == "Weekly Heatmap" }
 
-        XCTAssertNotNil(weakDay)
-        XCTAssertTrue(weakDay?.message.contains("Saturday") ?? false)
+        XCTAssertNotNil(heatmap)
+        XCTAssertTrue(heatmap?.message.contains("Saturday") ?? false)
+        XCTAssertNotNil(heatmap?.heatmapData)
     }
 
-    func testWeakDays_allDaysAboveThreshold_noInsight() {
+    func testWeakDays_allDaysAboveThreshold_showsHeatmap() {
         let sut = makeSUT()
         var activities: [DailyActivity] = []
 
-        // Complete 60% of every day
         for offset in 0..<28 {
             let d = date(2026, 8, 7 + offset)
             activities.append(DailyActivity(date: d, hasMeditation: true, hasNote: true))
@@ -137,9 +137,10 @@ final class StreakInsightEngineTests: XCTestCase {
 
         let snapshot = makeSnapshot(activities: activities)
         let insights = sut.generateInsights(from: snapshot)
-        let weakDay = insights.first { $0.title == "Weak Day" }
+        let heatmap = insights.first { $0.title == "Weekly Heatmap" }
 
-        XCTAssertNil(weakDay)
+        XCTAssertNotNil(heatmap)
+        XCTAssertNotNil(heatmap?.heatmapData)
     }
 
     // MARK: - Partial Day Pattern
@@ -460,12 +461,22 @@ final class StreakInsightEngineTests: XCTestCase {
 
     func testRecommendationAction_setReminder() {
         let sut = makeSUT()
+        let heatmapData = WeekdayHeatmapData(days: [
+            .init(name: "Sunday", shortName: "Su", completionRate: 0.1, totalDays: 0, completeDays: 0),
+            .init(name: "Monday", shortName: "Mo", completionRate: 0.8, totalDays: 0, completeDays: 0),
+            .init(name: "Tuesday", shortName: "Tu", completionRate: 0.9, totalDays: 0, completeDays: 0),
+            .init(name: "Wednesday", shortName: "We", completionRate: 0.7, totalDays: 0, completeDays: 0),
+            .init(name: "Thursday", shortName: "Th", completionRate: 0.6, totalDays: 0, completeDays: 0),
+            .init(name: "Friday", shortName: "Fr", completionRate: 0.5, totalDays: 0, completeDays: 0),
+            .init(name: "Saturday", shortName: "Sa", completionRate: 0.3, totalDays: 0, completeDays: 0),
+        ])
         let insight = StreakInsight(
             category: .pattern,
-            title: "Weak Day",
-            message: "Saturday — 20% completion",
-            value: 0.2,
-            icon: "calendar.badge.exclamationmark"
+            title: "Weekly Heatmap",
+            message: "Sunday is your weakest day",
+            value: nil,
+            icon: "calendar",
+            heatmapData: heatmapData
         )
 
         let recs = sut.generateRecommendations(from: [insight])
