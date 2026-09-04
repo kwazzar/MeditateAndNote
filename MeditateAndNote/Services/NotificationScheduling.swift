@@ -12,6 +12,8 @@ import UserNotifications
 protocol NotificationScheduling {
     func isAuthorized() async -> Bool
     func requestAuthorization() async -> Bool
+    /// Removes this app's reminder notifications (scoped to their identifier
+    /// prefix), never every pending request on the system.
     func removeAllPendingNotifications()
     func scheduleNotification(id: String, title: String, body: String, at date: Date)
 }
@@ -37,8 +39,17 @@ final class SystemNotificationScheduler: NSObject, NotificationScheduling, UNUse
         (try? await center.requestAuthorization(options: [.alert, .sound, .badge])) ?? false
     }
 
+    /// Removes only the pending requests that belong to this app's streak
+    /// reminders (identified by `ReminderManager.notificationIDPrefix`), so
+    /// disabling reminders never wipes other notification types.
     func removeAllPendingNotifications() {
-        center.removeAllPendingNotificationRequests()
+        center.getPendingNotificationRequests { [center] requests in
+            let reminderIDs = requests
+                .map(\.identifier)
+                .filter { $0.hasPrefix(ReminderManager.notificationIDPrefix) }
+            guard !reminderIDs.isEmpty else { return }
+            center.removePendingNotificationRequests(withIdentifiers: reminderIDs)
+        }
     }
 
     func scheduleNotification(id: String, title: String, body: String, at date: Date) {

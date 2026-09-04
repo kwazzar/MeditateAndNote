@@ -37,6 +37,9 @@ final class ReminderManager: ReminderProvidable, ReminderManageable {
 
     static let notificationTitle = "Streak reminder"
     static let notificationBody = "Time to complete today's streak — meditate and write a quick note."
+    /// All reminder notifications share this identifier prefix so a scheduler can
+    /// remove exactly the reminder requests without touching other notification types.
+    static let notificationIDPrefix = "streak-reminder-"
 
     /// How many upcoming fire dates are scheduled ahead.
     static let schedulingHorizon = 7
@@ -102,7 +105,7 @@ final class ReminderManager: ReminderProvidable, ReminderManageable {
 
         for (index, date) in fireDates.enumerated() {
             scheduler.scheduleNotification(
-                id: "streak-reminder-\(index)",
+                id: "\(Self.notificationIDPrefix)\(index)",
                 title: Self.notificationTitle,
                 body: Self.notificationBody,
                 at: date
