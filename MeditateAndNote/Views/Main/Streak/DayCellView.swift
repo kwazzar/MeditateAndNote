@@ -69,8 +69,6 @@ struct DayCellView: View {
                 .foregroundStyle(themeManager.current.textSecondary)
         }
         .frame(width: 40)
-        .scaleEffect(isComplete ? 1.0 : 0.92)
-        .animation(.snappy(duration: 0.2), value: isComplete)
         .accessibilityLabel(accessibilityDescription)
     }
 

@@ -93,13 +93,13 @@ struct StreakDetailView: View {
         )
     }
 
-    // MARK: - Calendar Grid (14 days, grouped by week)
+    // MARK: - Calendar Grid (current month, week rows)
 
     private var calendarGrid: some View {
-        let weeks = buildWeeks(count: 14)
+        let weeks = buildMonthWeeks()
 
         return VStack(alignment: .leading, spacing: 16) {
-            Text("Last 2 Weeks")
+            Text(monthTitle)
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(themeManager.current.textPrimary)
 
@@ -136,15 +136,25 @@ struct StreakDetailView: View {
         return (0..<7).map { symbols[($0 + first) % symbols.count] }
     }
 
-    private func buildWeeks(count: Int) -> [[Date?]] {
+    private var monthTitle: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMMM yyyy"
+        return formatter.string(from: Date())
+    }
+
+    private func buildMonthWeeks() -> [[Date?]] {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
-        let weekday = calendar.component(.weekday, from: today)
+        let components = calendar.dateComponents([.year, .month], from: today)
+        guard let monthStart = calendar.date(from: components) else { return [] }
+
+        let range = calendar.range(of: .day, in: .month, for: monthStart)!
+        let weekday = calendar.component(.weekday, from: monthStart)
         let startOffset = (weekday - calendar.firstWeekday + 7) % 7
 
         var allDays: [Date] = []
-        for offset in (0..<(count + startOffset)).reversed() {
-            if let date = calendar.date(byAdding: .day, value: -offset, to: today) {
+        for offset in (0..<(range.count + startOffset)).reversed() {
+            if let date = calendar.date(byAdding: .day, value: -Int(offset), to: monthStart) {
                 allDays.append(date)
             }
         }
@@ -164,7 +174,7 @@ struct StreakDetailView: View {
             weeks.append(currentWeek)
         }
 
-        return Array(weeks.suffix(2))
+        return weeks
     }
 }
 
@@ -250,9 +260,20 @@ private struct WeekRow: View {
                     )
                     .frame(maxWidth: .infinity)
                 } else {
-                    Color.clear.frame(width: 40)
+                    Color.clear
+                        .frame(width: 40)
+                        .frame(maxWidth: .infinity)
                 }
             }
         }
+    }
+}
+
+// MARK: - Preview
+
+struct StreakDetailView_Previews: PreviewProvider {
+    static var previews: some View {
+        StreakDetailView(streakTracker: StreakTracker())
+            .environment(ThemeManager())
     }
 }
