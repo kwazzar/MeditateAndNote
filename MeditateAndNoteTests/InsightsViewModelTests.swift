@@ -14,9 +14,17 @@ private final class StubInsightManager: StreakInsightProvidable {
     var insightsResult: [StreakInsight] = []
     var recommendationsResult: [UserRecommendation] = []
     var weeklyBreakdownResult: [WeeklyBucket] = []
+    var streakLengthDistributionResult: StreakLengthDistribution = .init(buckets: [], totalStreaks: 0, medianLength: 0)
+    var resilienceResult: StreakResilience = .init(avgRecoveryDays: 0, longestRecoveryDays: 0, totalRecoveries: 0, survivalByDay: [:])
+    var weekdayBreakPatternResult: [Int: Double] = [:]
+    var weekdayBreakHeatmapResult: WeekdayHeatmapData = .init(days: [])
     private(set) var insightsCallCount = 0
     private(set) var recommendationsCallCount = 0
     private(set) var weeklyBreakdownCallCount = 0
+    private(set) var streakLengthDistributionCallCount = 0
+    private(set) var resilienceCallCount = 0
+    private(set) var weekdayBreakPatternCallCount = 0
+    private(set) var weekdayBreakHeatmapCallCount = 0
     private(set) var lastInsightsRange: StreakRange?
     private(set) var lastRecommendationsRange: StreakRange?
     private(set) var lastWeeklyBreakdownRange: StreakRange?
@@ -37,6 +45,26 @@ private final class StubInsightManager: StreakInsightProvidable {
         weeklyBreakdownCallCount += 1
         lastWeeklyBreakdownRange = range
         return weeklyBreakdownResult
+    }
+
+    func streakLengthDistribution() -> StreakLengthDistribution {
+        streakLengthDistributionCallCount += 1
+        return streakLengthDistributionResult
+    }
+
+    func resilience() -> StreakResilience {
+        resilienceCallCount += 1
+        return resilienceResult
+    }
+
+    func weekdayBreakPattern() -> [Int: Double] {
+        weekdayBreakPatternCallCount += 1
+        return weekdayBreakPatternResult
+    }
+
+    func weekdayBreakHeatmap() -> WeekdayHeatmapData {
+        weekdayBreakHeatmapCallCount += 1
+        return weekdayBreakHeatmapResult
     }
 }
 

@@ -13,6 +13,11 @@ protocol StreakInsightProvidable {
     func insights(for range: StreakRange) -> [StreakInsight]
     func recommendations(for range: StreakRange) -> [UserRecommendation]
     func weeklyBreakdown(for range: StreakRange) -> [WeeklyBucket]
+
+    func streakLengthDistribution() -> StreakLengthDistribution
+    func resilience() -> StreakResilience
+    func weekdayBreakPattern() -> [Int: Double]
+    func weekdayBreakHeatmap() -> WeekdayHeatmapData
 }
 
 // MARK: - Streak Insight Manager
@@ -28,6 +33,10 @@ final class StreakInsightManager: StreakInsightProvidable {
 
     private var cachedInsights: [CacheKey: [StreakInsight]] = [:]
     private var cachedRecommendations: [CacheKey: [UserRecommendation]] = [:]
+    private var cachedDistribution: [Int: StreakLengthDistribution] = [:]
+    private var cachedResilience: [Int: StreakResilience] = [:]
+    private var cachedBreakPattern: [Int: [Int: Double]] = [:]
+    private var cachedBreakHeatmap: [Int: WeekdayHeatmapData] = [:]
     private var lastSnapshotSignature: Int?
 
     init(streakTracker: StreakTracker) {
@@ -59,14 +68,64 @@ final class StreakInsightManager: StreakInsightProvidable {
         engine.weeklyBreakdown(from: streakTracker.snapshot, range: range)
     }
 
+    func streakLengthDistribution() -> StreakLengthDistribution {
+        let signature = currentSnapshotSignature()
+        if let cached = cachedDistribution[signature] {
+            return cached
+        }
+        let result = engine.streakLengthDistribution(from: streakTracker.snapshot)
+        cachedDistribution[signature] = result
+        return result
+    }
+
+    func resilience() -> StreakResilience {
+        let signature = currentSnapshotSignature()
+        if let cached = cachedResilience[signature] {
+            return cached
+        }
+        let result = engine.resilience(from: streakTracker.snapshot)
+        cachedResilience[signature] = result
+        return result
+    }
+
+    func weekdayBreakPattern() -> [Int: Double] {
+        let signature = currentSnapshotSignature()
+        if let cached = cachedBreakPattern[signature] {
+            return cached
+        }
+        let result = engine.weekdayBreakPattern(from: streakTracker.snapshot)
+        cachedBreakPattern[signature] = result
+        return result
+    }
+
+    func weekdayBreakHeatmap() -> WeekdayHeatmapData {
+        let signature = currentSnapshotSignature()
+        if let cached = cachedBreakHeatmap[signature] {
+            return cached
+        }
+        let result = engine.weekdayBreakHeatmapData(from: streakTracker.snapshot)
+        cachedBreakHeatmap[signature] = result
+        return result
+    }
+
     func invalidateCache() {
         cachedInsights.removeAll()
         cachedRecommendations.removeAll()
+        cachedDistribution.removeAll()
+        cachedResilience.removeAll()
+        cachedBreakPattern.removeAll()
+        cachedBreakHeatmap.removeAll()
         lastSnapshotSignature = nil
     }
 
     private func cacheKey(for range: StreakRange) -> CacheKey {
-        CacheKey(range: range, signature: snapshotSignature(streakTracker.snapshot))
+        CacheKey(range: range, signature: currentSnapshotSignature())
+    }
+
+    private func currentSnapshotSignature() -> Int {
+        let signature = snapshotSignature(streakTracker.snapshot)
+        lastSnapshotSignature = signature
+        return signature
     }
 
     private func snapshotSignature(_ snapshot: StreakSnapshot) -> Int {

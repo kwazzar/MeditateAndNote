@@ -212,7 +212,8 @@ struct StreakInsightEngine {
                 shortName: idx < shortSymbols.count ? shortSymbols[idx] : "?",
                 completionRate: rate,
                 totalDays: 0,
-                completeDays: 0
+                completeDays: 0,
+                breakRate: 0
             )
         }
 
@@ -510,6 +511,277 @@ struct StreakInsightEngine {
             action: nil,
             icon: "scalemass.fill"
         )
+    }
+
+    // MARK: - Lifetime: streak runs
+
+    /// One complete-day run. `breakWeekday` is the weekday (1...7) of the
+    /// first calendar day *after* the run where `isComplete` was false
+    /// (or no activity existed). `nil` for the trailing run that may
+    /// still be alive — the user has not yet broken or completed it.
+    private struct StreakRun {
+        let length: Int
+        let breakWeekday: Int?
+    }
+
+    /// Extracts runs of consecutive complete days from the snapshot in
+    /// chronological order. Days are deduplicated and gap-tolerant: a
+    /// calendar day without an activity is treated as "not complete" and
+    /// ends the current run, but the run is annotated with the weekday
+    /// of that day (the day on which the streak broke).
+    ///
+    /// Runs are derived purely from `snapshot.activities` — no call into
+    /// `StreakEngine` — so the two engines stay decoupled.
+    private func extractStreakRuns(from snapshot: StreakSnapshot) -> [StreakRun] {
+        let activityByDay = Dictionary(
+            snapshot.activities.map { (calendar.startOfDay(for: $0.date), $0) },
+            uniquingKeysWith: { _, latest in latest }
+        )
+        let sortedDays = activityByDay.keys.sorted()
+        guard !sortedDays.isEmpty else { return [] }
+
+        var runs: [StreakRun] = []
+        var currentLength = 0
+        var previousDay: Date?
+
+        for day in sortedDays {
+            let isComplete = activityByDay[day]?.isComplete == true
+
+            // If a calendar day is missing between previousDay and day,
+            // the streak broke before `day`. Close out the current run
+            // and label the first missing day as the break.
+            if let prev = previousDay,
+               let expectedNext = calendar.date(byAdding: .day, value: 1, to: prev),
+               !calendar.isDate(day, inSameDayAs: expectedNext) {
+                if currentLength > 0 {
+                    runs.append(StreakRun(
+                        length: currentLength,
+                        breakWeekday: calendar.component(.weekday, from: expectedNext)
+                    ))
+                }
+                currentLength = 0
+            }
+
+            if isComplete {
+                currentLength += 1
+            } else {
+                if currentLength > 0 {
+                    runs.append(StreakRun(
+                        length: currentLength,
+                        breakWeekday: calendar.component(.weekday, from: day)
+                    ))
+                }
+                currentLength = 0
+            }
+
+            previousDay = day
+        }
+
+        // Trailing run: kept as-is with no break weekday. The engine
+        // cannot know yet whether it has been broken.
+        if currentLength > 0 {
+            runs.append(StreakRun(length: currentLength, breakWeekday: nil))
+        }
+
+        return runs
+    }
+
+    // MARK: - Lifetime: distribution
+
+    /// Buckets every run into the fixed six buckets
+    /// `[1 / 2 / 3 / 4-6 / 7-13 / 14+]` and computes the median length.
+    /// Returns an empty distribution (zero streaks) for an empty
+    /// snapshot.
+    func streakLengthDistribution(from snapshot: StreakSnapshot) -> StreakLengthDistribution {
+        let runs = extractStreakRuns(from: snapshot)
+        let lengths = runs.map(\.length)
+
+        var counts = Array(repeating: 0, count: StreakLengthDistribution.canonicalBuckets.count)
+        for length in lengths {
+            for (index, range) in StreakLengthDistribution.canonicalBuckets.enumerated()
+            where range.contains(length) {
+                counts[index] += 1
+                break
+            }
+        }
+
+        let buckets = zip(
+            StreakLengthDistribution.canonicalBuckets,
+            StreakLengthDistribution.canonicalLabels
+        ).enumerated().map { index, pair in
+            StreakLengthDistribution.Bucket(
+                range: pair.0,
+                label: pair.1,
+                count: counts[index]
+            )
+        }
+
+        return StreakLengthDistribution(
+            buckets: buckets,
+            totalStreaks: lengths.count,
+            medianLength: median(of: lengths)
+        )
+    }
+
+    // MARK: - Lifetime: resilience
+
+    /// Computes recovery gap (in calendar days) between consecutive runs
+    /// and the empirical survival curve: `survivalByDay[n]` is the
+    /// fraction of runs of length >= n that survived to length n+1.
+    /// `avgRecoveryDays` is the mean of recovery gaps; 0 when there are
+    /// no recoveries.
+    func resilience(from snapshot: StreakSnapshot) -> StreakResilience {
+        let runs = extractStreakRuns(from: snapshot)
+        guard !runs.isEmpty else {
+            return StreakResilience(
+                avgRecoveryDays: 0,
+                longestRecoveryDays: 0,
+                totalRecoveries: 0,
+                survivalByDay: [:]
+            )
+        }
+
+        let activityByDay = Dictionary(
+            snapshot.activities.map { (calendar.startOfDay(for: $0.date), $0) },
+            uniquingKeysWith: { _, latest in latest }
+        )
+        let sortedDays = activityByDay.keys.sorted()
+
+        // Recovery gaps: walk the sorted days, and when a gap appears
+        // (next day is not the previous+1) and both ends touch a
+        // complete run, count the gap length.
+        var recoveryGaps: [Int] = []
+        var previousRunEnd: Date?
+        for day in sortedDays {
+            guard let prev = previousRunEnd else {
+                if activityByDay[day]?.isComplete == true {
+                    previousRunEnd = day
+                }
+                continue
+            }
+            guard let expectedNext = calendar.date(byAdding: .day, value: 1, to: prev) else {
+                break
+            }
+            if calendar.isDate(day, inSameDayAs: expectedNext) {
+                if activityByDay[day]?.isComplete == true {
+                    previousRunEnd = day
+                } else {
+                    // The previous run ended one day ago; this day is
+                    // the first non-complete day. Reset.
+                    previousRunEnd = nil
+                }
+                continue
+            }
+            // Day is later than prev+1: there is a gap.
+            if activityByDay[day]?.isComplete == true {
+                let gap = calendar.dateComponents([.day], from: prev, to: day).day ?? 0
+                recoveryGaps.append(gap)
+                previousRunEnd = day
+            } else {
+                previousRunEnd = nil
+            }
+        }
+
+        // Survival: P(run of length >= n+1 | run of length >= n).
+        // We approximate by, for each n, counting runs of length >= n
+        // that also have length >= n+1.
+        let lengths = runs.map(\.length)
+        var survival: [Int: Double] = [:]
+        let maxLength = lengths.max() ?? 0
+        for n in 1..<maxLength {
+            let eligible = lengths.filter { $0 >= n }.count
+            guard eligible > 0 else { continue }
+            let survived = lengths.filter { $0 >= n + 1 }.count
+            survival[n] = Double(survived) / Double(eligible)
+        }
+
+        let avg = recoveryGaps.isEmpty
+            ? 0.0
+            : Double(recoveryGaps.reduce(0, +)) / Double(recoveryGaps.count)
+
+        return StreakResilience(
+            avgRecoveryDays: avg,
+            longestRecoveryDays: recoveryGaps.max() ?? 0,
+            totalRecoveries: recoveryGaps.count,
+            survivalByDay: survival
+        )
+    }
+
+    // MARK: - Lifetime: weekday break pattern
+
+    /// Returns, for each weekday (1...7), the fraction of streak breaks
+    /// whose first missing day fell on that weekday. Days with no
+    /// recorded breaks get 0.
+    func weekdayBreakPattern(from snapshot: StreakSnapshot) -> [Int: Double] {
+        let runs = extractStreakRuns(from: snapshot)
+        let breakWeekdays = runs.compactMap(\.breakWeekday)
+        guard !breakWeekdays.isEmpty else { return [:] }
+
+        var counts: [Int: Int] = [:]
+        for weekday in breakWeekdays {
+            counts[weekday, default: 0] += 1
+        }
+        let total = breakWeekdays.count
+        return counts.mapValues { Double($0) / Double(total) }
+    }
+
+    /// Same shape as the existing range-windowed heatmap, but enriched
+    /// with the lifetime `breakRate` for each weekday. Use this when
+    /// rendering the lifetime section; the existing `weakDayInsights`
+    /// path remains unchanged for the range-aware UI.
+    func weekdayBreakHeatmapData(from snapshot: StreakSnapshot) -> WeekdayHeatmapData {
+        let completionStats = lifetimeWeekdayCompletionStats(snapshot: snapshot)
+        let breakPattern = weekdayBreakPattern(from: snapshot)
+
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US")
+        let shortSymbols = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]
+        guard let fullSymbols = formatter.weekdaySymbols else {
+            return WeekdayHeatmapData(days: [])
+        }
+
+        let days: [WeekdayHeatmapData.Day] = (1...7).map { weekday in
+            let stats = completionStats[weekday]
+            let idx = weekday - 1
+            return WeekdayHeatmapData.Day(
+                name: idx < fullSymbols.count ? fullSymbols[idx] : "Day",
+                shortName: idx < shortSymbols.count ? shortSymbols[idx] : "?",
+                completionRate: stats?.completionRate ?? 0,
+                totalDays: stats?.totalDays ?? 0,
+                completeDays: stats?.completeDays ?? 0,
+                breakRate: breakPattern[weekday] ?? 0
+            )
+        }
+
+        return WeekdayHeatmapData(days: days)
+    }
+
+    private func lifetimeWeekdayCompletionStats(snapshot: StreakSnapshot) -> [Int: (completionRate: Double, totalDays: Int, completeDays: Int)] {
+        var totals: [Int: Int] = [:]
+        var completes: [Int: Int] = [:]
+        for activity in snapshot.activities {
+            let weekday = calendar.component(.weekday, from: activity.date)
+            totals[weekday, default: 0] += 1
+            if activity.isComplete {
+                completes[weekday, default: 0] += 1
+            }
+        }
+        var result: [Int: (completionRate: Double, totalDays: Int, completeDays: Int)] = [:]
+        for (weekday, total) in totals {
+            let complete = completes[weekday] ?? 0
+            result[weekday] = (Double(complete) / Double(total), total, complete)
+        }
+        return result
+    }
+
+    private func median(of values: [Int]) -> Int {
+        guard !values.isEmpty else { return 0 }
+        let sorted = values.sorted()
+        let mid = sorted.count / 2
+        if sorted.count.isMultiple(of: 2) {
+            return (sorted[mid - 1] + sorted[mid]) / 2
+        }
+        return sorted[mid]
     }
 
     // MARK: - Helpers

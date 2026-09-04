@@ -23,9 +23,59 @@ struct WeekdayHeatmapData: Hashable {
         let completionRate: Double
         let totalDays: Int
         let completeDays: Int
+        /// Fraction of streak breaks whose first missing day falls on this
+        /// weekday. 0 when there are no breaks in the snapshot. Always 0
+        /// for range-windowed heatmaps — break pattern is a lifetime metric.
+        let breakRate: Double
     }
 
     let days: [Day]
+}
+
+// MARK: - Streak Length Distribution
+
+/// Histogram of how many streaks fell into each length bucket across the
+/// whole history. Buckets are fixed (`1 / 2 / 3 / 4-6 / 7-13 / 14+`) so the
+/// UI can render a stable chart regardless of history size. Invariants:
+/// `sum(buckets.count) == totalStreaks`, and `buckets` always has exactly
+/// six entries in the canonical order.
+struct StreakLengthDistribution: Hashable {
+    struct Bucket: Hashable {
+        let range: ClosedRange<Int>
+        let label: String
+        let count: Int
+
+        func contains(_ length: Int) -> Bool {
+            range.contains(length)
+        }
+    }
+
+    static let canonicalBuckets: [ClosedRange<Int>] = [
+        1...1, 2...2, 3...3, 4...6, 7...13, 14...Int.max
+    ]
+
+    static let canonicalLabels: [String] = [
+        "1 day", "2 days", "3 days", "4-6 days", "1-2 weeks", "2+ weeks"
+    ]
+
+    let buckets: [Bucket]
+    let totalStreaks: Int
+    let medianLength: Int
+}
+
+// MARK: - Streak Resilience
+
+/// Recovery profile of the streak history. `avgRecoveryDays` is the mean
+/// number of non-complete days between the end of one streak and the start
+/// of the next. `survivalByDay[n]` is the empirical probability that a
+/// streak of length at least `n` survives to length `n+1`. Invariants:
+/// `survivalByDay` keys start at 1 and are contiguous; `avgRecoveryDays`
+/// is 0 when `totalRecoveries == 0`.
+struct StreakResilience: Hashable {
+    let avgRecoveryDays: Double
+    let longestRecoveryDays: Int
+    let totalRecoveries: Int
+    let survivalByDay: [Int: Double]
 }
 
 // MARK: - Streak Range (value object)

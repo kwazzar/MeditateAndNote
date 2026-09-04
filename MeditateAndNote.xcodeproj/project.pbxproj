@@ -75,6 +75,7 @@
 		CC0000032026082800000007 /* CoreDataSessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000032026082800000003 /* CoreDataSessionStore.swift */; };
 		CC0000042026082800000008 /* CoreDataStreakStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000042026082800000004 /* CoreDataStreakStore.swift */; };
 		DC587FE4027CE73A16A27FD0 /* InsightsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC3C8D0C08E6E9153624093E /* InsightsSection.swift */; };
+		LPS000012026090500000001 /* LifetimePatternsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = LPS000012026090500000002 /* LifetimePatternsSection.swift */; };
 		DD0000012026082800000005 /* CoreDataManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000012026082800000001 /* CoreDataManagerTests.swift */; };
 		DD0000022026082800000006 /* CoreDataNoteDataSourceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000022026082800000002 /* CoreDataNoteDataSourceTests.swift */; };
 		DD0000032026082800000007 /* CoreDataSessionStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000032026082800000003 /* CoreDataSessionStoreTests.swift */; };
@@ -205,6 +206,7 @@
 		AA0003102026082200000003 /* SearchQuery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchQuery.swift; sourceTree = "<group>"; };
 		AA2A9BB90A0B40656AE57601 /* ReminderManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReminderManager.swift; sourceTree = "<group>"; };
 		AC3C8D0C08E6E9153624093E /* InsightsSection.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InsightsSection.swift; sourceTree = "<group>"; };
+		LPS000012026090500000002 /* LifetimePatternsSection.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LifetimePatternsSection.swift; sourceTree = "<group>"; };
 		C1C20BEA552DE5FA2D6680E4 /* UserDefaultsReminderSettingsStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UserDefaultsReminderSettingsStore.swift; sourceTree = "<group>"; };
 		CC0000012026082800000001 /* CoreDataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataManager.swift; sourceTree = "<group>"; };
 		CC0000022026082800000002 /* CoreDataNoteDataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataNoteDataSource.swift; sourceTree = "<group>"; };
@@ -365,6 +367,7 @@
 				AA00000C2026082000000006 /* StreakDetailView.swift */,
 				AC3C8D0C08E6E9153624093E /* InsightsSection.swift */,
 				9DF1D116F571072F70488A4F /* WeekdayHeatmapView.swift */,
+				LPS000012026090500000002 /* LifetimePatternsSection.swift */,
 			);
 			path = Streak;
 			sourceTree = "<group>";
@@ -826,6 +829,7 @@
 				47C7FEEF91D17CEB73589285 /* InsightsViewModel.swift in Sources */,
 				DC587FE4027CE73A16A27FD0 /* InsightsSection.swift in Sources */,
 				8BF4C46227BAE479017286E0 /* WeekdayHeatmapView.swift in Sources */,
+				LPS000012026090500000001 /* LifetimePatternsSection.swift in Sources */,
 				3648450FC97396F2224840CD /* ReminderSettings.swift in Sources */,
 				096B78E3E88B87EA5E3E59B7 /* UserDefaultsReminderSettingsStore.swift in Sources */,
 				2FC28D69C78D5561F2B28F30 /* NotificationScheduling.swift in Sources */,

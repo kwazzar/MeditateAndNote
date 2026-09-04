@@ -20,6 +20,7 @@ struct StreakDetailView: View {
                 statsHeader
                 todayProgress
                 InsightsSection(viewModel: insightsViewModel)
+                LifetimePatternsSection(viewModel: insightsViewModel)
                 calendarGrid
             }
             .padding(.horizontal, 16)

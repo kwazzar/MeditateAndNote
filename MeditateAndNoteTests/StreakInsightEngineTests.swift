@@ -488,13 +488,13 @@ final class StreakInsightEngineTests: XCTestCase {
     func testRecommendationAction_setReminder() {
         let sut = makeSUT()
         let heatmapData = WeekdayHeatmapData(days: [
-            .init(name: "Sunday", shortName: "Su", completionRate: 0.1, totalDays: 0, completeDays: 0),
-            .init(name: "Monday", shortName: "Mo", completionRate: 0.8, totalDays: 0, completeDays: 0),
-            .init(name: "Tuesday", shortName: "Tu", completionRate: 0.9, totalDays: 0, completeDays: 0),
-            .init(name: "Wednesday", shortName: "We", completionRate: 0.7, totalDays: 0, completeDays: 0),
-            .init(name: "Thursday", shortName: "Th", completionRate: 0.6, totalDays: 0, completeDays: 0),
-            .init(name: "Friday", shortName: "Fr", completionRate: 0.5, totalDays: 0, completeDays: 0),
-            .init(name: "Saturday", shortName: "Sa", completionRate: 0.3, totalDays: 0, completeDays: 0),
+            .init(name: "Sunday", shortName: "Su", completionRate: 0.1, totalDays: 0, completeDays: 0, breakRate: 0),
+            .init(name: "Monday", shortName: "Mo", completionRate: 0.8, totalDays: 0, completeDays: 0, breakRate: 0),
+            .init(name: "Tuesday", shortName: "Tu", completionRate: 0.9, totalDays: 0, completeDays: 0, breakRate: 0),
+            .init(name: "Wednesday", shortName: "We", completionRate: 0.7, totalDays: 0, completeDays: 0, breakRate: 0),
+            .init(name: "Thursday", shortName: "Th", completionRate: 0.6, totalDays: 0, completeDays: 0, breakRate: 0),
+            .init(name: "Friday", shortName: "Fr", completionRate: 0.5, totalDays: 0, completeDays: 0, breakRate: 0),
+            .init(name: "Saturday", shortName: "Sa", completionRate: 0.3, totalDays: 0, completeDays: 0, breakRate: 0),
         ])
         let insight = StreakInsight(
             category: .pattern,
@@ -671,5 +671,169 @@ final class StreakInsightEngineTests: XCTestCase {
 
         let totalComplete = buckets.reduce(0) { $0 + $1.completeDays }
         XCTAssertEqual(totalComplete, 0)
+    }
+
+    // MARK: - Lifetime: streakLengthDistribution
+
+    func testStreakLengthDistribution_emptySnapshot() {
+        let sut = makeSUT()
+        let snapshot = makeSnapshot(activities: [])
+
+        let distribution = sut.streakLengthDistribution(from: snapshot)
+
+        XCTAssertEqual(distribution.totalStreaks, 0)
+        XCTAssertEqual(distribution.medianLength, 0)
+        XCTAssertTrue(distribution.buckets.allSatisfy { $0.count == 0 })
+    }
+
+    func testStreakLengthDistribution_bucketsRunLengths() {
+        let sut = makeSUT()
+        // Gaps between runs:
+        //   days 1-3   → run length 3
+        //   days 5-7   → run length 3
+        //   days 10-12 → run length 3
+        //   days 15-19 → run length 5
+        //   days 22-24 → run length 3
+        // Total 5 runs: four 3-day runs and one 5-day run.
+        let activities: [DailyActivity] = [
+            makeActivity(2026, 1, 1, meditation: true, note: true),
+            makeActivity(2026, 1, 2, meditation: true, note: true),
+            makeActivity(2026, 1, 3, meditation: true, note: true),
+            makeActivity(2026, 1, 5, meditation: true, note: true),
+            makeActivity(2026, 1, 6, meditation: true, note: true),
+            makeActivity(2026, 1, 7, meditation: true, note: true),
+            makeActivity(2026, 1, 10, meditation: true, note: true),
+            makeActivity(2026, 1, 11, meditation: true, note: true),
+            makeActivity(2026, 1, 12, meditation: true, note: true),
+            makeActivity(2026, 1, 15, meditation: true, note: true),
+            makeActivity(2026, 1, 16, meditation: true, note: true),
+            makeActivity(2026, 1, 17, meditation: true, note: true),
+            makeActivity(2026, 1, 18, meditation: true, note: true),
+            makeActivity(2026, 1, 19, meditation: true, note: true),
+            makeActivity(2026, 1, 22, meditation: true, note: true),
+            makeActivity(2026, 1, 23, meditation: true, note: true),
+            makeActivity(2026, 1, 24, meditation: true, note: true),
+        ]
+        let snapshot = makeSnapshot(activities: activities)
+
+        let distribution = sut.streakLengthDistribution(from: snapshot)
+
+        XCTAssertEqual(distribution.totalStreaks, 5)
+        XCTAssertEqual(distribution.buckets[0].count, 0) // 1 day
+        XCTAssertEqual(distribution.buckets[1].count, 0) // 2 days
+        XCTAssertEqual(distribution.buckets[2].count, 4) // 3 days (×4)
+        XCTAssertEqual(distribution.buckets[3].count, 1) // 4-6 days (run of 5)
+        XCTAssertEqual(distribution.buckets[4].count, 0) // 7-13 days
+        XCTAssertEqual(distribution.buckets[5].count, 0) // 14+ days
+    }
+
+    func testStreakLengthDistribution_median() {
+        let sut = makeSUT()
+        // Runs: 1, 5, 10 → median = 5
+        let activities: [DailyActivity] = [
+            makeActivity(2026, 1, 1, meditation: true, note: true),
+            makeActivity(2026, 1, 3, meditation: true, note: true),
+            makeActivity(2026, 1, 4, meditation: true, note: true),
+            makeActivity(2026, 1, 5, meditation: true, note: true),
+            makeActivity(2026, 1, 6, meditation: true, note: true),
+            makeActivity(2026, 1, 7, meditation: true, note: true),
+            makeActivity(2026, 1, 9, meditation: true, note: true),
+            makeActivity(2026, 1, 10, meditation: true, note: true),
+            makeActivity(2026, 1, 11, meditation: true, note: true),
+            makeActivity(2026, 1, 12, meditation: true, note: true),
+            makeActivity(2026, 1, 13, meditation: true, note: true),
+            makeActivity(2026, 1, 14, meditation: true, note: true),
+            makeActivity(2026, 1, 15, meditation: true, note: true),
+            makeActivity(2026, 1, 16, meditation: true, note: true),
+            makeActivity(2026, 1, 17, meditation: true, note: true),
+            makeActivity(2026, 1, 18, meditation: true, note: true),
+        ]
+        let snapshot = makeSnapshot(activities: activities)
+
+        let distribution = sut.streakLengthDistribution(from: snapshot)
+
+        XCTAssertEqual(distribution.medianLength, 5)
+    }
+
+    // MARK: - Lifetime: resilience
+
+    func testResilience_noRecoveries() {
+        let sut = makeSUT()
+        let activities = (1...5).map { makeActivity(2026, 1, $0, meditation: true, note: true) }
+        let snapshot = makeSnapshot(activities: activities)
+
+        let resilience = sut.resilience(from: snapshot)
+
+        XCTAssertEqual(resilience.totalRecoveries, 0)
+        XCTAssertEqual(resilience.avgRecoveryDays, 0)
+        XCTAssertEqual(resilience.longestRecoveryDays, 0)
+    }
+
+    func testResilience_singleRecovery() {
+        let sut = makeSUT()
+        // Two runs separated by 3 days: day 1, then day 5
+        let activities = [
+            makeActivity(2026, 1, 1, meditation: true, note: true),
+            makeActivity(2026, 1, 5, meditation: true, note: true),
+        ]
+        let snapshot = makeSnapshot(activities: activities)
+
+        let resilience = sut.resilience(from: snapshot)
+
+        XCTAssertEqual(resilience.totalRecoveries, 1)
+        XCTAssertEqual(resilience.longestRecoveryDays, 4) // 1 → 5 = 4 days apart
+        XCTAssertEqual(resilience.avgRecoveryDays, 4, accuracy: 0.001)
+    }
+
+    func testResilience_survivalByDay() {
+        let sut = makeSUT()
+        // Two runs: lengths 1 and 5. P(>=2 | >=1) = 1/2 = 0.5. P(>=5 | >=4) = 1/1 = 1.0.
+        let activities = [
+            makeActivity(2026, 1, 1, meditation: true, note: true),
+            makeActivity(2026, 1, 3, meditation: true, note: true),
+            makeActivity(2026, 1, 4, meditation: true, note: true),
+            makeActivity(2026, 1, 5, meditation: true, note: true),
+            makeActivity(2026, 1, 6, meditation: true, note: true),
+            makeActivity(2026, 1, 7, meditation: true, note: true),
+        ]
+        let snapshot = makeSnapshot(activities: activities)
+
+        let resilience = sut.resilience(from: snapshot)
+
+        XCTAssertEqual(resilience.survivalByDay[1] ?? 0, 0.5, accuracy: 0.001)
+        XCTAssertEqual(resilience.survivalByDay[4] ?? 0, 1.0, accuracy: 0.001)
+        XCTAssertEqual(resilience.survivalByDay[5] ?? 0, 0.0, accuracy: 0.001)
+    }
+
+    // MARK: - Lifetime: weekdayBreakPattern
+
+    func testWeekdayBreakPattern_empty() {
+        let sut = makeSUT()
+        let snapshot = makeSnapshot(activities: [])
+
+        let pattern = sut.weekdayBreakPattern(from: snapshot)
+
+        XCTAssertTrue(pattern.isEmpty)
+    }
+
+    func testWeekdayBreakPattern_countsFirstMissingWeekday() {
+        let sut = makeSUT()
+        // Run 1: days 3-4 (Sat-Sun), gap, day 5 (Mon) has no activity → break weekday = Mon
+        // Run 2: days 9-10 (Fri-Sat), day 11 (Sun) is incomplete → break weekday = Sun
+        // Total 2 breaks: Monday and Sunday, each at 0.5.
+        let activities: [DailyActivity] = [
+            makeActivity(2026, 1, 3, meditation: true, note: true),
+            makeActivity(2026, 1, 4, meditation: true, note: true),
+            makeActivity(2026, 1, 9, meditation: true, note: true),
+            makeActivity(2026, 1, 10, meditation: true, note: true),
+            makeActivity(2026, 1, 11, meditation: true, note: false),
+        ]
+        let snapshot = makeSnapshot(activities: activities)
+
+        let pattern = sut.weekdayBreakPattern(from: snapshot)
+
+        XCTAssertEqual(pattern[2] ?? 0, 0.5, accuracy: 0.001) // Monday
+        XCTAssertEqual(pattern[1] ?? 0, 0.5, accuracy: 0.001) // Sunday
+        XCTAssertNil(pattern[3])
     }
 }

@@ -338,7 +338,7 @@ final class StreakInsightValueTests: XCTestCase {
     }
 
     func testWeekdayHeatmapDay_hashable() {
-        let day = WeekdayHeatmapData.Day(name: "Monday", shortName: "Mon", completionRate: 0.5, totalDays: 4, completeDays: 2)
+        let day = WeekdayHeatmapData.Day(name: "Monday", shortName: "Mon", completionRate: 0.5, totalDays: 4, completeDays: 2, breakRate: 0)
         XCTAssertEqual(Set([day, day]).count, 1)
     }
 }
