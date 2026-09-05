@@ -164,8 +164,11 @@ struct StreakInsightEngine {
     // MARK: - Weak Days + Heatmap
 
     private func weakDayInsights(snapshot: StreakSnapshot, range: StreakRange, today: Date = Date()) -> [StreakInsight] {
+        let startOfToday = calendar.startOfDay(for: today)
+        let cutoff = calendar.date(byAdding: .day, value: -(range.dayCount - 1), to: startOfToday) ?? .distantPast
+        guard snapshot.activities.contains(where: { $0.date >= cutoff }) else { return [] }
+
         let weekdayStats = weekdayCompletionStats(snapshot: snapshot, range: range, today: today)
-        guard !weekdayStats.isEmpty else { return [] }
 
         let heatmapData = buildHeatmapData(from: weekdayStats)
 
@@ -221,23 +224,31 @@ struct StreakInsightEngine {
     }
 
     private func weekdayCompletionStats(snapshot: StreakSnapshot, range: StreakRange, today: Date = Date()) -> [Int: Double] {
-        let cutoff = calendar.date(byAdding: .day, value: -(range.dayCount - 1), to: calendar.startOfDay(for: today)) ?? .distantPast
+        let startOfToday = calendar.startOfDay(for: today)
+        let activityByDay = Dictionary(
+            snapshot.activities.map { (calendar.startOfDay(for: $0.date), $0) },
+            uniquingKeysWith: { _, latest in latest }
+        )
+
         var totals: [Int: Int] = [:]
         var completes: [Int: Int] = [:]
 
-        for activity in snapshot.activities {
-            guard activity.date >= cutoff else { continue }
-            let weekday = calendar.component(.weekday, from: activity.date)
+        // Every day in the window enters the denominator regardless of
+        // whether an activity was recorded, so weekday rates agree with the
+        // headline `completionRate` reported for the same range.
+        for offset in 0..<range.dayCount {
+            guard let day = calendar.date(byAdding: .day, value: -offset, to: startOfToday) else { continue }
+            let weekday = calendar.component(.weekday, from: day)
             totals[weekday, default: 0] += 1
-            if activity.isComplete {
+            if activityByDay[day]?.isComplete == true {
                 completes[weekday, default: 0] += 1
             }
         }
 
         var result: [Int: Double] = [:]
-        for (day, total) in totals {
-            let complete = completes[day] ?? 0
-            result[day] = Double(complete) / Double(total)
+        for (weekday, total) in totals {
+            let complete = completes[weekday] ?? 0
+            result[weekday] = Double(complete) / Double(total)
         }
         return result
     }

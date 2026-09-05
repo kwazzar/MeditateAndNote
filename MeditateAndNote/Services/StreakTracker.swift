@@ -218,6 +218,14 @@ final class StreakTracker: StreakSnapshotProvidable {
         }
     }
 
+    /// Rechecks the streak for days missed while the app was backgrounded.
+    /// `checkStreakBreak` otherwise runs only in `init`; a long-lived process
+    /// that is simply resumed from the background would keep showing a stale
+    /// streak. Idempotent and cheap — safe to call on every foreground.
+    func refreshStreakState(now: Date = .now) async {
+        await apply { $0.checkStreakBreak(now: now) }
+    }
+
     func activity(for date: Date) -> DailyActivity {
         engine.activity(for: date)
     }

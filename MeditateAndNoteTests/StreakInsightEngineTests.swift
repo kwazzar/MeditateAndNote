@@ -556,6 +556,42 @@ final class StreakInsightEngineTests: XCTestCase {
                        "the 7-day window must report Saturday's rate from the last 7 days only")
     }
 
+    func testWeakDays_denominatorCountsWholeWindow() {
+        let sut = makeSUT()
+        // Friday 09-04 / .last7 window: Fri, Thu, Wed, Tue, Mon, Sun, Sat.
+        // Only Mon (08-31) and Fri (09-04) have complete activity.
+        let activities = [
+            makeActivity(2026, 8, 31, meditation: true, note: true),
+            makeActivity(2026, 9, 4, meditation: true, note: true),
+        ]
+        let snapshot = makeSnapshot(activities: activities)
+
+        let heatmap = sut.generateInsights(from: snapshot, range: .last7, today: date(2026, 9, 4))
+            .first { $0.title == "Weekly Heatmap" }
+
+        XCTAssertNotNil(heatmap?.heatmapData)
+        let days = heatmap?.heatmapData?.days ?? []
+        XCTAssertEqual(days.first { $0.shortName == "Mo" }?.completionRate ?? -1, 1.0, accuracy: 0.01)
+        XCTAssertEqual(days.first { $0.shortName == "Sa" }?.completionRate ?? -1, 0.0, accuracy: 0.01,
+                       "Days without any activity must enter the denominator as 0%")
+
+        // The average of the seven weekday rates must equal the headline completion rate.
+        let averageRate = days.reduce(0.0) { $0 + $1.completionRate } / Double(days.count)
+        let completionRate = sut.completionRate(in: .last7, snapshot: snapshot, today: date(2026, 9, 4))
+        XCTAssertEqual(averageRate, completionRate, accuracy: 0.001,
+                       "Weekday rates must agree with the range completion rate")
+    }
+
+    func testWeakDays_noWindowActivity_noHeatmap() {
+        let sut = makeSUT()
+        let snapshot = makeSnapshot(activities: [])
+
+        let insights = sut.generateInsights(from: snapshot, range: .last7, today: date(2026, 9, 4))
+
+        XCTAssertNil(insights.first { $0.title == "Weekly Heatmap" },
+                     "An empty window must not produce a weekday heatmap")
+    }
+
     func testTrendTitle_reflectsRange() {
         let sut = makeSUT()
         let activities = (0..<60).map { offset in

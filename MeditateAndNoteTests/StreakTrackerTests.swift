@@ -376,6 +376,58 @@ final class StreakTrackerTests: XCTestCase {
         XCTAssertEqual(tracker.currentStreak, 0)
     }
 
+    // MARK: - refreshStreakState (background resume)
+
+    func testRefreshStreakState_clearsStaleStreakAfterMissedDays() async {
+        let tracker = makeSUT()
+        let now = date(year: 2026, month: 8, day: 21)
+
+        await tracker.markNoteCreated(date: date(year: 2026, month: 8, day: 19))
+        await tracker.markMeditationCompleted(date: date(year: 2026, month: 8, day: 19))
+        XCTAssertEqual(tracker.currentStreak, 1)
+
+        // Days 20 and 21 pass without any marks while the app is backgrounded.
+        await tracker.refreshStreakState(now: now)
+
+        XCTAssertEqual(tracker.currentStreak, 0,
+                       "Resuming after missed days must reset the stale streak")
+        XCTAssertEqual(tracker.longestStreak, 1, "Personal best is preserved")
+    }
+
+    func testRefreshStreakState_keepsAliveStreakUntilDayEnds() async {
+        let tracker = makeSUT()
+
+        await tracker.markNoteCreated(date: date(year: 2026, month: 8, day: 19))
+        await tracker.markMeditationCompleted(date: date(year: 2026, month: 8, day: 19))
+        XCTAssertEqual(tracker.currentStreak, 1)
+
+        // Resume the next day: yesterday was complete, so the streak is still alive.
+        await tracker.refreshStreakState(now: date(year: 2026, month: 8, day: 20))
+
+        XCTAssertEqual(tracker.currentStreak, 1,
+                       "A streak with a complete yesterday stays alive until the day ends")
+    }
+
+    func testRefreshStreakState_persistsResetAcrossInstances() async {
+        let now = date(year: 2026, month: 8, day: 21)
+
+        do {
+            let tracker = makeSUT()
+            await tracker.markNoteCreated(date: date(year: 2026, month: 8, day: 19))
+            await tracker.markMeditationCompleted(date: date(year: 2026, month: 8, day: 19))
+            XCTAssertEqual(tracker.currentStreak, 1)
+
+            await tracker.refreshStreakState(now: now)
+            XCTAssertEqual(tracker.currentStreak, 0)
+        }
+
+        do {
+            let tracker = makeSUT()
+            XCTAssertEqual(tracker.currentStreak, 0,
+                           "The reset triggered by a resume must be persisted")
+        }
+    }
+
     // MARK: - Persistence round-trip
 
     func testPersistence_survivesRecreation() async {

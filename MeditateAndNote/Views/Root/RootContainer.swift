@@ -11,6 +11,8 @@ struct RootContainer: View {
     @EnvironmentObject var router: Router
     @EnvironmentObject var container: AppContainer
     @Environment(ThemeManager.self) private var themeManager
+    @Environment(StreakTracker.self) private var streakTracker
+    @Environment(\.scenePhase) private var scenePhase
 
     /// Launch-time gating: onboarding runs before the tab bar is mounted
     /// (see `OnboardingCoordinator` for the Router transition on completion).
@@ -50,6 +52,12 @@ struct RootContainer: View {
             }
         }
         .animation(.easeInOut(duration: 0.35), value: startupFlow)
+        .onChange(of: scenePhase) { _, phase in
+            guard phase == .active else { return }
+            Task { @MainActor in
+                await streakTracker.refreshStreakState()
+            }
+        }
     }
 
     /// Decides once whether to show onboarding or jump straight to the tabs.
