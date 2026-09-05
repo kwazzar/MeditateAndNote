@@ -233,5 +233,26 @@ extension MainTheme {
         case .obsidian: .purple
         }
     }
+
+    /// Акцентний колір для вкладок, індикаторів та активних елементів навігації.
+    var accentColor: Color { accentButton }
+
+    /// Колір для індикаторів стріка (вогонь, бейджі, часткові індикатори).
+    var streakIndicator: Color {
+        switch self {
+        case .liquidGlass, .breathing, .softDawn: .orange
+        case .darkZen, .obsidian: .orange.opacity(0.75)
+        }
+    }
+
+    /// Кольори фаз дихання для анімації.
+    func breathingPhaseColor(_ phase: BreathingPhaseType) -> Color {
+        switch phase {
+        case .inhale: return .cyan
+        case .holdAfterInhale: return .blue
+        case .exhale: return .purple
+        case .holdAfterExhale: return .indigo
+        }
+    }
 }
 
