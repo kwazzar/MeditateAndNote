@@ -50,8 +50,8 @@ extension MainTheme {
         case .breathing:
             LinearGradient(
                 colors: [
-                    Color(red: 0.92, green: 0.96, blue: 1.0),
-                    Color(red: 0.88, green: 0.93, blue: 0.98)
+                    Color(red: 0.90, green: 0.97, blue: 0.96),
+                    Color(red: 0.86, green: 0.94, blue: 0.97)
                 ],
                 startPoint: .top,
                 endPoint: .bottom
@@ -60,18 +60,7 @@ extension MainTheme {
         case .darkZen:
             Color(red: 0.06, green: 0.08, blue: 0.14)
                 .ignoresSafeArea()
-                .overlay(
-                    Canvas { context, size in
-                        for _ in 0..<40 {
-                            let x = CGFloat.random(in: 0...size.width)
-                            let y = CGFloat.random(in: 0...size.height)
-                            context.fill(
-                                Path(ellipseIn: CGRect(x: x, y: y, width: 2, height: 2)),
-                                with: .color(.white.opacity(0.08))
-                            )
-                        }
-                    }
-                )
+                .overlay(DarkZenStarfield())
         case .softDawn:
             LinearGradient(
                 colors: [
@@ -215,24 +204,13 @@ extension MainTheme {
     }
 
     /// Текст на акцентних кнопках — завжди світлий поверх стабільного акцентного фону.
-    var buttonText: Color {
-        switch self {
-        case .darkZen, .obsidian: .white
-        case .liquidGlass, .breathing, .softDawn: .white
-        }
-    }
+    /// Свідомо однаковий для всіх тем: акцентний фон непрозорий і не залежить від теми.
+    var buttonText: Color { .white }
 
     /// Непрозорий акцентний фон для кнопок дій (Start Meditation тощо) —
     /// без прозорості, щоб під кнопкою нічого не просвічувало.
-    var accentButton: Color {
-        switch self {
-        case .liquidGlass: .purple
-        case .breathing: .purple
-        case .softDawn: .purple
-        case .darkZen: .purple
-        case .obsidian: .purple
-        }
-    }
+    /// Єдиний бренд-акцент для всіх тем.
+    var accentButton: Color { .purple }
 
     /// Акцентний колір для вкладок, індикаторів та активних елементів навігації.
     var accentColor: Color { accentButton }
@@ -245,13 +223,53 @@ extension MainTheme {
         }
     }
 
-    /// Кольори фаз дихання для анімації.
+    /// Небезпека / ризик (зламані стріки, high-priority рекомендації).
+    var danger: Color {
+        switch self {
+        case .liquidGlass, .breathing, .softDawn: .red
+        case .darkZen, .obsidian: .red.opacity(0.8)
+        }
+    }
+
+    /// Кольори фаз дихання для анімації. Світлим темам — темніші відтінки
+    /// для контрасту на світлому фоні, темним — яскравіші.
     func breathingPhaseColor(_ phase: BreathingPhaseType) -> Color {
+        let isDark = (self == .darkZen || self == .obsidian)
         switch phase {
-        case .inhale: return .cyan
-        case .holdAfterInhale: return .blue
-        case .exhale: return .purple
-        case .holdAfterExhale: return .indigo
+        case .inhale: return isDark ? .cyan.opacity(0.9) : Color(red: 0.0, green: 0.55, blue: 0.65)
+        case .holdAfterInhale: return isDark ? .blue.opacity(0.9) : .blue
+        case .exhale: return isDark ? .purple.opacity(0.9) : .purple
+        case .holdAfterExhale: return isDark ? .indigo.opacity(0.9) : .indigo
+        }
+    }
+}
+
+// MARK: - DarkZen starfield (stable)
+
+/// Зоряне небо для darkZen. Позиції генеруються один раз в `onAppear`,
+/// а не при кожному перерендері `body` — інакше зірки мерехтіли б.
+private struct DarkZenStarfield: View {
+    @State private var stars: [UnitPoint] = []
+
+    var body: some View {
+        GeometryReader { geo in
+            Canvas { context, _ in
+                for star in stars {
+                    let x = star.x * geo.size.width
+                    let y = star.y * geo.size.height
+                    context.fill(
+                        Path(ellipseIn: CGRect(x: x, y: y, width: 2, height: 2)),
+                        with: .color(.white.opacity(0.08))
+                    )
+                }
+            }
+        }
+        .onAppear {
+            if stars.isEmpty {
+                stars = (0..<40).map { _ in
+                    UnitPoint(x: .random(in: 0...1), y: .random(in: 0...1))
+                }
+            }
         }
     }
 }

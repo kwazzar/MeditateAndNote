@@ -58,7 +58,7 @@ struct MeditationCard: View {
         .background(
             RoundedRectangle(cornerRadius: 12)
                 .fill(isSelected ? themeManager.current.streakActiveNote.opacity(0.1) : themeManager.current.streakCellBackground)
-                .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+                .shadow(color: themeManager.current.dividerColor, radius: 4, x: 0, y: 2)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 12)

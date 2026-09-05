@@ -23,7 +23,7 @@ struct WeekdayHeatmapView: View {
                             .overlay(
                                 Text("\(Int(day.completionRate * 100))")
                                     .font(.system(size: 9, weight: .bold, design: .rounded))
-                                    .foregroundStyle(day.completionRate > 0.4 ? .white : themeManager.current.textSecondary)
+                                    .foregroundStyle(day.completionRate > 0.4 ? themeManager.current.buttonText : themeManager.current.textSecondary)
                                     .opacity(appeared ? 1 : 0)
                             )
 
@@ -50,7 +50,7 @@ struct WeekdayHeatmapView: View {
         case 0.25..<0.50:
             return themeManager.current.streakIndicator
         case 0.01..<0.25:
-            return .red.opacity(0.6)
+            return themeManager.current.danger.opacity(0.6)
         default:
             return themeManager.current.toolbarBackground
         }
@@ -164,7 +164,7 @@ struct InsightDetailView: View {
                 HStack(spacing: 6) {
                     Image(systemName: "exclamationmark.circle.fill")
                         .font(.system(size: 12))
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(themeManager.current.streakIndicator)
 
                     Text("Focus on \(weakest.name)s — your weakest day")
                         .font(.caption)
@@ -278,7 +278,7 @@ struct InsightDetailView: View {
 
     private var accentColor: Color {
         switch insight.category {
-        case .risk: return .red
+        case .risk: return themeManager.current.danger
         case .trend: return themeManager.current.streakSuccess
         case .pattern: return themeManager.current.streakActiveNote
         case .completion: return themeManager.current.streakIndicator
@@ -360,7 +360,7 @@ private struct WeeklyBreakdownChart: View {
         case 0.75...1.0: return themeManager.current.streakSuccess
         case 0.50..<0.75: return themeManager.current.streakSuccess.opacity(0.6)
         case 0.25..<0.50: return themeManager.current.streakIndicator
-        case 0.01..<0.25: return .red.opacity(0.6)
+        case 0.01..<0.25: return themeManager.current.danger.opacity(0.6)
         default: return themeManager.current.toolbarBackground
         }
     }

@@ -52,6 +52,8 @@ struct RootContainer: View {
             }
         }
         .animation(.easeInOut(duration: 0.35), value: startupFlow)
+        // Системні матеріали (.ultraThinMaterial), пікери та шити йдуть за MainTheme, а не за системною темою.
+        .preferredColorScheme(themeManager.current.colorScheme)
         .onChange(of: scenePhase) { _, phase in
             guard phase == .active else { return }
             Task { @MainActor in

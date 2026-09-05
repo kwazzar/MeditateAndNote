@@ -30,7 +30,7 @@ struct MeditateButtonIcon: View {
                 .overlay(
                     Image(systemName: "wind")
                         .font(.system(size: 48, weight: .thin))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(themeManager.current.buttonText)
                 )
                 .shadow(color: themeManager.current.accentColor.opacity(0.35), radius: 24, y: 8)
         }
@@ -58,7 +58,6 @@ extension MainTheme {
                             .font(.system(size: 48, weight: .thin))
                             .foregroundStyle(iconPrimary)
                     }
-                    .foregroundStyle(.primary)
                     .frame(width: 140, height: 140)
                     .glassEffect(.regular.interactive(), in: .circle)
                     .shadow(color: dividerColor, radius: 20, y: 10)
@@ -76,7 +75,6 @@ extension MainTheme {
                             .font(.system(size: 48, weight: .thin))
                             .foregroundStyle(iconPrimary)
                     }
-                    .foregroundStyle(.primary)
                     .frame(width: 180, height: 180)
                     .background(
                         Circle()

@@ -19,7 +19,7 @@ struct FloatingToolbar: View {
         .padding(.vertical, 6)
         .background(.ultraThinMaterial)
         .clipShape(Capsule())
-        .shadow(color: .black.opacity(0.18), radius: 8, y: 4)
+        .shadow(color: themeManager.current.dividerColor, radius: 8, y: 4)
         .padding(.horizontal, 16)
         .transition(.move(edge: .bottom).combined(with: .opacity))
         .animation(.snappy(duration: 0.25), value: isKeyboardVisible)

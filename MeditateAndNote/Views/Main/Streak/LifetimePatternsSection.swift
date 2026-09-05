@@ -128,7 +128,7 @@ private struct ResilienceCard: View {
             HStack(spacing: 6) {
                 Image(systemName: "arrow.uturn.backward.circle.fill")
                     .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(.purple)
+                    .foregroundStyle(themeManager.current.streakActiveMeditation)
 
                 Text("Resilience")
                     .font(.caption.weight(.semibold))
@@ -208,7 +208,7 @@ private struct BreakPatternCard: View {
             HStack(spacing: 6) {
                 Image(systemName: "calendar.badge.exclamationmark")
                     .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(.red)
+                    .foregroundStyle(themeManager.current.danger)
 
                 Text("Break Pattern")
                     .font(.caption.weight(.semibold))
@@ -230,7 +230,7 @@ private struct BreakPatternCard: View {
                                     .fill(themeManager.current.toolbarBackground)
                                     .frame(height: 8)
                                 Capsule()
-                                    .fill(.red)
+                                    .fill(themeManager.current.danger)
                                     .frame(
                                         width: geo.size.width * CGFloat(day.breakRate) * (appeared ? 1 : 0),
                                         height: 8

@@ -42,7 +42,7 @@ private extension NoteCard {
             VStack(alignment: .leading, spacing: 8) {
                 Text(note.content.rawValue)
                     .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(themeManager.current.textSecondary)
                 Spacer()
             }
             .padding()
@@ -51,11 +51,12 @@ private extension NoteCard {
             HStack {
                 Text(dateFormatter.string(from: note.date))
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(themeManager.current.textSecondary)
                 
                 Spacer()
                 Text(note.title.rawValue)
                     .font(.headline)
+                    .foregroundColor(themeManager.current.textPrimary)
                 Spacer()
                 
                 Button {
@@ -64,9 +65,9 @@ private extension NoteCard {
                     HStack {
                         Text("Read")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(themeManager.current.textSecondary)
                         Image(systemName: "chevron.right")
-                            .foregroundColor(.primary)
+                            .foregroundColor(themeManager.current.textPrimary)
                     }
                 }
             }
@@ -75,7 +76,7 @@ private extension NoteCard {
             .overlay(
                 Rectangle()
                     .frame(height: 1)
-                    .foregroundColor(Color.primary.opacity(0.15)),
+                    .foregroundColor(themeManager.current.dividerColor),
                 alignment: .top
             )
         }

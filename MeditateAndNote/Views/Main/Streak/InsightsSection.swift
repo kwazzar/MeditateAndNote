@@ -194,7 +194,7 @@ private struct HeatmapInsightRow: View {
             HStack(spacing: 6) {
                 Image(systemName: insight.icon)
                     .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(.blue)
+                    .foregroundStyle(iconColor)
 
                 Text(insight.title)
                     .font(.caption.weight(.semibold))
@@ -221,6 +221,15 @@ private struct HeatmapInsightRow: View {
             RoundedRectangle(cornerRadius: 10)
                 .fill(.ultraThinMaterial)
         )
+    }
+
+    private var iconColor: Color {
+        switch insight.category {
+        case .risk: return themeManager.current.danger
+        case .trend: return themeManager.current.streakSuccess
+        case .pattern: return themeManager.current.streakActiveNote
+        case .completion: return themeManager.current.streakIndicator
+        }
     }
 }
 
@@ -281,7 +290,7 @@ private struct InsightCard: View {
 
     private var iconColor: Color {
         switch insight.category {
-        case .risk: return .red
+        case .risk: return themeManager.current.danger
         case .trend: return themeManager.current.streakSuccess
         case .pattern: return themeManager.current.streakActiveNote
         case .completion: return themeManager.current.streakIndicator
@@ -290,7 +299,7 @@ private struct InsightCard: View {
 
     private var accentColor: Color {
         switch insight.category {
-        case .risk: return .red
+        case .risk: return themeManager.current.danger
         case .trend: return themeManager.current.streakSuccess
         case .pattern: return themeManager.current.streakActiveNote
         case .completion: return themeManager.current.streakIndicator
@@ -344,9 +353,9 @@ private struct RecommendationRow: View {
 
     private var priorityColor: Color {
         switch recommendation.priority {
-        case .high: return .red
-        case .medium: return .orange
-        case .low: return .blue
+        case .high: return themeManager.current.danger
+        case .medium: return themeManager.current.streakIndicator
+        case .low: return themeManager.current.streakActiveNote
         }
     }
 }
