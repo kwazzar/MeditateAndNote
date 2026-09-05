@@ -282,18 +282,18 @@ private struct InsightCard: View {
     private var iconColor: Color {
         switch insight.category {
         case .risk: return .red
-        case .trend: return .green
-        case .pattern: return .blue
-        case .completion: return .orange
+        case .trend: return themeManager.current.streakSuccess
+        case .pattern: return themeManager.current.streakActiveNote
+        case .completion: return themeManager.current.streakIndicator
         }
     }
 
     private var accentColor: Color {
         switch insight.category {
         case .risk: return .red
-        case .trend: return .green
-        case .pattern: return .blue
-        case .completion: return .orange
+        case .trend: return themeManager.current.streakSuccess
+        case .pattern: return themeManager.current.streakActiveNote
+        case .completion: return themeManager.current.streakIndicator
         }
     }
 }

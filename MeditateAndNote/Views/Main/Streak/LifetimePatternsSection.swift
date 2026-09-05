@@ -51,7 +51,7 @@ private struct StreakDistributionCard: View {
             HStack(spacing: 6) {
                 Image(systemName: "chart.bar.doc.horizontal")
                     .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(.blue)
+                    .foregroundStyle(themeManager.current.accentColor)
 
                 Text("Streak Distribution")
                     .font(.caption.weight(.semibold))
@@ -74,7 +74,7 @@ private struct StreakDistributionCard: View {
                                     .fill(themeManager.current.toolbarBackground)
                                     .frame(height: 8)
                                 Capsule()
-                                    .fill(.blue)
+                                    .fill(themeManager.current.accentColor)
                                     .frame(
                                         width: geo.size.width * (CGFloat(bucket.count) / CGFloat(maxCount)) * (appeared ? 1 : 0),
                                         height: 8

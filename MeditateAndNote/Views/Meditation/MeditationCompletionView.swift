@@ -30,9 +30,9 @@ struct MeditationCompletionView: View {
 private extension MeditationCompletionView {
     var headerSection: some View {
         VStack(spacing: 16) {
-            Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 64))
-                .foregroundStyle(.green)
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 64))
+                    .foregroundStyle(themeManager.current.streakSuccess)
 
             Text("Well Done!")
                 .font(.system(size: 32, weight: .bold, design: .rounded))
@@ -84,12 +84,12 @@ private extension MeditationCompletionView {
                     Text("Write a Note")
                 }
                 .font(.headline)
-                .foregroundColor(.white)
+                .foregroundColor(themeManager.current.buttonText)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
                 .background(
                     RoundedRectangle(cornerRadius: 14)
-                        .fill(Color.blue)
+                        .fill(themeManager.current.accentButton)
                 )
             }
 

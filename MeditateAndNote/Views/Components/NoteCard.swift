@@ -10,6 +10,7 @@ import SwiftUI
 struct NoteCard: View {
     let note: Note
     let toNoteAction: (Note) -> Void
+    @Environment(ThemeManager.self) private var themeManager
     
     private var dateFormatter: DateFormatter {
         let formatter = DateFormatter()
@@ -29,9 +30,9 @@ struct NoteCard: View {
         }
         .overlay(
             RoundedRectangle(cornerRadius: 12)
-                .strokeBorder(Color.black, lineWidth: 2)
+                .strokeBorder(themeManager.current.dividerColor, lineWidth: 2)
         )
-        .shadow(color: .black.opacity(0.12), radius: 5, y: 2)
+        .shadow(color: themeManager.current.dividerColor.opacity(0.12), radius: 5, y: 2)
     }
 }
 

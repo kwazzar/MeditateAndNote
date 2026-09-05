@@ -65,7 +65,7 @@ struct StreakHeaderView: View {
             HStack(alignment: .firstTextBaseline, spacing: 4) {
                 Image(systemName: "flame.fill")
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(streakTracker.isTodayComplete ? Color.orange : themeManager.current.textSecondary)
+                    .foregroundStyle(streakTracker.isTodayComplete ? themeManager.current.streakSuccess : themeManager.current.textSecondary)
 
                 Text("\(streakTracker.currentStreak)")
                     .font(.system(size: 22, weight: .medium, design: .rounded))
@@ -119,12 +119,12 @@ struct StreakHeaderView: View {
                 Image(systemName: "chevron.right")
                     .font(.system(size: 12, weight: .semibold))
             }
-            .foregroundStyle(.orange)
+            .foregroundStyle(themeManager.current.streakIndicator)
             .padding(.horizontal, 14)
             .padding(.vertical, 10)
             .background(
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(.orange.opacity(0.1))
+                    .fill(themeManager.current.streakIndicator.opacity(0.1))
             )
         }
         .buttonStyle(.plain)

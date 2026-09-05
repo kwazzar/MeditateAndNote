@@ -8,17 +8,19 @@
 import SwiftUI
 
 struct MeditateButtonIcon: View {
+    @Environment(ThemeManager.self) private var themeManager
+    
     var body: some View {
         ZStack {
             ForEach(0..<3, id: \.self) { i in
                 Circle()
-                    .stroke(Color.cyan.opacity(0.15 - Double(i) * 0.04), lineWidth: 2)
+                    .stroke(themeManager.current.accentColor.opacity(0.15 - Double(i) * 0.04), lineWidth: 2)
                     .frame(width: 160 + CGFloat(i * 28), height: 160 + CGFloat(i * 28))
             }
             Circle()
                 .fill(
                     RadialGradient(
-                        colors: [.cyan, .blue, .purple.opacity(0.8)],
+                        colors: [themeManager.current.accentColor, themeManager.current.accentColor.opacity(0.8), themeManager.current.accentButton.opacity(0.6)],
                         center: .center,
                         startRadius: 20,
                         endRadius: 90
@@ -30,7 +32,7 @@ struct MeditateButtonIcon: View {
                         .font(.system(size: 48, weight: .thin))
                         .foregroundStyle(.white)
                 )
-                .shadow(color: .blue.opacity(0.35), radius: 24, y: 8)
+                .shadow(color: themeManager.current.accentColor.opacity(0.35), radius: 24, y: 8)
         }
     }
 }
@@ -48,31 +50,31 @@ extension MainTheme {
                 ZStack {
                     ForEach(0..<3, id: \.self) { i in
                         Circle()
-                            .stroke(Color.cyan.opacity(0.15 - Double(i) * 0.04), lineWidth: 2)
+                            .stroke(accentColor.opacity(0.15 - Double(i) * 0.04), lineWidth: 2)
                             .frame(width: 160 + CGFloat(i * 28), height: 160 + CGFloat(i * 28))
                     }
                     VStack(spacing: 8) {
                         Image(systemName: "wind")
                             .font(.system(size: 48, weight: .thin))
-                            .foregroundStyle(.black)
+                            .foregroundStyle(iconPrimary)
                     }
                     .foregroundStyle(.primary)
                     .frame(width: 140, height: 140)
                     .glassEffect(.regular.interactive(), in: .circle)
-                    .shadow(color: .black.opacity(0.12), radius: 20, y: 10)
+                    .shadow(color: dividerColor, radius: 20, y: 10)
                 }
                 
             } else {
                 ZStack {
                     ForEach(0..<3, id: \.self) { i in
                         Circle()
-                            .stroke(Color.cyan.opacity(0.15 - Double(i) * 0.04), lineWidth: 2)
+                            .stroke(accentColor.opacity(0.15 - Double(i) * 0.04), lineWidth: 2)
                             .frame(width: 160 + CGFloat(i * 28), height: 160 + CGFloat(i * 28))
                     }
                     VStack(spacing: 8) {
                         Image(systemName: "wind")
                             .font(.system(size: 48, weight: .thin))
-                            .foregroundStyle(.black)
+                            .foregroundStyle(iconPrimary)
                     }
                     .foregroundStyle(.primary)
                     .frame(width: 180, height: 180)
@@ -91,7 +93,7 @@ extension MainTheme {
                                     )
                             )
                     )
-                    .shadow(color: .black.opacity(0.12), radius: 20, y: 10)
+                    .shadow(color: dividerColor, radius: 20, y: 10)
                 }
             }
             
@@ -99,13 +101,13 @@ extension MainTheme {
             ZStack {
                 ForEach(0..<3, id: \.self) { i in
                     Circle()
-                        .stroke(Color.cyan.opacity(0.15 - Double(i) * 0.04), lineWidth: 2)
+                        .stroke(accentColor.opacity(0.15 - Double(i) * 0.04), lineWidth: 2)
                         .frame(width: 160 + CGFloat(i * 28), height: 160 + CGFloat(i * 28))
                 }
                 Circle()
                     .fill(
                         RadialGradient(
-                            colors: [.cyan, .blue, .purple.opacity(0.8)],
+                            colors: [accentColor, accentColor.opacity(0.8), accentButton.opacity(0.6)],
                             center: .center,
                             startRadius: 20,
                             endRadius: 90
@@ -115,16 +117,16 @@ extension MainTheme {
                     .overlay(
                         Image(systemName: "wind")
                             .font(.system(size: 48, weight: .thin))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(buttonText)
                     )
-                    .shadow(color: .blue.opacity(0.35), radius: 24, y: 8)
+                    .shadow(color: accentColor.opacity(0.35), radius: 24, y: 8)
             }
             
         case .softDawn:
             ZStack {
                 ForEach(0..<3, id: \.self) { i in
                     Circle()
-                        .stroke(Color.cyan.opacity(0.15 - Double(i) * 0.04), lineWidth: 2)
+                        .stroke(accentColor.opacity(0.15 - Double(i) * 0.04), lineWidth: 2)
                         .frame(width: 160 + CGFloat(i * 28), height: 160 + CGFloat(i * 28))
                 }
             Circle()
@@ -143,18 +145,18 @@ extension MainTheme {
                     VStack(spacing: 4) {
                         Image(systemName: "wind")
                             .font(.system(size: 48, weight: .thin))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(buttonText)
                     }
-                        .foregroundStyle(.white)
+                        .foregroundStyle(buttonText)
                 )
-                .shadow(color: Color.orange.opacity(0.2), radius: 16, y: 8)
+                .shadow(color: streakIndicator.opacity(0.2), radius: 16, y: 8)
         }
             
         case .darkZen:
             ZStack {
                 ForEach(0..<3, id: \.self) { i in
                     Circle()
-                        .stroke(Color.cyan.opacity(0.15 - Double(i) * 0.04), lineWidth: 2)
+                        .stroke(accentColor.opacity(0.15 - Double(i) * 0.04), lineWidth: 2)
                         .frame(width: 160 + CGFloat(i * 28), height: 160 + CGFloat(i * 28))
                 }
                 Circle()
@@ -163,8 +165,9 @@ extension MainTheme {
                     .overlay(
                         Image(systemName: "wind")
                             .font(.system(size: 48, weight: .thin))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(buttonText)
                     )
+                    .shadow(color: dividerColor, radius: 24, y: 10)
             }
         case .obsidian:
             ZStack {
@@ -179,9 +182,9 @@ extension MainTheme {
                     .overlay(
                         Image(systemName: "wind")
                             .font(.system(size: 48, weight: .thin))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(buttonText)
                     )
-                    .shadow(color: .black.opacity(0.5), radius: 24, y: 10)
+                    .shadow(color: dividerColor, radius: 24, y: 10)
             }
         }
     }

@@ -205,7 +205,7 @@ struct StreakDayDetailSheet: View {
     private var accentColor: Color {
         switch detail.state {
         case .complete: return themeManager.current.streakSuccess
-        case .meditationOnly: return .orange
+        case .meditationOnly: return themeManager.current.streakIndicator
         case .noteOnly: return themeManager.current.streakActiveNote
         case .empty: return themeManager.current.textSecondary
         }

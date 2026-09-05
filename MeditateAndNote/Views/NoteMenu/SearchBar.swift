@@ -6,10 +6,11 @@
 //
 
 import SwiftUI
-#warning("searhc bar text change color for themes")
+
 struct SearchBar: View {
     @FocusState private var isTextFieldFocused: Bool
     @State private var isSearching: Bool = false
+    @Environment(ThemeManager.self) private var themeManager
     var titleSearch: String
     var searchText: Binding<String>
     var onClose: () -> Void
@@ -25,7 +26,7 @@ struct SearchBar: View {
                     .padding(.horizontal, 2)
                     .innerStroke(cornerRadius: 8,
                                  lineWidth: 2,
-                                 color: .black,
+                                 color: themeManager.current.dividerColor,
                                  inset: 1)
                     .onTapGesture {
                         isSearching = true
@@ -38,7 +39,7 @@ struct SearchBar: View {
                         onClose()
                     }) {
                         Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(.black)
+                            .foregroundColor(themeManager.current.textSecondary)
                             .padding()
                     }
                 }

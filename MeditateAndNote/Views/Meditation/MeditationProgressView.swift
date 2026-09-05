@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct MeditationProgressView: View {
+    @Environment(ThemeManager.self) private var themeManager
+
     let progress: Float
     let color: Color
     let width: CGFloat
@@ -27,7 +29,7 @@ struct MeditationProgressView: View {
         ZStack(alignment: .leading) {
             // Background capsule
             Capsule()
-                .fill(Color.gray.opacity(0.2))
+                .fill(themeManager.current.streakCellBackground)
 
             // Foreground fill
             GeometryReader { geometry in

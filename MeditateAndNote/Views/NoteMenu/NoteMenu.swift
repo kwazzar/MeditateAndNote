@@ -77,7 +77,7 @@ private extension NoteMenu {
             HStack {
                 Text("Add Note")
                     .font(.headline)
-                    .foregroundColor(.black)
+                    .foregroundColor(themeManager.current.textPrimary)
                     .frame(height: 40)
                     .padding(5)
             }
@@ -90,7 +90,7 @@ private extension NoteMenu {
             )
             .overlay(
                 Capsule()
-                    .strokeBorder(Color.white.opacity(0.3),
+                    .strokeBorder(themeManager.current.dividerColor,
                                   lineWidth: 1)
             )
         }

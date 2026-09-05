@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct CustomTabBar: View {
+    @Environment(ThemeManager.self) private var themeManager
     @Binding var selectedTab: TabDestination
     
     var body: some View {
@@ -38,12 +39,12 @@ struct CustomTabBar: View {
                 Text(title)
                     .font(.caption2)
             }
-            .foregroundColor(isSelected ? .blue : .secondary)
+            .foregroundColor(isSelected ? themeManager.current.accentColor : themeManager.current.textSecondary)
             .padding(.vertical, 6)
             .frame(maxWidth: .infinity)
             .background(
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(isSelected ? Color.blue.opacity(0.12) : .clear)
+                    .fill(isSelected ? themeManager.current.accentColor.opacity(0.12) : .clear)
             )
         }
         .buttonStyle(.plain)

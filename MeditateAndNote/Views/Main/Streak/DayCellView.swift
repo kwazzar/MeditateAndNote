@@ -104,7 +104,7 @@ struct DayCellView: View {
 
     private var partialIndicatorColor: Color {
         switch state {
-        case .meditationOnly: return .orange
+        case .meditationOnly: return themeManager.current.streakIndicator
         case .noteOnly: return themeManager.current.streakActiveNote
         default: return .clear
         }

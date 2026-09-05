@@ -131,7 +131,7 @@ struct ReminderSettingsSection: View {
                               : themeManager.current.toolbarBackground)
                 )
                 .foregroundColor(isSelected
-                                 ? .white
+                                 ? themeManager.current.buttonText
                                  : themeManager.current.textSecondary)
         }
         .buttonStyle(PlainButtonStyle())
@@ -141,7 +141,7 @@ struct ReminderSettingsSection: View {
         HStack(spacing: 8) {
             Image(systemName: "bell.slash.fill")
                 .font(.system(size: 13))
-                .foregroundColor(.orange)
+                .foregroundColor(themeManager.current.streakIndicator)
 
             Text("Allow notifications to receive reminders")
                 .font(.caption)

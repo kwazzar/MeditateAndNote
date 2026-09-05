@@ -48,7 +48,7 @@ private extension MainView {
                 Text("Settings")
                     .font(.headline)
             }
-            .foregroundColor(.black)
+            .foregroundColor(themeManager.current.textPrimary)
             .frame(height: 40)
             .padding(5)
             .padding(.horizontal, 10)
@@ -59,7 +59,7 @@ private extension MainView {
             )
             .overlay(
                 Capsule()
-                    .strokeBorder(Color.white.opacity(0.3), lineWidth: 1)
+                    .strokeBorder(themeManager.current.dividerColor, lineWidth: 1)
             )
         }
         .buttonStyle(PlainButtonStyle())

@@ -176,18 +176,8 @@ private extension MeditationView {
     }
     
     private var breathingColor: Color {
-        guard let currentPhase = viewModel.currentPhase else { return .blue }
-        
-        switch currentPhase.type {
-        case .inhale:
-            return .cyan
-        case .holdAfterInhale:
-            return .blue
-        case .exhale:
-            return .purple
-        case .holdAfterExhale:
-            return .indigo
-        }
+        guard let currentPhase = viewModel.currentPhase else { return themeManager.current.accentColor }
+        return themeManager.current.breathingPhaseColor(currentPhase.type)
     }
     
     private func formatTime(_ time: TimeInterval) -> String {

@@ -8,28 +8,34 @@
 import SwiftUI
 
 struct BreathingPathView: View {
+    @Environment(ThemeManager.self) private var themeManager
+
     let phases: [BreathingPhase]
     let phaseIndex: Int
     let phaseProgress: Double
-    var lineColor: Color = .primary
-    var progressColor: Color = .black
-    var ballColor: Color = .orange
+    var lineColor: Color?
+    var progressColor: Color?
+    var ballColor: Color?
     var height: CGFloat = 280
 
     var body: some View {
+        let line = lineColor ?? themeManager.current.textPrimary
+        let progress = progressColor ?? themeManager.current.accentColor
+        let ball = ballColor ?? themeManager.current.streakIndicator
+
         GeometryReader { proxy in
             let totalSeconds = max(CGFloat(phases.reduce(0) { $0 + $1.duration }), 1)
             let widthPerSecond = proxy.size.width / totalSeconds
 
             ZStack {
                 fullPath(widthPerSecond)
-                    .stroke(lineColor.opacity(0.35), style: StrokeStyle(lineWidth: 4, lineCap: .round, lineJoin: .round))
+                    .stroke(line.opacity(0.35), style: StrokeStyle(lineWidth: 4, lineCap: .round, lineJoin: .round))
 
                 progressPath(widthPerSecond)
-                    .stroke(progressColor, style: StrokeStyle(lineWidth: 4, lineCap: .round, lineJoin: .round))
+                    .stroke(progress, style: StrokeStyle(lineWidth: 4, lineCap: .round, lineJoin: .round))
 
                 Circle()
-                    .fill(ballColor)
+                    .fill(ball)
                     .frame(width: 40, height: 40)
                     .position(ballPosition(widthPerSecond))
             }

@@ -44,11 +44,11 @@ struct WeekdayHeatmapView: View {
     private func colorForRate(_ rate: Double) -> Color {
         switch rate {
         case 0.75...1.0:
-            return .green
+            return themeManager.current.streakSuccess
         case 0.50..<0.75:
-            return .green.opacity(0.6)
+            return themeManager.current.streakSuccess.opacity(0.6)
         case 0.25..<0.50:
-            return .orange
+            return themeManager.current.streakIndicator
         case 0.01..<0.25:
             return .red.opacity(0.6)
         default:
@@ -279,9 +279,9 @@ struct InsightDetailView: View {
     private var accentColor: Color {
         switch insight.category {
         case .risk: return .red
-        case .trend: return .green
-        case .pattern: return .blue
-        case .completion: return .orange
+        case .trend: return themeManager.current.streakSuccess
+        case .pattern: return themeManager.current.streakActiveNote
+        case .completion: return themeManager.current.streakIndicator
         }
     }
 }
@@ -357,9 +357,9 @@ private struct WeeklyBreakdownChart: View {
 
     private func barColor(for rate: Double) -> Color {
         switch rate {
-        case 0.75...1.0: return .green
-        case 0.50..<0.75: return .green.opacity(0.6)
-        case 0.25..<0.50: return .orange
+        case 0.75...1.0: return themeManager.current.streakSuccess
+        case 0.50..<0.75: return themeManager.current.streakSuccess.opacity(0.6)
+        case 0.25..<0.50: return themeManager.current.streakIndicator
         case 0.01..<0.25: return .red.opacity(0.6)
         default: return themeManager.current.toolbarBackground
         }

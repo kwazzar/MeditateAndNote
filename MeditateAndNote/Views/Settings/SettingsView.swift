@@ -208,11 +208,11 @@ extension BreathingAnimationStyle {
 extension MainTheme {
     var swatch: Color {
         switch self {
-        case .liquidGlass: .blue
-        case .breathing: .mint
-        case .softDawn: .orange
-        case .darkZen: .indigo
-        case .obsidian: .gray
+        case .liquidGlass: Color(red: 0.92, green: 0.96, blue: 1.0)
+        case .breathing: Color(red: 0.92, green: 0.96, blue: 1.0)
+        case .softDawn: Color(red: 1.0, green: 0.94, blue: 0.88)
+        case .darkZen: Color(red: 0.06, green: 0.08, blue: 0.14)
+        case .obsidian: Color(red: 0.04, green: 0.05, blue: 0.07)
         }
     }
 }
