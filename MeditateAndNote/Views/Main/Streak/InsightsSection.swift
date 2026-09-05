@@ -13,7 +13,13 @@ struct InsightsSection: View {
     @EnvironmentObject private var router: Router
     let viewModel: InsightsViewModel
 
+    @State private var selectedRange: StreakRange
     @State private var selectedInsight: StreakInsight?
+
+    init(viewModel: InsightsViewModel) {
+        self.viewModel = viewModel
+        _selectedRange = State(initialValue: viewModel.selectedRange)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -22,10 +28,15 @@ struct InsightsSection: View {
                     .transition(.move(edge: .top).combined(with: .opacity))
             }
 
+            insightsHeader
+
             if !viewModel.insights.isEmpty {
-                insightsBlock
+                insightCards
                     .transition(.move(edge: .top).combined(with: .opacity))
             }
+        }
+        .onChange(of: selectedRange) { _, newValue in
+            viewModel.selectedRange = newValue
         }
         .animation(.snappy(duration: 0.3), value: viewModel.insights.count)
         .animation(.snappy(duration: 0.3), value: viewModel.recommendations.count)
@@ -69,18 +80,38 @@ struct InsightsSection: View {
 
     // MARK: - Insights Grid
 
-    private var insightsBlock: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
+    private var insightsHeader: some View {
+        HStack(alignment: .center, spacing: 12) {
+            VStack(alignment: .leading, spacing: 2) {
                 Text("Insights")
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(themeManager.current.textPrimary)
 
-                Spacer()
-
-                rangePicker
+                Text(rangeSubtitle)
+                    .font(.caption)
+                    .foregroundStyle(themeManager.current.textSecondary)
+                    .contentTransition(.numericText())
+                    .animation(.snappy, value: rangeSubtitle)
             }
 
+            Spacer()
+
+            rangePicker
+        }
+    }
+
+    private var rangeSubtitle: String {
+        let completion = viewModel.insights
+            .first(where: { $0.category == .completion })?
+            .value
+        if let completion {
+            return "\(viewModel.selectedRange.title) · \(Int((completion * 100).rounded()))% complete"
+        }
+        return viewModel.selectedRange.title
+    }
+
+    private var insightCards: some View {
+        VStack(alignment: .leading, spacing: 10) {
             ForEach(viewModel.insights) { insight in
                 if insight.heatmapData != nil {
                     HeatmapInsightRow(insight: insight)
@@ -94,20 +125,13 @@ struct InsightsSection: View {
     }
 
     private var rangePicker: some View {
-        Picker("Range", selection: rangeBinding) {
+        Picker("Range", selection: $selectedRange) {
             ForEach(StreakRange.allCases) { range in
                 Text(range.shortLabel).tag(range)
             }
         }
         .pickerStyle(.segmented)
         .tint(themeManager.current.streakActiveMeditation)
-    }
-
-    private var rangeBinding: Binding<StreakRange> {
-        Binding(
-            get: { viewModel.selectedRange },
-            set: { viewModel.selectedRange = $0 }
-        )
     }
 
     // MARK: - Action Handling

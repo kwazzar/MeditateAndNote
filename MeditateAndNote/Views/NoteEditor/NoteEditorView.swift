@@ -85,7 +85,7 @@ private extension NoteEditorView {
     var editorBody: some View {
         VStack(alignment: .leading, spacing: 0) {
             TextField("Title", text: $viewModel.title)
-                .font(.system(size: 28, weight: .bold, design: .serif))
+                .font(.system(size: 28, weight: .bold))
                 .multilineTextAlignment(.center)
                 .foregroundStyle(themeManager.current.textPrimary)
                 .padding(.horizontal, 20)

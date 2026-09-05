@@ -235,7 +235,7 @@ private struct StatColumn: View {
     var body: some View {
         VStack(spacing: 4) {
             Text("\(value)")
-                .font(.system(size: 26, weight: .bold, design: .rounded))
+                .font(.system(size: 22, weight: .medium, design: .rounded))
                 .foregroundStyle(accent ? Color.orange : themeManager.current.textPrimary)
                 .contentTransition(.numericText())
                 .animation(.snappy, value: value)
