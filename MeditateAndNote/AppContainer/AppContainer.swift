@@ -21,6 +21,9 @@ final class AppContainer: ObservableObject {
     )
 
     private(set) lazy var streakTracker = StreakTracker(calendar: .current, store: CoreDataStreakStore())
+    private(set) lazy var insightManager = StreakInsightManager(
+        snapshotProvider: streakTracker as any StreakSnapshotProvidable
+    )
     private(set) lazy var meditationSessionStore = CoreDataSessionStore()
     private let meditationService: MeditationService = SampleMeditationService()
     private(set) lazy var selectionStore = MeditationSelectionStore()
@@ -55,6 +58,16 @@ final class AppContainer: ObservableObject {
         eventBus.subscribe { [weak store] event in
             Task { @MainActor in
                 await store?.handle(event)
+            }
+        }
+
+        let insights = insightManager
+        eventBus.subscribe { [weak insights] event in
+            // Same hop as the tracker/store subscriptions above: the bus
+            // publishes on the emitter's thread, and the insight cache
+            // dictionaries are not thread-safe. Next read regenerates.
+            Task { @MainActor in
+                insights?.handle(event)
             }
         }
     }
@@ -102,7 +115,6 @@ final class AppContainer: ObservableObject {
 
     @MainActor
     func makeInsightsViewModel() -> InsightsViewModel {
-        let manager = StreakInsightManager(streakTracker: streakTracker)
-        return InsightsViewModel(manager: manager)
+        InsightsViewModel(manager: insightManager)
     }
 }

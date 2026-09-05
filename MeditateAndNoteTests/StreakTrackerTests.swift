@@ -363,15 +363,16 @@ final class StreakTrackerTests: XCTestCase {
     // MARK: - checkStreakBreak
 
     func testCheckStreakBreak_yesterdayIncomplete_todayIncomplete_streakZero() async {
-        let tracker = makeSUT()
         let yesterday = date(year: 2026, month: 8, day: 19)
 
         // Yesterday incomplete (only note)
-        await tracker.markNoteCreated(date: yesterday)
-        XCTAssertEqual(tracker.currentStreak, 0)
+        let seeding = makeSUT()
+        await seeding.markNoteCreated(date: yesterday)
+        XCTAssertEqual(seeding.currentStreak, 0)
 
-        // Check streak break — today is also incomplete
-        tracker.checkStreakBreak()
+        // A fresh tracker runs checkStreakBreak in init — with yesterday
+        // and today both incomplete the streak stays zero.
+        let tracker = makeSUT()
         XCTAssertEqual(tracker.currentStreak, 0)
     }
 

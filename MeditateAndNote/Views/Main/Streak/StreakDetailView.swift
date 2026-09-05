@@ -7,9 +7,9 @@ import SwiftUI
 
 struct StreakDetailView: View {
     @Environment(ThemeManager.self) private var themeManager
+    @Environment(StreakTracker.self) private var streakTracker
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var router: Router
-    let streakTracker: StreakTracker
     let insightsViewModel: InsightsViewModel
 
     @State private var selectedDayDetail: StreakDayDetail?
@@ -149,7 +149,6 @@ struct StreakDetailView: View {
                 ForEach(weeks.indices, id: \.self) { weekIndex in
                     WeekRow(
                         days: weeks[weekIndex],
-                        streakTracker: streakTracker,
                         onSelect: { date in
                             selectedDayDetail = streakTracker.dayDetail(for: date)
                         }
@@ -301,8 +300,8 @@ private struct ProgressPill: View {
 // MARK: - Week Row
 
 private struct WeekRow: View {
+    @Environment(StreakTracker.self) private var streakTracker
     let days: [Date?]
-    let streakTracker: StreakTracker
     let onSelect: (Date) -> Void
 
     var body: some View {
@@ -334,12 +333,27 @@ private struct WeekRow: View {
 
 struct StreakDetailView_Previews: PreviewProvider {
     static var previews: some View {
-        let tracker = StreakTracker()
-        let manager = StreakInsightManager(streakTracker: tracker)
         StreakDetailView(
-            streakTracker: tracker,
-            insightsViewModel: InsightsViewModel(manager: manager)
+            insightsViewModel: InsightsViewModel(manager: PreviewInsightManager())
         )
         .environment(ThemeManager())
+        .environment(StreakTracker())
+        .environmentObject(Router.previewRouter())
     }
+}
+
+// MARK: - Preview double (avoids hand-built tracker wiring)
+
+private final class PreviewInsightManager: StreakInsightProvidable {
+    func insights(for range: StreakRange) -> [StreakInsight] { [] }
+    func recommendations(for range: StreakRange) -> [UserRecommendation] { [] }
+    func weeklyBreakdown(for range: StreakRange) -> [WeeklyBucket] { [] }
+    func streakLengthDistribution() -> StreakLengthDistribution {
+        .init(buckets: [], totalStreaks: 0, medianLength: 0)
+    }
+    func resilience() -> StreakResilience {
+        .init(avgRecoveryDays: 0, longestRecoveryDays: 0, totalRecoveries: 0, survivalByDay: [:])
+    }
+    func weekdayBreakPattern() -> [Int: Double] { [:] }
+    func weekdayBreakHeatmap() -> WeekdayHeatmapData { .init(days: []) }
 }

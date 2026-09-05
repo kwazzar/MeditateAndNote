@@ -63,7 +63,7 @@ final class StreakInsightEngineTests: XCTestCase {
         }
         let snapshot = makeSnapshot(activities: activities)
 
-        let insights = sut.generateInsights(from: snapshot, range: .last7)
+        let insights = sut.generateInsights(from: snapshot, range: .last7, today: date(2026, 9, 4))
         let rate = insights.first { $0.title == "Last 7 Days Completion" }
 
         XCTAssertNotNil(rate)
@@ -94,7 +94,7 @@ final class StreakInsightEngineTests: XCTestCase {
         }
         let snapshot = makeSnapshot(activities: activities)
 
-        let insights = sut.generateInsights(from: snapshot, range: .last7)
+        let insights = sut.generateInsights(from: snapshot, range: .last7, today: date(2026, 9, 4))
         let rate = insights.first { $0.title == "Last 7 Days Completion" }
 
         XCTAssertNotNil(rate)
@@ -345,7 +345,7 @@ final class StreakInsightEngineTests: XCTestCase {
         ]
         let snapshot = makeSnapshot(activities: activities, currentStreak: 5)
 
-        let insights = sut.generateInsights(from: snapshot)
+        let insights = sut.generateInsights(from: snapshot, today: date(2026, 9, 4))
         let risk = insights.first { $0.title == "Streak at Risk!" }
 
         XCTAssertNil(risk)

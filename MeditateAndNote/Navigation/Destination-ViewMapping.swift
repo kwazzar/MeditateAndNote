@@ -23,7 +23,6 @@ import SwiftUI
                 MeditationCompletionView(meditation: meditation, duration: duration)
             case .streakDetail:
                 StreakDetailView(
-                    streakTracker: container.streakTracker,
                     insightsViewModel: container.makeInsightsViewModel()
                 )
             case .settings:

@@ -172,6 +172,27 @@ struct StreakDayDetail: Hashable, Identifiable {
     }
 }
 
+// MARK: - Streak Snapshot (value object)
+
+/// Point-in-time view of streak state. Produced by `StreakEngine`,
+/// persisted via `StreakActivityStore`, consumed by `StreakInsightEngine`.
+/// Pure domain — no CoreData / SwiftUI.
+struct StreakSnapshot {
+    let activities: [DailyActivity]
+    let currentStreak: Int
+    let longestStreak: Int
+    let lastCountedDay: Date?
+}
+
+// MARK: - Streak Snapshot Provider (read boundary)
+
+/// Read boundary over streak state. `StreakTracker` conforms trivially;
+/// `StreakInsightManager` depends on this instead of the concrete tracker
+/// so tests can inject a stub without a real engine.
+protocol StreakSnapshotProvidable {
+    var snapshot: StreakSnapshot { get }
+}
+
 // MARK: - Streak Insight (value object)
 
 struct StreakInsight: Identifiable, Hashable {

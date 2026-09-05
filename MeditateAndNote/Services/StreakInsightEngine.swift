@@ -17,17 +17,17 @@ struct StreakInsightEngine {
 
     // MARK: - Public API
 
-    func generateInsights(from snapshot: StreakSnapshot, range: StreakRange = .last30) -> [StreakInsight] {
+    func generateInsights(from snapshot: StreakSnapshot, range: StreakRange = .last30, today: Date = Date()) -> [StreakInsight] {
         var insights: [StreakInsight] = []
-        let today = calendar.startOfDay(for: Date())
+        let today = calendar.startOfDay(for: today)
 
         insights.append(contentsOf: completionRateInsights(snapshot: snapshot, today: today, range: range))
-        insights.append(contentsOf: weakDayInsights(snapshot: snapshot, range: range))
-        insights.append(contentsOf: partialDayInsights(snapshot: snapshot, range: range))
-        insights.append(contentsOf: timeOfDayInsights(snapshot: snapshot, range: range))
+        insights.append(contentsOf: weakDayInsights(snapshot: snapshot, range: range, today: today))
+        insights.append(contentsOf: partialDayInsights(snapshot: snapshot, range: range, today: today))
+        insights.append(contentsOf: timeOfDayInsights(snapshot: snapshot, range: range, today: today))
         insights.append(contentsOf: trendInsights(snapshot: snapshot, today: today, range: range))
         insights.append(contentsOf: streakBreakRiskInsight(snapshot: snapshot, today: today))
-        insights.append(contentsOf: balanceInsights(snapshot: snapshot, range: range))
+        insights.append(contentsOf: balanceInsights(snapshot: snapshot, range: range, today: today))
         insights.append(contentsOf: milestoneInsight(snapshot: snapshot))
 
         return insights
@@ -163,8 +163,8 @@ struct StreakInsightEngine {
 
     // MARK: - Weak Days + Heatmap
 
-    private func weakDayInsights(snapshot: StreakSnapshot, range: StreakRange) -> [StreakInsight] {
-        let weekdayStats = weekdayCompletionStats(snapshot: snapshot, range: range)
+    private func weakDayInsights(snapshot: StreakSnapshot, range: StreakRange, today: Date = Date()) -> [StreakInsight] {
+        let weekdayStats = weekdayCompletionStats(snapshot: snapshot, range: range, today: today)
         guard !weekdayStats.isEmpty else { return [] }
 
         let heatmapData = buildHeatmapData(from: weekdayStats)
@@ -220,8 +220,8 @@ struct StreakInsightEngine {
         return WeekdayHeatmapData(days: days)
     }
 
-    private func weekdayCompletionStats(snapshot: StreakSnapshot, range: StreakRange) -> [Int: Double] {
-        let cutoff = calendar.date(byAdding: .day, value: -(range.dayCount - 1), to: calendar.startOfDay(for: Date())) ?? .distantPast
+    private func weekdayCompletionStats(snapshot: StreakSnapshot, range: StreakRange, today: Date = Date()) -> [Int: Double] {
+        let cutoff = calendar.date(byAdding: .day, value: -(range.dayCount - 1), to: calendar.startOfDay(for: today)) ?? .distantPast
         var totals: [Int: Int] = [:]
         var completes: [Int: Int] = [:]
 
@@ -244,8 +244,8 @@ struct StreakInsightEngine {
 
     // MARK: - Partial Day Pattern
 
-    private func partialDayInsights(snapshot: StreakSnapshot, range: StreakRange) -> [StreakInsight] {
-        let cutoff = calendar.date(byAdding: .day, value: -(range.dayCount - 1), to: calendar.startOfDay(for: Date())) ?? .distantPast
+    private func partialDayInsights(snapshot: StreakSnapshot, range: StreakRange, today: Date = Date()) -> [StreakInsight] {
+        let cutoff = calendar.date(byAdding: .day, value: -(range.dayCount - 1), to: calendar.startOfDay(for: today)) ?? .distantPast
         var meditationOnly = 0
         var noteOnly = 0
 
@@ -283,8 +283,8 @@ struct StreakInsightEngine {
 
     // MARK: - Time of Day
 
-    private func timeOfDayInsights(snapshot: StreakSnapshot, range: StreakRange) -> [StreakInsight] {
-        let cutoff = calendar.date(byAdding: .day, value: -(range.dayCount - 1), to: calendar.startOfDay(for: Date())) ?? .distantPast
+    private func timeOfDayInsights(snapshot: StreakSnapshot, range: StreakRange, today: Date = Date()) -> [StreakInsight] {
+        let cutoff = calendar.date(byAdding: .day, value: -(range.dayCount - 1), to: calendar.startOfDay(for: today)) ?? .distantPast
         var meditationHours: [Int] = []
         var noteHours: [Int] = []
 
@@ -395,8 +395,8 @@ struct StreakInsightEngine {
 
     // MARK: - Balance
 
-    private func balanceInsights(snapshot: StreakSnapshot, range: StreakRange) -> [StreakInsight] {
-        let cutoff = calendar.date(byAdding: .day, value: -(range.dayCount - 1), to: calendar.startOfDay(for: Date())) ?? .distantPast
+    private func balanceInsights(snapshot: StreakSnapshot, range: StreakRange, today: Date = Date()) -> [StreakInsight] {
+        let cutoff = calendar.date(byAdding: .day, value: -(range.dayCount - 1), to: calendar.startOfDay(for: today)) ?? .distantPast
         let windowed = snapshot.activities.filter { $0.date >= cutoff }
         let totalDays = windowed.count
         guard totalDays > 0 else { return [] }
