@@ -1,23 +1,32 @@
 # MeditateAndNote — Architecture
 
 Domain-Driven Design (DDD) app. SwiftUI + CoreData + `@Observable`, custom
-Router-based navigation, per-domain `DataSource`/`Store` protocols, and a
-`NoteManager` split into `NoteProvidable` / `NoteManageable`.
+Router-based navigation, per-domain `DataSource`/`Store` protocols, Managers
+split into read/write (`<X>Providable` / `<X>Manageable`) boundaries, and
+async / actor-backed persistence (Swift Concurrency safe).
 
 Dependencies point inward toward the domain:
 
 ```
 Presentation (SwiftUI Views, ViewModels)
         ↓
-Application (NoteManager, StreakTracker, MeditationSessionEngine adapters, ...)
+Application (NoteManager, StreakTracker, StreakInsightManager,
+            ReminderManager, MeditationSessionEngine adapters, ...)
         ↓
 Domain (Entities, Value Objects, DataSource/Store protocols)
         ↑
-Infrastructure (Persistence/ — CoreData implementations)
+Infrastructure (Persistence/ — CoreData + UserDefaults implementations)
 ```
 
 The Domain layer never imports `CoreData`/`SwiftUI`/`UIKit`. NSManagedObject
 maps to domain models only inside the concrete DataSource/Store.
+
+> **Swift Concurrency view.** Persistence paths are curly-safe: `NoteManager`
+> and `InMemoryNoteDataSource` are actors, CoreData data sources use
+> `context.perform`/`await`, view models that touch observable state are
+> `@MainActor`, and the single `DomainEventBus` is `@unchecked Sendable`
+> behind a concurrent queue. Subscribers hop onto `@MainActor` before
+> mutating observable/CoreData state.
 
 ## App Entry & Dependency Injection
 
@@ -25,32 +34,53 @@ maps to domain models only inside the concrete DataSource/Store.
 graph TB
     subgraph Entry["App Entry"]
         App["MeditateAndNoteApp<br/>@main"]
-        Router["Router<br/>ObservableObject<br/>Navigation State"]
-        Container["AppContainer<br/>ObservableObject<br/>DI Factory"]
+        Router["Router<br/>@StateObject<br/>Navigation State"]
+        Container["AppContainer<br/>@StateObject<br/>DI Factory"]
         Theme["ThemeManager<br/>@Observable<br/>UserDefaults"]
         Streak["StreakTracker<br/>@Observable<br/>engine + store"]
         SessionStore["CoreDataSessionStore<br/>@Observable"]
+        Insights["StreakInsightManager"]
+        Reminders["ReminderManager<br/>@Observable"]
     end
 
     App -->|"@StateObject"| Router
     App -->|"@StateObject"| Container
     App -->|"@State"| Theme
-    App -->|"environmentObject"| Streak
-    App -->|"environmentObject"| SessionStore
+    App -->|"environment"| Streak
+    App -->|"environment"| SessionStore
+    App -->|"environment"| Reminders
     App -->|"root view"| Root
 ```
 
-`AppContainer` is the DI root. It owns the singletons (event bus, data
+`AppContainer` is the DI root. It owns the singletons (DomainEventBus, data
 sources, sync coordinator, managers) and exposes `make<X>ViewModel()` factory
-methods; it never acts as a registration container.
+methods; it never acts as a registration container. Mutation paths that leak
+into `init` subscribe `StreakTracker`, `CoreDataSessionStore`, and
+`StreakInsightManager` to `DomainEventBus`, each hopping to `@MainActor`.
+
+Factored ViewModel constructors:
+
+- `makeMainViewModel()` → `MainViewModel(meditationService, selectionStore)`
+- `makeNoteEditorViewModel(noteId:)` → `NoteEditorViewModel(noteId, noteManager)`
+- `makeMeditateSelectViewModel()` → `MeditateSelectViewModel(...)`
+- `makeMeditationViewModel(for:)` → `MeditationViewModel(meditation, eventBus, soundPlayer)`
+- `makeNoteMenuViewModel()` → the shared singleton `NoteMenuViewModel`
+- `makeOnboardingViewModel(onCompletion:)` → `OnboardingViewModel(store, pages, onCompletion)`
+- `makeInsightsViewModel()` → `InsightsViewModel(StreakInsightManager)`
 
 ## Root & Navigation
 
 ```mermaid
 graph TB
     subgraph Root["Root Container"]
-        RootView["RootContainer<br/>TabView + CustomTabBar"]
+        RootView["RootContainer<br/>StartupFlow + TabView + CustomTabBar<br/>+ onboarding gating"]
+        Onb["OnboardingCoordinator<br/>store + Router transition"]
+        OnbVM["OnboardingViewModel<br/>@Observable<br/>pages + completion"]
     end
+
+    RootView -->|"shouldShowOnboarding ?"| Onb
+    Onb -->|"onOnboardingCompleted(router)"| RootView
+    Onb --> OnbVM
 
     RootView -->|"Tab: .home"| NavHome
     RootView -->|"Tab: .notes"| NavNotes
@@ -64,8 +94,8 @@ graph TB
 
     subgraph Nav["Navigation Model"]
         Dest["Destination<br/>tab / push / sheet / fullScreen"]
-        Push["PushDestination<br/>newNote, noteDetails, readingView,<br/>meditation, streakDetail"]
-        Sheet["SheetDestination<br/>newNote, meditationSettings, timeMeditation"]
+        Push["PushDestination<br/>newNote, noteDetails, readingView,<br/>meditation, meditationCompletion,<br/>streakDetail, settings"]
+        Sheet["SheetDestination<br/>newNote (stub), meditationSettings<br/>(stub), timeMeditation"]
         Full["FullScreenDestination<br/>meditationSession, fullScreenNote"]
         Deep["DeepLinkParser<br/>myScheme://..."]
     end
@@ -77,12 +107,20 @@ graph TB
     NavHome --> Deep
 ```
 
+- `RootContainer` gates launch on `OnboardingCoordinator` (`shouldShowOnboarding`),
+  showing onboarding before the tab bar mounts. A DEBUG `-showOnboarding`
+  launch arg reopens it for dev.
 - `Router` is a level-aware `ObservableObject` holding `navigationStackPath`,
-  `presentingSheet`, `presentingFullScreen`, and `selectedTab`. Children are
-  created via `childRouter(for:)`; only the active router resolves deep links.
+  `presentingSheet`, `presentingFullScreen`, `isDetailPresented`, and
+  `selectedTab`. Children are created via `childRouter(for:)`; only the active
+  router resolves deep links.
+- `Destination` wraps `PushDestination`/`SheetDestination`/`FullScreenDestination`.
+  Since the last update `.settings`, `.meditationCompletion` pushes and the
+  `.meditationSession` full screen were added; `newNote`/`meditationSettings`
+  sheet cases are currently mapped to `EmptyView()` stubs.
 - `NavigationContainer` wraps each tab in a `NavigationStack` bound to its
-  router, and maps `PushDestination`/`SheetDestination`/`FullScreenDestination`
-  to concrete views via `Destination-ViewMapping.swift` + `ContainerView`.
+  router, and maps destinations to concrete views via
+  `Destination-ViewMapping.swift` + `ContainerView`.
 - `NavigationContainer` exposes only the router and a view builder; it never
   holds screen logic. ViewModels never reference a concrete View.
 
@@ -96,18 +134,24 @@ graph TB
         MeditateSelect["MeditateSelectView<br/>Meditations Tab"]
         NoteEditor["NoteEditorView<br/>Note Editor"]
         MeditationView["MeditationView<br/>Active Session"]
+        MeditationCompletion["MeditationCompletionView"]
         ReadingView["ReadingView<br/>Post-Meditation"]
-        StreakDetail["StreakDetailView"]
+        StreakDetail["StreakDetailView<br/>InsightsSection, WeekdayHeatmap,
+<br/>LifetimePatternsSection, StreakDayDetailSheet"]
+        SettingsView["SettingsView<br/>Reminder / Animation / Theme / Sound"]
+        OnboardingView["OnboardingView<br/>OnboardingPageView"]
         TimeSheet["TimeMeditationSheet"]
         MeditationInfo["MeditationInfoScroll"]
     end
 
     subgraph ViewModels["ViewModels"]
-        MainVM["MainViewModel<br/>ObservableObject"]
-        NoteMenuVM["NoteMenuViewModel<br/>@Observable"]
+        MainVM["MainViewModel<br/>@Observable"]
+        NoteMenuVM["NoteMenuViewModel<br/>@Observable<br/>singleton"]
         NoteEditorVM["NoteEditorViewModel<br/>@Observable<br/>EditTarget state machine"]
-        MeditateSelectVM["MeditateSelectViewModel<br/>ObservableObject"]
-        MeditationVM["MeditationViewModel<br/>@Observable<br/>wraps MeditationSessionEngine"]
+        MeditateSelectVM["MeditateSelectViewModel<br/>@Observable<br/>loadState"]
+        MeditationVM["MeditationViewModel<br/>@MainActor @Observable<br/>wraps MeditationSessionEngine"]
+        InsightsVM["InsightsViewModel<br/>@Observable<br/>range + lifetime"]
+        OnboardingVM["OnboardingViewModel<br/>@MainActor @Observable"]
     end
 
     MainView --> MainVM
@@ -115,6 +159,8 @@ graph TB
     NoteEditor --> NoteEditorVM
     MeditateSelect --> MeditateSelectVM
     MeditationView --> MeditationVM
+    StreakDetail --> InsightsVM
+    OnboardingView --> OnboardingVM
 
     MainVM -->|uses| MeditSvc["MeditationService"]
     MainVM -->|uses| SelStore["MeditationSelectionStore"]
@@ -122,11 +168,13 @@ graph TB
     MeditateSelectVM -->|uses| SelStore
     NoteMenuVM -->|uses any NoteProvidable & NoteManageable| NM["NoteManager"]
     NoteEditorVM -->|uses any NoteProvidable & NoteManageable| NM
+    InsightsVM -->|uses any StreakInsightProvidable| IM["StreakInsightManager"]
 ```
 
 Note: `NoteMenuViewModel` is a singleton in `AppContainer` (loaded once,
-keeps its event-bus subscription alive). `NoteEditorViewModel` and
-`MeditationViewModel` are created per screen via `make<X>ViewModel()`.
+keeps its event-bus subscription alive). `NoteEditorViewModel`,
+`MeditationViewModel`, `OnboardingViewModel`, and `InsightsViewModel` are
+created per screen via `make<X>ViewModel()`.
 
 ## Domain Model
 
@@ -145,8 +193,12 @@ graph LR
         SessionDuration["SessionDuration<br/>positive invariant"]
         Engine["MeditationSessionEngine<br/>pure state machine"]
         Clock["BreathingClock<br/>pure timing"]
-        DailyAct["DailyActivity<br/>date, hasMeditation, hasNote"]
+        DayState["CoreDayState<br/>empty / meditationOnly /<br/>noteOnly / complete"]
+        DailyAct["DailyActivity<br/>date, hasMeditation, hasNote,<br/>meditationTime, noteTime"]
+        DayDetail["StreakDayDetail<br/>date, state, missingAction"]
         StreakEngine["StreakEngine<br/>pure streak logic"]
+        InsightVO["StreakInsight / UserRecommendation /<br/>StreakLengthDistribution /<br/>StreakResilience / WeeklyBucket /<br/>WeekdayHeatmapData / StreakRange"]
+        RemindVO["ReminderSettings +<br/>ReminderScheduleBuilder<br/>(pure scheduling math)"]
         Search["SearchQuery / NoteFilter"]
         MainTheme["MainTheme<br/>liquidGlass, breathing, softDawn,<br/>darkZen, obsidian"]
     end
@@ -158,6 +210,8 @@ graph LR
     Engine --> Clock
     Engine --> SessionDuration
     Session --> SessionDuration
+    DailyAct --> DayState
+    DayDetail --> DayState
     StreakEngine --> DailyAct
     Note -- aggregate --> NoteBook
     NoteBook -.-> MergeConflict
@@ -166,12 +220,26 @@ graph LR
 Domain invariants live in the Value Objects / aggregate / engines:
 - `NoteTitle` trims and supplies `"Untitled"`; `NoteContent` is a wrapper.
 - `NoteBook` owns collection invariants (one row per `NoteID`, LWW by date).
-- `SessionDuration` rejects non-positive values even on the constructor path.
+- `SessionDuration` rejects non-positive values even on the constructor path,
+  and `SessionDuration` decoder path throws rather than allowing bad data.
+- `DailyActivity` exposes a first-class `CoreDayState`
+  (`empty / meditationOnly / noteOnly / complete`); `.complete` is the only
+  streak-contributing state. `markMeditation`/`markNote` set the boolean and
+  its timestamp atomically.
+- `ReminderSettings` clamps `hour`/`minute` and guarantees a non-empty,
+  valid weekday set; `ReminderScheduleBuilder` computes fire dates with pure
+  calendar math (no `UNUserNotificationCenter`).
 - `MeditationSessionEngine` is a deterministic state machine
-  (`idle → countdown → active → finished`); all side effects come back as
-  `Event`s instead of being fired inline.
+  (`idle → countdown → active → finished`). `active` carries a wall-clock
+  `anchoredAt` and a `finishing` flag — remaining time is derived from real
+  elapsed time (timer drift / backgrounding can't overrun), and the session
+  closes on an exhale phase boundary rather than mid-inhale. All side effects
+  come back as `Event`s instead of being fired inline.
 - `StreakEngine` holds the pure streak rules; `StreakTracker` is an `@Observable`
-  adapter over it and forwards to `StreakActivityStore`.
+  adapter over it and forwards to `StreakActivityStore`. `StreakInsightEngine`
+  (pure) + `StreakInsightManager` (cached) derive range-aware insights and
+  lifetime patterns (distribution, resilience, break heatmap) from a
+  `StreakSnapshot`.
 
 ## Application / Services Layer
 
@@ -182,14 +250,18 @@ graph TB
         Sync["NoteSyncCoordinator<br/>protocol + Default impl<br/>local/remote strategies"]
         MeditSvc["MeditationService<br/>protocol + SampleMeditationService"]
         SelStore["MeditationSelectionStore<br/>UserDefaults"]
-        StreakTracker["StreakTracker<br/>@Observable"]
+        StreakTracker["StreakTracker<br/>@Observable<br/>StreakSnapshotProvidable"]
+        InsightMgr["StreakInsightManager<br/>StreakInsightProvidable<br/>cached"]
+        ReminderMgr["ReminderManager<br/>@Observable<br/>ReminderProvidable & ReminderManageable"]
+        OnbStore["OnboardingStore<br/>protocol + UserDefaultsOnboardingStore"]
         ThemeManager["ThemeManager<br/>@Observable"]
         Sound["SoundPlayer<br/>SoundPlaying protocol"]
         Bus["DomainEventBus<br/>DomainEventPublisher"]
 
         NoteProv["NoteProvidable<br/>currentNotes, note(with:),<br/>notes(matching:), refresh"]
         NoteMan["NoteManageable<br/>add, update, delete"]
-
+        InsightProv["StreakInsightProvidable<br/>insights(for:), recommendations(for:),<br/>weeklyBreakdown, streakLengthDistribution,<br/>resilience, weekdayBreakPattern,<br/>weekdayBreakHeatmap"]
+        RemindProv["ReminderProvidable / ReminderManageable"]
 
         Evt["DomainEvent<br/>noteCreated / noteUpdated /<br/>noteDeleted / meditationCompleted"]
     end
@@ -198,7 +270,13 @@ graph TB
     NM --- NoteMan
     NM --> Sync
     NM --> Bus
+    StreakTracker ---- InsightMgr
+    InsightMgr --- InsightProv
+    ReminderMgr --- RemindProv
+    OnbStore -.->|"implements"| UserDefaultsOnboardingStore
     StreakTracker --> Bus
+    InsightMgr --> Bus
+    ReminderMgr -->|"implements"| RemindProv
     Sound -->|"implements"| SoundP["SoundPlaying"]
     Bus --> Evt
 ```
@@ -206,16 +284,28 @@ graph TB
 - **`NoteManager`** (actor) is the application service for notes. It exposes
   two protocols: `NoteProvidable` (read) and `NoteManageable` (write), plus a
   typed `NoteOperationError` (`.loadFailed` / `.saveFailed` / `.deleteFailed`).
-  It holds its own `NoteBook` aggregate and publishes domain events after each
-  mutation. ViewModels depend on `any NoteProvidable & NoteManageable`.
+  It holds its own `NoteBook` aggregate (rebuilt from the sync coordinator
+  after each mutation) and publishes domain events. ViewModels depend on
+  `any NoteProvidable & NoteManageable`.
 - **`NoteSyncCoordinator`** (`DefaultNoteSyncCoordinator`) orchestrates
   local/remote reads and writes by `SyncStrategy` (`localOnly`, `remoteOnly`,
   `localFirst`, `remoteFirst`, `hybrid`). Hybrid merges via
-  `NoteBook.merged` and reports `MergeConflict`s.
+  `NoteBook.merged` and reports `MergeConflict`s; remote writes are best-effort
+  (`bestEffort`) so local data is safe even if remote sync fails.
+- **`StreakTracker`** is an `@Observable` adapter over the pure `StreakEngine`
+  (`StreakSnapshotProvidable` read boundary). **`StreakInsightManager`** depends
+  on `any StreakSnapshotProvidable` (not the concrete tracker) and exposes
+  `StreakInsightProvidable` — range-aware insights/recommendations plus
+  lifetime patterns, with per-(range, signature) memoization invalidated by
+  domain events.
+- **`ReminderManager`** (ReminderProvidable / ReminderManageable) orchestrates
+  `ReminderSettings` with a `NotificationScheduling` abstraction; every
+  mutation persists and reschedules a 7-day notification horizon.
 - **Domain events** decouple bounded contexts: `DomainEvent` is a closed sum
   type; subscribers (`StreakTracker`, `CoreDataSessionStore`,
-  `NoteMenuViewModel`) switch exhaustively, so adding a case is a compile-time
-  decision.
+  `StreakInsightManager`, `NoteMenuViewModel`) switch exhaustively, so adding a
+  case is a compile-time decision. The bus publishes on the emitter's thread;
+  subscribers hop to `@MainActor` before mutating observable/CoreData state.
 
 ## Infrastructure (Persistence)
 
@@ -225,7 +315,7 @@ graph TB
         CDM["CoreDataManager<br/>NSPersistentContainer<br/>buildModel(), newBackgroundContext()"]
         CDNote["CoreDataNoteDataSource<br/>conforms NoteDataSource"]
         CDStreak["CoreDataStreakStore<br/>conforms StreakActivityStore"]
-        CDSession["CoreDataSessionStore<br/>concrete store (accepted exception)"]
+        CDSession["CoreDataSessionStore<br/>concrete store (accepted exception)<br/>@Observable"]
 
         CDEvent["CDNote / CDMeditationSession /<br/>CDDailyActivity / CDStreakMeta<br/>NSManagedObject entities"]
     end
@@ -233,14 +323,23 @@ graph TB
     subgraph Contracts["Persistence Protocols (Domain)"]
         ND["NoteDataSource<br/>fetchAll / fetch(id:) / save /<br/>delete(id:) / deleteAll"]
         SA["StreakActivityStore<br/>load / save snapshot"]
-        IM["InMemoryNoteDataSource<br/>conforms NoteDataSource<br/>(tests & previews)"]
+        RS["ReminderSettingsStore<br/>load / save ReminderSettings"]
+        NS["NotificationScheduling<br/>isAuthorized / requestAuthorization /<br/>scheduleNotification / removeAllPending"]
+        OS["OnboardingStore<br/>hasCompletedOnboarding /<br/>markOnboardingCompleted"]
+        IM["InMemoryNoteDataSource<br/>actor · conforms NoteDataSource<br/>(tests & previews)"]
         UDS["UserDefaultsStreakStore<br/>conforms StreakActivityStore<br/>+ legacy migration"]
+        UDReminder["UserDefaultsReminderSettingsStore<br/>conforms ReminderSettingsStore"]
+        SysSched["SystemNotificationScheduler<br/>conforms NotificationScheduling<br/>(UNUserNotificationCenter)"]
+        UDOnb["UserDefaultsOnboardingStore<br/>conforms OnboardingStore"]
     end
 
     CDNote -.-> ND
     IM -.-> ND
     CDStreak -.-> SA
     UDS -.-> SA
+    UDReminder -.-> RS
+    SysSched -.-> NS
+    UDOnb -.-> OS
     CDNote --> CDM
     CDStreak --> CDM
     CDSession --> CDM
@@ -251,12 +350,18 @@ graph TB
 
 - `CoreDataManager` owns the `NSPersistentContainer` and builds the model
   programmatically (CDNote, CDMeditationSession, CDDailyActivity, CDStreakMeta).
-  Only DataSources/Stores touch it.
+  Only DataSources/Stores touch it. If the disk store fails to load it falls
+  back to an in-memory store so the app stays usable.
 - All NSManagedObject → domain mapping stays inside the concrete
   DataSource/Store (`.toNote()`, `.apply()`, `.findOrCreate()`).
 - `CoreDataSessionStore` is a known accepted exception — a concrete `@Observable`
   type with no protocol abstraction (unlike `CoreDataStreakStore`, which
   conforms to `StreakActivityStore`).
+- Async / actor persistence: CoreData data sources route I/O through
+  `context.perform` / `await context.perform`; `InMemoryNoteDataSource` is an
+  actor. These live in `Persistence/` plus `Services/` (streak/reminder store
+  protocols and their UserDefaults impls keep the Domain free of framework
+  imports).
 
 ## Data Flow
 
@@ -283,7 +388,7 @@ sequenceDiagram
     Mgr-->>VM: Updates @Observable / @Published
     VM-->>View: UI re-renders
     Mgr--)Bus: Publishes DomainEvent (noteCreated/meditationCompleted)
-    Bus--)Streak/CoreDataSessionStore: Reacts
+    Bus--)Streak/CoreDataSessionStore/StreakInsightManager: Reacts (@MainActor hop)
 
     Note over View,Container: On Navigation
     View->>Nav: router.navigate(to: .push / .sheet / .fullScreen)
@@ -302,6 +407,7 @@ stateDiagram-v2
     Home --> Meditation: Push .meditation(meditation)
     Home --> NoteDetail: Push .noteDetails(noteId)
     Home --> Streak: Push .streakDetail
+    Home --> Settings: Push .settings
 
     Notes --> NoteDetail: Push .noteDetails(noteId)
     Notes --> NewNote: Push .newNote
@@ -311,6 +417,7 @@ stateDiagram-v2
 
     Meditation --> TimePicker: Sheet .timeMeditation
     Meditation --> Reading: Push .readingView (after finish)
+    Meditation --> Completion: Push .meditationCompletion (after finish)
     Meditation --> Home: Close
 
     state Meditation {
@@ -327,4 +434,7 @@ stateDiagram-v2
 `MeditationViewModel` drives the `MeditationSessionEngine` timer loop; on
 `.completed` it builds a `MeditationSession` and publishes
 `.meditationCompleted` on the `DomainEventBus`, which `CoreDataSessionStore`
-persists and `StreakTracker` feeds into the streak engine.
+persists, `StreakTracker` feeds into the streak engine, and
+`StreakInsightManager` uses to invalidate its cache. The schedule no longer
+requires an on-screen `ReadingView` — a `MeditationCompletionView` push is
+available via `.meditationCompletion(meditation:duration:)`.
