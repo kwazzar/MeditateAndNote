@@ -16,6 +16,7 @@ enum CDEntity {
     static let session = "CDMeditationSession"
     static let dailyActivity = "CDDailyActivity"
     static let streakMeta = "CDStreakMeta"
+    static let aiDraftSession = "CDAIDraftSession"
 }
 
 // MARK: - CoreDataManager
@@ -205,8 +206,51 @@ final class CoreDataManager {
 
         streakEntity.properties = [streakCurrent, streakLongest, streakLastDay]
 
+        // ── CDAIDraftSession ───────────────────────────────────
+        // Persisted AI-draft aggregate for cold-start recovery.
+        let aiDraftEntity = NSEntityDescription()
+        aiDraftEntity.name = CDEntity.aiDraftSession
+        aiDraftEntity.managedObjectClassName = NSStringFromClass(NSManagedObject.self)
+
+        let aiDraftID = NSAttributeDescription()
+        aiDraftID.name = "id"
+        aiDraftID.attributeType = .UUIDAttributeType
+        aiDraftID.isOptional = false
+
+        let aiDraftNoteID = NSAttributeDescription()
+        aiDraftNoteID.name = "noteID"
+        aiDraftNoteID.attributeType = .UUIDAttributeType
+        aiDraftNoteID.isOptional = false
+
+        let aiDraftPrompt = NSAttributeDescription()
+        aiDraftPrompt.name = "promptJSON"
+        aiDraftPrompt.attributeType = .binaryDataAttributeType
+        aiDraftPrompt.isOptional = false
+
+        let aiDraftSuggestions = NSAttributeDescription()
+        aiDraftSuggestions.name = "suggestionsJSON"
+        aiDraftSuggestions.attributeType = .binaryDataAttributeType
+        aiDraftSuggestions.isOptional = false
+
+        let aiDraftState = NSAttributeDescription()
+        aiDraftState.name = "stateRaw"
+        aiDraftState.attributeType = .stringAttributeType
+        aiDraftState.isOptional = false
+        aiDraftState.defaultValue = ""
+
+        let aiDraftCreatedAt = NSAttributeDescription()
+        aiDraftCreatedAt.name = "createdAt"
+        aiDraftCreatedAt.attributeType = .dateAttributeType
+        aiDraftCreatedAt.isOptional = false
+        aiDraftCreatedAt.defaultValue = Date.distantPast
+
+        aiDraftEntity.properties = [
+            aiDraftID, aiDraftNoteID, aiDraftPrompt,
+            aiDraftSuggestions, aiDraftState, aiDraftCreatedAt,
+        ]
+
         // ── Register ─────────────────────────────────────────────
-        model.entities = [noteEntity, sessionEntity, activityEntity, streakEntity]
+        model.entities = [noteEntity, sessionEntity, activityEntity, streakEntity, aiDraftEntity]
 
         return model
     }

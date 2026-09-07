@@ -37,6 +37,16 @@ final class NoteEditorViewModel {
         return false
     }
 
+    /// The note's id when editing an existing note; nil for a fresh note.
+    var currentNoteID: NoteID? {
+        switch target {
+        case .new, .loading:
+            return nil
+        case .loaded(let id, _), .notFound(let id):
+            return id
+        }
+    }
+
     var isDirty: Bool {
         switch target {
         case .loading:
@@ -135,6 +145,15 @@ final class NoteEditorViewModel {
         } catch {
             logger.error("Save failed — \(error.localizedDescription)")
         }
+    }
+
+    // MARK: - AI Draft Integration
+
+    /// Applies a suggestion picked from the AI sheet, then nudges autosave.
+    func applyDraft(_ content: NoteContent) {
+        guard !content.rawValue.isEmpty else { return }
+        body = content.rawValue
+        onTextChanged()
     }
 
     // MARK: - Delete

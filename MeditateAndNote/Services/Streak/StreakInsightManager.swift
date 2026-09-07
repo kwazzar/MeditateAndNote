@@ -134,6 +134,8 @@ final class StreakInsightManager: StreakInsightProvidable {
             invalidateCache()
         case .noteUpdated, .noteDeleted:
             break
+        case .aiDraftGenerated:
+            break
         }
     }
 

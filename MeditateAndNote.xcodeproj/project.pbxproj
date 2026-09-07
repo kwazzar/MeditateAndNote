@@ -7,6 +7,20 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4FB48354A7001CC2650389B1 /* AIPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A8E44FFD43ED36DC040AF60 /* AIPrompt.swift */; };
+		AD2436D7DBA2E842F8932236 /* AISuggestion.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC899512073D5185F389B4B2 /* AISuggestion.swift */; };
+		3E3E6AF6D546FC647CD1CBD5 /* AIDraftSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = D75A6A03A0815DD9397A972C /* AIDraftSession.swift */; };
+		101741837BC46B6260CC7670 /* NoteAIDraftError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C097ECE4091974BC6E457F0 /* NoteAIDraftError.swift */; };
+		78316C7ABB9801F35E80B0BC /* AIDraftService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31BEF74850AB9BA8582B050E /* AIDraftService.swift */; };
+		D60A04870831F1EB26DE1D55 /* FoundationModelsAIDraftService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F5B8328BD4EB37593E54DF5 /* FoundationModelsAIDraftService.swift */; };
+		8E5CBDD277B7DA1853A68928 /* AIDraftServiceFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACED283CF7A40C96B22C4762 /* AIDraftServiceFactory.swift */; };
+		BCA229FAEFFF55C7207D8533 /* AIDraftSessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7D4CA8EC18784FA6B3313C1 /* AIDraftSessionStore.swift */; };
+		6A3A783F164CE76CEAB4DBEE /* AIDraftManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FB281AE971D4DB672406825 /* AIDraftManager.swift */; };
+		C51D477CB42F9FCB911391AD /* CoreDataAIDraftSessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FF5CC1CC273909C3EF0192B /* CoreDataAIDraftSessionStore.swift */; };
+		D090E4DDC1458412DDFCB91D /* NoteAIDraftViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C41C9EA24F3766528DEEC350 /* NoteAIDraftViewModel.swift */; };
+		3BCC2F210BD2E40EE81D0C68 /* NoteAIDraftSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = D44BFFA98B3EBE0C5FEBEF67 /* NoteAIDraftSheet.swift */; };
+		BD60022C477DD0A0FF778849 /* AIDraftSessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7648CA347C57421E7F2B662 /* AIDraftSessionTests.swift */; };
+		28A91B1F7276A0017B93246A /* AIDraftManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07F5E247FA129DC74064AF00 /* AIDraftManagerTests.swift */; };
 		053967EF78BB7B14A4784118 /* StreakInsight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D672486C798B4CC2DBFF322 /* StreakInsight.swift */; };
 		096B78E3E88B87EA5E3E59B7 /* UserDefaultsReminderSettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1C20BEA552DE5FA2D6680E4 /* UserDefaultsReminderSettingsStore.swift */; };
 		1319DD5B5051A8A4C9C10470 /* ReminderManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA2A9BB90A0B40656AE57601 /* ReminderManager.swift */; };
@@ -270,6 +284,21 @@
 		OB0000050000000000000005 /* OnboardingCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingCoordinator.swift; sourceTree = "<group>"; };
 		OB0000060000000000000006 /* OnboardingStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingStore.swift; sourceTree = "<group>"; };
 		OB0000070000000000000007 /* OnboardingViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewModelTests.swift; sourceTree = "<group>"; };
+
+		7A8E44FFD43ED36DC040AF60 /* AIPrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIPrompt.swift; sourceTree = "<group>"; };
+		CC899512073D5185F389B4B2 /* AISuggestion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AISuggestion.swift; sourceTree = "<group>"; };
+		D75A6A03A0815DD9397A972C /* AIDraftSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIDraftSession.swift; sourceTree = "<group>"; };
+		1C097ECE4091974BC6E457F0 /* NoteAIDraftError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteAIDraftError.swift; sourceTree = "<group>"; };
+		31BEF74850AB9BA8582B050E /* AIDraftService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIDraftService.swift; sourceTree = "<group>"; };
+		2F5B8328BD4EB37593E54DF5 /* FoundationModelsAIDraftService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoundationModelsAIDraftService.swift; sourceTree = "<group>"; };
+		ACED283CF7A40C96B22C4762 /* AIDraftServiceFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIDraftServiceFactory.swift; sourceTree = "<group>"; };
+		E7D4CA8EC18784FA6B3313C1 /* AIDraftSessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIDraftSessionStore.swift; sourceTree = "<group>"; };
+		0FB281AE971D4DB672406825 /* AIDraftManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIDraftManager.swift; sourceTree = "<group>"; };
+		6FF5CC1CC273909C3EF0192B /* CoreDataAIDraftSessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataAIDraftSessionStore.swift; sourceTree = "<group>"; };
+		C41C9EA24F3766528DEEC350 /* NoteAIDraftViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteAIDraftViewModel.swift; sourceTree = "<group>"; };
+		D44BFFA98B3EBE0C5FEBEF67 /* NoteAIDraftSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteAIDraftSheet.swift; sourceTree = "<group>"; };
+		C7648CA347C57421E7F2B662 /* AIDraftSessionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIDraftSessionTests.swift; sourceTree = "<group>"; };
+		07F5E247FA129DC74064AF00 /* AIDraftManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIDraftManagerTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -408,6 +437,7 @@
 			children = (
 				788513DF3033D9250052F4BC /* NoteEditorView.swift */,
 				788513DD3033D35D0052F4BC /* FloatingToolbar.swift */,
+				0FCDC88D328F1E47AD434D12 /* AIDraft */,
 			);
 			path = NoteEditor;
 			sourceTree = "<group>";
@@ -483,6 +513,8 @@
 				F309EADEBFC34EA8AEDBC615 /* RouterTests.swift */,
 				965AB13C80C9D60F37F232D7 /* ReminderSettingsTests.swift */,
 				3FC0FF6183D64D88B5E241EC /* ReminderManagerTests.swift */,
+				C7648CA347C57421E7F2B662 /* AIDraftSessionTests.swift */,
+				07F5E247FA129DC74064AF00 /* AIDraftManagerTests.swift */,
 			);
 			path = MeditateAndNoteTests;
 			sourceTree = "<group>";
@@ -512,6 +544,7 @@
 				CC0000042026082800000004 /* CoreDataStreakStore.swift */,
 				C1C20BEA552DE5FA2D6680E4 /* UserDefaultsReminderSettingsStore.swift */,
 				EE0000012026090500000004 /* UserDefaultsStreakStore.swift */,
+				6FF5CC1CC273909C3EF0192B /* CoreDataAIDraftSessionStore.swift */,
 			);
 			path = Persistence;
 			sourceTree = "<group>";
@@ -608,6 +641,7 @@
 				AA0003002026082200000001 /* MeditationDuration.swift */,
 				1D672486C798B4CC2DBFF322 /* StreakInsight.swift */,
 				1797E6BA050E651155BE0B60 /* ReminderSettings.swift */,
+				A3D654A06AA8B46BE49EF717 /* AI */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -657,6 +691,7 @@
 				E36164402E41050F00A5DCCF /* MeditationViewModel.swift */,
 				OB0000030000000000000003 /* OnboardingViewModel.swift */,
 				09E4AAB15B1383604B747363 /* InsightsViewModel.swift */,
+				C41C9EA24F3766528DEEC350 /* NoteAIDraftViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -673,6 +708,7 @@
 				8A0000052026090700000005 /* Settings */,
 				8A0000062026090700000006 /* Onboarding */,
 				8A0000072026090700000007 /* Theme */,
+				28418663D622F46F427B6E65 /* AI */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -702,6 +738,39 @@
 			path = Onboarding;
 			sourceTree = "<group>";
 		};
+
+		A3D654A06AA8B46BE49EF717 /* AI */ = {
+			isa = PBXGroup;
+			children = (
+				7A8E44FFD43ED36DC040AF60 /* AIPrompt.swift */,
+				CC899512073D5185F389B4B2 /* AISuggestion.swift */,
+				D75A6A03A0815DD9397A972C /* AIDraftSession.swift */,
+				1C097ECE4091974BC6E457F0 /* NoteAIDraftError.swift */,
+			);
+			path = AI;
+			sourceTree = "<group>";
+		};
+		28418663D622F46F427B6E65 /* AI */ = {
+			isa = PBXGroup;
+			children = (
+				31BEF74850AB9BA8582B050E /* AIDraftService.swift */,
+				2F5B8328BD4EB37593E54DF5 /* FoundationModelsAIDraftService.swift */,
+				ACED283CF7A40C96B22C4762 /* AIDraftServiceFactory.swift */,
+				E7D4CA8EC18784FA6B3313C1 /* AIDraftSessionStore.swift */,
+				0FB281AE971D4DB672406825 /* AIDraftManager.swift */,
+			);
+			path = AI;
+			sourceTree = "<group>";
+		};
+		0FCDC88D328F1E47AD434D12 /* AIDraft */ = {
+			isa = PBXGroup;
+			children = (
+				D44BFFA98B3EBE0C5FEBEF67 /* NoteAIDraftSheet.swift */,
+			);
+			path = AIDraft;
+			sourceTree = "<group>";
+		};
+
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -829,6 +898,8 @@
 				BAD70D9BC13D443FA7FBDCE4 /* RouterTests.swift in Sources */,
 				C14230B1AABCB77064DE1389 /* ReminderSettingsTests.swift in Sources */,
 				E918FB33F6CC56F39066F7DA /* ReminderManagerTests.swift in Sources */,
+				BD60022C477DD0A0FF778849 /* AIDraftSessionTests.swift in Sources */,
+				28A91B1F7276A0017B93246A /* AIDraftManagerTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -923,6 +994,18 @@
 				1319DD5B5051A8A4C9C10470 /* ReminderManager.swift in Sources */,
 				E2972A3FC4C853E0382811E2 /* ReminderSettingsSection.swift in Sources */,
 				A1B2C3D4E5F6000000000001 /* LoadingScreenView.swift in Sources */,
+				4FB48354A7001CC2650389B1 /* AIPrompt.swift in Sources */,
+				AD2436D7DBA2E842F8932236 /* AISuggestion.swift in Sources */,
+				3E3E6AF6D546FC647CD1CBD5 /* AIDraftSession.swift in Sources */,
+				101741837BC46B6260CC7670 /* NoteAIDraftError.swift in Sources */,
+				78316C7ABB9801F35E80B0BC /* AIDraftService.swift in Sources */,
+				D60A04870831F1EB26DE1D55 /* FoundationModelsAIDraftService.swift in Sources */,
+				8E5CBDD277B7DA1853A68928 /* AIDraftServiceFactory.swift in Sources */,
+				BCA229FAEFFF55C7207D8533 /* AIDraftSessionStore.swift in Sources */,
+				6A3A783F164CE76CEAB4DBEE /* AIDraftManager.swift in Sources */,
+				C51D477CB42F9FCB911391AD /* CoreDataAIDraftSessionStore.swift in Sources */,
+				D090E4DDC1458412DDFCB91D /* NoteAIDraftViewModel.swift in Sources */,
+				3BCC2F210BD2E40EE81D0C68 /* NoteAIDraftSheet.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

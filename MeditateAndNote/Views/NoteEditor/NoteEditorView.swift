@@ -9,11 +9,14 @@ struct NoteEditorView: View {
     @State var viewModel: NoteEditorViewModel
     @Environment(\.dismiss) private var dismiss
     @Environment(ThemeManager.self) private var themeManager
-    
+    @Environment(\.appContainer) private var appContainer
+
     @FocusState private var isEditorFocused: Bool
     @State private var isKeyboardVisible = false
     @State private var showDeleteConfirmation = false
-    
+    @State private var showAIDraftSheet = false
+    @State private var draftNoteID: NoteID?
+
     var body: some View {
         ZStack {
             themeManager.current.mainBackground.ignoresSafeArea()
@@ -46,10 +49,32 @@ struct NoteEditorView: View {
         } message: {
             Text("This action cannot be undone.")
         }
+        .sheet(isPresented: $showAIDraftSheet) {
+            aiDraftSheet
+        }
     }
 }
 
 private extension NoteEditorView {
+    // MARK: - AI Draft Sheet
+
+    @ViewBuilder
+    var aiDraftSheet: some View {
+        if let noteID = draftNoteID {
+            let aiViewModel = appContainer.makeNoteAIDraftViewModel(
+                noteID: noteID,
+                currentContent: NoteContent(viewModel.body)
+            )
+            NoteAIDraftSheet(viewModel: aiViewModel)
+                .environment(themeManager)
+                .onAppear {
+                    aiViewModel.onInsert = { _, suggestion in
+                        viewModel.applyDraft(NoteContent(suggestion.text))
+                    }
+                }
+        }
+    }
+    
     // MARK: - Top Bar
     var topBar: some View {
         HStack {
@@ -63,6 +88,16 @@ private extension NoteEditorView {
                     .frame(width: 36, height: 36)
             }
             Spacer()
+
+            Button(action: {
+                draftNoteID = viewModel.currentNoteID ?? NoteID()
+                showAIDraftSheet = true
+            }) {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(themeManager.current.iconPrimary)
+                    .frame(width: 36, height: 36)
+            }
             
             SwiftUI.Menu {
                 Button(role: .destructive) {

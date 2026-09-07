@@ -103,6 +103,9 @@ extension CoreDataSessionStore {
 
         case let .meditationCompleted(session):
             await save(session)
+
+        case .aiDraftGenerated:
+            break
         }
     }
 }

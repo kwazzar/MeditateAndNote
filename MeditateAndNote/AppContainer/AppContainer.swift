@@ -38,6 +38,16 @@ final class AppContainer {
 
     private lazy var noteManager = NoteManager(syncCoordinator: syncCoordinator, eventBus: eventBus)
 
+    // MARK: - AI Draft Services
+
+    private lazy var aiDraftService: any AIDraftService = AIDraftServiceFactory.make()
+    private lazy var aiDraftSessionStore: any AIDraftSessionStore = CoreDataAIDraftSessionStore()
+    private lazy var aiDraftManager = AIDraftManager(
+        service: aiDraftService,
+        store: aiDraftSessionStore,
+        eventBus: eventBus
+    )
+
     /// Single shared instance: NoteMenu binds one VM for its whole lifetime,
     /// so the list loads once and stays fresh via domain events. Creating a
     /// fresh VM per render would leak event-bus subscriptions.
@@ -85,6 +95,15 @@ final class AppContainer {
     @MainActor
     func makeNoteEditorViewModel(noteId: NoteID? = nil) -> NoteEditorViewModel {
         NoteEditorViewModel(noteId: noteId, notes: noteManager)
+    }
+
+    @MainActor
+    func makeNoteAIDraftViewModel(noteID: NoteID, currentContent: NoteContent) -> NoteAIDraftViewModel {
+        NoteAIDraftViewModel(
+            noteID: noteID,
+            currentContent: currentContent,
+            drafts: aiDraftManager
+        )
     }
 
     @MainActor

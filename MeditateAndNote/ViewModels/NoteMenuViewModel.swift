@@ -71,6 +71,8 @@ final class NoteMenuViewModel {
                 }
             case .meditationCompleted:
                 break
+            case .aiDraftGenerated:
+                break
             }
         }
     }

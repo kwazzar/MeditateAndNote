@@ -16,6 +16,7 @@ enum DomainEvent: Sendable {
     case noteUpdated(Note)
     case noteDeleted(NoteID)
     case meditationCompleted(MeditationSession)
+    case aiDraftGenerated(noteID: NoteID, sessionID: UUID)
 }
 
 // MARK: - Publisher Protocol
