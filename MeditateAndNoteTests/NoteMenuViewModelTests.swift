@@ -48,14 +48,6 @@ final class NoteMenuViewModelTests: XCTestCase {
         }
     }
 
-    /// `DomainEventBus.subscribe` registers the handler on a background queue
-    /// barrier; pump the executor so the registration lands before publishing.
-    private func settleSubscription() async {
-        for _ in 0..<100 {
-            await Task.yield()
-        }
-    }
-
     // MARK: - loadIfNeeded
 
     func testLoadIfNeeded_populatesSearchState() async {
@@ -127,7 +119,6 @@ final class NoteMenuViewModelTests: XCTestCase {
     func testNoteCreatedEvent_reloads() async {
         let vm = makeSUT()
         await vm.loadIfNeeded()
-        await settleSubscription()
 
         let note = makeNote("Eventual")
         try? await spy.add(note)
@@ -142,7 +133,6 @@ final class NoteMenuViewModelTests: XCTestCase {
         await seed(notes)
         let vm = makeSUT()
         await vm.loadIfNeeded()
-        await settleSubscription()
 
         try? await spy.delete(with: notes[0].id)
         bus.publish(.noteDeleted(notes[0].id))
@@ -156,7 +146,6 @@ final class NoteMenuViewModelTests: XCTestCase {
         await seed([note])
         let vm = makeSUT()
         await vm.loadIfNeeded()
-        await settleSubscription()
         XCTAssertEqual(vm.searchState.availableItems, [note])
 
         bus.publish(.meditationCompleted(MeditationSession(

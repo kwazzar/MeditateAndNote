@@ -20,48 +20,54 @@ enum DomainEvent: Sendable {
 
 // MARK: - Publisher Protocol
 
-protocol DomainEventPublisher: AnyObject {
+protocol DomainEventPublisher: AnyObject, Sendable {
     typealias Handler = @Sendable (DomainEvent) -> Void
 
     /// Subscribes a handler and returns a token for unsubscribing.
     @discardableResult
     func subscribe(_ handler: @escaping Handler) -> UUID
     func unsubscribe(_ id: UUID)
-    func publish(_ event: DomainEvent)
+    nonisolated func publish(_ event: DomainEvent)
 }
 
-// MARK: - Thread-Safe In-Memory Event Bus
+// MARK: - Thread-Safe Subscription Storage
 
-final class DomainEventBus: DomainEventPublisher, @unchecked Sendable {
-    typealias Handler = @Sendable (DomainEvent) -> Void
+private final class Subscriptions: @unchecked Sendable {
+    private var handlers: [UUID: @Sendable (DomainEvent) -> Void] = [:]
+    private let lock = NSLock()
 
-    private struct Subscription {
-        let id: UUID
-        let handler: Handler
-    }
-
-    private var subscriptions: [Subscription] = []
-    private let queue = DispatchQueue(label: "domain.event.bus", attributes: .concurrent)
-
-    /// Subscribes a handler and returns a token for unsubscribing.
-    @discardableResult
-    func subscribe(_ handler: @escaping Handler) -> UUID {
+    func add(_ handler: @escaping @Sendable (DomainEvent) -> Void) -> UUID {
         let id = UUID()
-        queue.async(flags: .barrier) { [weak self] in
-            self?.subscriptions.append(Subscription(id: id, handler: handler))
-        }
+        lock.withLock { handlers[id] = handler }
         return id
     }
 
-    func unsubscribe(_ id: UUID) {
-        queue.async(flags: .barrier) { [weak self] in
-            self?.subscriptions.removeAll { $0.id == id }
-        }
+    func remove(_ id: UUID) {
+        _ = lock.withLock { handlers.removeValue(forKey: id) }
     }
 
-    func publish(_ event: DomainEvent) {
-        let snapshot = queue.sync { subscriptions }
-        snapshot.forEach { $0.handler(event) }
+    func callAsFunction(_ event: DomainEvent) {
+        let snapshot = lock.withLock { Array(handlers.values) }
+        snapshot.forEach { $0(event) }
+    }
+}
+
+// MARK: - In-Memory Event Bus
+
+final class DomainEventBus: DomainEventPublisher {
+    private let storage = Subscriptions()
+
+    @discardableResult
+    func subscribe(_ handler: @escaping @Sendable (DomainEvent) -> Void) -> UUID {
+        storage.add(handler)
+    }
+
+    func unsubscribe(_ id: UUID) {
+        storage.remove(id)
+    }
+
+    nonisolated func publish(_ event: DomainEvent) {
+        storage(event)
     }
 }
 
