@@ -13,7 +13,7 @@ Rules:
 
 ---
 
-## Architecture & DDD (NightLoom / MeditateAndNote)
+## Architecture & DDD (MeditateAndNote)
 
 Goal: generated code follows DDD principles (per Scott Wlaschin) and matches the project's existing architecture, instead of inventing a new one every time.
 
