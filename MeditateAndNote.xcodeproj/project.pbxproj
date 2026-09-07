@@ -318,6 +318,65 @@
 			path = Streak;
 			sourceTree = "<group>";
 		};
+		8A0000012026090700000001 /* Notes */ = {
+			isa = PBXGroup;
+			children = (
+				E398CE772EDE464000B96376 /* NoteManager.swift */,
+				E3848D4F2E3BC9A0001BE8AB /* NotesRepository.swift */,
+				78215B543038AB4200DD8F99 /* NoteSyncCoordinator.swift */,
+			);
+			path = Notes;
+			sourceTree = "<group>";
+		};
+		8A0000022026090700000002 /* Meditation */ = {
+			isa = PBXGroup;
+			children = (
+				E3848D512E3BCA7F001BE8AB /* MeditationService.swift */,
+			);
+			path = Meditation;
+			sourceTree = "<group>";
+		};
+		8A0000032026090700000003 /* Events */ = {
+			isa = PBXGroup;
+			children = (
+				78215B563038AB5000DD8F99 /* DomainEvents.swift */,
+			);
+			path = Events;
+			sourceTree = "<group>";
+		};
+		8A0000042026090700000004 /* Reminders */ = {
+			isa = PBXGroup;
+			children = (
+				AA2A9BB90A0B40656AE57601 /* ReminderManager.swift */,
+				D35E3DCB24F352F1C7D834E8 /* NotificationScheduling.swift */,
+			);
+			path = Reminders;
+			sourceTree = "<group>";
+		};
+		8A0000052026090700000005 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				AA00000220260903C00003 /* AnimationSettings.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		8A0000062026090700000006 /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				OB0000060000000000000006 /* OnboardingStore.swift */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		8A0000072026090700000007 /* Theme */ = {
+			isa = PBXGroup;
+			children = (
+				788956A13032019E0001D509 /* ThemeManager.swift */,
+			);
+			path = Theme;
+			sourceTree = "<group>";
+		};
 		787880CE303E847E004474C4 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
@@ -596,16 +655,13 @@
 			children = (
 				785A57E3304E5EB100DC86B9 /* Streak */,
 				785A57E2304E5E8300DC86B9 /* Sound */,
-				78215B563038AB5000DD8F99 /* DomainEvents.swift */,
-				78215B543038AB4200DD8F99 /* NoteSyncCoordinator.swift */,
-				788956A13032019E0001D509 /* ThemeManager.swift */,
-				E3848D4F2E3BC9A0001BE8AB /* NotesRepository.swift */,
-				E3848D512E3BCA7F001BE8AB /* MeditationService.swift */,
-				E398CE772EDE464000B96376 /* NoteManager.swift */,
-				AA00000220260903C00003 /* AnimationSettings.swift */,
-				OB0000060000000000000006 /* OnboardingStore.swift */,
-				D35E3DCB24F352F1C7D834E8 /* NotificationScheduling.swift */,
-				AA2A9BB90A0B40656AE57601 /* ReminderManager.swift */,
+				8A0000012026090700000001 /* Notes */,
+				8A0000022026090700000002 /* Meditation */,
+				8A0000032026090700000003 /* Events */,
+				8A0000042026090700000004 /* Reminders */,
+				8A0000052026090700000005 /* Settings */,
+				8A0000062026090700000006 /* Onboarding */,
+				8A0000072026090700000007 /* Theme */,
 			);
 			path = Services;
 			sourceTree = "<group>";
