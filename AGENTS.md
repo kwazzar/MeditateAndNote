@@ -55,7 +55,7 @@ Hard rules:
 
 **Known exception:** `CoreDataSessionStore` (`Persistence/CoreDataSessionStore.swift`) is used as a concrete type with no protocol abstraction and no alternate implementation — unlike `CoreDataStreakStore`, which does conform to `StreakActivityStore` (the same protocol `UserDefaultsStreakStore` implements). Don't flag `CoreDataSessionStore`'s lack of a protocol as a violation; it's an accepted exception, not the target pattern to copy for new types.
 
-**Domain Events:** there's an existing `DomainEvent` type (see `Services/DomainEvents/`) — `CoreDataSessionStore.handle()` reacts to one. New cross-cutting side effects (an action that needs to update state in more than one Store/Manager) should go through this mechanism rather than being wired manually across call sites.
+**Domain Events:** there's an existing `DomainEvent` type (see `Services/Events/DomainEvents.swift`) — `CoreDataSessionStore.handle()` reacts to one. New cross-cutting side effects (an action that needs to update state in more than one Store/Manager) should go through this mechanism rather than being wired manually across call sites.
 
 > This section reflects the codebase as of the graphify snapshot. Re-verify with `graphify query`/`graphify explain` if the structure has moved on.
 

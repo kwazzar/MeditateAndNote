@@ -42,7 +42,7 @@ Step-by-step check of code against DDD principles (per Wlaschin/Ozun) and the pr
 
 ## 7. Domain Events
 
-The project has a real `DomainEvent` mechanism (`Services/DomainEvents/`) — `CoreDataSessionStore.handle()` is a working consumer of it.
+The project has a real `DomainEvent` mechanism (`Services/Events/DomainEvents.swift`) — `CoreDataSessionStore.handle()` is a working consumer of it.
 
 - [ ] If an action has side effects across several parts of the system (e.g. "note archived" → update stats, remove from active list) — does it go through `DomainEvent`, or is the logic smeared across multiple manual call sites? ⚠️/❌ if smeared, depending on how many places are touched.
 

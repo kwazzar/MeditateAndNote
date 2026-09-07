@@ -21,12 +21,13 @@ Infrastructure (Persistence/ — CoreData + UserDefaults implementations)
 The Domain layer never imports `CoreData`/`SwiftUI`/`UIKit`. NSManagedObject
 maps to domain models only inside the concrete DataSource/Store.
 
-> **Swift Concurrency view.** Persistence paths are curly-safe: `NoteManager`
-> and `InMemoryNoteDataSource` are actors, CoreData data sources use
-> `context.perform`/`await`, view models that touch observable state are
-> `@MainActor`, and the single `DomainEventBus` is `@unchecked Sendable`
-> behind a concurrent queue. Subscribers hop onto `@MainActor` before
-> mutating observable/CoreData state.
+> **Swift Concurrency view.** Persistence paths are concurrency-safe:
+> `NoteManager` and `InMemoryNoteDataSource` are actors, CoreData data sources
+> use `context.perform`/`await`, view models that touch observable state are
+> `@MainActor`, and the single `DomainEventBus` is a lock-based
+> `DomainEventPublisher` with a synchronous `nonisolated` `publish` that runs
+> on the emitter's thread. Subscribers hop onto `@MainActor` before mutating
+> observable/CoreData state.
 
 ## App Entry & Dependency Injection
 
@@ -280,6 +281,14 @@ graph TB
     Sound -->|"implements"| SoundP["SoundPlaying"]
     Bus --> Evt
 ```
+
+`Services/` is grouped by domain folder rather than flat: `Notes/`
+(`NoteManager`, `NotesRepository`, `NoteSyncCoordinator`), `Meditation/`
+(`MeditationService`), `Events/` (`DomainEvents`), `Reminders/`
+(`ReminderManager`, `NotificationScheduling`), `Settings/`
+(`AnimationSettings`), `Onboarding/` (`OnboardingStore`), `Theme/`
+(`ThemeManager`), plus `Sound/` (`SoundPlayer`, `SoundSettings`) and `Streak/`
+(`StreakTracker`, `StreakInsightEngine`, `StreakInsightManager`).
 
 - **`NoteManager`** (actor) is the application service for notes. It exposes
   two protocols: `NoteProvidable` (read) and `NoteManageable` (write), plus a
