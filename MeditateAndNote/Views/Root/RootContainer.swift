@@ -24,6 +24,7 @@ struct RootContainer: View {
 
     @State private var startupFlow: StartupFlow = .undecided
     @State private var onboardingViewModel: OnboardingViewModel?
+    @State private var showsLaunchScreen = true
 
     private var bindingSelectedTab: Binding<TabDestination> {
         Binding(
@@ -33,27 +34,38 @@ struct RootContainer: View {
     }
     
     var body: some View {
-        Group {
-            switch startupFlow {
-            case .undecided:
-                Color.clear
-                    .onAppear(perform: decideStartupFlow)
-            case .onboarding:
-                if let onboardingViewModel {
-                    OnboardingView(viewModel: onboardingViewModel)
-                        .environment(themeManager)
-                        .transition(.opacity)
-                } else {
+        ZStack {
+            Group {
+                switch startupFlow {
+                case .undecided:
                     Color.clear
+                        .onAppear(perform: decideStartupFlow)
+                case .onboarding:
+                    if let onboardingViewModel {
+                        OnboardingView(viewModel: onboardingViewModel)
+                            .environment(themeManager)
+                            .transition(.opacity)
+                    } else {
+                        Color.clear
+                    }
+                case .tabs:
+                    mainTabBar
+                        .transition(.opacity)
                 }
-            case .tabs:
-                mainTabBar
+            }
+            .animation(.easeInOut(duration: 0.35), value: startupFlow)
+
+            // Always-present launch loader: shows over onboarding and tabs,
+            // then fades out (see `scheduleLaunchDismissal`).
+            if showsLaunchScreen {
+                LoadingScreenView()
                     .transition(.opacity)
+                    .zIndex(1)
             }
         }
-        .animation(.easeInOut(duration: 0.35), value: startupFlow)
         // Системні матеріали (.ultraThinMaterial), пікери та шити йдуть за MainTheme, а не за системною темою.
         .preferredColorScheme(themeManager.current.colorScheme)
+        .onAppear(perform: scheduleLaunchDismissal)
         .onChange(of: scenePhase) { _, phase in
             guard phase == .active else { return }
             Task { @MainActor in
@@ -82,6 +94,18 @@ struct RootContainer: View {
             startupFlow = .tabs
         }
         startupFlow = .onboarding
+    }
+
+    /// Shows the loading screen briefly on every launch, then fades it out.
+    private func scheduleLaunchDismissal() {
+        guard showsLaunchScreen else { return }
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(1800))
+            guard !Task.isCancelled else { return }
+            withAnimation(.easeOut(duration: 0.45)) {
+                showsLaunchScreen = false
+            }
+        }
     }
 }
 

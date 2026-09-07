@@ -65,6 +65,7 @@
 		BAD70D9BC13D443FA7FBDCE4 /* RouterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F309EADEBFC34EA8AEDBC615 /* RouterTests.swift */; };
 		BB00D11120260905000001 /* StreakDayDetailSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB00D11220260905000002 /* StreakDayDetailSheet.swift */; };
 		C14230B1AABCB77064DE1389 /* ReminderSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 965AB13C80C9D60F37F232D7 /* ReminderSettingsTests.swift */; };
+		A1B2C3D4E5F6000000000001 /* LoadingScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000000000002 /* LoadingScreenView.swift */; };
 		CBD7ED78394EBA2ECBDB72A6 /* StreakInsightEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70119D3AECE1D5E2F27AEAF9 /* StreakInsightEngineTests.swift */; };
 		CC0000012026082800000005 /* CoreDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000012026082800000001 /* CoreDataManager.swift */; };
 		CC0000022026082800000006 /* CoreDataNoteDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000022026082800000002 /* CoreDataNoteDataSource.swift */; };
@@ -171,6 +172,7 @@
 		788956A13032019E0001D509 /* ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManager.swift; sourceTree = "<group>"; };
 		788956A53032081E0001D509 /* MeditateButtonComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditateButtonComponents.swift; sourceTree = "<group>"; };
 		789B7B093010417D0082F0CB /* MainTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTheme.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6000000000002 /* LoadingScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingScreenView.swift; sourceTree = "<group>"; };
 		78DA4DAD3047B4A600A36E6A /* CustomTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomTabBar.swift; sourceTree = "<group>"; };
 		78DF5422303F1CB200B1F2C3 /* meditation_resumed.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = meditation_resumed.wav; sourceTree = "<group>"; };
 		78DF54243040D09800B1F2C3 /* breath_inhale.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = breath_inhale.wav; sourceTree = "<group>"; };
@@ -493,6 +495,14 @@
 			path = Theme;
 			sourceTree = "<group>";
 		};
+		A1B2C3D4E5F6000000000003 /* Launch */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D4E5F6000000000002 /* LoadingScreenView.swift */,
+			);
+			path = Launch;
+			sourceTree = "<group>";
+		};
 		CC0000052026082800000009 /* Persistence */ = {
 			isa = PBXGroup;
 			children = (
@@ -605,6 +615,7 @@
 		E36187832D68D05C000E326D /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				A1B2C3D4E5F6000000000003 /* Launch */,
 				78DA4DAF3047BAFF00A36E6A /* Root */,
 				78C86D8E3037C27500950DB9 /* Main */,
 				E3BAF8A52E293D340036E250 /* ReadingView.swift */,
@@ -911,6 +922,7 @@
 				2FC28D69C78D5561F2B28F30 /* NotificationScheduling.swift in Sources */,
 				1319DD5B5051A8A4C9C10470 /* ReminderManager.swift in Sources */,
 				E2972A3FC4C853E0382811E2 /* ReminderSettingsSection.swift in Sources */,
+				A1B2C3D4E5F6000000000001 /* LoadingScreenView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
