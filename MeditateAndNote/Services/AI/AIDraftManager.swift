@@ -38,7 +38,10 @@ final actor AIDraftManager: AIDraftProvidable, AIDraftManageable {
     private let service: any AIDraftService
     private let store: any AIDraftSessionStore
     private let eventBus: DomainEventPublisher
-    private var inFlight: Set<UUID> = []
+    /// Notes with a generation currently claimed. Checked synchronously (no
+    /// await between check and claim) so two concurrent requests for the same
+    /// note can't both observe an empty store and start a duplicate draft.
+    private var inFlight: Set<NoteID> = []
 
     init(
         service: any AIDraftService,
@@ -63,9 +66,16 @@ final actor AIDraftManager: AIDraftProvidable, AIDraftManageable {
         instructions: String,
         context: NoteContent
     ) async throws -> AIDraftSession {
-        // One active generation per note — a second concurrent draft is the
-        // same race the state machine guards against. A ready/failed/cancelled
-        // session does not block a fresh draft.
+        // Synchronous claim — no await between check and insert, so a second
+        // concurrent draft for the same note can't slip through the gap.
+        guard inFlight.insert(noteID).inserted else {
+            logger.warning("Draft already in flight for note \(noteID.rawValue)")
+            throw AIDraftError.noContext
+        }
+        defer { inFlight.remove(noteID) }
+
+        // A persisted in-flight session (e.g. app relaunch with a stale row)
+        // still blocks a fresh draft.
         if let existing = try await store.fetch(noteID: noteID), existing.isInFlight {
             logger.warning("Draft session already in flight for note \(noteID.rawValue)")
             throw AIDraftError.noContext
@@ -79,19 +89,16 @@ final actor AIDraftManager: AIDraftProvidable, AIDraftManageable {
         )
         var session = AIDraftSession(noteID: noteID, prompt: prompt)
         session.beginGeneration()
-        inFlight.insert(session.id)
         try await store.save(session)
 
         do {
             let suggestions = try await service.suggest(prompt)
             session.fulfil(with: suggestions)
-            inFlight.remove(session.id)
             try await store.save(session)
             publishGenerated(session)
             return session
         } catch {
             session.fail(error as? AIDraftError ?? .emptyResponse)
-            inFlight.remove(session.id)
             try await store.save(session)
             throw error
         }
@@ -105,20 +112,24 @@ final actor AIDraftManager: AIDraftProvidable, AIDraftManageable {
             throw AIDraftError.noContext
         }
 
+        // Synchronous claim on the note — also covers racing regenerate calls.
+        guard inFlight.insert(session.noteID).inserted else {
+            logger.warning("Draft already in flight for note \(session.noteID.rawValue)")
+            throw AIDraftError.noContext
+        }
+        defer { inFlight.remove(session.noteID) }
+
         session.beginGeneration()
-        inFlight.insert(session.id)
         try await store.save(session)
 
         do {
             let suggestions = try await service.suggest(session.prompt)
             session.fulfil(with: suggestions)
-            inFlight.remove(session.id)
             try await store.save(session)
             publishGenerated(session)
             return session
         } catch {
             session.fail(error as? AIDraftError ?? .emptyResponse)
-            inFlight.remove(session.id)
             try await store.save(session)
             throw error
         }
@@ -127,7 +138,7 @@ final actor AIDraftManager: AIDraftProvidable, AIDraftManageable {
     func cancel(sessionID: UUID) async throws {
         guard var session = try await store.fetch(id: sessionID) else { return }
         session.cancel()
-        inFlight.remove(session.id)
+        inFlight.remove(session.noteID)
         try await store.save(session)
     }
 

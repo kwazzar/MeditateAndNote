@@ -81,6 +81,16 @@ final class AppContainer {
                 insights?.handle(event)
             }
         }
+
+        // When a note is deleted its AI draft sessions are orphans — clean them
+        // up so the store doesn't accumulate rows for notes that no longer exist.
+        let drafts = aiDraftManager
+        eventBus.subscribe { [weak drafts] event in
+            Task {
+                guard case .noteDeleted(let noteID) = event else { return }
+                try? await drafts?.discardSessions(for: noteID)
+            }
+        }
     }
 
     // MARK: - ViewModels Factory Methods
