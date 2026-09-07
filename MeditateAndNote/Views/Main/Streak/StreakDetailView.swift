@@ -9,7 +9,7 @@ struct StreakDetailView: View {
     @Environment(ThemeManager.self) private var themeManager
     @Environment(StreakTracker.self) private var streakTracker
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var router: Router
+    @Environment(Router.self) private var router
     let insightsViewModel: InsightsViewModel
 
     @State private var selectedDayDetail: StreakDayDetail?
@@ -338,7 +338,7 @@ struct StreakDetailView_Previews: PreviewProvider {
         )
         .environment(ThemeManager())
         .environment(StreakTracker())
-        .environmentObject(Router.previewRouter())
+        .environment(Router.previewRouter())
     }
 }
 

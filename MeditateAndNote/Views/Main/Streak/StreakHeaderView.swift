@@ -7,7 +7,7 @@ import SwiftUI
 
 struct StreakHeaderView: View {
     @Environment(ThemeManager.self) private var themeManager
-    @EnvironmentObject var router: Router
+    @Environment(Router.self) private var router
     let streakTracker: StreakTracker
 
     private var last7Days: [Date] {

@@ -9,8 +9,8 @@ import SwiftUI
 
 struct MeditateSelectView: View {
     @State var viewModel: MeditateSelectViewModel
-    @EnvironmentObject var router: Router
-    @EnvironmentObject var container: AppContainer
+    @Environment(Router.self) private var router
+    @Environment(\.appContainer) private var container
     @Environment(ThemeManager.self) private var themeManager
     @State private var showSoundSettings = false
 
@@ -229,7 +229,7 @@ private extension MeditateSelectView {
 struct MeditateSelectView_Previews: PreviewProvider {
     static var previews: some View {
         MeditateSelectView(viewModel: AppContainer().makeMeditateSelectViewModel())
-            .environmentObject(Router.previewRouter())
-            .environmentObject(AppContainer())
+            .environment(Router.previewRouter())
+            .environment(\.appContainer, AppContainer())
     }
 }

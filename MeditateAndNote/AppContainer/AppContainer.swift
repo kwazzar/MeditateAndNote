@@ -6,8 +6,9 @@
 //
 
 import Foundation
+import SwiftUI
 
-final class AppContainer: ObservableObject {
+final class AppContainer {
 
     // MARK: - Services (Singletons)
     private let eventBus = DomainEventBus.shared
@@ -116,5 +117,18 @@ final class AppContainer: ObservableObject {
     @MainActor
     func makeInsightsViewModel() -> InsightsViewModel {
         InsightsViewModel(manager: insightManager)
+    }
+}
+
+// MARK: - Environment
+
+private struct AppContainerEnvironmentKey: EnvironmentKey {
+    static let defaultValue: AppContainer = AppContainer()
+}
+
+extension EnvironmentValues {
+    var appContainer: AppContainer {
+        get { self[AppContainerEnvironmentKey.self] }
+        set { self[AppContainerEnvironmentKey.self] = newValue }
     }
 }

@@ -35,8 +35,8 @@ maps to domain models only inside the concrete DataSource/Store.
 graph TB
     subgraph Entry["App Entry"]
         App["MeditateAndNoteApp<br/>@main"]
-        Router["Router<br/>@StateObject<br/>Navigation State"]
-        Container["AppContainer<br/>@StateObject<br/>DI Factory"]
+        Router["Router<br/>@Observable<br/>Navigation State"]
+        Container["AppContainer<br/>plain class<br/>DI Factory"]
         Theme["ThemeManager<br/>@Observable<br/>UserDefaults"]
         Streak["StreakTracker<br/>@Observable<br/>engine + store"]
         SessionStore["CoreDataSessionStore<br/>@Observable"]
@@ -44,8 +44,8 @@ graph TB
         Reminders["ReminderManager<br/>@Observable"]
     end
 
-    App -->|"@StateObject"| Router
-    App -->|"@StateObject"| Container
+    App -->|"@State + environment"| Router
+    App -->|"@State + appContainer env"| Container
     App -->|"@State"| Theme
     App -->|"environment"| Streak
     App -->|"environment"| SessionStore
@@ -111,10 +111,13 @@ graph TB
 - `RootContainer` gates launch on `OnboardingCoordinator` (`shouldShowOnboarding`),
   showing onboarding before the tab bar mounts. A DEBUG `-showOnboarding`
   launch arg reopens it for dev.
-- `Router` is a level-aware `ObservableObject` holding `navigationStackPath`,
+- `Router` is a level-aware `@Observable` class holding `navigationStackPath`,
   `presentingSheet`, `presentingFullScreen`, `isDetailPresented`, and
   `selectedTab`. Children are created via `childRouter(for:)`; only the active
-  router resolves deep links.
+  router resolves deep links. It is injected via `@Environment(Router.self)` —
+  views read it non-optionally (Observation tracks only what a body actually
+  reads), and `NavigationContainer` owns its child router in `@State`, wrapping
+  it in a local `@Bindable` for `NavigationStack`/sheet bindings.
 - `Destination` wraps `PushDestination`/`SheetDestination`/`FullScreenDestination`.
   Since the last update `.settings`, `.meditationCompletion` pushes and the
   `.meditationSession` full screen were added; `newNote`/`meditationSettings`
@@ -394,7 +397,7 @@ sequenceDiagram
     VM->>Mgr: Any NoteProvidable & NoteManageable
     Mgr->>DS: Local (CoreData) + remote
     DS-->>Mgr: Returns domain model
-    Mgr-->>VM: Updates @Observable / @Published
+    Mgr-->>VM: Updates @Observable state
     VM-->>View: UI re-renders
     Mgr--)Bus: Publishes DomainEvent (noteCreated/meditationCompleted)
     Bus--)Streak/CoreDataSessionStore/StreakInsightManager: Reacts (@MainActor hop)

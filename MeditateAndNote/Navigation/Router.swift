@@ -6,9 +6,11 @@
 //
 
 import Foundation
+import Observation
 import OSLog
 
-final class Router: ObservableObject {
+@Observable
+final class Router {
     let id = UUID()
     let level: Int
     
@@ -16,25 +18,26 @@ final class Router: ObservableObject {
     let identifierTab: TabDestination?
     
     /// Only relevant for the `level 0` root router. Defines the tab to select
-    @Published var selectedTab: TabDestination?
+    var selectedTab: TabDestination?
     
     /// Values presented in the navigation stack
-    @Published var navigationStackPath: [PushDestination] = []
+    var navigationStackPath: [PushDestination] = []
     
     /// Current presented sheet
-    @Published var presentingSheet: SheetDestination?
+    var presentingSheet: SheetDestination?
     
     /// Current presented full screen
-    @Published var presentingFullScreen: FullScreenDestination?
+    var presentingFullScreen: FullScreenDestination?
     
     //MARK: - isDetailPresented
     /// Indicates whether a detail view is pushed in any child navigation stack
-    @Published var isDetailPresented: Bool = false
+    var isDetailPresented: Bool = false
     
     let logger = Logger(subsystem: Config.bundleID, category: "Navigation")
     
     /// Reference to the parent router to form a hierarchy
     /// Router levels increase for the children
+    @ObservationIgnored
     weak var parent: Router?
     
     /// A way to track which router is visible/active

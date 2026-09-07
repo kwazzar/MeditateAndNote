@@ -8,8 +8,8 @@
 import SwiftUI
 
 struct RootContainer: View {
-    @EnvironmentObject var router: Router
-    @EnvironmentObject var container: AppContainer
+    @Environment(Router.self) private var router
+    @Environment(\.appContainer) private var container
     @Environment(ThemeManager.self) private var themeManager
     @Environment(StreakTracker.self) private var streakTracker
     @Environment(\.scenePhase) private var scenePhase
@@ -125,8 +125,8 @@ extension RootContainer {
 struct RootContainer_Previews: PreviewProvider {
     static var previews: some View {
         RootContainer()
-            .environmentObject(Router.previewRouter())
-            .environmentObject(AppContainer())
+            .environment(Router.previewRouter())
+            .environment(\.appContainer, AppContainer())
             .environment(ThemeManager())
             .environment(StreakTracker())
     }

@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct MeditationCompletionView: View {
-    @EnvironmentObject var router: Router
+    @Environment(Router.self) private var router
     @Environment(ThemeManager.self) private var themeManager
 
     let meditation: Meditation
@@ -126,7 +126,7 @@ struct MeditationCompletionView_Previews: PreviewProvider {
             ),
             duration: .fiveMin
         )
-        .environmentObject(Router.previewRouter())
+        .environment(Router.previewRouter())
         .environment(ThemeManager())
     }
 }

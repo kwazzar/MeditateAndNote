@@ -10,7 +10,7 @@ import UIKit
 
 struct MeditationView: View {
     @State var viewModel: MeditationViewModel
-    @EnvironmentObject var router: Router
+    @Environment(Router.self) private var router
     @Environment(ThemeManager.self) private var themeManager
     @State private var showTimeSelection = true
 
@@ -215,7 +215,7 @@ struct MeditationView_Previews: PreviewProvider {
         let meditation = SampleMeditationService().getMeditations().first
             ?? Meditation(id: "preview", title: MeditationTitle("Preview"), breathingStyle: .fourSevenEight)
         return MeditationView(viewModel: MeditationViewModel(meditation: meditation))
-            .environmentObject(Router.previewRouter())
+            .environment(Router.previewRouter())
             .environment(ThemeManager())
     }
 }

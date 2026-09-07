@@ -19,7 +19,7 @@ Goal: generated code follows DDD principles (per Scott Wlaschin) and matches the
 
 ### Stack
 
-- SwiftUI, CoreData, `@Observable` (migrating away from `ObservableObject`)
+- SwiftUI, CoreData, `@Observable` (Observation framework throughout — state is injected via `.environment(...)` / `@Environment(Type.self)`; no `ObservableObject`/`@EnvironmentObject` remains)
 - Navigation: custom Router-based approach (NOT `NavigationStack` with logic directly in the View)
 - Theming: custom `ThemeManager`
 

@@ -10,7 +10,7 @@ import SwiftUI
 struct InsightsSection: View {
     @Environment(ThemeManager.self) private var themeManager
     @Environment(ReminderManager.self) private var reminderManager
-    @EnvironmentObject private var router: Router
+    @Environment(Router.self) private var router
     let viewModel: InsightsViewModel
 
     @State private var selectedRange: StreakRange

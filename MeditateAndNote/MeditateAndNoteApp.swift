@@ -9,15 +9,15 @@ import SwiftUI
 
 @main
 struct MeditateAndNoteApp: App {
-    @StateObject private var router = Router(level: 0, identifierTab: nil)
-    @StateObject private var container = AppContainer()
+    @State private var router = Router(level: 0, identifierTab: nil)
+    @State private var container = AppContainer()
     @State private var themeManager = ThemeManager()
 
     var body: some Scene {
         WindowGroup {
             RootContainer()
-                .environmentObject(router)
-                .environmentObject(container)
+                .environment(router)
+                .environment(\.appContainer, container)
                 .environment(themeManager)
                 .environment(container.streakTracker)
                 .environment(container.meditationSessionStore)

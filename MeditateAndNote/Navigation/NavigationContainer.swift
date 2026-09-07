@@ -9,7 +9,7 @@ import SwiftUI
 
 #warning("можливість керувати транзицією")
 struct NavigationContainer<Content: View>: View {
-    @StateObject var router: Router
+    @State private var router: Router
     @ViewBuilder var content: () -> Content
 
     init(
@@ -17,7 +17,7 @@ struct NavigationContainer<Content: View>: View {
         tab: TabDestination? = nil,
         @ViewBuilder content: @escaping () -> Content
     ) {
-        _router = StateObject(wrappedValue: parentRouter.childRouter(for: tab))
+        _router = State(initialValue: parentRouter.childRouter(for: tab))
         self.content = content
     }
 
@@ -25,7 +25,7 @@ struct NavigationContainer<Content: View>: View {
         return InnerContainer(router: router) {
             content()
         }
-        .environmentObject(router)
+        .environment(router)
         .onAppear {
             router.setActive()
         }
@@ -46,10 +46,11 @@ struct NavigationContainer<Content: View>: View {
 
 //MARK: - InnerContainer
 private struct InnerContainer<Content: View>: View {
-    @ObservedObject var router: Router
+    let router: Router
     @ViewBuilder var content: () -> Content
 
     var body: some View {
+        @Bindable var router = router
         return NavigationStack(path: $router.navigationStackPath) {
             content()
                 .navigationDestination(for: PushDestination.self) { destination in
@@ -62,21 +63,21 @@ private struct InnerContainer<Content: View>: View {
         .fullScreenCover(item: $router.presentingFullScreen) { fullScreen in
             navigationView(for: fullScreen, from: router)
         }
-        .onReceive(router.$navigationStackPath) { path in
-            router.parent?.isDetailPresented = !path.isEmpty
+        .onChange(of: router.navigationStackPath) { _, _ in
+            router.parent?.isDetailPresented = !router.navigationStackPath.isEmpty
         }
     }
 
     @ViewBuilder
     func navigationView(for destination: SheetDestination, from router: Router) -> some View {
         view(for: destination)
-            .environmentObject(router)
+            .environment(router)
     }
     
     @ViewBuilder
     func navigationView(for destination: FullScreenDestination, from router: Router) -> some View {
         view(for: destination)
-            .environmentObject(router)
+            .environment(router)
     }
 }
 

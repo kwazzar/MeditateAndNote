@@ -10,7 +10,7 @@ import SwiftUI
 struct NoteMenu: View {
     @State var viewModel: NoteMenuViewModel
     @State var searchState: SearchState
-    @EnvironmentObject var router: Router
+    @Environment(Router.self) private var router
     @Environment(ThemeManager.self) private var themeManager
 
     @State private var isScrolling = false
@@ -116,5 +116,6 @@ struct NoteMenu_Previews: PreviewProvider {
     static var previews: some View {
         NoteMenu(viewModel: AppContainer().makeNoteMenuViewModel())
             .environment(ThemeManager())
+            .environment(Router.previewRouter())
     }
 }

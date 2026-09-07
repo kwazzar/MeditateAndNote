@@ -9,7 +9,7 @@ import SwiftUI
 
 struct MainView: View {
     @State var viewModel: MainViewModel
-    @EnvironmentObject var router: Router
+    @Environment(Router.self) private var router
     @Environment(ThemeManager.self) private var themeManager
     @Environment(StreakTracker.self) private var streakTracker
 
@@ -83,7 +83,7 @@ struct MainView_Previews: PreviewProvider {
             meditationService: SampleMeditationService(),
             selectionStore: MeditationSelectionStore()
         ))
-            .environmentObject(Router.previewRouter())
+            .environment(Router.previewRouter())
             .environment(ThemeManager())
             .environment(StreakTracker())
     }

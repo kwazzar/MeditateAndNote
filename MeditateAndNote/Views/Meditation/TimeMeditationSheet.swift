@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct TimeMeditationSheet: View {
-    @EnvironmentObject var router: Router
+    @Environment(Router.self) private var router
     @Environment(ThemeManager.self) private var themeManager
     @State private var selectedDuration: MeditationDuration = .threeMin
     let onSelection: (MeditationDuration) -> Void
