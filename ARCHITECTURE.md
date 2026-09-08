@@ -26,8 +26,9 @@ maps to domain models only inside the concrete DataSource/Store.
 > use `context.perform`/`await`, view models that touch observable state are
 > `@MainActor`, and the single `DomainEventBus` is a lock-based
 > `DomainEventPublisher` with a synchronous `nonisolated` `publish` that runs
-> on the emitter's thread. Subscribers hop onto `@MainActor` before mutating
-> observable/CoreData state.
+> on the emitter's thread. Consumers read an `AsyncStream<DomainEvent>` via a
+> single stored `Task { for await ... }` on `@MainActor`, so events are handled
+> sequentially in publish order before mutating observable/CoreData state.
 
 ## App Entry & Dependency Injection
 
@@ -55,9 +56,11 @@ graph TB
 
 `AppContainer` is the DI root. It owns the singletons (DomainEventBus, data
 sources, sync coordinator, managers) and exposes `make<X>ViewModel()` factory
-methods; it never acts as a registration container. Mutation paths that leak
-into `init` subscribe `StreakTracker`, `CoreDataSessionStore`, and
-`StreakInsightManager` to `DomainEventBus`, each hopping to `@MainActor`.
+methods; it never acts as a registration container. Cross-cutting side effects
+are wired in `init` via `startEventListening()`: a single stored `Task` runs
+`for await` over the bus's `AsyncStream` and dispatches through `handleEvent`,
+hopping to `@MainActor` before touching the observers (`StreakTracker`,
+`CoreDataSessionStore`, `StreakInsightManager`, `AIDraftMetricStore`).
 
 Factored ViewModel constructors:
 
@@ -317,7 +320,10 @@ graph TB
   type; subscribers (`StreakTracker`, `CoreDataSessionStore`,
   `StreakInsightManager`, `NoteMenuViewModel`) switch exhaustively, so adding a
   case is a compile-time decision. The bus publishes on the emitter's thread;
-  subscribers hop to `@MainActor` before mutating observable/CoreData state.
+  consumers (`AppContainer`, `NoteMenuViewModel`) read an
+  `AsyncStream<DomainEvent>` with a stored, cancellable `Task { for await }`,
+  so events are processed sequentially in publish order before mutating
+  observable/CoreData state.
 
 ## Infrastructure (Persistence)
 

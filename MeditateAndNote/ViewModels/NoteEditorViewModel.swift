@@ -31,6 +31,7 @@ final class NoteEditorViewModel {
     private let notes: any NoteProvidable & NoteManageable
     private var target: EditTarget
     private var autosaveTask: Task<Void, Never>?
+    private var loadTask: Task<Void, Never>?
 
     var isNewNote: Bool {
         if case .new = target { return true }
@@ -64,7 +65,10 @@ final class NoteEditorViewModel {
         self.notes = notes
 
         if let noteId {
-            Task { await loadNote(noteId) }
+            loadTask = Task { [weak self] in
+                guard let self else { return }
+                await self.loadNote(noteId)
+            }
         }
     }
 
@@ -73,6 +77,7 @@ final class NoteEditorViewModel {
     private func loadNote(_ id: NoteID) async {
         do {
             if let note = try await notes.note(with: id) {
+                guard !Task.isCancelled else { return }
                 title = note.title.rawValue
                 body = note.content.rawValue
                 target = .loaded(id: id, persisted: note)

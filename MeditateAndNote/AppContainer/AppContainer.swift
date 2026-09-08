@@ -59,53 +59,10 @@ final class AppContainer {
     @MainActor
     private(set) lazy var noteMenuViewModel = NoteMenuViewModel(notes: noteManager)
 
+    private var eventsTask: Task<Void, Never>?
+
     init() {
-        let tracker = streakTracker
-        eventBus.subscribe { [weak tracker] event in
-            // Event bus publishes on the emitter's thread (e.g. NoteManager's
-            // actor on a background executor). Both observers mutate observable
-            // state / Core Data, so hop to the main actor before handling.
-            Task { @MainActor in
-                await tracker?.handle(event)
-            }
-        }
-
-        let store = meditationSessionStore
-        eventBus.subscribe { [weak store] event in
-            Task { @MainActor in
-                await store?.handle(event)
-            }
-        }
-
-        let insights = insightManager
-        eventBus.subscribe { [weak insights] event in
-            // Same hop as the tracker/store subscriptions above: the bus
-            // publishes on the emitter's thread, and the insight cache
-            // dictionaries are not thread-safe. Next read regenerates.
-            Task { @MainActor in
-                insights?.handle(event)
-            }
-        }
-
-        // When a note is deleted its AI draft sessions are orphans — clean them
-        // up so the store doesn't accumulate rows for notes that no longer exist.
-        let drafts = aiDraftManager
-        eventBus.subscribe { [weak drafts] event in
-            Task {
-                guard case .noteDeleted(let noteID) = event else { return }
-                try? await drafts?.discardSessions(for: noteID)
-            }
-        }
-
-        // Persist AI draft telemetry events. Bus publishes on the emitter's
-        // thread; the metric store writes to Core Data's view context, so hop
-        // to the main actor first (same pattern as the tracker/session stores).
-        let metrics = aiDraftMetricStore
-        eventBus.subscribe { [metrics] event in
-            Task { @MainActor in
-                await metrics.handle(event)
-            }
-        }
+        startEventListening()
     }
 
     // MARK: - ViewModels Factory Methods
@@ -167,6 +124,47 @@ final class AppContainer {
     @MainActor
     func makeInsightsViewModel() -> InsightsViewModel {
         InsightsViewModel(manager: insightManager)
+    }
+}
+
+// MARK: - Domain Events
+
+private extension AppContainer {
+    /// The single consumer of the bus. Chain:
+    ///
+    ///     eventBus.publish(event)            // emitter's thread (e.g. NoteManager actor)
+    ///     └─ AsyncStream<DomainEvent>.events // bus fans the event out to each consumer
+    ///        └─ this Task (for await)        // stored in `eventsTask`, cancellable
+    ///           └─ switch, on @MainActor     // handlers may mutate observable/CoreData state
+    ///
+    /// Events are processed sequentially, in publish order. The bus publishes on the
+    /// emitter's thread, so everything here runs on the main actor after a hop.
+    func startEventListening() {
+        eventsTask = Task { @MainActor [weak self] in
+            guard let self else { return }
+            for await event in self.eventBus.events {
+                switch event {
+                case .noteCreated, .noteUpdated:
+                    await self.streakTracker.handle(event)
+                    self.insightManager.handle(event)
+                case .noteDeleted(let noteID):
+                    await self.streakTracker.handle(event)
+                    self.insightManager.handle(event)
+                    // When a note is deleted its AI draft sessions are orphans — clean
+                    // them up so the store doesn't accumulate rows for notes that no
+                    // longer exist.
+                    try? await self.aiDraftManager.discardSessions(for: noteID)
+                case .meditationCompleted:
+                    await self.streakTracker.handle(event)
+                    self.insightManager.handle(event)
+                    await self.meditationSessionStore.handle(event)
+                case .aiDraftGenerated:
+                    break
+                case .aiDraftMetric:
+                    await self.aiDraftMetricStore.handle(event)
+                }
+            }
+        }
     }
 }
 

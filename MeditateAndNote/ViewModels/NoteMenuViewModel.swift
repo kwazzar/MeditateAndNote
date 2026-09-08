@@ -16,6 +16,7 @@ final class NoteMenuViewModel {
     private let eventBus: DomainEventPublisher
 
     private var hasLoaded = false
+    private var eventsTask: Task<Void, Never>?
 
     var error: NoteOperationError?
 
@@ -26,7 +27,7 @@ final class NoteMenuViewModel {
         self.notes = notes
         self.eventBus = eventBus
         self.searchState = SearchState()
-        subscribeToNoteEvents()
+        startEventListening()
     }
 
     /// Loads data exactly once. Subsequent tab appearances do not re-fetch:
@@ -56,23 +57,31 @@ final class NoteMenuViewModel {
             logger.error("Error deleting note — \(error.localizedDescription)")
         }
     }
+}
 
-    // MARK: - Domain Events
+// MARK: - Domain Events
 
-    private func subscribeToNoteEvents() {
-        eventBus.subscribe { [weak self] event in
-            switch event {
-            case .noteCreated, .noteUpdated, .noteDeleted:
-                // Hop to the main actor: Observable state must be mutated on
-                // the main thread. NoteManager has already recomputed
-                // currentNotes before publishing, so a local reload suffices.
-                Task { @MainActor [weak self] in
-                    await self?.loadNotes()
+@MainActor
+private extension NoteMenuViewModel {
+    /// The single consumer of note events. Chain:
+    ///
+    ///     eventBus.publish(event)            // emitter's thread (e.g. NoteManager actor)
+    ///     └─ AsyncStream<DomainEvent>.events // bus fans the event out to each consumer
+    ///        └─ this Task (for await)        // stored in `eventsTask`, cancellable
+    ///           └─ switch, on @MainActor     // Observable state is mutated on main
+    ///
+    /// Runs sequentially in publish order. NoteManager has already recomputed
+    /// currentNotes before publishing, so a local reload suffices.
+    func startEventListening() {
+        eventsTask = Task { [weak self] in
+            guard let self else { return }
+            for await event in self.eventBus.events {
+                switch event {
+                case .noteCreated, .noteUpdated, .noteDeleted:
+                    await self.loadNotes()
+                case .meditationCompleted, .aiDraftGenerated, .aiDraftMetric:
+                    break
                 }
-            case .meditationCompleted:
-                break
-            case .aiDraftGenerated, .aiDraftMetric:
-                break
             }
         }
     }

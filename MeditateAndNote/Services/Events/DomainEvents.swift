@@ -57,6 +57,9 @@ enum DomainEvent: Sendable {
 protocol DomainEventPublisher: AnyObject, Sendable {
     typealias Handler = @Sendable (DomainEvent) -> Void
 
+    /// AsyncStream of published events, consumed sequentially via `for await`.
+    var events: AsyncStream<DomainEvent> { get }
+
     /// Subscribes a handler and returns a token for unsubscribing.
     @discardableResult
     func subscribe(_ handler: @escaping Handler) -> UUID
@@ -88,8 +91,21 @@ private final class Subscriptions: @unchecked Sendable {
 
 // MARK: - In-Memory Event Bus
 
-final class DomainEventBus: DomainEventPublisher {
+final class DomainEventBus: DomainEventPublisher, @unchecked Sendable {
     private let storage = Subscriptions()
+    private var streamContinuations: [UUID: AsyncStream<DomainEvent>.Continuation] = [:]
+    private let streamLock = NSLock()
+
+    var events: AsyncStream<DomainEvent> {
+        AsyncStream { continuation in
+            let id = UUID()
+            self.streamLock.withLock { self.streamContinuations[id] = continuation }
+            continuation.onTermination = { @Sendable [weak self] _ in
+                guard let self else { return }
+                _ = self.streamLock.withLock { self.streamContinuations.removeValue(forKey: id) }
+            }
+        }
+    }
 
     @discardableResult
     func subscribe(_ handler: @escaping @Sendable (DomainEvent) -> Void) -> UUID {
@@ -102,6 +118,8 @@ final class DomainEventBus: DomainEventPublisher {
 
     nonisolated func publish(_ event: DomainEvent) {
         storage(event)
+        let snapshot = streamLock.withLock { Array(streamContinuations.values) }
+        snapshot.forEach { $0.yield(event) }
     }
 }
 

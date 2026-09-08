@@ -202,10 +202,10 @@ Roadmap для додавання AI-підсилення до нотаток у
 
 ```
 NoteManager publishes .noteCreated / .noteUpdated / .noteDeleted
-  → AIDraftManager (subscribe) → debounce 30s → triggers NoteAnalyzer
+  → AIDraftManager (consumes bus AsyncStream) → debounce 30s → triggers NoteAnalyzer
     → NoteInsight aggregate (themes, summary, suggestedTags)
       → NoteInsightManager publishes .noteInsightsUpdated
-        → NoteMenuViewModel subscribes → updates insights section
+        → NoteMenuViewModel (for await) → updates insights section
 ```
 
 ### Tasks
@@ -239,7 +239,7 @@ NoteManager publishes .noteCreated / .noteUpdated / .noteDeleted
 
 **Application:**
 - `Services/NoteInsightManager.swift`:
-  - subscribes to `.noteCreated`, `.noteUpdated`, `.noteDeleted`
+  - consumes `.noteCreated`, `.noteUpdated`, `.noteDeleted` via bus `AsyncStream`
   - debounces 30s, max once per minute
   - `NoteInsightProvidable` (read) + `NoteInsightManageable` (refresh)
   - publishes `.noteInsightsUpdated`
@@ -251,7 +251,7 @@ NoteManager publishes .noteCreated / .noteUpdated / .noteDeleted
 
 **DI:**
 - `AppContainer.makeNoteInsightsViewModel()` factory
-- `AppContainer.init()` — subscribe insightManager до events
+- `AppContainer.handleEvent()` — додати case для `.noteInsightsUpdated` → insightManager
 
 **Tests:**
 - `NoteInsightTests.swift` — invariants
@@ -584,7 +584,7 @@ enum ErrorKind: String, Codable {
 - Sprint 4 додає ще більше
 
 **Vulnerable spots:**
-- `AppContainer.swift` — файл росте, init() має 3 subscribe блоки, буде 6+
+- `AppContainer.swift` — файл росте; init() більше не накопичує subscribe блоки (один `startEventListening()` + `handleEvent` switch), але додавання споживачів збільшує case-и в `handleEvent`
 
 **Рекомендація:** Не блокер, але варто планувати refactor `AppContainer` на nested groups (наприклад `AIServicesGroup`) після Sprint 3, якщо файл перевищить ~250 LOC.
 
