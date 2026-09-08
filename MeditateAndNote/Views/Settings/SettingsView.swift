@@ -30,6 +30,7 @@ struct SettingsView: View {
                     animationSection
                     themeSection
                     volumeSection
+                    aiSettingsSection
                     #if DEBUG
                     devSection
                     #endif
@@ -148,6 +149,11 @@ private extension SettingsView {
         .padding(20)
         .background(themeManager.current.editorBackground)
         .cornerRadius(16)
+    }
+
+    var aiSettingsSection: some View {
+        let settingsStore = container.makeAIDraftSettingsViewModel()
+        return AIDraftSettingsView(settingsStore: settingsStore)
     }
 
     #if DEBUG

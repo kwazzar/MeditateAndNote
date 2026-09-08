@@ -17,6 +17,7 @@ enum CDEntity {
     static let dailyActivity = "CDDailyActivity"
     static let streakMeta = "CDStreakMeta"
     static let aiDraftSession = "CDAIDraftSession"
+    static let aiDraftMetric = "CDAIDraftMetric"
 }
 
 // MARK: - CoreDataManager
@@ -249,8 +250,42 @@ final class CoreDataManager {
             aiDraftSuggestions, aiDraftState, aiDraftCreatedAt,
         ]
 
+        // ── CDAIDraftMetric ────────────────────────────────────
+        // Append-only telemetry rows. The kind scalar allows cheap rollups
+        // (per-day counts, error breakdown) without decoding every payload.
+        let aiDraftMetricEntity = NSEntityDescription()
+        aiDraftMetricEntity.name = CDEntity.aiDraftMetric
+        aiDraftMetricEntity.managedObjectClassName = NSStringFromClass(NSManagedObject.self)
+
+        let metricID = NSAttributeDescription()
+        metricID.name = "id"
+        metricID.attributeType = .UUIDAttributeType
+        metricID.isOptional = false
+
+        let metricKind = NSAttributeDescription()
+        metricKind.name = "kind"
+        metricKind.attributeType = .stringAttributeType
+        metricKind.isOptional = false
+        metricKind.defaultValue = ""
+
+        let metricPayload = NSAttributeDescription()
+        metricPayload.name = "payloadJSON"
+        metricPayload.attributeType = .binaryDataAttributeType
+        metricPayload.isOptional = false
+
+        let metricRecordedAt = NSAttributeDescription()
+        metricRecordedAt.name = "recordedAt"
+        metricRecordedAt.attributeType = .dateAttributeType
+        metricRecordedAt.isOptional = false
+        metricRecordedAt.defaultValue = Date.distantPast
+
+        aiDraftMetricEntity.properties = [metricID, metricKind, metricPayload, metricRecordedAt]
+
         // ── Register ─────────────────────────────────────────────
-        model.entities = [noteEntity, sessionEntity, activityEntity, streakEntity, aiDraftEntity]
+        model.entities = [
+            noteEntity, sessionEntity, activityEntity, streakEntity,
+            aiDraftEntity, aiDraftMetricEntity,
+        ]
 
         return model
     }

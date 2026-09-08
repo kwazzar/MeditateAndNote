@@ -42,6 +42,9 @@ final actor AIDraftManager: AIDraftProvidable, AIDraftManageable {
     /// await between check and claim) so two concurrent requests for the same
     /// note can't both observe an empty store and start a duplicate draft.
     private var inFlight: Set<NoteID> = []
+    /// Tracks whether any generation has already run in this process, so first
+    /// usage can be flagged as a cold vs warm start in telemetry.
+    private var hasAttemptedGeneration = false
 
     init(
         service: any AIDraftService,
@@ -91,15 +94,18 @@ final actor AIDraftManager: AIDraftProvidable, AIDraftManageable {
         session.beginGeneration()
         try await store.save(session)
 
+        let start = generationStart()
         do {
             let suggestions = try await service.suggest(prompt)
             session.fulfil(with: suggestions)
             try await store.save(session)
             publishGenerated(session)
+            publishCompleted(suggestionCount: suggestions.count, start: start)
             return session
         } catch {
             session.fail(error as? AIDraftError ?? .emptyResponse)
             try await store.save(session)
+            publishFailed(error: error)
             throw error
         }
     }
@@ -122,15 +128,18 @@ final actor AIDraftManager: AIDraftProvidable, AIDraftManageable {
         session.beginGeneration()
         try await store.save(session)
 
+        let start = generationStart()
         do {
             let suggestions = try await service.suggest(session.prompt)
             session.fulfil(with: suggestions)
             try await store.save(session)
             publishGenerated(session)
+            publishCompleted(suggestionCount: suggestions.count, start: start)
             return session
         } catch {
             session.fail(error as? AIDraftError ?? .emptyResponse)
             try await store.save(session)
+            publishFailed(error: error)
             throw error
         }
     }
@@ -150,5 +159,39 @@ final actor AIDraftManager: AIDraftProvidable, AIDraftManageable {
 
     private func publishGenerated(_ session: AIDraftSession) {
         eventBus.publish(.aiDraftGenerated(noteID: session.noteID, sessionID: session.id))
+    }
+
+    /// Marks the start of a generation attempt and returns the monotonic
+    /// timestamp used to measure provider latency.
+    private func generationStart() -> UInt64 {
+        let start = DispatchTime.now().uptimeNanoseconds
+        eventBus.publish(.aiDraftMetric(event: .generationStarted(warmCold: !hasAttemptedGeneration)))
+        hasAttemptedGeneration = true
+        return start
+    }
+
+    private func publishCompleted(suggestionCount: Int, start: UInt64) {
+        let elapsed = Int((DispatchTime.now().uptimeNanoseconds - start) / 1_000_000)
+        eventBus.publish(.aiDraftMetric(event: .generationCompleted(
+            latencyMs: elapsed,
+            suggestionCount: suggestionCount
+        )))
+    }
+
+    private func publishFailed(error: Error) {
+        eventBus.publish(.aiDraftMetric(event: .generationFailed(errorKind: Self.errorKind(for: error))))
+    }
+
+    /// Maps a caught error to the sandboxed typed ErrorKind — never the raw
+    /// error message — so telemetry rows can't leak note content or URLs.
+    private static func errorKind(for error: Error) -> ErrorKind {
+        guard let draftError = error as? AIDraftError else { return .unknown }
+        switch draftError {
+        case .noContext, .contextTooLong: return .unavailable
+        case .rateLimited: return .rateLimited
+        case .providerUnavailable: return .unavailable
+        case .emptyResponse: return .emptyResponse
+        case .cancelled: return .unknown
+        }
     }
 }

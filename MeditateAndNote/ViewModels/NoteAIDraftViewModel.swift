@@ -37,16 +37,26 @@ final class NoteAIDraftViewModel {
     private let noteID: NoteID
     private let currentContent: NoteContent
     private let drafts: any AIDraftProvidable & AIDraftManageable
+    private let eventBus: DomainEventPublisher
 
     init(
         noteID: NoteID,
         currentContent: NoteContent,
-        drafts: any AIDraftProvidable & AIDraftManageable
+        drafts: any AIDraftProvidable & AIDraftManageable,
+        eventBus: DomainEventPublisher = DomainEventBus.shared
     ) {
         self.noteID = noteID
         self.currentContent = currentContent
         self.drafts = drafts
+        self.eventBus = eventBus
     }
+
+    /// Number of suggestions served in the current ready state, used to
+    /// report per-suggestion rejection telemetry when the sheet closes.
+    private var servedSuggestionCount = 0
+    /// Set once a suggestion is inserted so dismissal after an insert isn't
+    /// double-counted as a rejection.
+    private var didInsert = false
 
     // MARK: - Actions
 
@@ -56,8 +66,7 @@ final class NoteAIDraftViewModel {
         do {
             if let existing = try await drafts.session(for: noteID) {
                 if existing.state == .ready {
-                    uiState = .ready
-                    sessions = [existing]
+                    presentReady(existing)
                     return
                 }
             }
@@ -68,8 +77,7 @@ final class NoteAIDraftViewModel {
                 instructions: instructions,
                 context: currentContent
             )
-            sessions = [session]
-            uiState = session.state == .ready ? .ready : .failed(.noContext)
+            present(session)
             lastError = nil
         } catch let error as AIDraftError {
             handleGenerationFailure(error)
@@ -84,8 +92,7 @@ final class NoteAIDraftViewModel {
         uiState = .loading
         do {
             let refreshed = try await drafts.regenerate(sessionID: session.id)
-            sessions = [refreshed]
-            uiState = refreshed.state == .ready ? .ready : .failed(.noContext)
+            present(refreshed)
             lastError = nil
         } catch let error as AIDraftError {
             handleGenerationFailure(error)
@@ -103,9 +110,24 @@ final class NoteAIDraftViewModel {
         }
     }
 
-    /// Resolve an insert tap: routes through the editor's callback.
+    /// Resolve an insert tap: routes through the editor's callback and reports
+    /// which suggestion the user picked.
     func insert(_ suggestion: AISuggestion, from session: AIDraftSession) {
+        didInsert = true
+        if let index = session.suggestions.firstIndex(where: { $0.id == suggestion.id }) {
+            eventBus.publish(.aiDraftMetric(event: .suggestionInserted(index: index)))
+        }
         onInsert?(session, suggestion)
+    }
+
+    /// Called when the sheet disappears: reports the remaining served
+    /// suggestions as rejected when the user closes without inserting one.
+    func sheetWillDismiss() {
+        guard !didInsert else { return }
+        guard servedSuggestionCount > 0 else { return }
+        for index in 0..<servedSuggestionCount {
+            eventBus.publish(.aiDraftMetric(event: .suggestionRejected(index: index)))
+        }
     }
 
     /// Callback when the editor's text changed mid-generation (race-avoidance).
@@ -117,6 +139,20 @@ final class NoteAIDraftViewModel {
     }
 
     // MARK: - Private
+
+    private func present(_ session: AIDraftSession) {
+        sessions = [session]
+        uiState = session.state == .ready ? .ready : .failed(.noContext)
+        if session.state == .ready {
+            servedSuggestionCount = session.suggestions.count
+        }
+    }
+
+    private func presentReady(_ session: AIDraftSession) {
+        sessions = [session]
+        uiState = .ready
+        servedSuggestionCount = session.suggestions.count
+    }
 
     private func isTerminal(_ session: AIDraftSession) -> Bool {
         switch session.state {

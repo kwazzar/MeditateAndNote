@@ -34,6 +34,9 @@ struct NoteAIDraftSheet: View {
                     Button("Done") { dismiss() }
                 }
             }
+            .onDisappear {
+                viewModel.sheetWillDismiss()
+            }
         }
     }
 

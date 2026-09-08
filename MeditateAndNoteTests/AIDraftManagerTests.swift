@@ -118,12 +118,32 @@ final class AIDraftManagerTests: XCTestCase {
         let persisted = try await store.fetch(id: session.id)
         XCTAssertEqual(persisted, session, "Ready session must be persisted")
 
-        guard case .aiDraftGenerated(let noteID, let sessionID) = spy.events.first else {
+        guard case .aiDraftGenerated(let noteID, let sessionID) = spy.events.first(where: {
+            if case .aiDraftGenerated = $0 { return true }
+            return false
+        }) else {
             XCTFail("Expected .aiDraftGenerated event")
             return
         }
         XCTAssertEqual(noteID, session.noteID)
         XCTAssertEqual(sessionID, session.id)
+
+        // Telemetry: a successful generation emits generationStarted and
+        // generationCompleted, never a failure event.
+        let hasCompleted = spy.events.contains { event in
+            if case .aiDraftMetric(let metric) = event {
+                if case .generationCompleted = metric { return true }
+            }
+            return false
+        }
+        XCTAssertTrue(hasCompleted, "Expected a generationCompleted telemetry event")
+        let hasFailed = spy.events.contains { event in
+            if case .aiDraftMetric(let metric) = event {
+                if case .generationFailed = metric { return true }
+            }
+            return false
+        }
+        XCTAssertFalse(hasFailed, "Success must not emit a failure telemetry event")
     }
 
     func testStartDraft_serviceFailure_marksSessionFailedAndRethrows() async {
@@ -151,6 +171,16 @@ final class AIDraftManagerTests: XCTestCase {
         XCTAssertEqual(persisted?.state, .failed(.emptyResponse))
         XCTAssertFalse(spy.events.contains { if case .aiDraftGenerated = $0 { return true }; return false },
                        "Failed generation must not publish a success event")
+
+        // Telemetry: failures emit a typed ErrorKind, not a raw message.
+        let failedMetric = spy.events.lazy.compactMap { event -> AIDraftMetric? in
+            if case .aiDraftMetric(let metric) = event { return metric }
+            return nil
+        }
+        XCTAssertTrue(failedMetric.contains { metric in
+            if case .generationFailed(errorKind: .emptyResponse) = metric { return true }
+            return false
+        }, "Expected a generationFailed(.emptyResponse) telemetry event")
     }
 
     func testStartDraft_rejectsSecondConcurrentDraft() async throws {

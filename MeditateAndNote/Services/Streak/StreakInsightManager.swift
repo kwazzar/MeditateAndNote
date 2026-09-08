@@ -132,9 +132,7 @@ final class StreakInsightManager: StreakInsightProvidable {
         switch event {
         case .noteCreated, .meditationCompleted:
             invalidateCache()
-        case .noteUpdated, .noteDeleted:
-            break
-        case .aiDraftGenerated:
+        case .noteUpdated, .noteDeleted, .aiDraftGenerated, .aiDraftMetric:
             break
         }
     }

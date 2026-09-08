@@ -38,10 +38,15 @@ final class AppContainer {
 
     private lazy var noteManager = NoteManager(syncCoordinator: syncCoordinator, eventBus: eventBus)
 
+    // MARK: - AI Settings
+
+    @MainActor private lazy var aiSettingsStore = AIDraftSettingsStoreObservable()
+
     // MARK: - AI Draft Services
 
     private lazy var aiDraftService: any AIDraftService = AIDraftServiceFactory.make()
     private lazy var aiDraftSessionStore: any AIDraftSessionStore = CoreDataAIDraftSessionStore()
+    private lazy var aiDraftMetricStore: any AIDraftMetricStore = CoreDataAIDraftMetricStore()
     private lazy var aiDraftManager = AIDraftManager(
         service: aiDraftService,
         store: aiDraftSessionStore,
@@ -91,6 +96,16 @@ final class AppContainer {
                 try? await drafts?.discardSessions(for: noteID)
             }
         }
+
+        // Persist AI draft telemetry events. Bus publishes on the emitter's
+        // thread; the metric store writes to Core Data's view context, so hop
+        // to the main actor first (same pattern as the tracker/session stores).
+        let metrics = aiDraftMetricStore
+        eventBus.subscribe { [metrics] event in
+            Task { @MainActor in
+                await metrics.handle(event)
+            }
+        }
     }
 
     // MARK: - ViewModels Factory Methods
@@ -112,8 +127,14 @@ final class AppContainer {
         NoteAIDraftViewModel(
             noteID: noteID,
             currentContent: currentContent,
-            drafts: aiDraftManager
+            drafts: aiDraftManager,
+            eventBus: eventBus
         )
+    }
+
+    @MainActor
+    func makeAIDraftSettingsViewModel() -> AIDraftSettingsStoreObservable {
+        aiSettingsStore
     }
 
     @MainActor

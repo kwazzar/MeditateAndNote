@@ -277,7 +277,7 @@ extension StreakTracker {
         case let .meditationCompleted(session):
             await markMeditationCompleted(date: session.completedAt)
 
-        case .aiDraftGenerated:
+        case .aiDraftGenerated, .aiDraftMetric:
             break
         }
     }
