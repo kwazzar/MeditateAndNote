@@ -55,20 +55,65 @@ struct FoundationModelsAIDraftService: AIDraftService {
 
     @available(iOS 26.0, *)
     private func generate(_ prompt: AIPrompt) async throws -> [AISuggestion] {
+        do {
+            return try await respond(prompt)
+        } catch {
+            guard Self.isColdStartTransient(error) else {
+                logger.error("Foundation Models generation failed — \(error.localizedDescription)")
+                throw Self.mapError(error)
+            }
+            // First-touch cold start: availability reports ready while model
+            // assets are still downloading (observed: instant assetsUnavailable
+            // on a fresh sim). Wait out a bounded warmup window and retry once —
+            // the retry then blocks until ready, like the analyzer's first call
+            // did. Cancellation still propagates through Task.sleep, and a
+            // second failure maps to the regular error below.
+            logger.info("Model assets not ready — warmup retry in \(Self.warmupDelaySeconds)s")
+            try await Task.sleep(nanoseconds: Self.warmupDelayNanoseconds)
+            do {
+                return try await respond(prompt)
+            } catch {
+                logger.error("Foundation Models generation failed after warmup — \(error.localizedDescription)")
+                throw Self.mapError(error)
+            }
+        }
+    }
+
+    @available(iOS 26.0, *)
+    private func respond(_ prompt: AIPrompt) async throws -> [AISuggestion] {
         let session = LanguageModelSession(
             model: .default,
             tools: [],
             instructions: Self.systemInstructions
         )
         let userMessage = Self.composeUserMessage(for: prompt)
+        let response = try await session.respond(to: userMessage)
+        return Self.parseSuggestions(from: response.content, max: prompt.maxSuggestions)
+    }
 
-        do {
-            let response = try await session.respond(to: userMessage)
-            return Self.parseSuggestions(from: response.content, max: prompt.maxSuggestions)
-        } catch {
-            logger.error("Foundation Models generation failed — \(error.localizedDescription)")
-            throw Self.mapError(error)
+    /// Bounded warmup before the single retry (failure path only — the hot
+    /// path pays nothing).
+    @available(iOS 26.0, *)
+    private static let warmupDelaySeconds = 10
+    @available(iOS 26.0, *)
+    private static var warmupDelayNanoseconds: UInt64 {
+        UInt64(warmupDelaySeconds) * 1_000_000_000
+    }
+
+    /// True for transient not-ready failures worth one warmup retry.
+    /// `rateLimited` is deliberately excluded — hammering the limit is wrong;
+    /// `CompositeFallbackAIDraftService` routes those to the secondary
+    /// provider instead. `if case` (no exhaustive switch) keeps this
+    /// resilient to future `GenerationError` cases (non-frozen enum).
+    /// Internal (not private) so the classifier is unit-testable.
+    @available(iOS 26.0, *)
+    static func isColdStartTransient(_ error: Error) -> Bool {
+        guard let generationError = error as? LanguageModelSession.GenerationError else {
+            return false
         }
+        if case .assetsUnavailable = generationError { return true }
+        if case .concurrentRequests = generationError { return true }
+        return false
     }
 
     @available(iOS 26.0, *)

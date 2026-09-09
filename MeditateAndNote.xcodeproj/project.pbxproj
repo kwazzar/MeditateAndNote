@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B50BA45CEDD14CE39B089DD0 /* FoundationModelsDraftServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF01E6683058484B8508AA5B /* FoundationModelsDraftServiceTests.swift */; };
 		D6E0907466DD40B4B07F2800 /* NoteTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1888931E4FD4D369D64685B /* NoteTheme.swift */; };
 		20FF21AAD6CB4DEC960677E7 /* NoteInsight.swift in Sources */ = {isa = PBXBuildFile; fileRef = B54A74DD65CD487D90A51661 /* NoteInsight.swift */; };
 		7D0013605B5D464CB27FD0CF /* NoteInsightsCollection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62105EAFC00743E591CAECDC /* NoteInsightsCollection.swift */; };
@@ -197,6 +198,7 @@
 		441E68DB04904AA091E7274B /* NoteInsightTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteInsightTests.swift; sourceTree = "<group>"; };
 		36795F95436641CF9362FD4A /* NoteInsightManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteInsightManagerTests.swift; sourceTree = "<group>"; };
 		5C5AAA57CC8E45009A5A8EE0 /* CoreDataNoteInsightStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataNoteInsightStoreTests.swift; sourceTree = "<group>"; };
+		DF01E6683058484B8508AA5B /* FoundationModelsDraftServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoundationModelsDraftServiceTests.swift; sourceTree = "<group>"; };
 		07F5E247FA129DC74064AF00 /* AIDraftManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIDraftManagerTests.swift; sourceTree = "<group>"; };
 		09E4AAB15B1383604B747363 /* InsightsViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InsightsViewModel.swift; sourceTree = "<group>"; };
 		0FB281AE971D4DB672406825 /* AIDraftManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIDraftManager.swift; sourceTree = "<group>"; };
@@ -619,6 +621,7 @@
 				3FC0FF6183D64D88B5E241EC /* ReminderManagerTests.swift */,
 				C7648CA347C57421E7F2B662 /* AIDraftSessionTests.swift */,
 				07F5E247FA129DC74064AF00 /* AIDraftManagerTests.swift */,
+				DF01E6683058484B8508AA5B /* FoundationModelsDraftServiceTests.swift */,
 				441E68DB04904AA091E7274B /* NoteInsightTests.swift */,
 				36795F95436641CF9362FD4A /* NoteInsightManagerTests.swift */,
 				5C5AAA57CC8E45009A5A8EE0 /* CoreDataNoteInsightStoreTests.swift */,
@@ -975,6 +978,7 @@
 				656EFB51DAA945729EF107CA /* NoteInsightTests.swift in Sources */,
 				DD27AF01DB20457CB5DF09C9 /* NoteInsightManagerTests.swift in Sources */,
 				36380375A3F74EE7B91B2250 /* CoreDataNoteInsightStoreTests.swift in Sources */,
+				B50BA45CEDD14CE39B089DD0 /* FoundationModelsDraftServiceTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

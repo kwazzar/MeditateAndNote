@@ -296,6 +296,13 @@ Follow-ups (tech debt, non-blocking):
 - Double-`AppContainer` root cause (two live event loops/managers observed pre-fix) fixed by `.shared`; exact materialization path (defaultValue vs `@State` re-eval) not isolated — revisit if duplication symptoms return.
 - Battery profiling (< 5%/h) still open; also re-check after the `.shared` fix (previously two managers ran double passes).
 
+### First-touch verification (2026-09-09, real model on iPhone 17 sim)
+
+- **Finding 1 — availability ≠ readiness.** `isAvailable == true`, but the first `suggest` threw `assetsUnavailable` within 1.4s on a fresh sim (system reports ready while assets download). So the very first "Help me write" can show an error state.
+- **Finding 2 — cold start is minutes, not seconds.** First-ever model call blocked **165s** (asset download), vs the 1–3s assumed in Sprint 1 risks. Erasing the sim does not remove the runtime-cached asset, so this only hits true first launch.
+- **Mitigation implemented** in `FoundationModelsAIDraftService.generate`: on `assetsUnavailable` / `concurrentRequests` — one bounded warmup retry after 10s, then regular error mapping. Hot path pays nothing; `rateLimited` is excluded (goes to `CompositeFallback` → remote instead). Classifier covered by `FoundationModelsDraftServiceTests` (7 tests).
+- **Verified live:** draft e2e on warm sim (suggestions in 3.4s); analyzer e2e (2 insights). Sheet-UI flow, real-key remote, and battery profile remain manual-only.
+
 ---
 
 ## Sprint 4 — Differentiation (Variant C або D)
