@@ -10,7 +10,7 @@ import SwiftUI
 @main
 struct MeditateAndNoteApp: App {
     @State private var router = Router(level: 0, identifierTab: nil)
-    @State private var container = AppContainer()
+    @State private var container = AppContainer.shared
     @State private var themeManager = ThemeManager()
 
     var body: some Scene {

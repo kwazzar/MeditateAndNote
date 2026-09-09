@@ -10,6 +10,13 @@ import SwiftUI
 
 final class AppContainer {
 
+    /// The production instance. `init()` starts the event loop as a side
+    /// effect, so production must share one container — otherwise every extra
+    /// instance runs its own event loop and its own background managers
+    /// (double streak writes, double AI analysis passes). Fresh `init()`s are
+    /// only for previews/tests, which intentionally stay isolated.
+    static let shared = AppContainer()
+
     // MARK: - Services (Singletons)
     private let eventBus = DomainEventBus.shared
 
@@ -191,7 +198,7 @@ private extension AppContainer {
 // MARK: - Environment
 
 private struct AppContainerEnvironmentKey: EnvironmentKey {
-    static let defaultValue: AppContainer = AppContainer()
+    static let defaultValue: AppContainer = .shared
 }
 
 extension EnvironmentValues {
