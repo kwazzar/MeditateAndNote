@@ -19,9 +19,14 @@ struct LoadingScreenView: View {
         ZStack {
             themeManager.current.mainBackground
 
-            VStack(spacing: 32) {
-                hero
-                    .scaleEffect(isBreathing ? 1.06 : 0.96)
+            // Hero sits in the exact screen center — the same position the
+            // meditate button uses on the Main screen, so the splash morphs
+            // into the tabs without the icon jumping.
+            hero
+                .scaleEffect(isBreathing ? 1.06 : 0.96)
+
+            VStack {
+                Spacer()
 
                 VStack(spacing: 12) {
                     Text("Meditate & Note")
@@ -32,6 +37,7 @@ struct LoadingScreenView: View {
                         .tint(themeManager.current.accentColor)
                         .scaleEffect(0.9)
                 }
+                .padding(.bottom, 44)
             }
         }
         .onAppear {

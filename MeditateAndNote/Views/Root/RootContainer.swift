@@ -140,7 +140,7 @@ extension RootContainer {
             CustomTabBar(selectedTab: bindingSelectedTab)
                 .padding(.horizontal, 16)
                 .offset(y: router.isDetailPresented ? 100 : 0)
-                .animation(.snappy(duration: 0.25), value: router.isDetailPresented)
+                .animation(.snappy(duration: 0.4, extraBounce: 0.2), value: router.isDetailPresented)
         }
         .ignoresSafeArea(.keyboard, edges: .bottom)
     }

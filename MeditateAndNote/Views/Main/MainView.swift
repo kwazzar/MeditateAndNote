@@ -14,27 +14,26 @@ struct MainView: View {
     @Environment(StreakTracker.self) private var streakTracker
 
     var body: some View {
-        VStack(spacing: 0) {
-            StreakHeaderView(streakTracker: streakTracker)
-                .padding(.horizontal, 16)
-                .padding(.top, 8)
+        ZStack {
+            themeManager.current.mainBackground
 
-            Spacer()
+            VStack {
+                StreakHeaderView(streakTracker: streakTracker)
+                    .padding(.horizontal, 16)
+                    .padding(.top, 8)
 
-            HStack {
-                Spacer()
-                meditateButton
                 Spacer()
             }
 
-            Spacer()
-        }
-        .overlay(alignment: .bottomTrailing) {
+            // Centered in the same spot as the loading-screen hero, so the
+            // splash morphs into the main UI without the icon jumping.
+            meditateButton
+
             settingsButton
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
                 .padding(.bottom, 60)
                 .padding(.trailing, 26)
         }
-        .background(themeManager.current.mainBackground)
     }
 }
 
