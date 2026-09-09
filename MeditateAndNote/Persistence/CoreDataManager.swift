@@ -18,6 +18,7 @@ enum CDEntity {
     static let streakMeta = "CDStreakMeta"
     static let aiDraftSession = "CDAIDraftSession"
     static let aiDraftMetric = "CDAIDraftMetric"
+    static let noteInsight = "CDNoteInsight"
 }
 
 // MARK: - CoreDataManager
@@ -281,10 +282,49 @@ final class CoreDataManager {
 
         aiDraftMetricEntity.properties = [metricID, metricKind, metricPayload, metricRecordedAt]
 
+        // ── CDNoteInsight ──────────────────────────────────────
+        // One row per note: background analysis result (Sprint 3).
+        let noteInsightEntity = NSEntityDescription()
+        noteInsightEntity.name = CDEntity.noteInsight
+        noteInsightEntity.managedObjectClassName = NSStringFromClass(NSManagedObject.self)
+
+        let insightNoteID = NSAttributeDescription()
+        insightNoteID.name = "noteID"
+        insightNoteID.attributeType = .UUIDAttributeType
+        insightNoteID.isOptional = false
+
+        let insightThemes = NSAttributeDescription()
+        insightThemes.name = "themesJSON"
+        insightThemes.attributeType = .binaryDataAttributeType
+        insightThemes.isOptional = false
+
+        let insightSummary = NSAttributeDescription()
+        insightSummary.name = "summary"
+        insightSummary.attributeType = .stringAttributeType
+        insightSummary.isOptional = false
+        insightSummary.defaultValue = ""
+
+        let insightTags = NSAttributeDescription()
+        insightTags.name = "tagsJSON"
+        insightTags.attributeType = .binaryDataAttributeType
+        insightTags.isOptional = false
+
+        let insightGeneratedAt = NSAttributeDescription()
+        insightGeneratedAt.name = "generatedAt"
+        insightGeneratedAt.attributeType = .dateAttributeType
+        insightGeneratedAt.isOptional = false
+        insightGeneratedAt.defaultValue = Date.distantPast
+
+        noteInsightEntity.properties = [
+            insightNoteID, insightThemes, insightSummary,
+            insightTags, insightGeneratedAt,
+        ]
+        noteInsightEntity.uniquenessConstraints = [[insightNoteID]]
+
         // ── Register ─────────────────────────────────────────────
         model.entities = [
             noteEntity, sessionEntity, activityEntity, streakEntity,
-            aiDraftEntity, aiDraftMetricEntity,
+            aiDraftEntity, aiDraftMetricEntity, noteInsightEntity,
         ]
 
         return model

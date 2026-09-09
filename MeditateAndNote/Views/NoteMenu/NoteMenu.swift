@@ -10,14 +10,19 @@ import SwiftUI
 struct NoteMenu: View {
     @State var viewModel: NoteMenuViewModel
     @State var searchState: SearchState
+    /// Plain `let`, not `@State`: the VM is an @Observable reference type
+    /// owned by AppContainer — the view only reads it, so the latest passed
+    /// value must always win (no first-render staleness).
+    let insightsViewModel: NoteInsightsViewModel?
     @Environment(Router.self) private var router
     @Environment(ThemeManager.self) private var themeManager
 
     @State private var isScrolling = false
 
-    init(viewModel: NoteMenuViewModel) {
+    init(viewModel: NoteMenuViewModel, insightsViewModel: NoteInsightsViewModel? = nil) {
         self.viewModel = viewModel
         self.searchState = viewModel.searchState
+        self.insightsViewModel = insightsViewModel
     }
     
     var body: some View {
@@ -30,6 +35,9 @@ struct NoteMenu: View {
             GeometryReader { geo in
                 ScrollDetector(isScrolling: $isScrolling) {
                     LazyVStack {
+                        if let insightsViewModel {
+                            NoteInsightsSection(viewModel: insightsViewModel)
+                        }
                         ForEach(displayedNotes) { note in
                             NoteCard(
                                 note: note,

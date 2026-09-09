@@ -121,7 +121,10 @@ extension RootContainer {
                 .tag(TabDestination.home)
                 
                 NavigationContainer(parentRouter: router, tab: .notes) {
-                    NoteMenu(viewModel: container.makeNoteMenuViewModel())
+                    NoteMenu(
+                        viewModel: container.makeNoteMenuViewModel(),
+                        insightsViewModel: container.makeNoteInsightsViewModel()
+                    )
                         .environment(themeManager)
                         .toolbar(.hidden, for: .tabBar)
                 }

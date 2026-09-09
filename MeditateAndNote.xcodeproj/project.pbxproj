@@ -7,6 +7,22 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D6E0907466DD40B4B07F2800 /* NoteTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1888931E4FD4D369D64685B /* NoteTheme.swift */; };
+		20FF21AAD6CB4DEC960677E7 /* NoteInsight.swift in Sources */ = {isa = PBXBuildFile; fileRef = B54A74DD65CD487D90A51661 /* NoteInsight.swift */; };
+		7D0013605B5D464CB27FD0CF /* NoteInsightsCollection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62105EAFC00743E591CAECDC /* NoteInsightsCollection.swift */; };
+		F78204ED1AFA449086104A36 /* NoteAnalysisError.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4AFEC1DFE2F4D45BD5C2DD6 /* NoteAnalysisError.swift */; };
+		4EE3B6E63BC641879A68A1B1 /* NoteInsightStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14E05B614E774DBBB0C7A67C /* NoteInsightStore.swift */; };
+		46AF5819145340EA90DEBAC9 /* RemoteLLMDraftService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CABE108FA80445DB6B918B7 /* RemoteLLMDraftService.swift */; };
+		D67B0A10D51B47BA83DB69AB /* NoteAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13FB111E61EB44269CED5073 /* NoteAnalyzer.swift */; };
+		BDFDDB12E34D499CA88CEA1A /* HeuristicNoteAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 132CCACAA0FA4CEFB3F9A34C /* HeuristicNoteAnalyzer.swift */; };
+		2FB6ECE237A74E428A0DFD7E /* FoundationModelsNoteAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C2BB67EADD34167B544CAAE /* FoundationModelsNoteAnalyzer.swift */; };
+		710DC865B1B648958C8400CF /* NoteInsightManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC3FB19986AD48CBB9285299 /* NoteInsightManager.swift */; };
+		3AEDBF51D2294DC6B04A3516 /* CoreDataNoteInsightStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BC160799DFD41468C12B455 /* CoreDataNoteInsightStore.swift */; };
+		A0A8F180B9F04563AF2BC042 /* NoteInsightsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 752F419E4E3F4F8E97054D73 /* NoteInsightsViewModel.swift */; };
+		ED94EC7AAB0A4DEA9699E0DE /* NoteInsightsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07122C96FB9D45AD927BAB76 /* NoteInsightsSection.swift */; };
+		656EFB51DAA945729EF107CA /* NoteInsightTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 441E68DB04904AA091E7274B /* NoteInsightTests.swift */; };
+		DD27AF01DB20457CB5DF09C9 /* NoteInsightManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36795F95436641CF9362FD4A /* NoteInsightManagerTests.swift */; };
+		36380375A3F74EE7B91B2250 /* CoreDataNoteInsightStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C5AAA57CC8E45009A5A8EE0 /* CoreDataNoteInsightStoreTests.swift */; };
 		053967EF78BB7B14A4784118 /* StreakInsight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D672486C798B4CC2DBFF322 /* StreakInsight.swift */; };
 		096B78E3E88B87EA5E3E59B7 /* UserDefaultsReminderSettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1C20BEA552DE5FA2D6680E4 /* UserDefaultsReminderSettingsStore.swift */; };
 		101741837BC46B6260CC7670 /* NoteAIDraftError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C097ECE4091974BC6E457F0 /* NoteAIDraftError.swift */; };
@@ -165,6 +181,22 @@
 
 /* Begin PBXFileReference section */
 		0283B1D3266C4E2A884A4011 /* StreakInsightManagerTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StreakInsightManagerTests.swift; sourceTree = "<group>"; };
+		E1888931E4FD4D369D64685B /* NoteTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteTheme.swift; sourceTree = "<group>"; };
+		B54A74DD65CD487D90A51661 /* NoteInsight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteInsight.swift; sourceTree = "<group>"; };
+		62105EAFC00743E591CAECDC /* NoteInsightsCollection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteInsightsCollection.swift; sourceTree = "<group>"; };
+		E4AFEC1DFE2F4D45BD5C2DD6 /* NoteAnalysisError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteAnalysisError.swift; sourceTree = "<group>"; };
+		14E05B614E774DBBB0C7A67C /* NoteInsightStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteInsightStore.swift; sourceTree = "<group>"; };
+		6CABE108FA80445DB6B918B7 /* RemoteLLMDraftService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteLLMDraftService.swift; sourceTree = "<group>"; };
+		13FB111E61EB44269CED5073 /* NoteAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteAnalyzer.swift; sourceTree = "<group>"; };
+		132CCACAA0FA4CEFB3F9A34C /* HeuristicNoteAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeuristicNoteAnalyzer.swift; sourceTree = "<group>"; };
+		3C2BB67EADD34167B544CAAE /* FoundationModelsNoteAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoundationModelsNoteAnalyzer.swift; sourceTree = "<group>"; };
+		FC3FB19986AD48CBB9285299 /* NoteInsightManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteInsightManager.swift; sourceTree = "<group>"; };
+		5BC160799DFD41468C12B455 /* CoreDataNoteInsightStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataNoteInsightStore.swift; sourceTree = "<group>"; };
+		752F419E4E3F4F8E97054D73 /* NoteInsightsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteInsightsViewModel.swift; sourceTree = "<group>"; };
+		07122C96FB9D45AD927BAB76 /* NoteInsightsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteInsightsSection.swift; sourceTree = "<group>"; };
+		441E68DB04904AA091E7274B /* NoteInsightTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteInsightTests.swift; sourceTree = "<group>"; };
+		36795F95436641CF9362FD4A /* NoteInsightManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteInsightManagerTests.swift; sourceTree = "<group>"; };
+		5C5AAA57CC8E45009A5A8EE0 /* CoreDataNoteInsightStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataNoteInsightStoreTests.swift; sourceTree = "<group>"; };
 		07F5E247FA129DC74064AF00 /* AIDraftManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIDraftManagerTests.swift; sourceTree = "<group>"; };
 		09E4AAB15B1383604B747363 /* InsightsViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InsightsViewModel.swift; sourceTree = "<group>"; };
 		0FB281AE971D4DB672406825 /* AIDraftManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIDraftManager.swift; sourceTree = "<group>"; };
@@ -355,6 +387,11 @@
 				E7D4CA8EC18784FA6B3313C1 /* AIDraftSessionStore.swift */,
 				0FB281AE971D4DB672406825 /* AIDraftManager.swift */,
 				3BCCAAAA0000000000000006 /* KeychainService.swift */,
+				6CABE108FA80445DB6B918B7 /* RemoteLLMDraftService.swift */,
+				13FB111E61EB44269CED5073 /* NoteAnalyzer.swift */,
+				132CCACAA0FA4CEFB3F9A34C /* HeuristicNoteAnalyzer.swift */,
+				3C2BB67EADD34167B544CAAE /* FoundationModelsNoteAnalyzer.swift */,
+				FC3FB19986AD48CBB9285299 /* NoteInsightManager.swift */,
 			);
 			path = AI;
 			sourceTree = "<group>";
@@ -366,6 +403,7 @@
 				E32C6BC02ED9CD6D0093F735 /* SearchBar.swift */,
 				78421A36302C1C4C001B52A6 /* ScrollDetector.swift */,
 				E32C6BC22ED9CEBB0093F735 /* SearchState.swift */,
+				07122C96FB9D45AD927BAB76 /* NoteInsightsSection.swift */,
 			);
 			path = NoteMenu;
 			sourceTree = "<group>";
@@ -517,6 +555,11 @@
 				D75A6A03A0815DD9397A972C /* AIDraftSession.swift */,
 				1C097ECE4091974BC6E457F0 /* NoteAIDraftError.swift */,
 				3BCCAAAA0000000000000003 /* AIDraftSettings.swift */,
+				E1888931E4FD4D369D64685B /* NoteTheme.swift */,
+				B54A74DD65CD487D90A51661 /* NoteInsight.swift */,
+				62105EAFC00743E591CAECDC /* NoteInsightsCollection.swift */,
+				E4AFEC1DFE2F4D45BD5C2DD6 /* NoteAnalysisError.swift */,
+				14E05B614E774DBBB0C7A67C /* NoteInsightStore.swift */,
 			);
 			path = AI;
 			sourceTree = "<group>";
@@ -576,6 +619,9 @@
 				3FC0FF6183D64D88B5E241EC /* ReminderManagerTests.swift */,
 				C7648CA347C57421E7F2B662 /* AIDraftSessionTests.swift */,
 				07F5E247FA129DC74064AF00 /* AIDraftManagerTests.swift */,
+				441E68DB04904AA091E7274B /* NoteInsightTests.swift */,
+				36795F95436641CF9362FD4A /* NoteInsightManagerTests.swift */,
+				5C5AAA57CC8E45009A5A8EE0 /* CoreDataNoteInsightStoreTests.swift */,
 			);
 			path = MeditateAndNoteTests;
 			sourceTree = "<group>";
@@ -599,6 +645,7 @@
 				EE0000012026090500000004 /* UserDefaultsStreakStore.swift */,
 				6FF5CC1CC273909C3EF0192B /* CoreDataAIDraftSessionStore.swift */,
 				3BCCAAAA0000000000000009 /* CoreDataAIDraftMetricStore.swift */,
+				5BC160799DFD41468C12B455 /* CoreDataNoteInsightStore.swift */,
 			);
 			path = Persistence;
 			sourceTree = "<group>";
@@ -747,6 +794,7 @@
 				OB0000030000000000000003 /* OnboardingViewModel.swift */,
 				09E4AAB15B1383604B747363 /* InsightsViewModel.swift */,
 				C41C9EA24F3766528DEEC350 /* NoteAIDraftViewModel.swift */,
+				752F419E4E3F4F8E97054D73 /* NoteInsightsViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -924,6 +972,9 @@
 				E918FB33F6CC56F39066F7DA /* ReminderManagerTests.swift in Sources */,
 				BD60022C477DD0A0FF778849 /* AIDraftSessionTests.swift in Sources */,
 				28A91B1F7276A0017B93246A /* AIDraftManagerTests.swift in Sources */,
+				656EFB51DAA945729EF107CA /* NoteInsightTests.swift in Sources */,
+				DD27AF01DB20457CB5DF09C9 /* NoteInsightManagerTests.swift in Sources */,
+				36380375A3F74EE7B91B2250 /* CoreDataNoteInsightStoreTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1035,6 +1086,19 @@
 				3BCC2F210BD2E40EE81D0C68 /* NoteAIDraftSheet.swift in Sources */,
 				3BCCAAAA0000000000000001 /* AIDraftSettings.swift in Sources */,
 				3BCCAAAA0000000000000002 /* AIDraftSettingsView.swift in Sources */,
+				D6E0907466DD40B4B07F2800 /* NoteTheme.swift in Sources */,
+				20FF21AAD6CB4DEC960677E7 /* NoteInsight.swift in Sources */,
+				7D0013605B5D464CB27FD0CF /* NoteInsightsCollection.swift in Sources */,
+				F78204ED1AFA449086104A36 /* NoteAnalysisError.swift in Sources */,
+				4EE3B6E63BC641879A68A1B1 /* NoteInsightStore.swift in Sources */,
+				46AF5819145340EA90DEBAC9 /* RemoteLLMDraftService.swift in Sources */,
+				D67B0A10D51B47BA83DB69AB /* NoteAnalyzer.swift in Sources */,
+				BDFDDB12E34D499CA88CEA1A /* HeuristicNoteAnalyzer.swift in Sources */,
+				2FB6ECE237A74E428A0DFD7E /* FoundationModelsNoteAnalyzer.swift in Sources */,
+				710DC865B1B648958C8400CF /* NoteInsightManager.swift in Sources */,
+				3AEDBF51D2294DC6B04A3516 /* CoreDataNoteInsightStore.swift in Sources */,
+				A0A8F180B9F04563AF2BC042 /* NoteInsightsViewModel.swift in Sources */,
+				ED94EC7AAB0A4DEA9699E0DE /* NoteInsightsSection.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

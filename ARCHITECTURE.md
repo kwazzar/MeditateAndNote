@@ -69,8 +69,26 @@ Factored ViewModel constructors:
 - `makeMeditateSelectViewModel()` → `MeditateSelectViewModel(...)`
 - `makeMeditationViewModel(for:)` → `MeditationViewModel(meditation, eventBus, soundPlayer)`
 - `makeNoteMenuViewModel()` → the shared singleton `NoteMenuViewModel`
+- `makeNoteAIDraftViewModel(noteID:currentContent:)` → `NoteAIDraftViewModel(drafts, eventBus)`
+- `makeNoteInsightsViewModel()` → `NoteInsightsViewModel(noteInsightManager, eventBus)`
 - `makeOnboardingViewModel(onCompletion:)` → `OnboardingViewModel(store, pages, onCompletion)`
 - `makeInsightsViewModel()` → `InsightsViewModel(StreakInsightManager)`
+
+### AI Notes (Sprints 1–3)
+
+- Drafts: `AIDraftSession` aggregate → `AIDraftService` protocol
+  (`FoundationModelsAIDraftService` on iOS 26+, `RemoteLLMDraftService`
+  opt-in fallback, `DisabledAIDraftService`) → `AIDraftManager` actor
+  (`AIDraftProvidable`/`AIDraftManageable`, events `.aiDraftGenerated` /
+  `.aiDraftMetric` → `CoreDataAIDraftMetricStore`).
+- Insights: `NoteInsight` entity + `NoteInsightsCollection` (max 1 per note)
+  → `NoteAnalyzer` protocol (`HeuristicNoteAnalyzer` always available,
+  `FoundationModelsNoteAnalyzer` upgrades quality on iOS 26+) →
+  `NoteInsightManager` actor (debounce 30s, max 1 pass/min, consumes
+  `.noteCreated/.noteUpdated/.noteDeleted`, publishes
+  `.noteInsightsUpdated`) → `NoteInsightStore`
+  (`CoreDataNoteInsightStore` / `InMemoryNoteInsightStore`) →
+  `NoteInsightsViewModel` + `NoteInsightsSection` in `NoteMenu`.
 
 ## Root & Navigation
 

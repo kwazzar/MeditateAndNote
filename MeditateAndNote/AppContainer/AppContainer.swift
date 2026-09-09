@@ -53,6 +53,17 @@ final class AppContainer {
         eventBus: eventBus
     )
 
+    // MARK: - Note Insights (Sprint 3)
+
+    private lazy var noteInsightAnalyzer: any NoteAnalyzer = FoundationModelsNoteAnalyzer()
+    private lazy var noteInsightStore: any NoteInsightStore = CoreDataNoteInsightStore()
+    private lazy var noteInsightManager = NoteInsightManager(
+        analyzer: noteInsightAnalyzer,
+        store: noteInsightStore,
+        notesProvider: { [noteManager] in await noteManager.currentNotes },
+        eventBus: eventBus
+    )
+
     /// Single shared instance: NoteMenu binds one VM for its whole lifetime,
     /// so the list loads once and stays fresh via domain events. Creating a
     /// fresh VM per render would leak event-bus subscriptions.
@@ -113,6 +124,11 @@ final class AppContainer {
     }
 
     @MainActor
+    func makeNoteInsightsViewModel() -> NoteInsightsViewModel {
+        NoteInsightsViewModel(provider: noteInsightManager, eventBus: eventBus)
+    }
+
+    @MainActor
     func makeOnboardingViewModel(onCompletion: @escaping () -> Void) -> OnboardingViewModel {
         OnboardingViewModel(
             store: onboardingStore,
@@ -147,6 +163,7 @@ private extension AppContainer {
                 case .noteCreated, .noteUpdated:
                     await self.streakTracker.handle(event)
                     self.insightManager.handle(event)
+                    await self.noteInsightManager.handle(event)
                 case .noteDeleted(let noteID):
                     await self.streakTracker.handle(event)
                     self.insightManager.handle(event)
@@ -154,6 +171,7 @@ private extension AppContainer {
                     // them up so the store doesn't accumulate rows for notes that no
                     // longer exist.
                     try? await self.aiDraftManager.discardSessions(for: noteID)
+                    await self.noteInsightManager.handle(event)
                 case .meditationCompleted:
                     await self.streakTracker.handle(event)
                     self.insightManager.handle(event)
@@ -162,6 +180,8 @@ private extension AppContainer {
                     break
                 case .aiDraftMetric:
                     await self.aiDraftMetricStore.handle(event)
+                case .noteInsightsUpdated:
+                    break
                 }
             }
         }
