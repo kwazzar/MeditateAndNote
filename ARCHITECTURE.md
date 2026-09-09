@@ -56,7 +56,11 @@ graph TB
 
 `AppContainer` is the DI root. It owns the singletons (DomainEventBus, data
 sources, sync coordinator, managers) and exposes `make<X>ViewModel()` factory
-methods; it never acts as a registration container. Cross-cutting side effects
+methods; it never acts as a registration container. Production shares exactly
+one instance — `AppContainer.shared`, used both by the `EnvironmentKey`
+`defaultValue` and the App struct — because `init()` starts the event loop as
+a side effect and a second instance would run duplicate loops/managers.
+Fresh `init()`s are only for previews/tests isolation. Cross-cutting side effects
 are wired in `init` via `startEventListening()`: a single stored `Task` runs
 `for await` over the bus's `AsyncStream` and dispatches through `handleEvent`,
 hopping to `@MainActor` before touching the observers (`StreakTracker`,
@@ -88,7 +92,8 @@ Factored ViewModel constructors:
   `.noteCreated/.noteUpdated/.noteDeleted`, publishes
   `.noteInsightsUpdated`) → `NoteInsightStore`
   (`CoreDataNoteInsightStore` / `InMemoryNoteInsightStore`) →
-  `NoteInsightsViewModel` + `NoteInsightsSection` in `NoteMenu`.
+  `NoteInsightsViewModel` + `NoteInsightsSection` in `NoteMenu`
+  (the section reloads on every appear — background passes finish off-tab).
 
 ## Root & Navigation
 
@@ -199,7 +204,10 @@ graph TB
 Note: `NoteMenuViewModel` is a singleton in `AppContainer` (loaded once,
 keeps its event-bus subscription alive). `NoteEditorViewModel`,
 `MeditationViewModel`, `OnboardingViewModel`, and `InsightsViewModel` are
-created per screen via `make<X>ViewModel()`.
+created per screen via `make<X>ViewModel()`. ViewModels passed into views
+via `init` are held as `let`, not `@State` — `@State var vm: VM?` was
+observed dropping the value (init got it, body saw `nil`); `let` always
+reflects the latest passed reference and still tracks `@Observable` updates.
 
 ## Domain Model
 

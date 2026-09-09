@@ -17,6 +17,8 @@ Roadmap для додавання AI-підсилення до нотаток у
 
 ## Sprint 1 — Smart Prompt MVP (Foundation Models)
 
+**Status: ✅ DONE** (`48b35b8`, `df4e4a7` — AIDraftManager, Foundation Models service, in-flight guard, orphan cleanup).
+
 **Goal:** Працюючий AI assistant у note editor через on-device Apple Foundation Models (iOS 26+).
 
 ### Architecture (DDD-compliant)
@@ -130,6 +132,8 @@ Roadmap для додавання AI-підсилення до нотаток у
 
 ## Sprint 2 — Remote Fallback + Telemetry
 
+**Status: ✅ DONE** (`af4a604` + `992b3fe` — telemetry store, settings UI, privacy manifest; `RemoteLLMDraftService` registered in project by S3 commit).
+
 **Goal:** Працює на всіх пристроях iOS 17+; збираємо метрики для прийняття рішень по Sprint 4.
 
 ### Tasks
@@ -195,6 +199,8 @@ Roadmap для додавання AI-підсилення до нотаток у
 ---
 
 ## Sprint 3 — AI Insights (Variant B)
+
+**Status: ✅ DONE** (2026-09-09, `992b3fe` + `6ea72bb`; 23 new tests, full suite 423 green; manual QA on iOS 26.5 sim passed — seeded notes produce themed insights end-to-end through Foundation Models).
 
 **Goal:** Background аналіз колекції нотаток, поверх існуючих `DomainEvent`s.
 
@@ -269,14 +275,32 @@ NoteManager publishes .noteCreated / .noteUpdated / .noteDeleted
 
 ### Definition of Done
 
-- Insights auto-refresh після створення/редагування нотаток
-- NoteMenu показує collapsible insights section
-- Manual test: створити 3 нотатки про подібну тему → отримати themes
-- Battery profile: < 5% per hour при background usage
+- [x] Insights auto-refresh після створення/редагування нотаток (debounce 30s, throttle 1 pass/min — verified in logs)
+- [x] NoteMenu показує collapsible insights section (`NoteInsightsSection`, top themes + 3 freshest + refresh button)
+- [x] Manual test: створити 3 нотатки про подібну тему → отримати themes (sim: `calm`/`meditation`/`sleep` chips + summaries + `#tags`)
+- [ ] Battery profile: < 5% per hour при background usage — **not measured**, open item
+
+### Done — deviations from the plan & follow-ups
+
+Deviations (all DDD-compliant, see `ddd-audit` 2026-09-09 — zero ❌):
+- `.noteInsightsUpdated` carries `[NoteID]`, not the whole `NoteInsightsCollection` (subscribers reload from the store).
+- `NoteAnalyzer.isAvailable` is **sync**, not async (all checks are cheap/local; avoids `await` warnings).
+- `FoundationModelsNoteAnalyzer` falls back to `HeuristicNoteAnalyzer` per-note on any failure; heuristic is always available (iOS 17+, tests, previews).
+- `NoteInsightsSection` loads on **every appear**, not only via events — background passes usually finish while the user is off-tab (found in manual QA).
+- VMs are passed to views as `let`, not `@State` — `@State var vm: VM?` dropped the value (init got it, body saw `nil`); `let` always wins. Applies to any future `@Observable` VM passed via init.
+
+Follow-ups (tech debt, non-blocking):
+- `NoteInsight.maxSummaryLength` declared but unenforced — enforce or delete.
+- `NoteInsightManager.refresh` batch is not atomic (partial batch on mid-loop failure; self-heals next pass).
+- `AppContainer.init()` still public — production path uses `.shared` (see `6ea72bb`), but nothing stops a second production instance by hand.
+- Double-`AppContainer` root cause (two live event loops/managers observed pre-fix) fixed by `.shared`; exact materialization path (defaultValue vs `@State` re-eval) not isolated — revisit if duplication symptoms return.
+- Battery profiling (< 5%/h) still open; also re-check after the `.shared` fix (previously two managers ran double passes).
 
 ---
 
 ## Sprint 4 — Differentiation (Variant C або D)
+
+**Status: ⬜ NOT STARTED** — telemetry for the decision (`CDAIDraftMetric`: counts, latency, error kinds) is being collected since Sprint 2; decision pending real usage data. Current lean: **D (Semantic Search)** — lower risk, builds on existing search, iOS 17+ via NaturalLanguage.
 
 **Рішення в кінці Sprint 3 на основі метрик з Sprint 2.**
 
