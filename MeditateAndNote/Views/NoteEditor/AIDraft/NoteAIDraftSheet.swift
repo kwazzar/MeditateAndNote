@@ -139,19 +139,38 @@ struct NoteAIDraftSheet: View {
     }
 
     private var unavailableView: some View {
-        ContentUnavailableView(
-            "AI isn't available here",
-            systemImage: "exclamationmark.triangle",
-            description: Text("Your device doesn't support on-device AI right now.")
-        )
+        VStack(spacing: 12) {
+            ContentUnavailableView(
+                "AI isn't available here",
+                systemImage: "exclamationmark.triangle",
+                description: Text("Your device doesn't support on-device AI right now. If this is your first run, the model may still be downloading — try again in a bit.")
+            )
+            retryButton
+        }
     }
 
     private func errorView(_ error: AIDraftError) -> some View {
-        ContentUnavailableView(
-            "Couldn't generate ideas",
-            systemImage: "wifi.exclamationmark",
-            description: Text(errorDescription(error))
-        )
+        VStack(spacing: 12) {
+            ContentUnavailableView(
+                "Couldn't generate ideas",
+                systemImage: "wifi.exclamationmark",
+                description: Text(errorDescription(error))
+            )
+            retryButton
+        }
+    }
+
+    /// Re-runs generation with the current prompt. The sparkles button up top
+    /// does the same, but a terminal state needs a discoverable way out —
+    /// otherwise users sit on the error screen (observed in manual QA).
+    private var retryButton: some View {
+        Button {
+            Task { await viewModel.start(instructions: promptText) }
+        } label: {
+            Label("Try again", systemImage: "arrow.clockwise")
+                .font(.footnote.weight(.semibold))
+        }
+        .disabled(viewModel.uiState == .loading)
     }
 
     private func errorDescription(_ error: AIDraftError) -> String {
