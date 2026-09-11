@@ -14,9 +14,10 @@ enum AIDraftServiceFactory {
 
     static func make(remote: (any AIDraftService)? = nil) -> any AIDraftService {
         let onDevice: any AIDraftService = FoundationModelsAIDraftService()
-        // REMOTE: RemoteLLMDraftService - TODO: add to Xcode project for full fallback support
-        // For now, use the remote service if provided, else disabled
-        let remoteService: any AIDraftService = remote ?? DisabledAIDraftService()
+        // RemoteLLMDraftService is opt-in gated inside (settings toggle +
+        // Keychain key), so wiring it by default is safe: without opt-in it
+        // reports unavailable and the UI degrades exactly as before.
+        let remoteService: any AIDraftService = remote ?? RemoteLLMDraftService()
 
         if #available(iOS 26.0, *) {
             return CompositeFallbackAIDraftService(primary: onDevice, secondary: remoteService)

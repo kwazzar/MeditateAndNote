@@ -10,6 +10,9 @@ import SwiftUI
 struct AIDraftSettingsView: View {
     @Bindable var settingsStore: AIDraftSettingsStoreObservable
     @Environment(ThemeManager.self) private var themeManager
+    @State private var hasStoredKey = false
+    @State private var keyMessage: String?
+    @State private var keyMessageIsError = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -30,6 +33,15 @@ struct AIDraftSettingsView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(themeManager.current.editorBackground)
         .cornerRadius(16)
+        // The controls above mutate the in-memory copy; persist every change
+        // or the service (which reads its own store instance) keeps seeing
+        // stale defaults — e.g. the toggle silently does nothing.
+        .onChange(of: settingsStore.settings) { _, newValue in
+            settingsStore.saveSettings(newValue)
+        }
+        .task {
+            hasStoredKey = settingsStore.getAPIKey() != nil
+        }
     }
 
     private var remoteEndpointSection: some View {
@@ -49,12 +61,14 @@ struct AIDraftSettingsView: View {
                 .font(.caption)
                 .foregroundColor(themeManager.current.textSecondary)
 
-            Picker("Model", selection: $settingsStore.settings.selectedModel) {
-                Text("gpt-4o-mini").tag("gpt-4o-mini")
-                Text("gpt-4o").tag("gpt-4o")
-                Text("claude-3-5-sonnet-20241022").tag("claude-3-5-sonnet-20241022")
-            }
-            .pickerStyle(.menu)
+            // Free-text (not a Picker): providers come and go (OpenAI,
+            // Gemini via its OpenAI-compat endpoint, OpenRouter…), hardcoding
+            // three names would block all of them. Persists via the view's
+            // onChange → saveSettings like the other fields.
+            TextField("gpt-4o-mini", text: $settingsStore.settings.selectedModel)
+                .textFieldStyle(.roundedBorder)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
         }
     }
 
@@ -83,9 +97,55 @@ struct AIDraftSettingsView: View {
                 .font(.caption2)
                 .foregroundColor(themeManager.current.textSecondary)
 
-            Button("Save API Key") {
-                Task {
-                    try? await settingsStore.saveAPIKey("...")
+            apiKeySection
+        }
+    }
+
+    private var apiKeySection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(hasStoredKey ? "API key saved ✓" : "No API key saved")
+                .font(.caption)
+                .foregroundColor(themeManager.current.textSecondary)
+
+            SecureField("sk-...", text: $settingsStore.draftAPIKey)
+                .textFieldStyle(.roundedBorder)
+                .textContentType(.password)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+
+            if let keyMessage {
+                Text(keyMessage)
+                    .font(.caption2)
+                    .foregroundColor(keyMessageIsError ? themeManager.current.danger : themeManager.current.textSecondary)
+            }
+
+            HStack(spacing: 16) {
+                Button("Save API Key") {
+                    Task {
+                        do {
+                            try await settingsStore.saveAPIKey(settingsStore.draftAPIKey)
+                            settingsStore.draftAPIKey = ""
+                            hasStoredKey = true
+                            keyMessage = nil
+                        } catch {
+                            keyMessage = "Couldn't save the key. Try again."
+                            keyMessageIsError = true
+                        }
+                    }
+                }
+                .disabled(settingsStore.draftAPIKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+
+                if hasStoredKey {
+                    Button("Delete", role: .destructive) {
+                        do {
+                            try settingsStore.deleteAPIKey()
+                            hasStoredKey = false
+                            keyMessage = nil
+                        } catch {
+                            keyMessage = "Couldn't delete the key."
+                            keyMessageIsError = true
+                        }
+                    }
                 }
             }
         }

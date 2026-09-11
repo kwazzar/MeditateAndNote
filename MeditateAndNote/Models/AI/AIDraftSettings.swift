@@ -55,6 +55,10 @@ protocol AIDraftSettingsStore: Sendable {
 @MainActor @Observable final class AIDraftSettingsStoreObservable {
     var settings: AIDraftSettings
     var showAPIKeySheet = false
+    /// Staging text for the key field. Memory-only — never persisted or
+    /// logged. Lives here (not in view @State) so view-identity churn can't
+    /// wipe typed/pasted text mid-entry.
+    var draftAPIKey = ""
 
     private let store: any AIDraftSettingsStore
 
