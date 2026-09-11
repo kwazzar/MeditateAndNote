@@ -58,7 +58,15 @@ struct FoundationModelsNoteAnalyzer: NoteAnalyzer {
     #if canImport(FoundationModels)
     @available(iOS 26.0, *)
     private func systemModelAvailable() -> Bool {
-        SystemLanguageModel.default.availability == .available
+        switch SystemLanguageModel.default.availability {
+        case .available:
+            return true
+        case .unavailable(let reason):
+            // Same DEBUG diagnostic as the draft service: distinguishes a
+            // still-downloading model (wait) from an ineligible device (give up).
+            logger.info("System model unavailable for analysis: \(String(describing: reason))")
+            return false
+        }
     }
 
     /// Batch-analyzes up to 10 notes in a single session. Notes are matched

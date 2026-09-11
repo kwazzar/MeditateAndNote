@@ -50,7 +50,16 @@ struct FoundationModelsAIDraftService: AIDraftService {
     #if canImport(FoundationModels)
     @available(iOS 26.0, *)
     private func systemModelAvailability() -> Bool {
-        SystemLanguageModel.default.availability == .available
+        switch SystemLanguageModel.default.availability {
+        case .available:
+            return true
+        case .unavailable(let reason):
+            // DEBUG diagnostic: the exact reason (deviceNotEligible /
+            // appleIntelligenceNotEnabled / modelNotReady) tells whether to
+            // wait for a download or give up on this device. No content leaks.
+            logger.info("System model unavailable: \(String(describing: reason))")
+            return false
+        }
     }
 
     @available(iOS 26.0, *)
