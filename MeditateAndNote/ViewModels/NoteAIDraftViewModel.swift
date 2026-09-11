@@ -29,6 +29,14 @@ final class NoteAIDraftViewModel {
     private(set) var sessions: [AIDraftSession] = []
     private(set) var lastError: AIDraftError?
 
+    /// True when the sheet opened with note text to work from. The sheet
+    /// auto-starts generation in that case, so opening ✨ never requires
+    /// typing — the prompt field is only for steering follow-ups (or for
+    /// generating from a bare request on an empty note).
+    var hasContext: Bool {
+        !currentContent.rawValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
     /// Fired with the chosen suggestion when the user taps "Insert".
     var onInsert: ((AIDraftSession, AISuggestion) -> Void)?
 

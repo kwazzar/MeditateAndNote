@@ -14,8 +14,10 @@ struct NoteEditorView: View {
     @FocusState private var isEditorFocused: Bool
     @State private var isKeyboardVisible = false
     @State private var showDeleteConfirmation = false
-    @State private var showAIDraftSheet = false
-    @State private var draftNoteID: NoteID?
+    /// Presentation payload for the AI sheet: single source of truth, so the
+    /// sheet always renders against a concrete id (no `if let` race) and the
+    /// session keys to a real note id whenever the note is saved.
+    @State private var draftContext: AIDraftSheetContext?
 
     var body: some View {
         ZStack {
@@ -49,30 +51,38 @@ struct NoteEditorView: View {
         } message: {
             Text("This action cannot be undone.")
         }
-        .sheet(isPresented: $showAIDraftSheet) {
-            aiDraftSheet
+        .sheet(item: $draftContext, onDismiss: { draftContext = nil }) { context in
+            aiDraftSheet(for: context)
         }
     }
+}
+
+// MARK: - AI Draft Sheet Context
+
+/// Snapshot bound to one sheet presentation: which note and what content the
+/// generation runs against. `.sheet(item:)` guarantees the sheet never builds
+/// with a nil id (the previous `if let` shape could present blank).
+private struct AIDraftSheetContext: Identifiable, Equatable {
+    var id: NoteID { noteID }
+    let noteID: NoteID
+    let content: NoteContent
 }
 
 private extension NoteEditorView {
     // MARK: - AI Draft Sheet
 
-    @ViewBuilder
-    var aiDraftSheet: some View {
-        if let noteID = draftNoteID {
-            let aiViewModel = appContainer.makeNoteAIDraftViewModel(
-                noteID: noteID,
-                currentContent: NoteContent(viewModel.body)
-            )
-            NoteAIDraftSheet(viewModel: aiViewModel)
-                .environment(themeManager)
-                .onAppear {
-                    aiViewModel.onInsert = { _, suggestion in
-                        viewModel.applyDraft(NoteContent(suggestion.text))
-                    }
+    func aiDraftSheet(for context: AIDraftSheetContext) -> some View {
+        let aiViewModel = appContainer.makeNoteAIDraftViewModel(
+            noteID: context.noteID,
+            currentContent: context.content
+        )
+        return NoteAIDraftSheet(viewModel: aiViewModel)
+            .environment(themeManager)
+            .onAppear {
+                aiViewModel.onInsert = { _, suggestion in
+                    viewModel.applyDraft(NoteContent(suggestion.text))
                 }
-        }
+            }
     }
     
     // MARK: - Top Bar
@@ -90,8 +100,19 @@ private extension NoteEditorView {
             Spacer()
 
             Button(action: {
-                draftNoteID = viewModel.currentNoteID ?? NoteID()
-                showAIDraftSheet = true
+                Task {
+                    // Persist first so the AI session keys to the real note id
+                    // instead of a phantom one (unsaved note → orphan sessions
+                    // under an id the note never gets). Skipped when there is
+                    // nothing to save — the sheet then works from the prompt.
+                    if viewModel.isDirty {
+                        await viewModel.save()
+                    }
+                    draftContext = AIDraftSheetContext(
+                        noteID: viewModel.currentNoteID ?? NoteID(),
+                        content: NoteContent(viewModel.body)
+                    )
+                }
             }) {
                 Image(systemName: "sparkles")
                     .font(.system(size: 16, weight: .semibold))

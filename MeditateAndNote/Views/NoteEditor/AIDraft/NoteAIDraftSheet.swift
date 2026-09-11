@@ -37,6 +37,14 @@ struct NoteAIDraftSheet: View {
             .onDisappear {
                 viewModel.sheetWillDismiss()
             }
+            .task {
+                // Auto-generate on open: the note content is the prompt.
+                // Typing is only needed to steer a follow-up generation —
+                // or to generate from a bare request on an empty note.
+                if viewModel.hasContext {
+                    await viewModel.start()
+                }
+            }
         }
     }
 
@@ -83,7 +91,7 @@ struct NoteAIDraftSheet: View {
         ContentUnavailableView(
             "Ask for a spark of inspiration",
             systemImage: "lightbulb",
-            description: Text("Your note stays private. Suggestions are generated on your device.")
+            description: Text("With text in your note, ideas generate on their own — or type what you need below. Your note stays private.")
         )
     }
 
