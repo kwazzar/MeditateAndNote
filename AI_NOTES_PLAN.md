@@ -303,6 +303,13 @@ Follow-ups (tech debt, non-blocking):
 - **Mitigation implemented** in `FoundationModelsAIDraftService.generate`: on `assetsUnavailable` / `concurrentRequests` — one bounded warmup retry after 10s, then regular error mapping. Hot path pays nothing; `rateLimited` is excluded (goes to `CompositeFallback` → remote instead). Classifier covered by `FoundationModelsDraftServiceTests` (7 tests).
 - **Verified live:** draft e2e on warm sim (suggestions in 3.4s); analyzer e2e (2 insights). Sheet-UI flow, real-key remote, and battery profile remain manual-only.
 
+### Live remote verification (2026-09-10/11, OpenAI via fallback)
+
+- **Covered:** full pipe Settings → Keychain → service → network → mapping → telemetry → UI, all on the real endpoint. Found and fixed on the way: factory defaulted to `Disabled` (remote could never fire), settings mutated in-memory only (toggle silently did nothing), key button saved a literal `"..."`, model Picker blocked non-OpenAI providers. Service logic covered by `RemoteLLMDraftServiceTests` (10 tests, URLProtocol mock).
+- **Result:** request reaches OpenAI and gets a typed answer — currently HTTP 429 `insufficient_quota` / `credit_balance_exhausted`. So the pipe is proven; only billing blocks the final 200 round trip.
+- **Situation now:** on-device sim has no model asset (`Model Catalog 5000`) and needed locale fix (was `pl`, now English — `unsupportedLanguage` line gone). Sim text input is broken environment-wide (typing/paste die in every field), worked around, not app code. Live API key was briefly exposed in logs during QA — rotated; repo scan clean (only dummies/placeholders remain).
+- **Remaining for full close:** one successful 200 round trip (needs OpenAI credits) + battery profile. After that: remove nothing (no TEMP left — all diagnostics already stripped), this section becomes the record.
+
 ---
 
 ## Sprint 4 — Differentiation (Variant C або D)
