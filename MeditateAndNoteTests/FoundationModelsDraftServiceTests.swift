@@ -68,5 +68,6 @@ final class FoundationModelsDraftServiceTests: XCTestCase {
         struct Other: Error {}
         XCTAssertFalse(FoundationModelsAIDraftService.isColdStartTransient(Other()))
     }
+
 }
 #endif

@@ -27,7 +27,11 @@ struct FoundationModelsAIDraftService: AIDraftService {
         get async {
             guard #available(iOS 26.0, *) else { return false }
             #if canImport(FoundationModels)
-            return systemModelAvailability()
+            let result = systemModelAvailability()
+            #if DEBUG
+            print("[AIDraft] isAvailable check: \(result) — \(SystemLanguageModel.default.availability)")
+            #endif
+            return result
             #else
             return false
             #endif
@@ -39,6 +43,9 @@ struct FoundationModelsAIDraftService: AIDraftService {
             throw AIDraftError.providerUnavailable
         }
         #if canImport(FoundationModels)
+        #if DEBUG
+        print("[AIDraft] suggest() called — isAvailable: \(await isAvailable)")
+        #endif
         return try await generate(prompt)
         #else
         throw AIDraftError.providerUnavailable
@@ -67,6 +74,9 @@ struct FoundationModelsAIDraftService: AIDraftService {
         do {
             return try await respond(prompt)
         } catch {
+            #if DEBUG
+            print("[AIDraft] generate() error: \(error.localizedDescription) — isColdStartTransient: \(Self.isColdStartTransient(error))")
+            #endif
             guard Self.isColdStartTransient(error) else {
                 logger.error("Foundation Models generation failed — \(error.localizedDescription)")
                 throw Self.mapError(error)
@@ -78,10 +88,20 @@ struct FoundationModelsAIDraftService: AIDraftService {
             // did. Cancellation still propagates through Task.sleep, and a
             // second failure maps to the regular error below.
             logger.info("Model assets not ready — warmup retry in \(Self.warmupDelaySeconds)s")
+            #if DEBUG
+            print("[AIDraft] Warmup retry after 10s...")
+            #endif
             try await Task.sleep(nanoseconds: Self.warmupDelayNanoseconds)
             do {
-                return try await respond(prompt)
+                let result = try await respond(prompt)
+                #if DEBUG
+                print("[AIDraft] Warmup retry SUCCESS — suggestions: \(result.count)")
+                #endif
+                return result
             } catch {
+                #if DEBUG
+                print("[AIDraft] Warmup retry FAILED — \(error.localizedDescription)")
+                #endif
                 logger.error("Foundation Models generation failed after warmup — \(error.localizedDescription)")
                 throw Self.mapError(error)
             }
@@ -114,14 +134,31 @@ struct FoundationModelsAIDraftService: AIDraftService {
     /// `CompositeFallbackAIDraftService` routes those to the secondary
     /// provider instead. `if case` (no exhaustive switch) keeps this
     /// resilient to future `GenerationError` cases (non-frozen enum).
+/// True for transient not-ready failures worth one warmup retry.
+    /// `rateLimited` is deliberately excluded — hammering the limit is wrong;
+    /// `CompositeFallbackAIDraftService` routes those to the secondary
+    /// provider instead. `if case` (no exhaustive switch) keeps this
+    /// resilient to future `GenerationError` cases (non-frozen enum).
     /// Internal (not private) so the classifier is unit-testable.
     @available(iOS 26.0, *)
     static func isColdStartTransient(_ error: Error) -> Bool {
+        if let nsError = error as? NSError,
+           nsError.domain == "com.apple.UnifiedAssetFramework" && nsError.code == 5000 {
+            return true
+        }
         guard let generationError = error as? LanguageModelSession.GenerationError else {
             return false
         }
         if case .assetsUnavailable = generationError { return true }
         if case .concurrentRequests = generationError { return true }
+        // Handle GenerationError with code -1 (ModelCatalog "no assets" error)
+        // which indicates assets are not yet downloaded on this device/simulator,
+        // even though isAvailable may report .available. This is the case on
+        // fresh iOS 26 simulators where availability reports ready while assets
+        // are still downloading (observed: instant assetsUnavailable on first launch).
+        if generationError.localizedDescription.contains("error -1") {
+            return true
+        }
         return false
     }
 
