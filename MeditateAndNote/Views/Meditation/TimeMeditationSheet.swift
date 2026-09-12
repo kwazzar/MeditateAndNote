@@ -25,11 +25,8 @@ struct TimeMeditationSheet: View {
             }
             .pickerStyle(WheelPickerStyle())
             .colorScheme(themeManager.current.colorScheme)
-
-            .clipShape(
-                Rectangle()
-                    .path(in: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 150))
-            )
+            .frame(height: 150)
+            .clipped()
             .mask(
                 GeometryReader { geometry in
                     CustomTopRoundedShape()

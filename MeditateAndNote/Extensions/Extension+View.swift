@@ -22,6 +22,11 @@ extension EnvironmentValues {
 
 // MARK: - View Helpers
 
+enum HomeLayout {
+    static let compactWidth: CGFloat = 460
+    static let contentWidth: CGFloat = 620
+}
+
 extension View {
     func innerStroke(cornerRadius: CGFloat = 8, lineWidth: CGFloat = 2, color: Color = .black, inset: CGFloat = 4) -> some View {
         self.overlay(

@@ -33,6 +33,8 @@ struct MeditateSelectView: View {
             }
             .padding()
             .padding(.bottom, 24)
+            .frame(maxWidth: HomeLayout.contentWidth)
+            .frame(maxWidth: .infinity)
         }
         .background(themeManager.current.mainBackground)
         .sheet(item: $viewModel.infoItem) { item in

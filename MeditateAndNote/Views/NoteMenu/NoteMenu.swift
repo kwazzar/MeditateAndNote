@@ -18,6 +18,11 @@ struct NoteMenu: View {
     @Environment(ThemeManager.self) private var themeManager
 
     @State private var isScrolling = false
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
+
+    private var isLandscape: Bool {
+        verticalSizeClass == .compact
+    }
 
     init(viewModel: NoteMenuViewModel, insightsViewModel: NoteInsightsViewModel? = nil) {
         self.viewModel = viewModel
@@ -31,6 +36,8 @@ struct NoteMenu: View {
                 searchBar
                     .padding(.horizontal)
             }
+            .padding(.top, isLandscape ? 0 : 0)
+            .safeAreaPadding(.top, isLandscape ? 24 : 0)
             
             GeometryReader { geo in
                 ScrollDetector(isScrolling: $isScrolling) {
@@ -53,17 +60,18 @@ struct NoteMenu: View {
                 .clipped()
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            
-            .overlay(alignment: .bottomTrailing) {
-                addNoteButton
-                    .opacity(isScrolling ? 0 : 1)
-                    .scaleEffect(isScrolling ? 0.6 : 1)
-                    .padding(.bottom, 60)
-                    .padding(.trailing, 12)
-                    .allowsHitTesting(!isScrolling)
-                    .animation(.easeInOut(duration: 0.2),
-                               value: isScrolling)
-            }
+        }
+        .frame(maxWidth: HomeLayout.contentWidth)
+        .frame(maxWidth: .infinity)
+        .overlay(alignment: .bottomTrailing) {
+            addNoteButton
+                .opacity(isScrolling ? 0 : 1)
+                .scaleEffect(isScrolling ? 0.6 : 1)
+                .padding(.bottom, isLandscape ? 52 : 60)
+                .padding(.trailing, 26)
+                .allowsHitTesting(!isScrolling)
+                .animation(.easeInOut(duration: 0.2),
+                           value: isScrolling)
         }
         .task {
             await viewModel.loadIfNeeded()
@@ -120,10 +128,14 @@ private extension NoteMenu {
     }
 }
 
-struct NoteMenu_Previews: PreviewProvider {
-    static var previews: some View {
-        NoteMenu(viewModel: AppContainer().makeNoteMenuViewModel())
-            .environment(ThemeManager())
-            .environment(Router.previewRouter())
-    }
+#Preview("Portrait Preview", traits: .portrait) {
+    NoteMenu(viewModel: AppContainer().makeNoteMenuViewModel())
+        .environment(ThemeManager())
+        .environment(Router.previewRouter())
+}
+
+#Preview("Landscape Preview", traits: .landscapeLeft) {
+    NoteMenu(viewModel: AppContainer().makeNoteMenuViewModel())
+        .environment(ThemeManager())
+        .environment(Router.previewRouter())
 }

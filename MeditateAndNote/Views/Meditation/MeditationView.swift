@@ -15,16 +15,21 @@ struct MeditationView: View {
     @State private var showTimeSelection = true
 
     var body: some View {
+        GeometryReader { geometry in
+            let isLandscape = geometry.size.width > geometry.size.height
+            let breathe = breathSize(for: geometry.size.height)
+            let progressWidth = progressBarWidth(for: geometry.size)
             VStack {
-                navigationBar
+                navigationBar(isLandscape: isLandscape)
                 meditationPlan
                 Spacer()
                 if !showTimeSelection {
-                    breathingAnimation
+                    breathingAnimation(size: breathe)
                 }
                 Spacer()
-                progress
+                progress(width: progressWidth)
             }
+        }
         .background(themeManager.current.mainBackground.ignoresSafeArea())
         .overlay(
             Group {
@@ -64,7 +69,7 @@ struct MeditationView: View {
 
 //MARK: - Extension
 private extension MeditationView {
-    var navigationBar: some View {
+    func navigationBar(isLandscape: Bool) -> some View {
         ZStack {
             Text("\(viewModel.meditationTitle)")
                 .font(.headline)
@@ -86,7 +91,7 @@ private extension MeditationView {
             }
             
         }
-        .padding(.horizontal)
+        .padding(.horizontal, isLandscape ? 32 : 16)
     }
     
     var meditationPlan: some View {
@@ -101,25 +106,26 @@ private extension MeditationView {
     }
     
     @ViewBuilder
-    var breathingAnimation: some View {
+    func breathingAnimation(size: CGFloat) -> some View {
         switch AnimationSettings.shared.style {
         case .rings:
-            meditationCircle
+            meditationCircle(size: size)
         case .path:
             BreathingPathView(
                 phases: viewModel.breathingPhases,
                 phaseIndex: viewModel.currentPhaseIndex,
                 phaseProgress: viewModel.phaseProgress,
                 lineColor: themeManager.current.textPrimary,
-                ballColor: breathingColor
+                ballColor: breathingColor,
+                height: size
             )
         }
     }
 
-    var meditationCircle: some View {
+    func meditationCircle(size: CGFloat) -> some View {
         Circle()
             .stroke(themeManager.current.dividerColor, lineWidth: 2)
-            .frame(width: 250, height: 250)
+            .frame(width: size, height: size)
             .overlay(
                 ForEach(0..<5, id: \.self) { index in
                     ConcentricRing(
@@ -133,7 +139,7 @@ private extension MeditationView {
             .overlay(
                 Circle()
                     .fill(breathingColor.opacity(0.8))
-                    .frame(width: 80, height: 80)
+                    .frame(width: size * 0.32, height: size * 0.32)
                     .animation(.easeInOut(duration: 0.3), value: breathingColor)
             )
             .overlay(
@@ -147,7 +153,7 @@ private extension MeditationView {
             )
     }
     
-    var progress: some View {
+    func progress(width: CGFloat) -> some View {
         Button(action: {
             switch viewModel.meditationState {
             case .notStarted:
@@ -166,13 +172,21 @@ private extension MeditationView {
             }
         }) {
             ZStack {
-                MeditationProgressView(progress: viewModel.progress, color: breathingColor.opacity(0.8))
+                MeditationProgressView(progress: viewModel.progress, color: breathingColor.opacity(0.8), width: width)
                 Text(viewModel.meditationState.progressText)
                     .font(.system(size: 24))
                     .bold()
                     .foregroundColor(themeManager.current.textPrimary)
             }
         }
+    }
+
+    private func breathSize(for totalHeight: CGFloat) -> CGFloat {
+        min(max(totalHeight * 0.55, 120), 250)
+    }
+
+    private func progressBarWidth(for size: CGSize) -> CGFloat {
+        size.width > size.height ? 480 : 326
     }
     
     private var breathingColor: Color {

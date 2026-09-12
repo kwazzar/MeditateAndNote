@@ -14,25 +14,28 @@ struct MainView: View {
     @Environment(StreakTracker.self) private var streakTracker
 
     var body: some View {
-        ZStack {
-            themeManager.current.mainBackground
+        GeometryReader { geometry in
+            let isLandscape = geometry.size.width > geometry.size.height
+            ZStack {
+                themeManager.current.mainBackground
 
-            VStack {
-                StreakHeaderView(streakTracker: streakTracker)
-                    .padding(.horizontal, 16)
-                    .padding(.top, 8)
+                VStack {
+                    StreakHeaderView(streakTracker: streakTracker)
+                        .padding(.horizontal, 16)
+                        .padding(.top, 8)
+                        .frame(maxWidth: HomeLayout.compactWidth)
 
-                Spacer()
+                    Spacer()
+                }
+
+                meditateButton
+                    .scaleEffect(isLandscape ? 0.7 : 1)
+
+                settingsButton
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                    .padding(.bottom, isLandscape ? 52 : 60)
+                    .padding(.trailing, 26)
             }
-
-            // Centered in the same spot as the loading-screen hero, so the
-            // splash morphs into the main UI without the icon jumping.
-            meditateButton
-
-            settingsButton
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
-                .padding(.bottom, 60)
-                .padding(.trailing, 26)
         }
     }
 }
