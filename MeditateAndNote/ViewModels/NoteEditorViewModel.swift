@@ -154,10 +154,14 @@ final class NoteEditorViewModel {
 
     // MARK: - AI Draft Integration
 
-    /// Applies a suggestion picked from the AI sheet, then nudges autosave.
+    /// Applies a suggestion picked from the AI sheet by appending it to the
+    /// current note body (the user keeps their own text and can edit the
+    /// addition), then nudges autosave.
     func applyDraft(_ content: NoteContent) {
         guard !content.rawValue.isEmpty else { return }
-        body = content.rawValue
+        let addition = content.rawValue.trimmingCharacters(in: .newlines)
+        let existing = body.trimmingCharacters(in: .whitespacesAndNewlines)
+        body = existing.isEmpty ? addition : body + "\n\n" + addition
         onTextChanged()
     }
 

@@ -395,6 +395,54 @@ final class NoteEditorViewModelTests: XCTestCase {
         XCTAssertTrue(remaining.isEmpty)
     }
 
+    // MARK: - AI Draft integration
+
+    func testApplyDraft_emptyNote_setsBodyToSuggestion() {
+        let sut = NoteEditorViewModel(notes: NoteServiceSpy())
+        XCTAssertEqual(sut.body, "")
+
+        sut.applyDraft(NoteContent("Try breathing for two minutes"))
+
+        XCTAssertEqual(sut.body, "Try breathing for two minutes")
+    }
+
+    func testApplyDraft_nonEmptyNote_appendsSuggestionKeepingExistingText() {
+        let sut = NoteEditorViewModel(notes: NoteServiceSpy())
+        sut.body = "I felt anxious about the presentation."
+
+        sut.applyDraft(NoteContent("Write the exact fears down"))
+
+        XCTAssertEqual(sut.body, "I felt anxious about the presentation.\n\nWrite the exact fears down")
+    }
+
+    func testApplyDraft_trimstTrailingNewlines_noTripleBlankLines() {
+        let sut = NoteEditorViewModel(notes: NoteServiceSpy())
+        sut.body = "Existing"
+
+        sut.applyDraft(NoteContent("Suggestion\n\n\n"))
+
+        XCTAssertEqual(sut.body, "Existing\n\nSuggestion")
+    }
+
+    func testApplyDraft_emptySuggestion_isNoOp() {
+        let sut = NoteEditorViewModel(notes: NoteServiceSpy())
+        sut.body = "Existing"
+
+        sut.applyDraft(NoteContent(""))
+
+        XCTAssertEqual(sut.body, "Existing")
+    }
+
+    func testApplyDraft_appendedSuggestion_marksNoteDirty() {
+        let spy = NoteServiceSpy()
+        let sut = NoteEditorViewModel(notes: spy)
+        sut.body = "Base"
+
+        sut.applyDraft(NoteContent("More"))
+
+        XCTAssertTrue(sut.isDirty)
+    }
+
     // MARK: - Autosave (debounced)
 
     func testOnTextChanged_firesSaveAfterDebounce() async throws {
