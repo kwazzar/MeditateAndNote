@@ -119,3 +119,26 @@ Before considering a task complete:
 
 - `ddd-audit` — checklist for reviewing code/PRs against DDD principles. Invoke before finishing a significant feature, or on explicit request like "check this for DDD compliance".
 - `new-aggregate` — recipe for adding a new domain type in the project's actual style (`<X>DataSource`/`<X>Store` protocol + `CoreData`/`InMemory`/`UserDefaults` implementation + `<X>Manager` with `<X>Providable`/`<X>Manageable`). Invoke when adding a new domain entity.
+
+---
+
+## Multi-session setup (git worktrees)
+
+Working on this project in parallel sessions is done with git worktrees. **One session = one worktree — never open two sessions on the same worktree.**
+
+Current layout (`git worktree list`):
+- `/Users/nazar/Swift/MeditateAndNote` → branch `main`
+- `/Users/nazar/Swift/task2` → branch `task2`
+
+Rules that keep this working:
+
+- Every shared file is tracked in git (e.g. the scheme in `xcshareddata/xcschemes/`) — untracked/ignored files are NOT copied into new worktrees. New worktree ⇒ re-open its Xcode project once; auto-created schemes are per-worktree.
+- Per-worktree DerivedData is already configured via `project.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings` (`IDECustomDerivedDataLocation`) and `.xcodebuildmcp/config.yaml` in each worktree → both go to `~/Library/Developer/Xcode/DerivedData/{MeditateAndNote,MeditateAndNote-task2}`. Parallel builds don't collide. Do not point both at the same path.
+- `.git` is shared by all worktrees: commit/merge from any of them works, writes just serialize on the `.git` lock.
+- Run the app from only one worktree at a time per simulator device — use a different simulator or sequential runs.
+- One task = one short-lived branch in its worktree. Merge often: `git merge main` in the task tree, `git merge task2` (or cherry-pick) in the main tree. Delete the branch after merge, `git checkout -b task3`.
+
+Quick start for two sessions:
+```bash
+./Scripts/start-session.sh   # opens both Xcode projects
+```

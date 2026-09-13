@@ -116,3 +116,6 @@ xcuserdata
 .DS_Store
 graphify-out/
 .opencode/opencode.json.bak
+.xcodebuildmcp/
+
+Scripts/
