@@ -12,30 +12,31 @@ struct MainView: View {
     @Environment(Router.self) private var router
     @Environment(ThemeManager.self) private var themeManager
     @Environment(StreakTracker.self) private var streakTracker
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
+
+    private var isLandscape: Bool {
+        verticalSizeClass == .compact
+    }
 
     var body: some View {
-        GeometryReader { geometry in
-            let isLandscape = geometry.size.width > geometry.size.height
-            ZStack {
-                themeManager.current.mainBackground
+        ZStack {
+            themeManager.current.mainBackground
 
-                VStack {
-                    StreakHeaderView(streakTracker: streakTracker)
-                        .padding(.horizontal, 16)
-                        .padding(.top, 8)
-                        .frame(maxWidth: HomeLayout.compactWidth)
+            VStack {
+                StreakHeaderView(streakTracker: streakTracker)
+                    .padding(.horizontal, 16)
+                    .padding(.top, 8)
 
-                    Spacer()
-                }
-
-                meditateButton
-                    .scaleEffect(isLandscape ? 0.7 : 1)
-
-                settingsButton
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
-                    .padding(.bottom, isLandscape ? 52 : 60)
-                    .padding(.trailing, 26)
+                Spacer()
             }
+
+            meditateButton
+                .scaleEffect(isLandscape ? 0.7 : 1)
+
+            settingsButton
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                .padding(.bottom, isLandscape ? 52 : 60)
+                .padding(.trailing, 26)
         }
     }
 }
@@ -79,14 +80,22 @@ private extension MainView {
     }
 }
 
-struct MainView_Previews: PreviewProvider {
-    static var previews: some View {
-        MainView(viewModel: MainViewModel(
-            meditationService: SampleMeditationService(),
-            selectionStore: MeditationSelectionStore()
-        ))
-            .environment(Router.previewRouter())
-            .environment(ThemeManager())
-            .environment(StreakTracker())
-    }
+#Preview("Portrait", traits: .portrait) {
+    MainView(viewModel: MainViewModel(
+        meditationService: SampleMeditationService(),
+        selectionStore: MeditationSelectionStore()
+    ))
+    .environment(Router.previewRouter())
+    .environment(ThemeManager())
+    .environment(StreakTracker())
+}
+
+#Preview("Landscape", traits: .landscapeLeft) {
+    MainView(viewModel: MainViewModel(
+        meditationService: SampleMeditationService(),
+        selectionStore: MeditationSelectionStore()
+    ))
+    .environment(Router.previewRouter())
+    .environment(ThemeManager())
+    .environment(StreakTracker())
 }

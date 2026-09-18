@@ -8,7 +8,10 @@ import SwiftUI
 struct StreakHeaderView: View {
     @Environment(ThemeManager.self) private var themeManager
     @Environment(Router.self) private var router
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
     let streakTracker: StreakTracker
+
+    private var isLandscape: Bool { verticalSizeClass == .compact }
 
     private var last7Days: [Date] {
         let calendar = Calendar.current
@@ -24,23 +27,23 @@ struct StreakHeaderView: View {
     }
 
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: isLandscape ? 4 : 8) {
             Button {
                 router.navigate(to: .push(.streakDetail))
             } label: {
-                HStack(spacing: 0) {
+        HStack(spacing: isLandscape ? 10 : 0) {
                     streakNumberSection
-                        .frame(minWidth: 72)
+                        .frame(minWidth: isLandscape ? 56 : 72)
 
                     Rectangle()
                         .fill(themeManager.current.dividerColor)
-                        .frame(width: 0.5, height: 44)
+                        .frame(width: 0.5, height: isLandscape ? 32 : 44)
 
                     dayCellsSection
                         .padding(.leading, 12)
                 }
-                .padding(.horizontal, 14)
-                .padding(.vertical, 12)
+                .padding(.horizontal, isLandscape ? 10 : 14)
+                .padding(.vertical, isLandscape ? 8 : 12)
                 .background(
                     RoundedRectangle(cornerRadius: 14)
                         .fill(.ultraThinMaterial)
@@ -52,6 +55,7 @@ struct StreakHeaderView: View {
                 noteReminderBanner
             }
         }
+        .scaleEffect(isLandscape ? 0.85 : 1, anchor: .top)
     }
 
     // MARK: - Streak Number
@@ -95,7 +99,7 @@ struct StreakHeaderView: View {
                     showPartialIndicatorForRecentDays: true,
                     onTap: {}
                 )
-                .frame(maxWidth: .infinity)
+                .frame(maxWidth: isLandscape ? nil : .infinity)
             }
         }
     }

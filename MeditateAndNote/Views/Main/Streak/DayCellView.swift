@@ -7,6 +7,7 @@ import SwiftUI
 
 struct DayCellView: View {
     @Environment(ThemeManager.self) private var themeManager
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
 
     let date: Date
     let hasMeditation: Bool
@@ -42,7 +43,7 @@ struct DayCellView: View {
         }
     }
 
-    private let cellSize: CGFloat = 32
+    private var cellSize: CGFloat { verticalSizeClass == .compact ? 30 : 32 }
     private let cornerRadius: CGFloat = 10
 
     private var weekdayLabel: String {
@@ -89,7 +90,7 @@ struct DayCellView: View {
                 .font(.system(size: 9, weight: .medium))
                 .foregroundStyle(themeManager.current.textSecondary)
         }
-        .frame(width: 40)
+        .frame(minWidth: 36, idealWidth: 40)
         .contentShape(Rectangle())
         .onTapGesture(perform: onTap)
         .accessibilityLabel(accessibilityDescription)
