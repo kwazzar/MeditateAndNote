@@ -83,14 +83,6 @@ final class NoteValueObjectTests: XCTestCase {
 
         XCTAssertEqual(book[id], newer, "stale writes must never overwrite a newer version")
     }
-
-    func testNoteBook_merged_sameDateIsNotAConflict() {
-        let note = Note(title: "Same", content: "v", date: Date(timeIntervalSince1970: 500))
-        let outcome = NoteBook.merged(local: [note], remote: [note])
-
-        XCTAssertEqual(outcome.notes.count, 1)
-        XCTAssertTrue(outcome.conflicts.isEmpty, "identical versions across sources are not conflicts")
-    }
 }
 
 // MARK: - MeditationSession aggregate

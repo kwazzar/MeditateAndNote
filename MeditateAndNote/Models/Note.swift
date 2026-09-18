@@ -175,28 +175,3 @@ struct NoteBook {
         notesByID.removeValue(forKey: id)
     }
 }
-
-// MARK: - Merge Outcome (typed sync decision)
-
-struct MergeConflict: Equatable {
-    let id: NoteID
-    let localVersion: Note
-    let remoteVersion: Note
-}
-
-extension NoteBook {
-    /// Hybrid-sync merge: per-ID last-write-wins, conflicts reported instead of hidden.
-    static func merged(local: [Note], remote: [Note]) -> (notes: [Note], conflicts: [MergeConflict]) {
-        var book = NoteBook(notes: local)
-        var conflicts: [MergeConflict] = []
-
-        for remoteNote in remote {
-            if let localVersion = book[remoteNote.id], localVersion.date != remoteNote.date {
-                conflicts.append(MergeConflict(id: remoteNote.id, localVersion: localVersion, remoteVersion: remoteNote))
-            }
-            book.upsert(remoteNote)
-        }
-
-        return (book.notes, conflicts)
-    }
-}

@@ -35,7 +35,7 @@ enum NoteOperationError: Error {
 
 final actor NoteManager: NoteProvidable, NoteManageable {
     private let logger = Logger(subsystem: Config.bundleID, category: "NoteManager")
-    private let syncCoordinator: NoteSyncCoordinator
+    private let localDataSource: any NoteDataSource
     private let eventBus: DomainEventPublisher
 
     /// The aggregate owns collection-level invariants (one entry per ID,
@@ -43,20 +43,24 @@ final actor NoteManager: NoteProvidable, NoteManageable {
     private var book = NoteBook()
     var currentNotes: [Note] { book.notes }
 
-    init(syncCoordinator: NoteSyncCoordinator,
+    init(local: any NoteDataSource,
          eventBus: DomainEventPublisher = DomainEventBus.shared) {
-        self.syncCoordinator = syncCoordinator
+        self.localDataSource = local
         self.eventBus = eventBus
     }
 
     // MARK: - NoteProvidable
 
     func refresh() async {
-        await refreshFromRemote()
+        do {
+            book = NoteBook(notes: try await localDataSource.fetchAll())
+        } catch {
+            logger.error("Failed to fetch notes — \(error.localizedDescription)")
+        }
     }
 
     func note(with id: NoteID) async throws -> Note? {
-        try await syncCoordinator.find(id, strategy: .localOnly)
+        try await localDataSource.fetch(id: id)
     }
 
     func notes(matching query: SearchQuery) async -> [Note] {
@@ -66,30 +70,20 @@ final actor NoteManager: NoteProvidable, NoteManageable {
     // MARK: - NoteManageable
 
     func add(_ note: Note) async throws {
-        try await syncCoordinator.save(note, strategy: .hybrid)
-        book = NoteBook(notes: try await syncCoordinator.fetchAll(strategy: .hybrid))
+        try await localDataSource.save(note)
+        book = NoteBook(notes: try await localDataSource.fetchAll())
         eventBus.publish(.noteCreated(note))
     }
 
     func update(_ note: Note) async throws {
-        try await syncCoordinator.save(note, strategy: .hybrid)
-        book = NoteBook(notes: try await syncCoordinator.fetchAll(strategy: .hybrid))
+        try await localDataSource.save(note)
+        book = NoteBook(notes: try await localDataSource.fetchAll())
         eventBus.publish(.noteUpdated(note))
     }
 
     func delete(with id: NoteID) async throws {
-        try await syncCoordinator.delete(id, strategy: .hybrid)
-        book = NoteBook(notes: try await syncCoordinator.fetchAll(strategy: .hybrid))
+        try await localDataSource.delete(id: id)
+        book = NoteBook(notes: try await localDataSource.fetchAll())
         eventBus.publish(.noteDeleted(id))
-    }
-
-    // MARK: - Private
-
-    private func refreshFromRemote() async {
-        do {
-            book = NoteBook(notes: try await syncCoordinator.fetchAll(strategy: .remoteFirst))
-        } catch {
-            logger.error("Failed to fetch initial notes — \(error.localizedDescription)")
-        }
     }
 }

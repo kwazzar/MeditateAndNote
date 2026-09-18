@@ -19,15 +19,13 @@ final class NoteManagerTests: XCTestCase {
         return Calendar(identifier: .gregorian).date(from: comps)!
     }
 
-    private func makeSUT(seedLocal: [Note] = [], seedRemote: [Note] = [])
-        -> (manager: NoteManager, capture: EventCapture, remote: InMemoryNoteDataSource) {
+    private func makeSUT(seedLocal: [Note] = [])
+        -> (manager: NoteManager, capture: EventCapture) {
         let local = InMemoryNoteDataSource(seedNotes: seedLocal)
-        let remote = InMemoryNoteDataSource(seedNotes: seedRemote)
-        let sync = DefaultNoteSyncCoordinator(local: local, remote: remote)
         let bus = DomainEventBus()
         let capture = EventCapture(bus: bus)
-        let manager = NoteManager(syncCoordinator: sync, eventBus: bus)
-        return (manager, capture, remote)
+        let manager = NoteManager(local: local, eventBus: bus)
+        return (manager, capture)
     }
 
     // MARK: - NoteBook aggregate
@@ -44,23 +42,10 @@ final class NoteManagerTests: XCTestCase {
         XCTAssertEqual(book.notes.first, newer)
     }
 
-    func testNoteBook_mergedReportsConflictsAndKeepsNewest() {
-        let id = NoteID()
-        let local = Note(id: id, title: "Local", content: "local", date: date(2026, 8, 1))
-        let remote = Note(id: id, title: "Remote", content: "remote", date: date(2026, 8, 2))
-
-        let outcome = NoteBook.merged(local: [local], remote: [remote])
-
-        XCTAssertEqual(outcome.conflicts.count, 1)
-        XCTAssertEqual(outcome.conflicts.first?.id, id)
-        XCTAssertEqual(outcome.notes.count, 1)
-        XCTAssertEqual(outcome.notes.first, remote)
-    }
-
     // MARK: - NoteManager lifecycle
 
     func testAdd_exposesNoteAndPublishesEvent() async throws {
-        let (manager, capture, _) = makeSUT()
+        let (manager, capture) = makeSUT()
         let note = Note(title: "Hello", content: "World")
 
         try await manager.add(note)
@@ -71,7 +56,7 @@ final class NoteManagerTests: XCTestCase {
     }
 
     func testUpdate_replacesContentInPlace() async throws {
-        let (manager, _, _) = makeSUT()
+        let (manager, _) = makeSUT()
         let note = Note(title: "A", content: "1")
         try await manager.add(note)
         let updated = note.updating(content: NoteContent("2"))
@@ -84,7 +69,7 @@ final class NoteManagerTests: XCTestCase {
     }
 
     func testDelete_removesNote() async throws {
-        let (manager, _, _) = makeSUT()
+        let (manager, _) = makeSUT()
         let note = Note(title: "x", content: "y")
         try await manager.add(note)
 
@@ -95,7 +80,7 @@ final class NoteManagerTests: XCTestCase {
     }
 
     func testCollidingIDs_collapseToSingleEntry() async throws {
-        let (manager, _, _) = makeSUT()
+        let (manager, _) = makeSUT()
         let note = Note(title: "S", content: "1")
 
         try await manager.add(note)
@@ -106,18 +91,17 @@ final class NoteManagerTests: XCTestCase {
         XCTAssertEqual(notes.first?.content, NoteContent("2"))
     }
 
-    func testRefresh_resolvesNewestVersionAcrossSources() async throws {
+    func testRefresh_reloadsFromDataSource() async throws {
         let id = NoteID()
-        let (manager, _, _) = makeSUT(
-            seedLocal: [Note(id: id, title: "Local", content: "local", date: date(2026, 8, 1))],
-            seedRemote: [Note(id: id, title: "Remote", content: "remote", date: date(2026, 8, 2))]
+        let (manager, _) = makeSUT(
+            seedLocal: [Note(id: id, title: "Local", content: "local", date: date(2026, 8, 1))]
         )
 
         await manager.refresh()
 
         let notes = await manager.currentNotes
         XCTAssertEqual(notes.count, 1)
-        XCTAssertEqual(notes.first?.content, NoteContent("remote"))
+        XCTAssertEqual(notes.first?.content, NoteContent("local"))
     }
 }
 

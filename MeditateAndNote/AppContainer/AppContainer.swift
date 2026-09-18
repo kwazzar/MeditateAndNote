@@ -21,12 +21,6 @@ final class AppContainer {
     private let eventBus = DomainEventBus.shared
 
     private lazy var localDataSource: any NoteDataSource = CoreDataNoteDataSource()
-    private lazy var remoteDataSource: any NoteDataSource = InMemoryNoteDataSource()
-
-    private lazy var syncCoordinator: NoteSyncCoordinator = DefaultNoteSyncCoordinator(
-        local: localDataSource,
-        remote: remoteDataSource
-    )
 
     private(set) lazy var streakTracker = StreakTracker(calendar: .current, store: CoreDataStreakStore())
     private(set) lazy var insightManager = StreakInsightManager(
@@ -43,7 +37,7 @@ final class AppContainer {
         scheduler: SystemNotificationScheduler()
     )
 
-    private lazy var noteManager = NoteManager(syncCoordinator: syncCoordinator, eventBus: eventBus)
+    private lazy var noteManager = NoteManager(local: localDataSource, eventBus: eventBus)
 
     // MARK: - AI Settings
 

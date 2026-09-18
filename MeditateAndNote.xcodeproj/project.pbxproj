@@ -49,7 +49,7 @@
 		6A3A783F164CE76CEAB4DBEE /* AIDraftManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FB281AE971D4DB672406825 /* AIDraftManager.swift */; };
 		3BCCAAAA0000000000000005 /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BCCAAAA0000000000000006 /* KeychainService.swift */; };
 		6A8A939804634FC7B8D8A527 /* OnboardingCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C1F31185E4F418DA3FCAF90 /* OnboardingCoordinatorTests.swift */; };
-		78215B553038AB4200DD8F99 /* NoteSyncCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78215B543038AB4200DD8F99 /* NoteSyncCoordinator.swift */; };
+		
 		78215B573038AB5000DD8F99 /* DomainEvents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78215B563038AB5000DD8F99 /* DomainEvents.swift */; };
 		78316C7ABB9801F35E80B0BC /* AIDraftService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31BEF74850AB9BA8582B050E /* AIDraftService.swift */; };
 		78421A37302C1C4E001B52A6 /* ScrollDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78421A36302C1C4C001B52A6 /* ScrollDetector.swift */; };
@@ -92,7 +92,7 @@
 		AA00014120260902C00005 /* SoundSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00014020260902C00006 /* SoundSettingsTests.swift */; };
 		AA0003012026082200000002 /* MeditationDuration.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0003002026082200000001 /* MeditationDuration.swift */; };
 		AA0003112026082200000004 /* SearchQuery.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0003102026082200000003 /* SearchQuery.swift */; };
-		AA77522E74F540C896C65CA6 /* NoteSyncCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBE42B0AC10B4DD48C852B91 /* NoteSyncCoordinatorTests.swift */; };
+		
 		AD2436D7DBA2E842F8932236 /* AISuggestion.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC899512073D5185F389B4B2 /* AISuggestion.swift */; };
 		ADCF424E00CF12AEB7374BEA /* MeditationViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2191349DA8C57C98F66164B8 /* MeditationViewModelTests.swift */; };
 		AF907A6263184C60A1FA9DEF /* DomainModelsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84C29101031C42F2B592FF6B /* DomainModelsTests.swift */; };
@@ -227,7 +227,7 @@
 		6FF5CC1CC273909C3EF0192B /* CoreDataAIDraftSessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataAIDraftSessionStore.swift; sourceTree = "<group>"; };
 		70119D3AECE1D5E2F27AEAF9 /* StreakInsightEngineTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StreakInsightEngineTests.swift; sourceTree = "<group>"; };
 		73571B9E27145AED24F2D353 /* StreakReminderTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StreakReminderTests.swift; sourceTree = "<group>"; };
-		78215B543038AB4200DD8F99 /* NoteSyncCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteSyncCoordinator.swift; sourceTree = "<group>"; };
+		
 		78215B563038AB5000DD8F99 /* DomainEvents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DomainEvents.swift; sourceTree = "<group>"; };
 		78421A36302C1C4C001B52A6 /* ScrollDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollDetector.swift; sourceTree = "<group>"; };
 		787880CC303E25FE004474C4 /* BreathingPathView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreathingPathView.swift; sourceTree = "<group>"; };
@@ -280,7 +280,7 @@
 		C1C20BEA552DE5FA2D6680E4 /* UserDefaultsReminderSettingsStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UserDefaultsReminderSettingsStore.swift; sourceTree = "<group>"; };
 		C41C9EA24F3766528DEEC350 /* NoteAIDraftViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteAIDraftViewModel.swift; sourceTree = "<group>"; };
 		C7648CA347C57421E7F2B662 /* AIDraftSessionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIDraftSessionTests.swift; sourceTree = "<group>"; };
-		CBE42B0AC10B4DD48C852B91 /* NoteSyncCoordinatorTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NoteSyncCoordinatorTests.swift; sourceTree = "<group>"; };
+		
 		CC0000012026082800000001 /* CoreDataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataManager.swift; sourceTree = "<group>"; };
 		CC0000022026082800000002 /* CoreDataNoteDataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataNoteDataSource.swift; sourceTree = "<group>"; };
 		CC0000032026082800000003 /* CoreDataSessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataSessionStore.swift; sourceTree = "<group>"; };
@@ -491,7 +491,6 @@
 			children = (
 				E398CE772EDE464000B96376 /* NoteManager.swift */,
 				E3848D4F2E3BC9A0001BE8AB /* NotesRepository.swift */,
-				78215B543038AB4200DD8F99 /* NoteSyncCoordinator.swift */,
 			);
 			path = Notes;
 			sourceTree = "<group>";
@@ -611,7 +610,6 @@
 				AA00000220260903C00007 /* AnimationSettingsTests.swift */,
 				OB0000070000000000000007 /* OnboardingViewModelTests.swift */,
 				70119D3AECE1D5E2F27AEAF9 /* StreakInsightEngineTests.swift */,
-				CBE42B0AC10B4DD48C852B91 /* NoteSyncCoordinatorTests.swift */,
 				7C1F31185E4F418DA3FCAF90 /* OnboardingCoordinatorTests.swift */,
 				5AF6A1460BA24AA596E512D2 /* MeditateSelectViewModelTests.swift */,
 				103E1801162647CA91378FED /* MainViewModelTests.swift */,
@@ -966,7 +964,6 @@
 				AA00000220260903C00008 /* AnimationSettingsTests.swift in Sources */,
 				OB0100070000000000000007 /* OnboardingViewModelTests.swift in Sources */,
 				CBD7ED78394EBA2ECBDB72A6 /* StreakInsightEngineTests.swift in Sources */,
-				AA77522E74F540C896C65CA6 /* NoteSyncCoordinatorTests.swift in Sources */,
 				6A8A939804634FC7B8D8A527 /* OnboardingCoordinatorTests.swift in Sources */,
 				385A8D4039D4420D85CBFFF1 /* MeditateSelectViewModelTests.swift in Sources */,
 				DD2A01627A7343278DE8A05B /* MainViewModelTests.swift in Sources */,
@@ -1010,7 +1007,6 @@
 				788956A6303208330001D509 /* MeditateButtonComponents.swift in Sources */,
 				789B7B0A3010417D0082F0CB /* MainTheme.swift in Sources */,
 				78215B573038AB5000DD8F99 /* DomainEvents.swift in Sources */,
-				78215B553038AB4200DD8F99 /* NoteSyncCoordinator.swift in Sources */,
 				E361876F2D68B221000E326D /* MeditateAndNoteApp.swift in Sources */,
 				E3848D542E3BCAC4001BE8AB /* Meditation.swift in Sources */,
 				E36164412E41050F00A5DCCF /* MeditationViewModel.swift in Sources */,
