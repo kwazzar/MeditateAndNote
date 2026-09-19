@@ -82,7 +82,7 @@ struct NoteMenu: View {
 
 private extension NoteMenu {
     var displayedNotes: [Note] {
-        viewModel.searchState.filteredItems
+        viewModel.searchState.displayedItems
     }
     
     var addNoteButton: some View {
@@ -118,11 +118,11 @@ private extension NoteMenu {
             searchText: Binding(
                 get: { viewModel.searchState.searchText.text },
                 set: { newText in
-                    viewModel.searchState.searchText = SearchQuery(text: newText)
+                    viewModel.updateSearch(newText)
                 }
             ),
             onClose: {
-                viewModel.searchState.resetSearch()
+                viewModel.updateSearch("")
             }
         )
     }

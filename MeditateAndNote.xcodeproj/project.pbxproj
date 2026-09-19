@@ -50,6 +50,15 @@
 		3BCCAAAA0000000000000005 /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BCCAAAA0000000000000006 /* KeychainService.swift */; };
 		6A8A939804634FC7B8D8A527 /* OnboardingCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C1F31185E4F418DA3FCAF90 /* OnboardingCoordinatorTests.swift */; };
 		
+		3BCCAAAA0000000000000014 /* NoteEmbedding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BCCAAAA0000000000000015 /* NoteEmbedding.swift */; };
+		3BCCAAAA0000000000000016 /* SemanticQuery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BCCAAAA0000000000000017 /* SemanticQuery.swift */; };
+		3BCCAAAA0000000000000018 /* NoteEmbeddingStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BCCAAAA0000000000000019 /* NoteEmbeddingStore.swift */; };
+		3BCCAAAA000000000000001A /* EmbeddingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BCCAAAA000000000000001B /* EmbeddingService.swift */; };
+		3BCCAAAA000000000000001C /* NLEmbeddingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BCCAAAA000000000000001D /* NLEmbeddingService.swift */; };
+		3BCCAAAA000000000000001E /* SemanticSearchManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BCCAAAA000000000000001F /* SemanticSearchManager.swift */; };
+		3BCCAAAA0000000000000020 /* CoreDataNoteEmbeddingStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BCCAAAA0000000000000021 /* CoreDataNoteEmbeddingStore.swift */; };
+		3BCCAAAA0000000000000022 /* SemanticSearchManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BCCAAAA0000000000000023 /* SemanticSearchManagerTests.swift */; };
+		
 		78215B573038AB5000DD8F99 /* DomainEvents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78215B563038AB5000DD8F99 /* DomainEvents.swift */; };
 		78316C7ABB9801F35E80B0BC /* AIDraftService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31BEF74850AB9BA8582B050E /* AIDraftService.swift */; };
 		78421A37302C1C4E001B52A6 /* ScrollDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78421A36302C1C4C001B52A6 /* ScrollDetector.swift */; };
@@ -210,6 +219,14 @@
 		3BCCAAAA0000000000000007 /* AIDraftMetricStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIDraftMetricStore.swift; sourceTree = "<group>"; };
 		3BCCAAAA0000000000000009 /* CoreDataAIDraftMetricStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataAIDraftMetricStore.swift; sourceTree = "<group>"; };
 		3BCCAAAA0000000000000011 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		3BCCAAAA0000000000000015 /* NoteEmbedding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteEmbedding.swift; sourceTree = "<group>"; };
+		3BCCAAAA0000000000000017 /* SemanticQuery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SemanticQuery.swift; sourceTree = "<group>"; };
+		3BCCAAAA0000000000000019 /* NoteEmbeddingStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteEmbeddingStore.swift; sourceTree = "<group>"; };
+		3BCCAAAA000000000000001B /* EmbeddingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmbeddingService.swift; sourceTree = "<group>"; };
+		3BCCAAAA000000000000001D /* NLEmbeddingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NLEmbeddingService.swift; sourceTree = "<group>"; };
+		3BCCAAAA000000000000001F /* SemanticSearchManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SemanticSearchManager.swift; sourceTree = "<group>"; };
+		3BCCAAAA0000000000000021 /* CoreDataNoteEmbeddingStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataNoteEmbeddingStore.swift; sourceTree = "<group>"; };
+		3BCCAAAA0000000000000023 /* SemanticSearchManagerTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SemanticSearchManagerTests.swift; sourceTree = "<group>"; };
 		103E1801162647CA91378FED /* MainViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MainViewModelTests.swift; sourceTree = "<group>"; };
 		1797E6BA050E651155BE0B60 /* ReminderSettings.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReminderSettings.swift; sourceTree = "<group>"; };
 		1C097ECE4091974BC6E457F0 /* NoteAIDraftError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteAIDraftError.swift; sourceTree = "<group>"; };
@@ -398,6 +415,9 @@
 				132CCACAA0FA4CEFB3F9A34C /* HeuristicNoteAnalyzer.swift */,
 				3C2BB67EADD34167B544CAAE /* FoundationModelsNoteAnalyzer.swift */,
 				FC3FB19986AD48CBB9285299 /* NoteInsightManager.swift */,
+				3BCCAAAA000000000000001B /* EmbeddingService.swift */,
+				3BCCAAAA000000000000001D /* NLEmbeddingService.swift */,
+				3BCCAAAA000000000000001F /* SemanticSearchManager.swift */,
 			);
 			path = AI;
 			sourceTree = "<group>";
@@ -566,6 +586,9 @@
 				62105EAFC00743E591CAECDC /* NoteInsightsCollection.swift */,
 				E4AFEC1DFE2F4D45BD5C2DD6 /* NoteAnalysisError.swift */,
 				14E05B614E774DBBB0C7A67C /* NoteInsightStore.swift */,
+				3BCCAAAA0000000000000015 /* NoteEmbedding.swift */,
+				3BCCAAAA0000000000000017 /* SemanticQuery.swift */,
+				3BCCAAAA0000000000000019 /* NoteEmbeddingStore.swift */,
 			);
 			path = AI;
 			sourceTree = "<group>";
@@ -629,6 +652,7 @@
 				441E68DB04904AA091E7274B /* NoteInsightTests.swift */,
 				36795F95436641CF9362FD4A /* NoteInsightManagerTests.swift */,
 				5C5AAA57CC8E45009A5A8EE0 /* CoreDataNoteInsightStoreTests.swift */,
+				3BCCAAAA0000000000000023 /* SemanticSearchManagerTests.swift */,
 			);
 			path = MeditateAndNoteTests;
 			sourceTree = "<group>";
@@ -653,6 +677,7 @@
 				6FF5CC1CC273909C3EF0192B /* CoreDataAIDraftSessionStore.swift */,
 				3BCCAAAA0000000000000009 /* CoreDataAIDraftMetricStore.swift */,
 				5BC160799DFD41468C12B455 /* CoreDataNoteInsightStore.swift */,
+				3BCCAAAA0000000000000021 /* CoreDataNoteEmbeddingStore.swift */,
 			);
 			path = Persistence;
 			sourceTree = "<group>";
@@ -983,6 +1008,7 @@
 				36380375A3F74EE7B91B2250 /* CoreDataNoteInsightStoreTests.swift in Sources */,
 				B50BA45CEDD14CE39B089DD0 /* FoundationModelsDraftServiceTests.swift in Sources */,
 				01028B003F0E4B6097568B82 /* RemoteLLMDraftServiceTests.swift in Sources */,
+				3BCCAAAA0000000000000022 /* SemanticSearchManagerTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1107,6 +1133,13 @@
 				A0A8F180B9F04563AF2BC042 /* NoteInsightsViewModel.swift in Sources */,
 				ED94EC7AAB0A4DEA9699E0DE /* NoteInsightsSection.swift in Sources */,
 				57A85034CF9E41CAABB50BF0 /* AIDraftMetric.swift in Sources */,
+				3BCCAAAA0000000000000014 /* NoteEmbedding.swift in Sources */,
+				3BCCAAAA0000000000000016 /* SemanticQuery.swift in Sources */,
+				3BCCAAAA0000000000000018 /* NoteEmbeddingStore.swift in Sources */,
+				3BCCAAAA000000000000001A /* EmbeddingService.swift in Sources */,
+				3BCCAAAA000000000000001C /* NLEmbeddingService.swift in Sources */,
+				3BCCAAAA000000000000001E /* SemanticSearchManager.swift in Sources */,
+				3BCCAAAA0000000000000020 /* CoreDataNoteEmbeddingStore.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

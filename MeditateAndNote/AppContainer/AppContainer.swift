@@ -65,11 +65,23 @@ final class AppContainer {
         eventBus: eventBus
     )
 
+    // MARK: - Semantic Search (Sprint 4)
+
+    private lazy var embeddingService: any EmbeddingService = NLEmbeddingService()
+    private lazy var noteEmbeddingStore: any NoteEmbeddingStore = CoreDataNoteEmbeddingStore()
+    private lazy var semanticSearchManager = SemanticSearchManager(
+        service: embeddingService,
+        store: noteEmbeddingStore
+    )
+
     /// Single shared instance: NoteMenu binds one VM for its whole lifetime,
     /// so the list loads once and stays fresh via domain events. Creating a
     /// fresh VM per render would leak event-bus subscriptions.
     @MainActor
-    private(set) lazy var noteMenuViewModel = NoteMenuViewModel(notes: noteManager)
+    private(set) lazy var noteMenuViewModel = NoteMenuViewModel(
+        notes: noteManager,
+        semanticSearch: semanticSearchManager
+    )
 
     private var eventsTask: Task<Void, Never>?
 
@@ -173,6 +185,7 @@ private extension AppContainer {
                     // longer exist.
                     try? await self.aiDraftManager.discardSessions(for: noteID)
                     await self.noteInsightManager.handle(event)
+                    await self.semanticSearchManager.deleteEmbedding(for: noteID)
                 case .meditationCompleted:
                     await self.streakTracker.handle(event)
                     self.insightManager.handle(event)

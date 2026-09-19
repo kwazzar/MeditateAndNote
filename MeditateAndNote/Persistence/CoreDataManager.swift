@@ -19,6 +19,7 @@ enum CDEntity {
     static let aiDraftSession = "CDAIDraftSession"
     static let aiDraftMetric = "CDAIDraftMetric"
     static let noteInsight = "CDNoteInsight"
+    static let noteEmbedding = "CDNoteEmbedding"
 }
 
 // MARK: - CoreDataManager
@@ -321,10 +322,44 @@ final class CoreDataManager {
         ]
         noteInsightEntity.uniquenessConstraints = [[insightNoteID]]
 
+        // ── CDNoteEmbedding ────────────────────────────────────
+        // One row per note: dense semantic-search vector + staleness marker.
+        let noteEmbeddingEntity = NSEntityDescription()
+        noteEmbeddingEntity.name = CDEntity.noteEmbedding
+        noteEmbeddingEntity.managedObjectClassName = NSStringFromClass(NSManagedObject.self)
+
+        let embeddingNoteID = NSAttributeDescription()
+        embeddingNoteID.name = "noteID"
+        embeddingNoteID.attributeType = .UUIDAttributeType
+        embeddingNoteID.isOptional = false
+
+        let embeddingVector = NSAttributeDescription()
+        embeddingVector.name = "vector"
+        embeddingVector.attributeType = .binaryDataAttributeType
+        embeddingVector.isOptional = false
+
+        let embeddingHash = NSAttributeDescription()
+        embeddingHash.name = "contentHash"
+        embeddingHash.attributeType = .integer64AttributeType
+        embeddingHash.isOptional = false
+        embeddingHash.defaultValue = 0
+
+        let embeddingUpdatedAt = NSAttributeDescription()
+        embeddingUpdatedAt.name = "updatedAt"
+        embeddingUpdatedAt.attributeType = .dateAttributeType
+        embeddingUpdatedAt.isOptional = false
+        embeddingUpdatedAt.defaultValue = Date.distantPast
+
+        noteEmbeddingEntity.properties = [
+            embeddingNoteID, embeddingVector, embeddingHash, embeddingUpdatedAt,
+        ]
+        noteEmbeddingEntity.uniquenessConstraints = [[embeddingNoteID]]
+
         // ── Register ─────────────────────────────────────────────
         model.entities = [
             noteEntity, sessionEntity, activityEntity, streakEntity,
             aiDraftEntity, aiDraftMetricEntity, noteInsightEntity,
+            noteEmbeddingEntity,
         ]
 
         return model

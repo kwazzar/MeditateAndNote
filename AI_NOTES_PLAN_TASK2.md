@@ -314,7 +314,7 @@ Follow-ups (tech debt, non-blocking):
 
 ## Sprint 4 — Differentiation (Variant C або D)
 
-**Status: ⬜ NOT STARTED** — telemetry for the decision (`CDAIDraftMetric`: counts, latency, error kinds) is being collected since Sprint 2; decision pending real usage data. Current lean: **D (Semantic Search)** — lower risk, builds on existing search, iOS 17+ via NaturalLanguage.
+**Status: ✅ DONE** (2026-09-19 — Variant **D (Semantic Search)** chosen. Embedded-search built: `NoteEmbedding`/`SemanticQuery`/`NoteEmbeddingStore` value objects, `EmbeddingService` + `NLEmbeddingService` (NaturalLanguage, iOS 14+), `CoreDataNoteEmbeddingStore`, `SemanticSearchManager` actor; keyword search wins, semantic ranking used only when keyword hits are empty (auto mode, no toggle UI). Embeddings are lazy/fnv-1a-hash-synced per edit; `SemanticSearchManagerTests` 11 green.)
 
 **Рішення в кінці Sprint 3 на основі метрик з Sprint 2.**
 
@@ -344,19 +344,21 @@ Follow-ups (tech debt, non-blocking):
 
 ### If Variant D (Semantic Search)
 
-**Tasks:**
-- `Models/AI/NoteEmbedding.swift` — value object (`[Float]` vector + noteID)
-- `Services/AI/EmbeddingService.swift` — protocol + `NLEmbeddingService` (NaturalLanguage)
-- `Persistence/CoreDataNoteEmbeddingStore.swift` — stores vectors as Data
-- `Models/AI/SemanticQuery.swift` — value object
-- `Services/NoteManager.swift` — extend `NoteProvidable`:
-  ```swift
-  func notes(matching semanticQuery: SemanticQuery) async -> [Note]
-  ```
-- `ViewModels/NoteMenuViewModel.swift` — toggle keyword/semantic search
-- Sync: regenerate embedding при `.noteUpdated`
+**Зроблено:**
+- `Models/AI/NoteEmbedding.swift` — value object (`[Float]` vector + noteID, cosine similarity, FNV-1a `contentHash`)
+- `Models/AI/SemanticQuery.swift` — value object (text + `minSimilarity` floor, default 0.25)
+- `Models/AI/NoteEmbeddingStore.swift` — protocol + `InMemoryNoteEmbeddingStore`
+- `Services/AI/EmbeddingService.swift` — protocol + `DisabledEmbeddingService`
+- `Services/AI/NLEmbeddingService.swift` — NaturalLanguage sentence embedding, dominant language model (EN fallback), iOS 14+
+- `Persistence/CoreDataNoteEmbeddingStore.swift` — stores vectors as Data (`CDNoteEmbedding` in `CoreDataManager.buildModel()`)
+- `Services/AI/SemanticSearchManager.swift` — actor: lazy embed, upsert only missing/stale (contentHash), rank by cosine above floor, delete on note delete
+- `Views/NoteMenu/SearchState.swift` — `keywordHits` / `semanticMatches` / `displayedItems`
+- `ViewModels/NoteMenuViewModel.swift` — `updateSearch(_:)`: keyword first, semantic fallback when keyword zero hits (auto, no toggle)
+- `AppContainer` — wiring + `.noteDeleted` → `deleteEmbedding(for:)`
+- Sync: embeddings lazy-regenerated on `.noteUpdated` via contentHash staleness
+- `MeditateAndNoteTests/SemanticSearchManagerTests.swift` — 11 tests (ranking, floor, laziness, cleanup, cosine/hash)
 
-**Risks:** +50 MB embedding model, sync overhead при edits
+**Risks:** +50 MB embedding model, sync overhead при edits (mitigated: only text-changed notes re-embedded)
 
 ---
 
