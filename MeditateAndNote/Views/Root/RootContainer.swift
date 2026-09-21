@@ -13,6 +13,9 @@ struct RootContainer: View {
     @Environment(ThemeManager.self) private var themeManager
     @Environment(StreakTracker.self) private var streakTracker
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
+
+    private var isLandscape: Bool { verticalSizeClass == .compact }
 
     /// Launch-time gating: onboarding runs before the tab bar is mounted
     /// (see `OnboardingCoordinator` for the Router transition on completion).
@@ -141,6 +144,7 @@ extension RootContainer {
             .ignoresSafeArea(.container, edges: .all)
             
             CustomTabBar(selectedTab: bindingSelectedTab)
+                .frame(maxWidth: isLandscape ? 480 : .infinity)
                 .padding(.horizontal, 16)
                 .offset(y: router.isDetailPresented ? 100 : 0)
                 .animation(.snappy(duration: 0.4, extraBounce: 0.2), value: router.isDetailPresented)
