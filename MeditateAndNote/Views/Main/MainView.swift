@@ -35,7 +35,7 @@ struct MainView: View {
 
             settingsButton
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
-                .padding(.bottom, isLandscape ? 52 : 60)
+                .padding(.bottom, isLandscape ? 52 : 80)
                 .padding(.trailing, 26)
         }
     }
