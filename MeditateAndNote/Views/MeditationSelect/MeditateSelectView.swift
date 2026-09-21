@@ -32,10 +32,11 @@ struct MeditateSelectView: View {
                 actionButtonsSection
             }
             .padding()
-            .padding(.bottom, 24)
+            .padding(.bottom, 110)
             .frame(maxWidth: HomeLayout.contentWidth)
             .frame(maxWidth: .infinity)
         }
+        .scrollIndicators(.hidden)
         .background(themeManager.current.mainBackground)
         .sheet(item: $viewModel.infoItem) { item in
             MeditationInfoSheet(item.meditation)
@@ -56,9 +57,6 @@ private extension MeditateSelectView {
     private var headerSection: some View {
         ZStack {
             VStack(spacing: 12) {
-                Image(systemName: "leaf.fill")
-                    .font(.system(size: 40))
-                    .foregroundColor(themeManager.current.streakActiveMeditation)
 
                 Text(viewModel.selectedMeditation?.title.rawValue ?? "Meditation Session")
                     .font(.largeTitle)
@@ -72,29 +70,6 @@ private extension MeditateSelectView {
                 .foregroundColor(themeManager.current.textSecondary)
                 .multilineTextAlignment(.center)
             }
-            //            VStack {
-            //                HStack {
-            //                    Spacer()
-            //
-            //                    Button {
-            //                        router.presentingSheet = nil
-            //                        router.presentingFullScreen = nil
-            //                        router.navigationStackPath = []
-            //                    } label: {
-            //                        Image(systemName: "xmark")
-            //                            .font(.system(size: 16, weight: .medium))
-            //                            .foregroundColor(.secondary)
-            //                            .padding(8)
-            //                            .background(
-            //                                Circle()
-            //                                    .fill(Color.gray.opacity(0.1))
-            //                            )
-            //                    }
-            //                    .buttonStyle(PlainButtonStyle())
-            //                }
-            //
-            //                Spacer()
-            //            }
         }
     }
 
