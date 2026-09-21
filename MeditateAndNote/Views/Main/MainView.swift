@@ -25,7 +25,7 @@ struct MainView: View {
             VStack {
                 StreakHeaderView(streakTracker: streakTracker)
                     .padding(.horizontal, 16)
-                    .padding(.top, 8)
+                    .padding(.top, isLandscape ? 20 : 8)
 
                 Spacer()
             }
