@@ -81,7 +81,7 @@ struct DayCellView: View {
                     Circle()
                         .fill(partialIndicatorColor)
                         .frame(width: 6, height: 6)
-                        .offset(x: 3, y: -3)
+                        .offset(x: 0, y: 0)
                         .transition(.scale.combined(with: .opacity))
                 }
             }
