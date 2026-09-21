@@ -216,7 +216,6 @@ graph LR
     subgraph Models["Domain Models (plain Swift, no CoreData/SwiftUI)"]
         Note["Note<br/>id, title, content, date"]
         NoteBook["NoteBook<br/>aggregate: one entry per id,<br/>last-write-wins"]
-        MergeConflict["MergeConflict"]
         Meditation["Meditation<br/>id, title, breathingStyle, category"]
         BreathingStyle["BreathingStyle<br/>fourSevenEight, box,<br/>fourEight, custom"]
         BreathingPattern["BreathingPattern<br/>name, phases"]
@@ -247,7 +246,6 @@ graph LR
     DayDetail --> DayState
     StreakEngine --> DailyAct
     Note -- aggregate --> NoteBook
-    NoteBook -.-> MergeConflict
 ```
 
 Domain invariants live in the Value Objects / aggregate / engines:
@@ -280,7 +278,6 @@ Domain invariants live in the Value Objects / aggregate / engines:
 graph TB
     subgraph App["Application Services"]
         NM["NoteManager<br/>actor<br/>NoteProvidable & NoteManageable"]
-        Sync["NoteSyncCoordinator<br/>protocol + Default impl<br/>local/remote strategies"]
         MeditSvc["MeditationService<br/>protocol + SampleMeditationService"]
         SelStore["MeditationSelectionStore<br/>UserDefaults"]
         StreakTracker["StreakTracker<br/>@Observable<br/>StreakSnapshotProvidable"]
@@ -301,7 +298,6 @@ graph TB
 
     NM --- NoteProv
     NM --- NoteMan
-    NM --> Sync
     NM --> Bus
     StreakTracker ---- InsightMgr
     InsightMgr --- InsightProv
@@ -315,7 +311,7 @@ graph TB
 ```
 
 `Services/` is grouped by domain folder rather than flat: `Notes/`
-(`NoteManager`, `NotesRepository`, `NoteSyncCoordinator`), `Meditation/`
+(`NoteManager`, `NotesRepository`), `Meditation/`
 (`MeditationService`), `Events/` (`DomainEvents`), `Reminders/`
 (`ReminderManager`, `NotificationScheduling`), `Settings/`
 (`AnimationSettings`), `Onboarding/` (`OnboardingStore`), `Theme/`
@@ -325,14 +321,9 @@ graph TB
 - **`NoteManager`** (actor) is the application service for notes. It exposes
   two protocols: `NoteProvidable` (read) and `NoteManageable` (write), plus a
   typed `NoteOperationError` (`.loadFailed` / `.saveFailed` / `.deleteFailed`).
-  It holds its own `NoteBook` aggregate (rebuilt from the sync coordinator
+  It holds its own `NoteBook` aggregate (rebuilt from the data source
   after each mutation) and publishes domain events. ViewModels depend on
   `any NoteProvidable & NoteManageable`.
-- **`NoteSyncCoordinator`** (`DefaultNoteSyncCoordinator`) orchestrates
-  local/remote reads and writes by `SyncStrategy` (`localOnly`, `remoteOnly`,
-  `localFirst`, `remoteFirst`, `hybrid`). Hybrid merges via
-  `NoteBook.merged` and reports `MergeConflict`s; remote writes are best-effort
-  (`bestEffort`) so local data is safe even if remote sync fails.
 - **`StreakTracker`** is an `@Observable` adapter over the pure `StreakEngine`
   (`StreakSnapshotProvidable` read boundary). **`StreakInsightManager`** depends
   on `any StreakSnapshotProvidable` (not the concrete tracker) and exposes
@@ -427,7 +418,7 @@ sequenceDiagram
     User->>View: Taps action
     View->>VM: Delegates to ViewModel
     VM->>Mgr: Any NoteProvidable & NoteManageable
-    Mgr->>DS: Local (CoreData) + remote
+    Mgr->>DS: Local (CoreData)
     DS-->>Mgr: Returns domain model
     Mgr-->>VM: Updates @Observable state
     VM-->>View: UI re-renders

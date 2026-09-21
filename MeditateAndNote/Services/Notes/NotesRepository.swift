@@ -23,8 +23,8 @@ protocol NoteDataSource {
 // MARK: - In-Memory Implementation
 
 /// Actor: its mutable array is shared across isolation domains (the NoteManager
-/// actor and the sync coordinator), so the actor serializes access instead of
-/// relying on unsafe concurrent mutation.
+/// actor), so the actor serializes access instead of relying on unsafe
+/// concurrent mutation.
 final actor InMemoryNoteDataSource: NoteDataSource {
     private var notes: [Note]
 
