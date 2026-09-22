@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import UIKit
 
 struct MeditationView: View {
     @State var viewModel: MeditationViewModel
@@ -17,17 +16,13 @@ struct MeditationView: View {
     var body: some View {
         GeometryReader { geometry in
             let isLandscape = geometry.size.width > geometry.size.height
-            let breathe = breathSize(for: geometry.size.height)
-            let progressWidth = progressBarWidth(for: geometry.size)
-            VStack {
-                navigationBar(isLandscape: isLandscape)
-                meditationPlan
-                Spacer()
-                if !showTimeSelection {
-                    breathingAnimation(size: breathe)
-                }
-                Spacer()
-                progress(width: progressWidth)
+            let breathe = breathSize(for: geometry.size, isLandscape: isLandscape)
+            let progressWidth = progressBarWidth(for: geometry.size, isLandscape: isLandscape)
+
+            if isLandscape {
+                landscapeLayout(breathe: breathe, progressWidth: progressWidth)
+            } else {
+                portraitLayout(breathe: breathe, progressWidth: progressWidth)
             }
         }
         .background(themeManager.current.mainBackground.ignoresSafeArea())
@@ -43,7 +38,7 @@ struct MeditationView: View {
                         .transition(.move(edge: .bottom))
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .edgesIgnoringSafeArea(.all)
+                    .ignoresSafeArea(edges: [.bottom, .leading, .trailing])
                     .padding(0)
                 }
             }
@@ -67,9 +62,40 @@ struct MeditationView: View {
     }
 }
 
-//MARK: - Extension
+// MARK: - Layout
 private extension MeditationView {
-    func navigationBar(isLandscape: Bool) -> some View {
+    func portraitLayout(breathe: CGFloat, progressWidth: CGFloat) -> some View {
+        VStack {
+            navigationBar()
+            meditationPlan
+            Spacer()
+            if !showTimeSelection {
+                breathingAnimation(size: breathe)
+            }
+            Spacer()
+            if !showTimeSelection {
+                progress(width: progressWidth)
+            }
+        }
+    }
+
+    func landscapeLayout(breathe: CGFloat, progressWidth: CGFloat) -> some View {
+        VStack(spacing: 0) {
+            navigationBar()
+            meditationPlan
+            HStack(spacing: 32) {
+                Spacer()
+                if !showTimeSelection {
+                    breathingAnimation(size: breathe)
+                    progress(width: progressWidth)
+                }
+                Spacer()
+            }
+            .frame(maxHeight: .infinity)
+        }
+    }
+
+    func navigationBar() -> some View {
         ZStack {
             Text("\(viewModel.meditationTitle)")
                 .font(.headline)
@@ -89,9 +115,8 @@ private extension MeditationView {
                 }
                 .buttonStyle(PlainButtonStyle())
             }
-            
         }
-        .padding(.horizontal, isLandscape ? 32 : 16)
+        .padding(.horizontal, 16)
     }
     
     var meditationPlan: some View {
@@ -181,12 +206,17 @@ private extension MeditationView {
         }
     }
 
-    private func breathSize(for totalHeight: CGFloat) -> CGFloat {
-        min(max(totalHeight * 0.55, 120), 250)
+    private func breathSize(for size: CGSize, isLandscape: Bool) -> CGFloat {
+        let dimension = isLandscape ? size.width : size.height
+        let fraction: CGFloat = isLandscape ? 0.55 : 0.55
+        let cap: CGFloat = isLandscape ? 200 : 250
+        return min(max(dimension * fraction, 120), cap)
     }
 
-    private func progressBarWidth(for size: CGSize) -> CGFloat {
-        size.width > size.height ? 480 : 326
+    private func progressBarWidth(for size: CGSize, isLandscape: Bool) -> CGFloat {
+        let available = size.width - 48
+        let maxW: CGFloat = isLandscape ? 300 : 326
+        return min(available, maxW)
     }
     
     private var breathingColor: Color {
@@ -224,12 +254,18 @@ extension BreathingPhaseType {
     }
 }
 
-struct MeditationView_Previews: PreviewProvider {
-    static var previews: some View {
-        let meditation = SampleMeditationService().getMeditations().first
-            ?? Meditation(id: "preview", title: MeditationTitle("Preview"), breathingStyle: .fourSevenEight)
-        return MeditationView(viewModel: MeditationViewModel(meditation: meditation))
-            .environment(Router.previewRouter())
-            .environment(ThemeManager())
-    }
+#Preview("Portrait Preview", traits: .portrait) {
+    let meditation = SampleMeditationService().getMeditations().first
+        ?? Meditation(id: "preview", title: MeditationTitle("Preview"), breathingStyle: .fourSevenEight)
+    return MeditationView(viewModel: MeditationViewModel(meditation: meditation))
+        .environment(Router.previewRouter())
+        .environment(ThemeManager())
+}
+
+#Preview("Landscape Preview", traits: .landscapeLeft) {
+    let meditation = SampleMeditationService().getMeditations().first
+        ?? Meditation(id: "preview", title: MeditationTitle("Preview"), breathingStyle: .fourSevenEight)
+    return MeditationView(viewModel: MeditationViewModel(meditation: meditation))
+        .environment(Router.previewRouter())
+        .environment(ThemeManager())
 }
