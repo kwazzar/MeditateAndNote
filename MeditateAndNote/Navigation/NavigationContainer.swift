@@ -7,7 +7,6 @@
 
 import SwiftUI
 
-#warning("можливість керувати транзицією")
 struct NavigationContainer<Content: View>: View {
     @State private var router: Router
     @ViewBuilder var content: () -> Content
@@ -57,6 +56,7 @@ private struct InnerContainer<Content: View>: View {
                     return view(for: destination)
                 }
         }
+        .background(DisableSwipeBack())
         .sheet(item: $router.presentingSheet) { sheet in
             navigationView(for: sheet, from: router)
         }
@@ -79,6 +79,27 @@ private struct InnerContainer<Content: View>: View {
         view(for: destination)
             .environment(router)
     }
+}
+
+//MARK: - DisableSwipeBack
+private struct DisableSwipeBack: UIViewRepresentable {
+    func makeUIView(context: Context) -> UIView {
+        let view = UIView()
+        view.backgroundColor = .clear
+        DispatchQueue.main.async {
+            var responder: UIResponder? = view
+            while let r = responder {
+                if let nav = r as? UINavigationController {
+                    nav.interactivePopGestureRecognizer?.isEnabled = false
+                    break
+                }
+                responder = r.next
+            }
+        }
+        return view
+    }
+
+    func updateUIView(_ uiView: UIView, context: Context) {}
 }
 
 struct NavigationContainer_Previews: PreviewProvider {

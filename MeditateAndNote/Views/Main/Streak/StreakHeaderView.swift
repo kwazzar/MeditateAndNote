@@ -42,8 +42,8 @@ struct StreakHeaderView: View {
                     dayCellsSection
                         .padding(.leading, 12)
                 }
-                .padding(.horizontal, isLandscape ? 10 : 14)
-                .padding(.vertical, isLandscape ? 8 : 12)
+                .padding(.horizontal, isLandscape ? 12 : 14)
+                .padding(.vertical, isLandscape ? 10 : 12)
                 .background(
                     RoundedRectangle(cornerRadius: 14)
                         .fill(.ultraThinMaterial)

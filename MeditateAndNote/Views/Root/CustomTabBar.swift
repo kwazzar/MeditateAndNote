@@ -12,12 +12,13 @@ struct CustomTabBar: View {
     @Binding var selectedTab: TabDestination
     
     var body: some View {
-        HStack(spacing: 32) {
+        HStack(spacing: 10) {
             tabButton(.notes, systemImage: "note.text", title: "Notes")
             tabButton(.home, systemImage: "house", title: "Home")
             tabButton(.meditations, systemImage: "leaf", title: "Meditations")
         }
-        .padding(.horizontal, 92)
+        .padding(.horizontal)
+        .padding(.vertical, 6)
         .frame(maxWidth: .infinity)
         .background(
             Capsule()
@@ -36,12 +37,15 @@ struct CustomTabBar: View {
         } label: {
             VStack(spacing: 4) {
                 Image(systemName: systemImage)
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(.system(size: 22, weight: .semibold))
                 Text(title)
-                    .font(.caption2)
+                    .font(.caption)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.9)
             }
             .foregroundColor(isSelected ? themeManager.current.accentColor : themeManager.current.textSecondary)
             .padding(.vertical, 6)
+            .padding(.horizontal)
             .frame(maxWidth: .infinity)
             .background(
                 RoundedRectangle(cornerRadius: 10)

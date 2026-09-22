@@ -67,7 +67,7 @@ struct NoteMenu: View {
             addNoteButton
                 .opacity(isScrolling ? 0 : 1)
                 .scaleEffect(isScrolling ? 0.6 : 1)
-                .padding(.bottom, isLandscape ? 52 : 60)
+                .padding(.bottom, isLandscape ? 52 : 80)
                 .padding(.trailing, 26)
                 .allowsHitTesting(!isScrolling)
                 .animation(.easeInOut(duration: 0.2),

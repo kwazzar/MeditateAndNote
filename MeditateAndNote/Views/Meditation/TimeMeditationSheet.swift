@@ -15,7 +15,7 @@ struct TimeMeditationSheet: View {
 
     var body: some View {
         VStack(spacing: 5) {
-            Spacer().frame(height: 20)
+            Spacer().frame(height: 72)
 
             Picker("Duration", selection: $selectedDuration) {
                 ForEach(MeditationDuration.allCases) { duration in
@@ -26,13 +26,8 @@ struct TimeMeditationSheet: View {
             .pickerStyle(WheelPickerStyle())
             .colorScheme(themeManager.current.colorScheme)
             .frame(height: 150)
+            .frame(maxWidth: 720)
             .clipped()
-            .mask(
-                GeometryReader { geometry in
-                    CustomTopRoundedShape()
-                        .offset(y: -20)
-                }
-            )
 
             Text("Select Duration")
                 .font(.title2)

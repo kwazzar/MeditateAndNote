@@ -14,6 +14,10 @@ struct NoteEditorView: View {
     @FocusState private var isEditorFocused: Bool
     @State private var isKeyboardVisible = false
     @State private var showDeleteConfirmation = false
+    @State private var safeInsets: UIEdgeInsets = .zero
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
+
+    private var isLandscape: Bool { verticalSizeClass == .compact }
     /// Presentation payload for the AI sheet: single source of truth, so the
     /// sheet always renders against a concrete id (no `if let` race) and the
     /// session keys to a real note id whenever the note is saved.
@@ -36,7 +40,22 @@ struct NoteEditorView: View {
                 }
             }
         }
-        .onAppear { registerKeyboard() }
+        .onAppear {
+            registerKeyboard()
+            safeInsets = Self.readSafeInsets()
+            // Deferred: window layout може бути не завершений в onAppear
+            DispatchQueue.main.async {
+                safeInsets = Self.readSafeInsets()
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIDevice.orientationDidChangeNotification)) { _ in
+            // Notification приходить ДО оновлення window insets — читаємо двічі:
+            // одразу (швидкий відгук) і після анімації ротації (правильні значення).
+            safeInsets = Self.readSafeInsets()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                safeInsets = Self.readSafeInsets()
+            }
+        }
         .onDisappear { unregisterKeyboard() }
         .onChange(of: viewModel.title) { _, _ in viewModel.onTextChanged() }
         .onChange(of: viewModel.body) { _, _ in viewModel.onTextChanged() }
@@ -85,6 +104,16 @@ private extension NoteEditorView {
             }
     }
     
+    // MARK: - Safe Area
+
+    /// Реальні insets з key window. Читається в onAppear (не в body),
+    /// бо під час першого layout вікно ще не key → були б нулі.
+    private static func readSafeInsets() -> UIEdgeInsets {
+        (UIApplication.shared.connectedScenes.first as? UIWindowScene)?
+            .windows.first?
+            .safeAreaInsets ?? .zero
+    }
+
     // MARK: - Top Bar
     var topBar: some View {
         HStack {
@@ -120,21 +149,26 @@ private extension NoteEditorView {
                     .frame(width: 36, height: 36)
             }
             
-            SwiftUI.Menu {
-                Button(role: .destructive) {
-                    showDeleteConfirmation = true
+            if !viewModel.isNewNote {
+                SwiftUI.Menu {
+                    Button(role: .destructive) {
+                        showDeleteConfirmation = true
+                    } label: {
+                        Label("Delete", systemImage: "trash")
+                    }
                 } label: {
-                    Label("Delete", systemImage: "trash")
+                    Image(systemName: "ellipsis")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(themeManager.current.iconPrimary)
+                        .frame(width: 36, height: 36)
                 }
-            } label: {
-                Image(systemName: "ellipsis")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(themeManager.current.iconPrimary)
-                    .frame(width: 36, height: 36)
             }
         }
         .padding(.horizontal, 12)
-        .frame(height: 44)
+        .padding(.top, isLandscape ? 22 : 6)
+        .padding(.leading, safeInsets.left)
+        .padding(.trailing, safeInsets.right)
+        .frame(height: 44 + (isLandscape ? 22 : 6))
     }
     
     // MARK: - Editor
@@ -212,9 +246,13 @@ private extension NoteEditorView {
     }
 }
 
-struct NoteEditor_Previews: PreviewProvider {
-    static var previews: some View {
-        NoteEditorView(viewModel: AppContainer().makeNoteEditorViewModel())
-            .environment(ThemeManager())
-    }
+#Preview("Portrait", traits: .portrait) {
+    NoteEditorView(viewModel: AppContainer().makeNoteEditorViewModel())
+        .environment(ThemeManager())
 }
+
+#Preview("Landscape", traits: .landscapeLeft) {
+    NoteEditorView(viewModel: AppContainer().makeNoteEditorViewModel())
+        .environment(ThemeManager())
+}
+
