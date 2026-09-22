@@ -140,9 +140,8 @@ extension RootContainer {
                 }
                 .tag(TabDestination.meditations)
             }
-            .tabViewStyle(.page(indexDisplayMode: .never))
             .ignoresSafeArea(.container, edges: .all)
-            
+
             CustomTabBar(selectedTab: bindingSelectedTab)
                 .frame(maxWidth: isLandscape ? 480 : .infinity)
                 .padding(.horizontal, 16)
