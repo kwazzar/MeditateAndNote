@@ -314,7 +314,7 @@ Follow-ups (tech debt, non-blocking):
 
 ## Sprint 4 — Differentiation (Variant C або D)
 
-**Status: ✅ DONE** (2026-09-19 — Variant **D (Semantic Search)** chosen. Embedded-search built: `NoteEmbedding`/`SemanticQuery`/`NoteEmbeddingStore` value objects, `EmbeddingService` + `NLEmbeddingService` (NaturalLanguage, iOS 14+), `CoreDataNoteEmbeddingStore`, `SemanticSearchManager` actor; keyword search wins, semantic ranking used only when keyword hits are empty (auto mode, no toggle UI). Embeddings are lazy/fnv-1a-hash-synced per edit; `SemanticSearchManagerTests` 11 green.)
+**Status: ✅ DONE** (2026-09-22 — Variant **D (Semantic Search)** chosen, built, QA'd, then **semantic fallback DISABLED**. Embedded-search built: `NoteEmbedding`/`SemanticQuery`/`NoteEmbeddingStore` value objects, `EmbeddingService` + `NLEmbeddingService` (NaturalLanguage), `CoreDataNoteEmbeddingStore`, `SemanticSearchManager` actor; lazy/fnv-1a-hash-synced embeddings; `SemanticSearchManagerTests` 11 green. **QA finding** (measured on real model, iOS 26.5 sim, query "space travel"): relevant Mars note cos 0.24 < irrelevant Groceries 0.35 / Workout 0.38 — on-device sentence embeddings can't rank topical relation on short note texts; the 0.25 floor surfaced ALL notes. Apple docs also steer similarity to `NLEmbedding` (in use) and `NLContextualEmbedding` needs OTA model downloads. **Decision (user, option 1):** search stays keyword-only — the semantic pipeline remains in the repo (files + tests + note-delete embedding cleanup via domain events) but is not wired into `NoteMenuViewModel`/`SearchState` runtime (no fallback, no leak). Verified e2e via XCUITest target `MeditateAndNoteUITests` (keyword hit filters to the match; keyword miss shows nothing). Re-enable path: re-inject `semanticSearch` into `AppContainer.makeNoteMenuViewModel` + restore `semanticMatches` fallback in `SearchState.displayedItems` once a better embedding strategy exists.)
 
 **Рішення в кінці Sprint 3 на основі метрик з Sprint 2.**
 
@@ -352,8 +352,8 @@ Follow-ups (tech debt, non-blocking):
 - `Services/AI/NLEmbeddingService.swift` — NaturalLanguage sentence embedding, dominant language model (EN fallback), iOS 14+
 - `Persistence/CoreDataNoteEmbeddingStore.swift` — stores vectors as Data (`CDNoteEmbedding` in `CoreDataManager.buildModel()`)
 - `Services/AI/SemanticSearchManager.swift` — actor: lazy embed, upsert only missing/stale (contentHash), rank by cosine above floor, delete on note delete
-- `Views/NoteMenu/SearchState.swift` — `keywordHits` / `semanticMatches` / `displayedItems`
-- `ViewModels/NoteMenuViewModel.swift` — `updateSearch(_:)`: keyword first, semantic fallback when keyword zero hits (auto, no toggle)
+- `Views/NoteMenu/SearchState.swift` — `keywordHits` / `displayedItems` (keyword-only after QA decision)
+- `ViewModels/NoteMenuViewModel.swift` — `updateSearch(_:)`: synchronous keyword matching; semantic fallback wired out after QA
 - `AppContainer` — wiring + `.noteDeleted` → `deleteEmbedding(for:)`
 - Sync: embeddings lazy-regenerated on `.noteUpdated` via contentHash staleness
 - `MeditateAndNoteTests/SemanticSearchManagerTests.swift` — 11 tests (ranking, floor, laziness, cleanup, cosine/hash)

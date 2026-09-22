@@ -126,6 +126,8 @@ private extension NoteEditorView {
                     .foregroundStyle(themeManager.current.iconPrimary)
                     .frame(width: 36, height: 36)
             }
+            .accessibilityLabel("Back")
+            .accessibilityIdentifier("noteEditorBackButton")
             Spacer()
 
             Button(action: {

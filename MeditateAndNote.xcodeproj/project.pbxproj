@@ -58,6 +58,7 @@
 		3BCCAAAA000000000000001E /* SemanticSearchManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BCCAAAA000000000000001F /* SemanticSearchManager.swift */; };
 		3BCCAAAA0000000000000020 /* CoreDataNoteEmbeddingStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BCCAAAA0000000000000021 /* CoreDataNoteEmbeddingStore.swift */; };
 		3BCCAAAA0000000000000022 /* SemanticSearchManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BCCAAAA0000000000000023 /* SemanticSearchManagerTests.swift */; };
+		AA0000202026082100000021 /* NoteMenuSemanticSearchUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000102026082200000001 /* NoteMenuSemanticSearchUITests.swift */; };
 		
 		78215B573038AB5000DD8F99 /* DomainEvents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78215B563038AB5000DD8F99 /* DomainEvents.swift */; };
 		78316C7ABB9801F35E80B0BC /* AIDraftService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31BEF74850AB9BA8582B050E /* AIDraftService.swift */; };
@@ -189,6 +190,13 @@
 			remoteGlobalIDString = E361876A2D68B221000E326D;
 			remoteInfo = MeditateAndNote;
 		};
+		AA0004202026082200000002 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E36187632D68B221000E326D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E361876A2D68B221000E326D;
+			remoteInfo = MeditateAndNote;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
@@ -283,6 +291,8 @@
 		AA0000102026082000000008 /* StreakTrackerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakTrackerTests.swift; sourceTree = "<group>"; };
 		AA000012202608200000000C /* DayCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayCellView.swift; sourceTree = "<group>"; };
 		AA0000202026082100000002 /* MeditateAndNoteTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MeditateAndNoteTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA0000202026082100000020 /* MeditateAndNoteUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MeditateAndNoteUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA0000102026082200000001 /* NoteMenuSemanticSearchUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NoteMenuSemanticSearchUITests.swift; sourceTree = "<group>"; };
 		AA0000212026082600A10001 /* SoundPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundPlayer.swift; sourceTree = "<group>"; };
 		AA0000302026082700B10002 /* breath_hold_after_exhale.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = breath_hold_after_exhale.wav; sourceTree = "<group>"; };
 		AA00010020260902C00002 /* SoundSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundSettings.swift; sourceTree = "<group>"; };
@@ -376,6 +386,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		E36187682D68B221000E326D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA0000142026090400000001 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -721,7 +738,16 @@
 				E361876D2D68B221000E326D /* MeditateAndNote */,
 				E361876C2D68B221000E326D /* Products */,
 				AA000014202608200000000A /* MeditateAndNoteTests */,
+				AA0000112026090400000001 /* MeditateAndNoteUITests */,
 			);
+			sourceTree = "<group>";
+		};
+		AA0000112026090400000001 /* MeditateAndNoteUITests */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000102026082200000001 /* NoteMenuSemanticSearchUITests.swift */,
+			);
+			path = MeditateAndNoteUITests;
 			sourceTree = "<group>";
 		};
 		E361876C2D68B221000E326D /* Products */ = {
@@ -729,6 +755,7 @@
 			children = (
 				E361876B2D68B221000E326D /* MeditateAndNote.app */,
 				AA0000202026082100000002 /* MeditateAndNoteTests.xctest */,
+				AA0000202026082100000020 /* MeditateAndNoteUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -894,6 +921,24 @@
 			productReference = AA0000202026082100000002 /* MeditateAndNoteTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		AA0000122026090400000001 /* MeditateAndNoteUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AA0000162026090400000001 /* Build configuration list for PBXNativeTarget "MeditateAndNoteUITests" */;
+			buildPhases = (
+				AA0000132026090400000001 /* Sources */,
+				AA0000142026090400000001 /* Frameworks */,
+				AA0000152026090400000001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				AA0004302026082200000002 /* PBXTargetDependency */,
+			);
+			name = MeditateAndNoteUITests;
+			productName = MeditateAndNoteUITests;
+			productReference = AA0000202026082100000020 /* MeditateAndNoteUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 		E361876A2D68B221000E326D /* MeditateAndNote */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = E36187792D68B223000E326D /* Build configuration list for PBXNativeTarget "MeditateAndNote" */;
@@ -925,6 +970,10 @@
 						CreatedOnToolsVersion = 14.2;
 						TestTargetID = E361876A2D68B221000E326D;
 					};
+					AA0000122026090400000001 = {
+						CreatedOnToolsVersion = 14.2;
+						TestTargetID = E361876A2D68B221000E326D;
+					};
 					E361876A2D68B221000E326D = {
 						CreatedOnToolsVersion = 14.2;
 					};
@@ -945,6 +994,7 @@
 			targets = (
 				E361876A2D68B221000E326D /* MeditateAndNote */,
 				AA0000202026082100000005 /* MeditateAndNoteTests */,
+				AA0000122026090400000001 /* MeditateAndNoteUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -966,6 +1016,13 @@
 				787880D3303E8744004474C4 /* meditation_finished.wav in Resources */,
 				E36187732D68B223000E326D /* Assets.xcassets in Resources */,
 				3BCCAAAA0000000000000012 /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA0000152026090400000001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1143,6 +1200,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+AA0000132026090400000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA0000202026082100000021 /* NoteMenuSemanticSearchUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -1150,6 +1215,11 @@
 			isa = PBXTargetDependency;
 			target = E361876A2D68B221000E326D /* MeditateAndNote */;
 			targetProxy = AA0004202026082200000001 /* PBXContainerItemProxy */;
+		};
+		AA0004302026082200000002 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E361876A2D68B221000E326D /* MeditateAndNote */;
+			targetProxy = AA0004202026082200000002 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -1203,6 +1273,56 @@
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MeditateAndNote.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/MeditateAndNote";
+			};
+			name = Release;
+		};
+		AA0000172026090400000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = nazar.MeditateAndNoteUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_TARGET_NAME = MeditateAndNote;
+			};
+			name = Debug;
+		};
+		AA0000182026090400000001 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = nazar.MeditateAndNoteUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_TARGET_NAME = MeditateAndNote;
 			};
 			name = Release;
 		};
@@ -1400,6 +1520,15 @@
 			buildConfigurations = (
 				AA0000202026082100000006 /* Debug */,
 				AA0000202026082100000007 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AA0000162026090400000001 /* Build configuration list for PBXNativeTarget "MeditateAndNoteUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA0000172026090400000001 /* Debug */,
+				AA0000182026090400000001 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

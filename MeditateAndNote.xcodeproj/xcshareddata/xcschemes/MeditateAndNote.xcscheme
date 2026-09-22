@@ -39,6 +39,16 @@
                ReferencedContainer = "container:MeditateAndNote.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "AA0000122026090400000001"
+               BuildableName = "MeditateAndNoteUITests.xctest"
+               BlueprintName = "MeditateAndNoteUITests"
+               ReferencedContainer = "container:MeditateAndNote.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction

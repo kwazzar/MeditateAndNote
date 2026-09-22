@@ -42,6 +42,8 @@ struct SearchBar: View {
                             .foregroundColor(themeManager.current.textSecondary)
                             .padding()
                     }
+                    .accessibilityLabel("Clear search")
+                    .accessibilityIdentifier("searchClearButton")
                 }
             }
         }

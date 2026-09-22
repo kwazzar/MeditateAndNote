@@ -79,8 +79,7 @@ final class AppContainer {
     /// fresh VM per render would leak event-bus subscriptions.
     @MainActor
     private(set) lazy var noteMenuViewModel = NoteMenuViewModel(
-        notes: noteManager,
-        semanticSearch: semanticSearchManager
+        notes: noteManager
     )
 
     private var eventsTask: Task<Void, Never>?

@@ -14,22 +14,18 @@ final class NoteMenuViewModel {
     private let logger = Logger(subsystem: Config.bundleID, category: "NoteMenuViewModel")
     private let notes: any NoteProvidable & NoteManageable
     private let eventBus: DomainEventPublisher
-    private let semanticSearch: (any SemanticSearchProvidable)?
 
     private var hasLoaded = false
     private var eventsTask: Task<Void, Never>?
-    private var semanticTask: Task<Void, Never>?
 
     var error: NoteOperationError?
 
     let searchState: SearchState
 
     init(notes: any NoteProvidable & NoteManageable,
-         eventBus: DomainEventPublisher = DomainEventBus.shared,
-         semanticSearch: (any SemanticSearchProvidable)? = nil) {
+         eventBus: DomainEventPublisher = DomainEventBus.shared) {
         self.notes = notes
         self.eventBus = eventBus
-        self.semanticSearch = semanticSearch
         self.searchState = SearchState()
         startEventListening()
     }
@@ -62,37 +58,10 @@ final class NoteMenuViewModel {
         }
     }
 
-    /// Updates the query and, when keyword matching finds nothing, falls back
-    /// to semantic ranking over the full collection (auto mode).
+    /// Updates the query and recomputes keyword matches synchronously.
     func updateSearch(_ text: String) {
         let query = SearchQuery(text: text)
         searchState.setSearchText(query)
-
-        semanticTask?.cancel()
-        searchState.setSemanticSearching(false)
-        searchState.setSemanticMatches([])
-
-        guard query != .all, searchState.keywordHits.isEmpty,
-              let semanticSearch else { return }
-
-        searchState.setSemanticSearching(true)
-        let semanticQuery = SemanticQuery(text: query.text)
-        semanticTask = Task { [weak self] in
-            guard let self else { return }
-            let matches = await semanticSearch.search(
-                matching: semanticQuery,
-                in: searchState.availableItems
-            )
-            guard !Task.isCancelled else { return }
-            searchState.setSemanticMatches(matches)
-            searchState.setSemanticSearching(false)
-        }
-    }
-
-    var isUsingSemanticResults: Bool {
-        searchState.searchText != .all
-            && searchState.keywordHits.isEmpty
-            && (searchState.hasSemanticResults || searchState.isSemanticSearching)
     }
 }
 
