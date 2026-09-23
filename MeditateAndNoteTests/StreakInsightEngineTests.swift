@@ -77,7 +77,7 @@ final class StreakInsightEngineTests: XCTestCase {
         }
         let snapshot = makeSnapshot(activities: activities)
 
-        let insights = sut.generateInsights(from: snapshot, range: .last30)
+        let insights = sut.generateInsights(from: snapshot, range: .last30, today: date(2026, 9, 4))
         let rate = insights.first { $0.title == "Last 30 Days Completion" }
 
         XCTAssertNotNil(rate)
@@ -281,7 +281,7 @@ final class StreakInsightEngineTests: XCTestCase {
         }
 
         let snapshot = makeSnapshot(activities: activities)
-        let insights = sut.generateInsights(from: snapshot, range: .last30)
+        let insights = sut.generateInsights(from: snapshot, range: .last30, today: date(2026, 9, 4))
         let trend = insights.first { $0.title == "30D Trend" }
 
         XCTAssertNotNil(trend)
@@ -302,7 +302,7 @@ final class StreakInsightEngineTests: XCTestCase {
         }
 
         let snapshot = makeSnapshot(activities: activities)
-        let insights = sut.generateInsights(from: snapshot, range: .last30)
+        let insights = sut.generateInsights(from: snapshot, range: .last30, today: date(2026, 9, 4))
         let trend = insights.first { $0.title == "30D Trend" }
 
         XCTAssertNotNil(trend)
@@ -361,7 +361,7 @@ final class StreakInsightEngineTests: XCTestCase {
         }
         let snapshot = makeSnapshot(activities: activities)
 
-        let insights = sut.generateInsights(from: snapshot, range: .last30)
+        let insights = sut.generateInsights(from: snapshot, range: .last30, today: date(2026, 9, 4))
         let balance = insights.first { $0.title == "30D Balance" }
 
         XCTAssertNotNil(balance)
@@ -376,7 +376,7 @@ final class StreakInsightEngineTests: XCTestCase {
         }
         let snapshot = makeSnapshot(activities: activities)
 
-        let insights = sut.generateInsights(from: snapshot, range: .last30)
+        let insights = sut.generateInsights(from: snapshot, range: .last30, today: date(2026, 9, 4))
         let balance = insights.first { $0.title == "30D Balance" }
 
         XCTAssertNil(balance)
@@ -514,14 +514,14 @@ final class StreakInsightEngineTests: XCTestCase {
     func testCompletionRate_last7DayTitle_reflectsRange() {
         let sut = makeSUT()
         let snapshot = makeSnapshot(activities: [])
-        let insights = sut.generateInsights(from: snapshot, range: .last7)
+        let insights = sut.generateInsights(from: snapshot, range: .last7, today: date(2026, 9, 4))
         XCTAssertEqual(insights.first?.title, "Last 7 Days Completion")
     }
 
     func testCompletionRate_last90DayTitle_reflectsRange() {
         let sut = makeSUT()
         let snapshot = makeSnapshot(activities: [])
-        let insights = sut.generateInsights(from: snapshot, range: .last90)
+        let insights = sut.generateInsights(from: snapshot, range: .last90, today: date(2026, 9, 4))
         XCTAssertEqual(insights.first?.title, "Last 90 Days Completion")
     }
 
@@ -547,7 +547,7 @@ final class StreakInsightEngineTests: XCTestCase {
 
         let activities = Array(activitiesByDate.values)
         let snapshot = makeSnapshot(activities: activities)
-        let heatmap = sut.generateInsights(from: snapshot, range: .last7)
+        let heatmap = sut.generateInsights(from: snapshot, range: .last7, today: date(2026, 9, 4))
             .first { $0.title == "Weekly Heatmap" }
 
         XCTAssertNotNil(heatmap?.heatmapData)
@@ -600,15 +600,15 @@ final class StreakInsightEngineTests: XCTestCase {
         let snapshot = makeSnapshot(activities: activities)
 
         XCTAssertEqual(
-            sut.generateInsights(from: snapshot, range: .last7).first { $0.category == .trend }?.title,
+            sut.generateInsights(from: snapshot, range: .last7, today: date(2026, 9, 4)).first { $0.category == .trend }?.title,
             "7D Trend"
         )
         XCTAssertEqual(
-            sut.generateInsights(from: snapshot, range: .last30).first { $0.category == .trend }?.title,
+            sut.generateInsights(from: snapshot, range: .last30, today: date(2026, 9, 4)).first { $0.category == .trend }?.title,
             "30D Trend"
         )
         XCTAssertEqual(
-            sut.generateInsights(from: snapshot, range: .last90).first { $0.category == .trend }?.title,
+            sut.generateInsights(from: snapshot, range: .last90, today: date(2026, 9, 4)).first { $0.category == .trend }?.title,
             "90D Trend"
         )
     }

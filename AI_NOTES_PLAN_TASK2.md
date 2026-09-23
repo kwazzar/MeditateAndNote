@@ -368,7 +368,7 @@ Follow-ups (tech debt, non-blocking):
 **Що лишилось / відкрите:**
 - Merge `task2` → `main` (коміти `ffb9753` + `63e3245` + `10dda5f` + `351f615`) — очікує рішення юзера
 - **Після merge:** оновити `ARCHITECTURE.md` під Sprint 4 (SemSearch файли + статус disabled) — з Cross-Sprint Concerns
-- `StreakInsightEngineTests` — 3 датазалежних фейли (Saturday 2026-09-19, pre-existing на main; суботній бенчмарк, не Sprint 4)
+- `StreakInsightEngineTests` — були 3 датазалежні фейли: тести з хардкодними датами навколо `2026-09-04`, але `generateInsights` без `today:` → «пливли» з реальною датою (не лише по суботах). **Виправлено 2026-09-23**: всі виклики заякорили `today: date(2026, 9, 4)` → 444/444 green, детерміновано
 - UI-тести запускати лише raw `xcodebuild` (MCP `test_sim` таймаутить на UI): чистий інстал + `defaults write nazar.MeditateAndNote hasCompletedOnboarding -bool true`
 - Реактивація семантичного fallback (шлях у Status) — після появи кращої локальної embedding-моделі (кандидат: `NLContextualEmbedding`, але OTA-ассети)
 
