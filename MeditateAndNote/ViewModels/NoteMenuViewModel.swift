@@ -42,6 +42,7 @@ final class NoteMenuViewModel {
     private func loadNotes() async {
         let allNotes = await notes.currentNotes
         searchState.setAvailableItems(allNotes)
+        logger.info("QA: loaded \(allNotes.count) notes")
     }
 
     func refreshNotes() async {
@@ -52,9 +53,10 @@ final class NoteMenuViewModel {
         do {
             try await notes.delete(with: note.id)
             await refreshNotes()
+            logger.info("QA: deleted note '\(note.title.rawValue)'")
         } catch {
             self.error = .deleteFailed(note.id)
-            logger.error("Error deleting note — \(error.localizedDescription)")
+            logger.error("QA: delete failed \(note.id.rawValue) — \(error.localizedDescription)")
         }
     }
 
@@ -62,6 +64,7 @@ final class NoteMenuViewModel {
     func updateSearch(_ text: String) {
         let query = SearchQuery(text: text)
         searchState.setSearchText(query)
+        logger.info("QA: search query='\(query.text)' hits=\(self.searchState.keywordHits.count)")
     }
 }
 
