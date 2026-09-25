@@ -59,6 +59,13 @@ final class NoteEditorViewModel {
         }
     }
 
+    /// An all-blank note is a mis-tap, never an intent — it must not be
+    /// persisted (the list would fill with "Untitled" empties).
+    var hasContent: Bool {
+        !(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && body.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+    }
+
     init(noteId: NoteID? = nil,
          notes: any NoteProvidable & NoteManageable) {
         self.target = noteId.map(EditTarget.loading) ?? .new
@@ -113,6 +120,7 @@ final class NoteEditorViewModel {
             return
 
         case .new:
+            guard hasContent else { return }
             await saveNewNote()
 
         case let .loaded(id, persisted):

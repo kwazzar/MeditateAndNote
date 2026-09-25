@@ -303,6 +303,29 @@ final class NoteEditorViewModelTests: XCTestCase {
         XCTAssertEqual(added.first?.title, "Untitled")
     }
 
+    func testSave_blankNewNote_createsNothing() async throws {
+        let spy = NoteServiceSpy()
+        let sut = NoteEditorViewModel(notes: spy)
+
+        await sut.save()
+
+        let added = await spy.added
+        XCTAssertTrue(added.isEmpty, "An all-blank note must never be persisted")
+        XCTAssertTrue(sut.isNewNote, "Skipping persist must keep the editor on the new target")
+    }
+
+    func testSave_whitespaceOnlyNote_createsNothing() async throws {
+        let spy = NoteServiceSpy()
+        let sut = NoteEditorViewModel(notes: spy)
+        sut.title = "\n "
+        sut.body = "  \t "
+
+        await sut.save()
+
+        let added = await spy.added
+        XCTAssertTrue(added.isEmpty, "Whitespace-only input is still an empty note")
+    }
+
     func testSave_unchangedExisting_skipsWrite() async throws {
         let spy = NoteServiceSpy()
         let note = Note(title: "Stable", content: "Same")
