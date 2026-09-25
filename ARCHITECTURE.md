@@ -95,6 +95,26 @@ Factored ViewModel constructors:
   `NoteInsightsViewModel` + `NoteInsightsSection` in `NoteMenu`
   (the section reloads on every appear — background passes finish off-tab).
 
+### Semantic Search (Sprint 4 — built, fallback disabled)
+
+- **Runtime path is keyword-only:** `SearchQuery`/`NoteFilter` VOs
+  (case-insensitive substring over title+content, trimmed at the match level)
+  drive `SearchState.displayedItems`. An empty result on a keyword miss is
+  expected — there is no semantic fallback.
+- **Semantic pipeline kept in the repo, not wired:** `SemanticQuery`/
+  `NoteEmbedding` VOs → `EmbeddingService` protocol (`NLEmbeddingService`,
+  NaturalLanguage) → `CoreDataNoteEmbeddingStore` (note-delete cleanup via
+  domain events) → `SemanticSearchManager` actor (+ 11 unit tests). It is not
+  injected in `AppContainer.makeNoteMenuViewModel` and has no fallback branch
+  in `SearchState.displayedItems`.
+- **Why disabled:** measured ranking on real short notes failed (query
+  "space travel": Mars cos 0.24 < irrelevant Groceries 0.35 / Workout 0.38).
+  Re-enable path: re-inject `semanticSearch` in `AppContainer` + restore the
+  `semanticMatches` fallback once a better embedding strategy exists
+  (candidate: `NLContextualEmbedding`, needs OTA assets).
+- End-to-end guard: XCUITest target `MeditateAndNoteUITests`
+  (`testKeywordSearchFiltersWithoutSemanticFallback` etc.).
+
 ## Root & Navigation
 
 ```mermaid
