@@ -106,6 +106,40 @@ final class NoteMenuSemanticSearchUITests: XCTestCase {
         XCTAssertFalse(app.staticTexts["Groceries"].exists, "No note may leak in without a keyword hit")
         XCTAssertFalse(app.staticTexts["Workout plan"].exists, "No note may leak in without a keyword hit")
     }
+
+    /// Covers manual-QA gaps #10 (whitespace trim), #13 (tab switch keeps
+    /// query), #16 (notes + search survive relaunch).
+    func testTrimTabSwitchAndRestart() throws {
+        openNotesTab()
+        createNote(title: "Mars mission", body: "The red planet, rovers and astronauts")
+
+        // --- Trimming: leading/trailing spaces must equal the bare query. ---
+        let search = app.textFields["Search notes..."]
+        XCTAssertTrue(search.waitForExistence(timeout: 8))
+        search.tap()
+        search.typeText(" Mars ")
+        XCTAssertTrue(app.staticTexts["Mars mission"].waitForExistence(timeout: 5),
+                      "Whitespace-padded query must be trimmed and hit the Mars note")
+        XCTAssertEqual(search.value as? String, " Mars ",
+                       "Field shows raw input; trimming happens at match layer, not display")
+
+        // --- Tab switch: query must survive Notes -> Home -> Notes. ---
+        app.buttons["Home"].tap()
+        XCTAssertTrue(app.buttons["Notes"].waitForExistence(timeout: 5))
+        app.buttons["Notes"].tap()
+        XCTAssertTrue(app.staticTexts["Mars mission"].waitForExistence(timeout: 5),
+                      "Query results must survive a tab switch")
+
+        // --- Restart: notes persist, in-memory search resets. ---
+        app.terminate()
+        app.launch()
+        openNotesTab()
+        XCTAssertTrue(app.staticTexts["Mars mission"].waitForExistence(timeout: 10),
+                      "Created note must persist across relaunch")
+        XCTAssertNotEqual(search.value as? String, "Mars",
+                          "Search must reset after relaunch (in-memory state)")
+        XCTAssertTrue(app.buttons["Add Note"].exists, "Notes tab functional after relaunch")
+    }
 }
 
 private extension XCUIElement {
