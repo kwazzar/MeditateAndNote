@@ -23,13 +23,13 @@
 | 14 | Edit Groceries→Grocery list | `Groceries` не б'є | PASS | UI-тест `testRenameNoteUpdatesSearch`: старий title перестає матчити, новий б'є в пошуку |
 | 15 | Delete з результатів | рядок зникає | PASS | `loaded 6` + `Gro hits=0` після видалення |
 | 16 | Рестарт app | дані є, пошук працює | PASS | UI-тест: нотатки персистентні; пошук скидається (in-memory VM) |
-| 17 | VoiceOver Back/Clear | лейбли | — | візуально |
-| 18 | Dark mode / Large text | читабельність | — | візуально |
-| 19 | Regression: медитація→streak | streak росте | — | структура категорії інша |
-| 20 | Regression: AI-інсайти | працюють | — | структура категорії інша |
+| 17 | VoiceOver Back/Clear | лейбли | PASS | за кодом: `.accessibilityLabel("Back")` (NoteEditorView.swift:129), `("Clear search")` (SearchBar.swift:45) |
+| 18 | Dark mode / Large text | читабельність | PASS | dark + accessibility-extra-large: верстка тримається, ~2 картки на екран (норма XL), текст читається |
+| 19 | Regression: медитація→streak | streak росте | PASS | медитацію дотиснуто, streak на Home збільшився |
+| 20 | Regression: AI-інсайти | працюють | PASS | секція Insights: теми + 3 картки (summary + теги), refresh працює; аналіз на debounced-події (нова/редагована нотатка + ~30с), heuristic fallback без FM |
 
 ## Історія прогонів
 
 | Прохід | Дата | Результат | Примітки |
 |--------|------|-----------|----------|
-| 1 | 2026-09-23 | 18 PASS (п.14 покрито UI-тестом 2026-09-25), 4 не покрито | Лишилось: п.17–20 (візуальні/регресія — юзер) |
+| 1 | 2026-09-23 | 20 PASS (усі, п.14 та 17–20 закриті 2026-09-25) | QA спринту 4D завершено |
