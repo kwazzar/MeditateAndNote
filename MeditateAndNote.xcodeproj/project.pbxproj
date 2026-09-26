@@ -25,6 +25,7 @@
 		ED94EC7AAB0A4DEA9699E0DE /* NoteInsightsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07122C96FB9D45AD927BAB76 /* NoteInsightsSection.swift */; };
 		656EFB51DAA945729EF107CA /* NoteInsightTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 441E68DB04904AA091E7274B /* NoteInsightTests.swift */; };
 		DD27AF01DB20457CB5DF09C9 /* NoteInsightManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36795F95436641CF9362FD4A /* NoteInsightManagerTests.swift */; };
+		A0A8F180B9F04563AF2BC043 /* NoteInsightsViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D4FAD89241840CD80A66785EC23C74E /* NoteInsightsViewModelTests.swift */; };
 		36380375A3F74EE7B91B2250 /* CoreDataNoteInsightStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C5AAA57CC8E45009A5A8EE0 /* CoreDataNoteInsightStoreTests.swift */; };
 		053967EF78BB7B14A4784118 /* StreakInsight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D672486C798B4CC2DBFF322 /* StreakInsight.swift */; };
 		096B78E3E88B87EA5E3E59B7 /* UserDefaultsReminderSettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1C20BEA552DE5FA2D6680E4 /* UserDefaultsReminderSettingsStore.swift */; };
@@ -36,7 +37,6 @@
 		3221E85D880F3E3F3CC7D7E5 /* StreakInsightEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C2C893562EB1C321CF1B273 /* StreakInsightEngine.swift */; };
 		3648450FC97396F2224840CD /* ReminderSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1797E6BA050E651155BE0B60 /* ReminderSettings.swift */; };
 		385A8D4039D4420D85CBFFF1 /* MeditateSelectViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AF6A1460BA24AA596E512D2 /* MeditateSelectViewModelTests.swift */; };
-		3BCC2F210BD2E40EE81D0C68 /* NoteAIDraftSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = D44BFFA98B3EBE0C5FEBEF67 /* NoteAIDraftSheet.swift */; };
 		3E3E6AF6D546FC647CD1CBD5 /* AIDraftSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = D75A6A03A0815DD9397A972C /* AIDraftSession.swift */; };
 		3BCCAAAA0000000000000001 /* AIDraftSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BCCAAAA0000000000000003 /* AIDraftSettings.swift */; };
 		3BCCAAAA0000000000000002 /* AIDraftSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BCCAAAA0000000000000004 /* AIDraftSettingsView.swift */; };
@@ -216,6 +216,7 @@
 		07122C96FB9D45AD927BAB76 /* NoteInsightsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteInsightsSection.swift; sourceTree = "<group>"; };
 		441E68DB04904AA091E7274B /* NoteInsightTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteInsightTests.swift; sourceTree = "<group>"; };
 		36795F95436641CF9362FD4A /* NoteInsightManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteInsightManagerTests.swift; sourceTree = "<group>"; };
+		7D4FAD89241840CD80A66785EC23C74E /* NoteInsightsViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteInsightsViewModelTests.swift; sourceTree = "<group>"; };
 		5C5AAA57CC8E45009A5A8EE0 /* CoreDataNoteInsightStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataNoteInsightStoreTests.swift; sourceTree = "<group>"; };
 		DF01E6683058484B8508AA5B /* FoundationModelsDraftServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoundationModelsDraftServiceTests.swift; sourceTree = "<group>"; };
 		2529E2C01C3644608D8576D7 /* AIDraftMetric.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIDraftMetric.swift; sourceTree = "<group>"; };
@@ -314,7 +315,6 @@
 		CC0000042026082800000004 /* CoreDataStreakStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataStreakStore.swift; sourceTree = "<group>"; };
 		CC899512073D5185F389B4B2 /* AISuggestion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AISuggestion.swift; sourceTree = "<group>"; };
 		D35E3DCB24F352F1C7D834E8 /* NotificationScheduling.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NotificationScheduling.swift; sourceTree = "<group>"; };
-		D44BFFA98B3EBE0C5FEBEF67 /* NoteAIDraftSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteAIDraftSheet.swift; sourceTree = "<group>"; };
 		D75A6A03A0815DD9397A972C /* AIDraftSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIDraftSession.swift; sourceTree = "<group>"; };
 		3BCCAAAA0000000000000003 /* AIDraftSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIDraftSettings.swift; sourceTree = "<group>"; };
 		3BCCAAAA0000000000000004 /* AIDraftSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIDraftSettingsView.swift; sourceTree = "<group>"; };
@@ -405,7 +405,6 @@
 		0FCDC88D328F1E47AD434D12 /* AIDraft */ = {
 			isa = PBXGroup;
 			children = (
-				D44BFFA98B3EBE0C5FEBEF67 /* NoteAIDraftSheet.swift */,
 			);
 			path = AIDraft;
 			sourceTree = "<group>";
@@ -668,6 +667,7 @@
 				DF01E6683058484B8508AA5B /* FoundationModelsDraftServiceTests.swift */,
 				441E68DB04904AA091E7274B /* NoteInsightTests.swift */,
 				36795F95436641CF9362FD4A /* NoteInsightManagerTests.swift */,
+				7D4FAD89241840CD80A66785EC23C74E /* NoteInsightsViewModelTests.swift */,
 				5C5AAA57CC8E45009A5A8EE0 /* CoreDataNoteInsightStoreTests.swift */,
 				3BCCAAAA0000000000000023 /* SemanticSearchManagerTests.swift */,
 			);
@@ -1062,6 +1062,7 @@
 				28A91B1F7276A0017B93246A /* AIDraftManagerTests.swift in Sources */,
 				656EFB51DAA945729EF107CA /* NoteInsightTests.swift in Sources */,
 				DD27AF01DB20457CB5DF09C9 /* NoteInsightManagerTests.swift in Sources */,
+				A0A8F180B9F04563AF2BC043 /* NoteInsightsViewModelTests.swift in Sources */,
 				36380375A3F74EE7B91B2250 /* CoreDataNoteInsightStoreTests.swift in Sources */,
 				B50BA45CEDD14CE39B089DD0 /* FoundationModelsDraftServiceTests.swift in Sources */,
 				01028B003F0E4B6097568B82 /* RemoteLLMDraftServiceTests.swift in Sources */,
@@ -1173,7 +1174,6 @@
 				3BCCAAAA0000000000000010 /* CoreDataAIDraftMetricStore.swift in Sources */,
 				C51D477CB42F9FCB911391AD /* CoreDataAIDraftSessionStore.swift in Sources */,
 				D090E4DDC1458412DDFCB91D /* NoteAIDraftViewModel.swift in Sources */,
-				3BCC2F210BD2E40EE81D0C68 /* NoteAIDraftSheet.swift in Sources */,
 				3BCCAAAA0000000000000001 /* AIDraftSettings.swift in Sources */,
 				3BCCAAAA0000000000000002 /* AIDraftSettingsView.swift in Sources */,
 				D6E0907466DD40B4B07F2800 /* NoteTheme.swift in Sources */,

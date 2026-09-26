@@ -99,7 +99,7 @@ final class AppContainer {
 
     @MainActor
     func makeNoteEditorViewModel(noteId: NoteID? = nil) -> NoteEditorViewModel {
-        NoteEditorViewModel(noteId: noteId, notes: noteManager)
+        NoteEditorViewModel(noteId: noteId, notes: noteManager, drafts: aiDraftManager, eventBus: eventBus)
     }
 
     @MainActor
@@ -136,8 +136,11 @@ final class AppContainer {
     }
 
     @MainActor
+    private lazy var noteInsightsViewModel: NoteInsightsViewModel = NoteInsightsViewModel(provider: noteInsightManager, eventBus: eventBus)
+
+    @MainActor
     func makeNoteInsightsViewModel() -> NoteInsightsViewModel {
-        NoteInsightsViewModel(provider: noteInsightManager, eventBus: eventBus)
+        noteInsightsViewModel
     }
 
     @MainActor
