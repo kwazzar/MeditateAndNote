@@ -28,6 +28,12 @@ protocol AIDraftManageable {
     func cancel(sessionID: UUID) async throws
     /// Discard all sessions for a note (e.g. when it is deleted).
     func discardSessions(for noteID: NoteID) async throws
+    /// Accept a single suggestion into the accepted pool and persist.
+    func acceptSuggestion(sessionID: UUID, suggestionID: UUID) async throws -> AIDraftSession
+    /// Accept all pending suggestions and persist.
+    func acceptAllSuggestions(sessionID: UUID) async throws -> AIDraftSession
+    /// Reject an accepted suggestion back to pending and persist.
+    func rejectSuggestion(sessionID: UUID, suggestionID: UUID) async throws -> AIDraftSession
 }
 
 // MARK: - Manager
@@ -151,6 +157,40 @@ final actor AIDraftManager: AIDraftProvidable, AIDraftManageable {
         try await store.save(session)
     }
 
+    func acceptAllSuggestions(sessionID: UUID) async throws -> AIDraftSession {
+        guard var session = try await store.fetch(id: sessionID) else {
+            throw AIDraftError.noContext
+        }
+        session.acceptAll()
+        try await store.save(session)
+        return session
+    }
+
+    func rejectSuggestion(sessionID: UUID, suggestionID: UUID) async throws -> AIDraftSession {
+        guard var session = try await store.fetch(id: sessionID) else {
+            throw AIDraftError.noContext
+        }
+        let suggestion = session.acceptedSuggestions.first { $0.id == suggestionID }
+        guard let suggestion else { throw AIDraftError.noContext }
+        _ = session.reject(suggestion)
+        try await store.save(session)
+        return session
+    }
+
+    func acceptSuggestion(sessionID: UUID, suggestionID: UUID) async throws -> AIDraftSession {
+        guard var session = try await store.fetch(id: sessionID) else {
+            throw AIDraftError.noContext
+        }
+        let suggestion = session.suggestions.first { $0.id == suggestionID } ??
+            session.acceptedSuggestions.first { $0.id == suggestionID }
+        guard let suggestion else { throw AIDraftError.noContext }
+        if !session.acceptedSuggestions.contains(where: { $0.id == suggestionID }) {
+            _ = session.accept(suggestion)
+        }
+        try await store.save(session)
+        return session
+    }
+
     func discardSessions(for noteID: NoteID) async throws {
         try await store.delete(noteID: noteID)
     }
@@ -192,6 +232,30 @@ final actor AIDraftManager: AIDraftProvidable, AIDraftManageable {
         case .providerUnavailable: return .unavailable
         case .emptyResponse: return .emptyResponse
         case .cancelled: return .unknown
+        case .noAcceptedProposals: return .unknown
         }
+    }
+}
+
+// MARK: - Stub (for tests/previews)
+
+struct AIDraftManagerStub: AIDraftProvidable, AIDraftManageable, Sendable {
+    func session(for noteID: NoteID) async throws -> AIDraftSession? { nil }
+    func startDraft(noteID: NoteID, instructions: String, context: NoteContent) async throws -> AIDraftSession {
+        AIDraftSession(noteID: noteID, prompt: AIPrompt(instructions: instructions, noteID: noteID, context: context))
+    }
+    func regenerate(sessionID: UUID) async throws -> AIDraftSession {
+        throw AIDraftError.noContext
+    }
+    func cancel(sessionID: UUID) async throws {}
+    func discardSessions(for noteID: NoteID) async throws {}
+    func acceptSuggestion(sessionID: UUID, suggestionID: UUID) async throws -> AIDraftSession {
+        throw AIDraftError.noContext
+    }
+    func acceptAllSuggestions(sessionID: UUID) async throws -> AIDraftSession {
+        throw AIDraftError.noContext
+    }
+    func rejectSuggestion(sessionID: UUID, suggestionID: UUID) async throws -> AIDraftSession {
+        throw AIDraftError.noContext
     }
 }
