@@ -23,6 +23,7 @@ final class NoteInsightsViewModel {
     var insights: [NoteInsight] = []
     var isRefreshing = false
     var error: NoteAnalysisError?
+    var hasLoaded = false
 
     /// Aggregate theme labels across all insights, most frequent first.
     var topThemes: [String] {
@@ -63,10 +64,13 @@ final class NoteInsightsViewModel {
         do {
             insights = try await provider.insights()
             error = nil
+            hasLoaded = true
         } catch let analysisError as NoteAnalysisError {
             self.error = analysisError
+            hasLoaded = true
             logger.error("Failed to load insights — \(analysisError)")
         } catch {
+            hasLoaded = true
             logger.error("Failed to load insights — \(error.localizedDescription)")
         }
     }
@@ -96,8 +100,9 @@ private extension NoteInsightsViewModel {
                 switch event {
                 case .noteInsightsUpdated:
                     await self.load()
-                case .noteCreated, .noteUpdated, .noteDeleted,
-                     .meditationCompleted, .aiDraftGenerated, .aiDraftMetric:
+                case .noteCreated, .noteUpdated, .noteDeleted:
+                    await self.load()
+                case .meditationCompleted, .aiDraftGenerated, .aiDraftMetric:
                     break
                 }
             }

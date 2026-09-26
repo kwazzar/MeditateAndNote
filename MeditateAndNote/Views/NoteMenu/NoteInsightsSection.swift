@@ -17,16 +17,36 @@ struct NoteInsightsSection: View {
 
     var body: some View {
         Group {
-            if !viewModel.isEmpty {
+            if !viewModel.hasLoaded {
+                loadingState
+            } else if !viewModel.isEmpty {
                 content
             }
         }
-        // Loads on every appearance, not just when non-empty: a background
-        // pass usually finishes while the user is on another tab, so the
-        // section must pick up persisted insights when navigating here.
         .task {
             await viewModel.load()
         }
+    }
+
+    private var loadingState: some View {
+        HStack(spacing: 8) {
+            ProgressView()
+                .scaleEffect(0.8)
+            Text("Loading insights…")
+                .font(.subheadline)
+                .foregroundColor(themeManager.current.textSecondary)
+        }
+        .padding(.vertical, 8)
+        .frame(maxWidth: .infinity)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(.ultraThinMaterial)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .strokeBorder(themeManager.current.dividerColor, lineWidth: 1)
+        )
+        .disabled(true)
     }
 
     private var content: some View {
@@ -59,7 +79,6 @@ struct NoteInsightsSection: View {
                 RoundedRectangle(cornerRadius: 12)
                     .strokeBorder(themeManager.current.dividerColor, lineWidth: 1)
             )
-            .padding(.horizontal)
     }
 }
 
