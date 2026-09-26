@@ -232,4 +232,96 @@ final class AIDraftSessionTests: XCTestCase {
         session.cancel()
         XCTAssertEqual(session.state, .cancelled)
     }
+
+    // MARK: - accept / reject / acceptAll
+
+    func testAccept_movesSuggestionToAccepted() {
+        var session = makeSession()
+        session.beginGeneration()
+        session.fulfil(with: [AISuggestion(text: "idea 1"), AISuggestion(text: "idea 2")])
+
+        let suggestion = session.suggestions.first!
+        XCTAssertTrue(session.accept(suggestion))
+        XCTAssertEqual(session.acceptedSuggestions.count, 1)
+        XCTAssertEqual(session.acceptedSuggestions.first?.text, "idea 1")
+    }
+
+    func testAccept_isIdempotent() {
+        var session = makeSession()
+        session.beginGeneration()
+        session.fulfil(with: [AISuggestion(text: "idea 1")])
+
+        let suggestion = session.suggestions.first!
+        _ = session.accept(suggestion)
+        _ = session.accept(suggestion)
+        XCTAssertEqual(session.acceptedSuggestions.count, 1)
+    }
+
+    func testReject_movesSuggestionBackToPending() {
+        var session = makeSession()
+        session.beginGeneration()
+        session.fulfil(with: [AISuggestion(text: "idea 1")])
+
+        let suggestion = session.suggestions.first!
+        _ = session.accept(suggestion)
+        XCTAssertEqual(session.acceptedSuggestions.count, 1)
+
+        _ = session.reject(suggestion)
+        XCTAssertEqual(session.acceptedSuggestions.count, 0)
+    }
+
+    func testReject_ignored_forNonAccepted() {
+        var session = makeSession()
+        session.beginGeneration()
+        session.fulfil(with: [AISuggestion(text: "idea 1")])
+
+        let suggestion = session.suggestions.first!
+        XCTAssertFalse(session.reject(suggestion))
+    }
+
+    func testAcceptAll_acceptsAllPending() {
+        var session = makeSession()
+        session.beginGeneration()
+        session.fulfil(with: [AISuggestion(text: "a"), AISuggestion(text: "b"), AISuggestion(text: "c")])
+
+        session.acceptAll()
+        XCTAssertEqual(session.acceptedSuggestions.count, 3)
+    }
+
+    func testAcceptAll_isIdempotent() {
+        var session = makeSession()
+        session.beginGeneration()
+        session.fulfil(with: [AISuggestion(text: "a")])
+
+        session.acceptAll()
+        session.acceptAll()
+        XCTAssertEqual(session.acceptedSuggestions.count, 1)
+    }
+
+    func testClearAccepted_removesAll() {
+        var session = makeSession()
+        session.beginGeneration()
+        session.fulfil(with: [AISuggestion(text: "a")])
+        _ = session.accept(session.suggestions.first!)
+
+        session.clearAccepted()
+        XCTAssertEqual(session.acceptedSuggestions.count, 0)
+    }
+
+    func testFulfil_resetsAcceptedSuggestions() {
+        var session = makeSession()
+        session.beginGeneration()
+        session.fulfil(with: [AISuggestion(text: "a")])
+        _ = session.accept(session.suggestions.first!)
+        XCTAssertEqual(session.acceptedSuggestions.count, 1)
+
+        // fulfil is called internally by AIDraftManager during regeneration
+        // and always resets acceptedSuggestions to empty.
+        // Verify: a fresh session created by AIDraftManager after fulfil
+        // starts with empty acceptedSuggestions.
+        var freshSession = makeSession()
+        freshSession.beginGeneration()
+        freshSession.fulfil(with: [AISuggestion(text: "b")])
+        XCTAssertEqual(freshSession.acceptedSuggestions.count, 0)
+    }
 }

@@ -348,4 +348,80 @@ final class AIDraftManagerTests: XCTestCase {
         let after = try await store.fetch(noteID: noteID)
         XCTAssertNil(after)
     }
+
+    // MARK: - accept / reject / acceptAll suggestions
+
+    func testAcceptSuggestion_movesToAccepted() async throws {
+        let service = StubAIDraftService(
+            available: true,
+            nextResult: .success([AISuggestion(text: "a"), AISuggestion(text: "b")])
+        )
+        let manager = makeManager(service: service)
+        let noteID = NoteID()
+
+        let session = try await manager.startDraft(noteID: noteID, instructions: "i", context: NoteContent("c"))
+        let suggestion = session.suggestions.first!
+
+        let updated = try await manager.acceptSuggestion(sessionID: session.id, suggestionID: suggestion.id)
+        XCTAssertEqual(updated.acceptedSuggestions.count, 1)
+        XCTAssertEqual(updated.acceptedSuggestions.first?.text, "a")
+
+        let persisted = try await store.fetch(id: session.id)
+        XCTAssertEqual(persisted?.acceptedSuggestions.count, 1)
+    }
+
+    func testAcceptSuggestion_isIdempotent() async throws {
+        let service = StubAIDraftService(
+            available: true,
+            nextResult: .success([AISuggestion(text: "a")])
+        )
+        let manager = makeManager(service: service)
+        let noteID = NoteID()
+
+        let session = try await manager.startDraft(noteID: noteID, instructions: "i", context: NoteContent("c"))
+        let suggestion = session.suggestions.first!
+
+        _ = try await manager.acceptSuggestion(sessionID: session.id, suggestionID: suggestion.id)
+        _ = try await manager.acceptSuggestion(sessionID: session.id, suggestionID: suggestion.id)
+
+        let updated = try await store.fetch(id: session.id)
+        XCTAssertEqual(updated?.acceptedSuggestions.count, 1)
+    }
+
+    func testRejectSuggestion_movesBackToPending() async throws {
+        let service = StubAIDraftService(
+            available: true,
+            nextResult: .success([AISuggestion(text: "a")])
+        )
+        let manager = makeManager(service: service)
+        let noteID = NoteID()
+
+        let session = try await manager.startDraft(noteID: noteID, instructions: "i", context: NoteContent("c"))
+        let suggestion = session.suggestions.first!
+
+        _ = try await manager.acceptSuggestion(sessionID: session.id, suggestionID: suggestion.id)
+        let acceptedAfterAccept = (try await store.fetch(id: session.id))?.acceptedSuggestions.count
+        XCTAssertEqual(acceptedAfterAccept, 1)
+
+        _ = try await manager.rejectSuggestion(sessionID: session.id, suggestionID: suggestion.id)
+        let acceptedAfterReject = (try await store.fetch(id: session.id))?.acceptedSuggestions.count
+        XCTAssertEqual(acceptedAfterReject, 0)
+    }
+
+    func testAcceptAllSuggestions_acceptsAll() async throws {
+        let service = StubAIDraftService(
+            available: true,
+            nextResult: .success([AISuggestion(text: "a"), AISuggestion(text: "b"), AISuggestion(text: "c")])
+        )
+        let manager = makeManager(service: service)
+        let noteID = NoteID()
+
+        let session = try await manager.startDraft(noteID: noteID, instructions: "i", context: NoteContent("c"))
+
+        let updated = try await manager.acceptAllSuggestions(sessionID: session.id)
+        XCTAssertEqual(updated.acceptedSuggestions.count, 3)
+
+        let persisted = try await store.fetch(id: session.id)
+        XCTAssertEqual(persisted?.acceptedSuggestions.count, 3)
+    }
 }
