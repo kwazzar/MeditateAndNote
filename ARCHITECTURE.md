@@ -69,12 +69,12 @@ hopping to `@MainActor` before touching the observers (`StreakTracker`,
 Factored ViewModel constructors:
 
 - `makeMainViewModel()` → `MainViewModel(meditationService, selectionStore)`
-- `makeNoteEditorViewModel(noteId:)` → `NoteEditorViewModel(noteId, noteManager)`
+- `makeNoteEditorViewModel(noteId:)` → `NoteEditorViewModel(noteId, notes, drafts, eventBus)`
 - `makeMeditateSelectViewModel()` → `MeditateSelectViewModel(...)`
 - `makeMeditationViewModel(for:)` → `MeditationViewModel(meditation, eventBus, soundPlayer)`
 - `makeNoteMenuViewModel()` → the shared singleton `NoteMenuViewModel`
 - `makeNoteAIDraftViewModel(noteID:currentContent:)` → `NoteAIDraftViewModel(drafts, eventBus)`
-- `makeNoteInsightsViewModel()` → `NoteInsightsViewModel(noteInsightManager, eventBus)`
+- `makeNoteInsightsViewModel()` → cached `lazy var` in `AppContainer`
 - `makeOnboardingViewModel(onCompletion:)` → `OnboardingViewModel(store, pages, onCompletion)`
 - `makeInsightsViewModel()` → `InsightsViewModel(StreakInsightManager)`
 
@@ -85,6 +85,14 @@ Factored ViewModel constructors:
   opt-in fallback, `DisabledAIDraftService`) → `AIDraftManager` actor
   (`AIDraftProvidable`/`AIDraftManageable`, events `.aiDraftGenerated` /
   `.aiDraftMetric` → `CoreDataAIDraftMetricStore`).
+  - `AIDraftManager` supports `acceptSuggestion`, `rejectSuggestion`,
+    `acceptAllSuggestions`, and `AIDraftManagerStub` for tests.
+- **Inline AI bar:** `NoteEditorView` shows `aiDraftBar` inline (bottom
+  sheet) when `aiDraftViewModel != nil` and `uiState == .ready` or `.loading`.
+  The sparkles button in the top bar calls `startAIDraft()`, shows a
+  `ProgressView` while generating, and is disabled during generation.
+  `NoteEditorViewModel` exposes `showAIDraftBar`, `pendingSuggestions`,
+  `acceptedSuggestions`, `isAIDraftGenerating`.
 - Insights: `NoteInsight` entity + `NoteInsightsCollection` (max 1 per note)
   → `NoteAnalyzer` protocol (`HeuristicNoteAnalyzer` always available,
   `FoundationModelsNoteAnalyzer` upgrades quality on iOS 26+) →
@@ -93,7 +101,8 @@ Factored ViewModel constructors:
   `.noteInsightsUpdated`) → `NoteInsightStore`
   (`CoreDataNoteInsightStore` / `InMemoryNoteInsightStore`) →
   `NoteInsightsViewModel` + `NoteInsightsSection` in `NoteMenu`
-  (the section reloads on every appear — background passes finish off-tab).
+  (shows loading spinner until `hasLoaded`, hides when empty,
+  refreshes on `.noteCreated/.noteUpdated/.noteDeleted` events).
 
 ### Semantic Search (Sprint 4 — built, fallback disabled)
 
