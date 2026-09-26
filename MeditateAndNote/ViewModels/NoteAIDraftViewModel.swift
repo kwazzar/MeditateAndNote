@@ -37,8 +37,13 @@ final class NoteAIDraftViewModel {
         !currentContent.rawValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
-    /// Fired with the chosen suggestion when the user taps "Insert".
-    var onInsert: ((AIDraftSession, AISuggestion) -> Void)?
+      /// Fired with the chosen suggestion when the user taps "Insert".
+      @MainActor var onInsert: ((AIDraftSession, AISuggestion) -> Void)?
+      /// Fired with all accepted suggestions when the user taps "Transfer to Note".
+      @MainActor var onAcceptAll: (([AISuggestion]) -> Void)?
+
+     /// Currently accepted suggestions from the active session.
+     private(set) var acceptedSuggestions: [AISuggestion] = []
 
     // MARK: - Dependencies
 
@@ -87,6 +92,8 @@ final class NoteAIDraftViewModel {
             )
             present(session)
             lastError = nil
+        } catch is CancellationError {
+            uiState = .idle
         } catch let error as AIDraftError {
             handleGenerationFailure(error)
         } catch {
@@ -126,6 +133,51 @@ final class NoteAIDraftViewModel {
             eventBus.publish(.aiDraftMetric(event: .suggestionInserted(index: index)))
         }
         onInsert?(session, suggestion)
+    }
+
+    /// Accept a suggestion into the accepted pool via the manager and persist.
+    func accept(_ suggestion: AISuggestion, from session: AIDraftSession) async {
+        do {
+            let updated = try await drafts.acceptSuggestion(sessionID: session.id, suggestionID: suggestion.id)
+            if let idx = sessions.firstIndex(where: { $0.id == session.id }) {
+                sessions[idx] = updated
+            }
+            acceptedSuggestions = updated.acceptedSuggestions
+        } catch {
+            lastError = error as? AIDraftError ?? .emptyResponse
+        }
+    }
+
+    /// Reject an accepted suggestion back to pending via the manager and persist.
+    func reject(_ suggestion: AISuggestion, from session: AIDraftSession) async {
+        do {
+            let updated = try await drafts.rejectSuggestion(sessionID: session.id, suggestionID: suggestion.id)
+            if let idx = sessions.firstIndex(where: { $0.id == session.id }) {
+                sessions[idx] = updated
+            }
+            acceptedSuggestions = updated.acceptedSuggestions
+        } catch {
+            lastError = error as? AIDraftError ?? .emptyResponse
+        }
+    }
+
+    /// Accept all pending suggestions via the manager and persist.
+    func acceptAll(from session: AIDraftSession) async {
+        do {
+            let updated = try await drafts.acceptAllSuggestions(sessionID: session.id)
+            if let idx = sessions.firstIndex(where: { $0.id == session.id }) {
+                sessions[idx] = updated
+            }
+            acceptedSuggestions = updated.acceptedSuggestions
+        } catch {
+            lastError = error as? AIDraftError ?? .emptyResponse
+        }
+    }
+
+    /// Transfer all accepted suggestions to the note via the callback.
+    func transferAccepted(from session: AIDraftSession) {
+        guard !acceptedSuggestions.isEmpty else { return }
+        onAcceptAll?(acceptedSuggestions)
     }
 
     /// Called when the sheet disappears: reports the remaining served

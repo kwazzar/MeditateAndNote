@@ -29,9 +29,36 @@ final class NoteEditorViewModel {
     var body: String = ""
 
     private let notes: any NoteProvidable & NoteManageable
+    private let drafts: any AIDraftProvidable & AIDraftManageable
+    private let eventBus: DomainEventPublisher
     private var target: EditTarget
     private var autosaveTask: Task<Void, Never>?
     private var loadTask: Task<Void, Never>?
+
+    /// Internal AI draft view model, nil until the user first triggers generation.
+    var aiDraftViewModel: NoteAIDraftViewModel?
+
+    /// True when the inline AI suggestion bar should be visible.
+    var showAIDraftBar: Bool {
+        aiDraftViewModel != nil && (aiDraftViewModel?.uiState == .ready || aiDraftViewModel?.uiState == .loading)
+    }
+
+    /// True when AI is still generating suggestions.
+    var isAIDraftLoading: Bool {
+        aiDraftViewModel?.uiState == .loading
+    }
+
+    /// Pending suggestions not yet accepted.
+    var pendingSuggestions: [AISuggestion] {
+        guard let vm = aiDraftViewModel else { return [] }
+        let acceptedIDs = Set(vm.acceptedSuggestions.map { $0.id })
+        return vm.sessions.first?.suggestions.filter { !acceptedIDs.contains($0.id) } ?? []
+    }
+
+    /// Accepted suggestions waiting to be transferred.
+    var acceptedSuggestions: [AISuggestion] {
+        aiDraftViewModel?.acceptedSuggestions ?? []
+    }
 
     var isNewNote: Bool {
         if case .new = target { return true }
@@ -67,9 +94,13 @@ final class NoteEditorViewModel {
     }
 
     init(noteId: NoteID? = nil,
-         notes: any NoteProvidable & NoteManageable) {
+         notes: any NoteProvidable & NoteManageable,
+         drafts: any AIDraftProvidable & AIDraftManageable = AIDraftManagerStub(),
+         eventBus: DomainEventPublisher = DomainEventBus.shared) {
         self.target = noteId.map(EditTarget.loading) ?? .new
         self.notes = notes
+        self.drafts = drafts
+        self.eventBus = eventBus
 
         if let noteId {
             loadTask = Task { [weak self] in
@@ -160,14 +191,75 @@ final class NoteEditorViewModel {
         }
     }
 
-    // MARK: - AI Draft Integration
+    // MARK: - AI Draft (inline bottom bar)
 
-    /// Applies a suggestion picked from the AI sheet by appending it to the
-    /// current note body (the user keeps their own text and can edit the
-    /// addition), then nudges autosave.
+    /// True when AI is currently generating suggestions.
+    var isAIDraftGenerating: Bool {
+        aiDraftViewModel?.uiState == .loading
+    }
+
+    /// Creates and starts the AI draft VM for this note.
+    /// Guarded — calling while already generating is a no-op.
+    func startAIDraft() async {
+        guard aiDraftViewModel == nil else { return }
+        let noteID = currentNoteID ?? NoteID()
+        let content = NoteContent(body)
+        let vm = NoteAIDraftViewModel(
+            noteID: noteID,
+            currentContent: content,
+            drafts: drafts,
+            eventBus: eventBus
+        )
+        vm.onAcceptAll = { [weak self] proposals in
+            self?.applyAcceptedProposals(proposals)
+        }
+        aiDraftViewModel = vm
+        await vm.start()
+    }
+
+    /// Accept a suggestion.
+    func acceptSuggestion(_ suggestion: AISuggestion) async {
+        guard let vm = aiDraftViewModel else { return }
+        let session = vm.sessions.first!
+        await vm.accept(suggestion, from: session)
+    }
+
+    /// Reject an accepted suggestion back to pending.
+    func rejectSuggestion(_ suggestion: AISuggestion) async {
+        guard let vm = aiDraftViewModel else { return }
+        let session = vm.sessions.first!
+        await vm.reject(suggestion, from: session)
+    }
+
+    /// Accept all pending suggestions.
+    func acceptAllSuggestions() async {
+        guard let vm = aiDraftViewModel else { return }
+        let session = vm.sessions.first!
+        await vm.acceptAll(from: session)
+    }
+
+    /// Transfer all accepted suggestions into the note body.
+    func transferAccepted() {
+        guard let vm = aiDraftViewModel else { return }
+        let session = vm.sessions.first!
+        vm.transferAccepted(from: session)
+        aiDraftViewModel = nil
+    }
+
+    /// Applies a single suggestion by appending it to the current note body.
     func applyDraft(_ content: NoteContent) {
         guard !content.rawValue.isEmpty else { return }
         let addition = content.rawValue.trimmingCharacters(in: .newlines)
+        let existing = body.trimmingCharacters(in: .whitespacesAndNewlines)
+        body = existing.isEmpty ? addition : body + "\n\n" + addition
+        onTextChanged()
+    }
+
+    /// Transfers all accepted proposals into the note body.
+    func applyAcceptedProposals(_ proposals: [AISuggestion]) {
+        guard !proposals.isEmpty else { return }
+        let texts = proposals.map { $0.text.trimmingCharacters(in: .newlines) }
+        let addition = texts.joined(separator: "\n\n")
         let existing = body.trimmingCharacters(in: .whitespacesAndNewlines)
         body = existing.isEmpty ? addition : body + "\n\n" + addition
         onTextChanged()
