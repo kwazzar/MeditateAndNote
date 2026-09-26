@@ -25,7 +25,7 @@ protocol NoteManageable {
 
 // MARK: - Errors
 
-enum NoteOperationError: Error {
+enum NoteOperationError: Error, Sendable {
     case loadFailed(NoteID)
     case saveFailed
     case deleteFailed(NoteID)
