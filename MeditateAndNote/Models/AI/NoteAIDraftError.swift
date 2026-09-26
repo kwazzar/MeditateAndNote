@@ -23,4 +23,6 @@ enum AIDraftError: String, Error, Equatable, Codable, Sendable {
     case contextTooLong
     /// Generation was cancelled by the user or by a newer generation.
     case cancelled
+    /// No accepted proposals to transfer to the note.
+    case noAcceptedProposals
 }

@@ -31,14 +31,22 @@ struct AIDraftSession: Identifiable, Equatable, Codable, Sendable {
     /// Frozen prompt that produced (or is producing) this session.
     let prompt: AIPrompt
     private(set) var suggestions: [AISuggestion]
+    private(set) var acceptedSuggestions: [AISuggestion]
     private(set) var state: AIDraftState
     private(set) var createdAt: Date
+
+    /// Count of suggestions the user has accepted.
+    var acceptedCount: Int { acceptedSuggestions.count }
+
+    /// True when there are accepted suggestions waiting to be transferred.
+    var hasAcceptedSuggestions: Bool { !acceptedSuggestions.isEmpty }
 
     init(
         id: UUID = UUID(),
         noteID: NoteID,
         prompt: AIPrompt,
         suggestions: [AISuggestion] = [],
+        acceptedSuggestions: [AISuggestion] = [],
         state: AIDraftState = .idle,
         createdAt: Date = Date()
     ) {
@@ -46,6 +54,7 @@ struct AIDraftSession: Identifiable, Equatable, Codable, Sendable {
         self.noteID = noteID
         self.prompt = prompt
         self.suggestions = suggestions
+        self.acceptedSuggestions = acceptedSuggestions
         self.state = state
         self.createdAt = createdAt
     }
@@ -78,10 +87,42 @@ struct AIDraftSession: Identifiable, Equatable, Codable, Sendable {
 
     /// Deliver a batch of suggestions. Enforces the max-suggestions invariant
     /// and the "no generation after ready/cancelled" invariant.
+    /// Resets accepted suggestions since a fresh generation replaces the pool.
     mutating func fulfil(with newSuggestions: [AISuggestion]) {
         guard state == .generating else { return }
         suggestions = Array(newSuggestions.prefix(prompt.maxSuggestions))
+        acceptedSuggestions = []
         state = suggestions.isEmpty ? .failed(.emptyResponse) : .ready
+    }
+
+    /// Accept a pending suggestion into the accepted pool.
+    /// Returns true if the suggestion was moved from pending to accepted.
+    @discardableResult
+    mutating func accept(_ suggestion: AISuggestion) -> Bool {
+        guard let index = suggestions.firstIndex(where: { $0.id == suggestion.id }),
+              !acceptedSuggestions.contains(where: { $0.id == suggestion.id }) else { return false }
+        acceptedSuggestions.append(suggestions[index])
+        return true
+    }
+
+    /// Remove a suggestion from the accepted pool back to pending.
+    @discardableResult
+    mutating func reject(_ suggestion: AISuggestion) -> Bool {
+        guard let index = acceptedSuggestions.firstIndex(where: { $0.id == suggestion.id }) else { return false }
+        acceptedSuggestions.remove(at: index)
+        return true
+    }
+
+    /// Accept all pending suggestions.
+    mutating func acceptAll() {
+        for suggestion in suggestions where !acceptedSuggestions.contains(where: { $0.id == suggestion.id }) {
+            acceptedSuggestions.append(suggestion)
+        }
+    }
+
+    /// Clear all accepted suggestions.
+    mutating func clearAccepted() {
+        acceptedSuggestions = []
     }
 
     /// Surface a provider failure.
@@ -99,4 +140,5 @@ struct AIDraftSession: Identifiable, Equatable, Codable, Sendable {
             break
         }
     }
+    
 }

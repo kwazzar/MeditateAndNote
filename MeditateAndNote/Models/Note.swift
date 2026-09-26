@@ -9,7 +9,7 @@ import Foundation
 
 //MARK: - Value Types
 
-struct NoteID: Hashable, Codable {
+struct NoteID: Hashable, Codable, Sendable {
     let rawValue: UUID
 
     init() { self.rawValue = UUID() }
@@ -37,7 +37,7 @@ struct NoteID: Hashable, Codable {
 
 //MARK: - NoteTitle
 
-struct NoteTitle: Hashable, Codable {
+struct NoteTitle: Hashable, Codable, Sendable {
     let rawValue: String
 
     init(_ rawValue: String) {
@@ -65,7 +65,7 @@ extension NoteTitle {
 
 //MARK: - NoteContent
 
-struct NoteContent: Hashable, Codable {
+struct NoteContent: Hashable, Codable, Sendable {
     let rawValue: String
 
     init(_ rawValue: String) {
@@ -91,7 +91,7 @@ extension NoteContent {
 
 //MARK: - Note
 
-struct Note: Codable, Identifiable, Equatable {
+struct Note: Codable, Identifiable, Equatable, Sendable {
     enum CodingKeys: String, CodingKey {
         case id
         case title

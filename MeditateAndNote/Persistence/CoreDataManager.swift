@@ -235,6 +235,12 @@ final class CoreDataManager {
         aiDraftSuggestions.attributeType = .binaryDataAttributeType
         aiDraftSuggestions.isOptional = false
 
+        let aiDraftAccepted = NSAttributeDescription()
+        aiDraftAccepted.name = "acceptedSuggestionsJSON"
+        aiDraftAccepted.attributeType = .binaryDataAttributeType
+        aiDraftAccepted.isOptional = false
+        aiDraftAccepted.defaultValue = Data()
+
         let aiDraftState = NSAttributeDescription()
         aiDraftState.name = "stateRaw"
         aiDraftState.attributeType = .stringAttributeType
@@ -249,7 +255,7 @@ final class CoreDataManager {
 
         aiDraftEntity.properties = [
             aiDraftID, aiDraftNoteID, aiDraftPrompt,
-            aiDraftSuggestions, aiDraftState, aiDraftCreatedAt,
+            aiDraftSuggestions, aiDraftAccepted, aiDraftState, aiDraftCreatedAt,
         ]
 
         // ── CDAIDraftMetric ────────────────────────────────────

@@ -100,10 +100,12 @@ final class CoreDataAIDraftSessionStore: AIDraftSessionStore {
               let noteID = object.value(forKey: "noteID") as? UUID,
               let promptData = object.value(forKey: "promptJSON") as? Data,
               let suggestionsData = object.value(forKey: "suggestionsJSON") as? Data,
+              let acceptedData = object.value(forKey: "acceptedSuggestionsJSON") as? Data,
               let stateRaw = object.value(forKey: "stateRaw") as? String,
               let createdAt = object.value(forKey: "createdAt") as? Date,
               let prompt = try? JSONDecoder().decode(AIPrompt.self, from: promptData),
               let suggestions = try? JSONDecoder().decode([AISuggestion].self, from: suggestionsData),
+              let acceptedSuggestions = try? JSONDecoder().decode([AISuggestion].self, from: acceptedData),
               let state = decodeState(stateRaw) else {
             return nil
         }
@@ -112,6 +114,7 @@ final class CoreDataAIDraftSessionStore: AIDraftSessionStore {
             noteID: NoteID(rawValue: noteID),
             prompt: prompt,
             suggestions: suggestions,
+            acceptedSuggestions: acceptedSuggestions,
             state: state,
             createdAt: createdAt
         )
@@ -122,6 +125,7 @@ final class CoreDataAIDraftSessionStore: AIDraftSessionStore {
         object.setValue(session.noteID.rawValue, forKey: "noteID")
         object.setValue(try? JSONEncoder().encode(session.prompt), forKey: "promptJSON")
         object.setValue(try? JSONEncoder().encode(session.suggestions), forKey: "suggestionsJSON")
+        object.setValue(try? JSONEncoder().encode(session.acceptedSuggestions), forKey: "acceptedSuggestionsJSON")
         object.setValue(encodeState(session.state), forKey: "stateRaw")
         object.setValue(session.createdAt, forKey: "createdAt")
     }
