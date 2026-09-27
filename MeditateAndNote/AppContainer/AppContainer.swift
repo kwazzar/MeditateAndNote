@@ -17,89 +17,54 @@ final class AppContainer {
     /// only for previews/tests, which intentionally stay isolated.
     static let shared = AppContainer()
 
-    // MARK: - Services (Singletons)
+    // MARK: - Scopes
+
+    /// Lazy on purpose: every scope opens CoreData stacks and/or loads models
+    /// (`NLEmbeddingService`, `AIDraftServiceFactory`). The event loop resolves
+    /// them through a closure, so nothing is built until something needs it.
+    private lazy var streak = StreakScope()
+    private lazy var notes = NoteScope(localDataSource: localDataSource, eventBus: eventBus)
+    private lazy var aiDraft = AIDraftScope(eventBus: eventBus)
+    private lazy var meditation = MeditationScope()
+    private lazy var search = SearchScope()
+    private lazy var settings = SettingsScope()
+
+    // MARK: - Core
+
     private let eventBus = DomainEventBus.shared
-
     private lazy var localDataSource: any NoteDataSource = CoreDataNoteDataSource()
+    private let eventLoop = EventLoopCoordinator()
 
-    private(set) lazy var streakTracker = StreakTracker(calendar: .current, store: CoreDataStreakStore())
-    private(set) lazy var insightManager = StreakInsightManager(
-        snapshotProvider: streakTracker as any StreakSnapshotProvidable
-    )
-    private(set) lazy var meditationSessionStore = CoreDataSessionStore()
-    private let meditationService: MeditationService = SampleMeditationService()
-    private(set) lazy var selectionStore = MeditationSelectionStore()
-    private(set) lazy var soundSettings = SoundSettings.shared
-    private(set) lazy var animationSettings = AnimationSettings.shared
-    private(set) lazy var onboardingStore: any OnboardingStore = UserDefaultsOnboardingStore()
-    private(set) lazy var reminderManager = ReminderManager(
-        store: UserDefaultsReminderSettingsStore(),
-        scheduler: SystemNotificationScheduler()
-    )
+    // MARK: - Long-lived ViewModels
 
-    private lazy var noteManager = NoteManager(local: localDataSource, eventBus: eventBus)
-
-    // MARK: - AI Settings
-
+    /// Single shared instance: NoteMenu binds one VM for its whole lifetime, so
+    /// the list loads once and stays fresh via domain events. A fresh VM per
+    /// render would leak event-bus subscriptions.
+    @MainActor private lazy var noteMenuViewModel = NoteMenuViewModel(notes: notes.manager)
+    @MainActor private lazy var noteInsightsViewModel = NoteInsightsViewModel(provider: notes.insightManager, eventBus: eventBus)
     @MainActor private lazy var aiSettingsStore = AIDraftSettingsStoreObservable()
 
-    // MARK: - AI Draft Services
-
-    private lazy var aiDraftService: any AIDraftService = AIDraftServiceFactory.make()
-    private lazy var aiDraftSessionStore: any AIDraftSessionStore = CoreDataAIDraftSessionStore()
-    private lazy var aiDraftMetricStore: any AIDraftMetricStore = CoreDataAIDraftMetricStore()
-    private lazy var aiDraftManager = AIDraftManager(
-        service: aiDraftService,
-        store: aiDraftSessionStore,
-        eventBus: eventBus
-    )
-
-    // MARK: - Note Insights (Sprint 3)
-
-    private lazy var noteInsightAnalyzer: any NoteAnalyzer = FoundationModelsNoteAnalyzer()
-    private lazy var noteInsightStore: any NoteInsightStore = CoreDataNoteInsightStore()
-    private lazy var noteInsightManager = NoteInsightManager(
-        analyzer: noteInsightAnalyzer,
-        store: noteInsightStore,
-        notesProvider: { [noteManager] in await noteManager.currentNotes },
-        eventBus: eventBus
-    )
-
-    // MARK: - Semantic Search (Sprint 4)
-
-    private lazy var embeddingService: any EmbeddingService = NLEmbeddingService()
-    private lazy var noteEmbeddingStore: any NoteEmbeddingStore = CoreDataNoteEmbeddingStore()
-    private lazy var semanticSearchManager = SemanticSearchManager(
-        service: embeddingService,
-        store: noteEmbeddingStore
-    )
-
-    /// Single shared instance: NoteMenu binds one VM for its whole lifetime,
-    /// so the list loads once and stays fresh via domain events. Creating a
-    /// fresh VM per render would leak event-bus subscriptions.
-    @MainActor
-    private(set) lazy var noteMenuViewModel = NoteMenuViewModel(
-        notes: noteManager
-    )
-
-    private var eventsTask: Task<Void, Never>?
+    // MARK: - Init
 
     init() {
-        startEventListening()
+        eventLoop.start(eventBus: eventBus) { [self] in
+            [streak, notes, aiDraft, meditation, search]
+        }
     }
 
     // MARK: - ViewModels Factory Methods
 
+    @MainActor
     func makeMainViewModel() -> MainViewModel {
         MainViewModel(
-            meditationService: meditationService,
-            selectionStore: selectionStore
+            meditationService: meditation.service,
+            selectionStore: meditation.selectionStore
         )
     }
 
     @MainActor
     func makeNoteEditorViewModel(noteId: NoteID? = nil) -> NoteEditorViewModel {
-        NoteEditorViewModel(noteId: noteId, notes: noteManager, drafts: aiDraftManager, eventBus: eventBus)
+        NoteEditorViewModel(noteId: noteId, notes: notes.manager, drafts: aiDraft.manager, eventBus: eventBus)
     }
 
     @MainActor
@@ -107,7 +72,7 @@ final class AppContainer {
         NoteAIDraftViewModel(
             noteID: noteID,
             currentContent: currentContent,
-            drafts: aiDraftManager,
+            drafts: aiDraft.manager,
             eventBus: eventBus
         )
     }
@@ -119,7 +84,7 @@ final class AppContainer {
 
     @MainActor
     func makeMeditateSelectViewModel() -> MeditateSelectViewModel {
-        MeditateSelectViewModel(meditationService: meditationService, selectionStore: selectionStore)
+        MeditateSelectViewModel(meditationService: meditation.service, selectionStore: meditation.selectionStore)
     }
 
     @MainActor
@@ -136,9 +101,6 @@ final class AppContainer {
     }
 
     @MainActor
-    private lazy var noteInsightsViewModel: NoteInsightsViewModel = NoteInsightsViewModel(provider: noteInsightManager, eventBus: eventBus)
-
-    @MainActor
     func makeNoteInsightsViewModel() -> NoteInsightsViewModel {
         noteInsightsViewModel
     }
@@ -146,7 +108,7 @@ final class AppContainer {
     @MainActor
     func makeOnboardingViewModel(onCompletion: @escaping () -> Void) -> OnboardingViewModel {
         OnboardingViewModel(
-            store: onboardingStore,
+            store: settings.onboardingStore,
             pages: OnboardingPage.appSlides,
             onCompletion: onCompletion
         )
@@ -154,54 +116,28 @@ final class AppContainer {
 
     @MainActor
     func makeInsightsViewModel() -> InsightsViewModel {
-        InsightsViewModel(manager: insightManager)
+        InsightsViewModel(manager: streak.insightManager)
     }
-}
 
-// MARK: - Domain Events
+    // MARK: - Forwarding (kept so existing call sites don't change)
 
-private extension AppContainer {
-    /// The single consumer of the bus. Chain:
-    ///
-    ///     eventBus.publish(event)            // emitter's thread (e.g. NoteManager actor)
-    ///     └─ AsyncStream<DomainEvent>.events // bus fans the event out to each consumer
-    ///        └─ this Task (for await)        // stored in `eventsTask`, cancellable
-    ///           └─ switch, on @MainActor     // handlers may mutate observable/CoreData state
-    ///
-    /// Events are processed sequentially, in publish order. The bus publishes on the
-    /// emitter's thread, so everything here runs on the main actor after a hop.
-    func startEventListening() {
-        eventsTask = Task { @MainActor [weak self] in
-            guard let self else { return }
-            for await event in self.eventBus.events {
-                switch event {
-                case .noteCreated, .noteUpdated:
-                    await self.streakTracker.handle(event)
-                    self.insightManager.handle(event)
-                    await self.noteInsightManager.handle(event)
-                case .noteDeleted(let noteID):
-                    await self.streakTracker.handle(event)
-                    self.insightManager.handle(event)
-                    // When a note is deleted its AI draft sessions are orphans — clean
-                    // them up so the store doesn't accumulate rows for notes that no
-                    // longer exist.
-                    try? await self.aiDraftManager.discardSessions(for: noteID)
-                    await self.noteInsightManager.handle(event)
-                    await self.semanticSearchManager.deleteEmbedding(for: noteID)
-                case .meditationCompleted:
-                    await self.streakTracker.handle(event)
-                    self.insightManager.handle(event)
-                    await self.meditationSessionStore.handle(event)
-                case .aiDraftGenerated:
-                    break
-                case .aiDraftMetric:
-                    await self.aiDraftMetricStore.handle(event)
-                case .noteInsightsUpdated:
-                    break
-                }
-            }
-        }
-    }
+    var streakTracker: StreakTracker { streak.streakTracker }
+    var insightManager: StreakInsightManager { streak.insightManager }
+    var meditationSessionStore: CoreDataSessionStore { meditation.store }
+    var reminderManager: ReminderManager { settings.reminderManager }
+    var soundSettings: SoundSettings { settings.soundSettings }
+    var animationSettings: AnimationSettings { settings.animationSettings }
+    var onboardingStore: any OnboardingStore { settings.onboardingStore }
+    var noteManager: NoteManager { notes.manager }
+    var aiDraftManager: AIDraftManager { aiDraft.manager }
+    var aiDraftSessionStore: any AIDraftSessionStore { aiDraft.sessionStore }
+    var aiDraftMetricStore: any AIDraftMetricStore { aiDraft.metricStore }
+    var embeddingService: any EmbeddingService { search.embeddingService }
+    var noteEmbeddingStore: any NoteEmbeddingStore { search.noteEmbeddingStore }
+    var semanticSearchManager: SemanticSearchManager { search.manager }
+    var noteInsightManager: NoteInsightManager { notes.insightManager }
+    var meditationService: MeditationService { meditation.service }
+    var selectionStore: MeditationSelectionStore { meditation.selectionStore }
 }
 
 // MARK: - Environment
