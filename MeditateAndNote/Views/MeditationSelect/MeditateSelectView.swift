@@ -46,9 +46,6 @@ struct MeditateSelectView: View {
         .sheet(isPresented: $showSoundSettings) {
             SoundSettingsSheet(soundSettings: container.soundSettings)
         }
-        .onAppear {
-            viewModel.loadMeditations()
-        }
     }
 }
 

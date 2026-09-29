@@ -16,6 +16,15 @@ struct MeditationScope: DomainEventRouting {
         selectionStore = MeditationSelectionStore()
     }
 
+    static func handles(_ event: DomainEvent) -> Bool {
+        switch event {
+        case .meditationCompleted:
+            return true
+        case .noteCreated, .noteUpdated, .noteDeleted, .aiDraftGenerated, .aiDraftMetric, .noteInsightsUpdated:
+            return false
+        }
+    }
+
     func handle(_ event: DomainEvent) async {
         switch event {
         case .meditationCompleted:

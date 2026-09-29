@@ -16,6 +16,15 @@ struct SearchScope: DomainEventRouting {
         manager = SemanticSearchManager(service: embeddingService, store: noteEmbeddingStore)
     }
 
+    static func handles(_ event: DomainEvent) -> Bool {
+        switch event {
+        case .noteDeleted:
+            return true
+        case .noteCreated, .noteUpdated, .meditationCompleted, .aiDraftGenerated, .aiDraftMetric, .noteInsightsUpdated:
+            return false
+        }
+    }
+
     func handle(_ event: DomainEvent) async {
         switch event {
         case .noteDeleted(let noteID):

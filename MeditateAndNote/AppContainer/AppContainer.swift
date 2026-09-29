@@ -5,7 +5,6 @@
 //  Created by Quasar on 31.07.2025.
 //
 
-import Foundation
 import SwiftUI
 
 final class AppContainer {
@@ -44,22 +43,48 @@ final class AppContainer {
     @MainActor private lazy var noteInsightsViewModel = NoteInsightsViewModel(provider: notes.insightManager, eventBus: eventBus)
     @MainActor private lazy var aiSettingsStore = AIDraftSettingsStoreObservable()
 
+    /// Cached for the same reason as `noteMenuViewModel`: these are created
+    /// inside `RootContainer.mainTabBar`, which SwiftUI re-evaluates on every
+    /// router/theme/streak/scenePhase change. A factory-allocated VM per pass
+    /// meant a fresh `MeditateSelectViewModel` — and its 500ms `loadTask` —
+    /// per body pass, plus a `UserDefaults` write from `restoreLastSelected`.
+    @MainActor private lazy var mainViewModel = MainViewModel(
+        meditationService: meditation.service,
+        selectionStore: meditation.selectionStore
+    )
+    @MainActor private lazy var meditateSelectViewModel = MeditateSelectViewModel(
+        meditationService: meditation.service,
+        selectionStore: meditation.selectionStore
+    )
+
     // MARK: - Init
 
     init() {
-        eventLoop.start(eventBus: eventBus) { [self] in
-            [streak, notes, aiDraft, meditation, search]
+        eventLoop.start(eventBus: eventBus) { [self] event in
+            handlers(for: event)
         }
+    }
+
+    /// Resolves only the scopes that actually react to `event`. The
+    /// `DomainEventRouting.handles` check is static and allocation-free, so an
+    /// event nobody wants (e.g. `.noteInsightsUpdated`) no longer drags
+    /// `AIDraftScope`/`SearchScope` out of `lazy` on its way to being dropped.
+    @MainActor
+    private func handlers(for event: DomainEvent) -> [any DomainEventRouting] {
+        var result: [any DomainEventRouting] = []
+        if StreakScope.handles(event) { result.append(streak) }
+        if NoteScope.handles(event) { result.append(notes) }
+        if AIDraftScope.handles(event) { result.append(aiDraft) }
+        if MeditationScope.handles(event) { result.append(meditation) }
+        if SearchScope.handles(event) { result.append(search) }
+        return result
     }
 
     // MARK: - ViewModels Factory Methods
 
     @MainActor
     func makeMainViewModel() -> MainViewModel {
-        MainViewModel(
-            meditationService: meditation.service,
-            selectionStore: meditation.selectionStore
-        )
+        mainViewModel
     }
 
     @MainActor
@@ -84,7 +109,7 @@ final class AppContainer {
 
     @MainActor
     func makeMeditateSelectViewModel() -> MeditateSelectViewModel {
-        MeditateSelectViewModel(meditationService: meditation.service, selectionStore: meditation.selectionStore)
+        meditateSelectViewModel
     }
 
     @MainActor

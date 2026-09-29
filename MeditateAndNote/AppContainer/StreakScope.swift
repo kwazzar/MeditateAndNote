@@ -14,6 +14,15 @@ struct StreakScope: DomainEventRouting {
         insightManager = StreakInsightManager(snapshotProvider: streakTracker)
     }
 
+    static func handles(_ event: DomainEvent) -> Bool {
+        switch event {
+        case .noteCreated, .noteUpdated, .noteDeleted, .meditationCompleted:
+            return true
+        case .aiDraftGenerated, .aiDraftMetric, .noteInsightsUpdated:
+            return false
+        }
+    }
+
     func handle(_ event: DomainEvent) async {
         switch event {
         case .noteCreated, .noteUpdated, .noteDeleted, .meditationCompleted:

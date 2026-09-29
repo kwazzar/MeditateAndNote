@@ -19,6 +19,15 @@ struct NoteScope: DomainEventRouting {
         )
     }
 
+    static func handles(_ event: DomainEvent) -> Bool {
+        switch event {
+        case .noteCreated, .noteUpdated, .noteDeleted:
+            return true
+        case .meditationCompleted, .aiDraftGenerated, .aiDraftMetric, .noteInsightsUpdated:
+            return false
+        }
+    }
+
     func handle(_ event: DomainEvent) async {
         switch event {
         case .noteCreated, .noteUpdated:

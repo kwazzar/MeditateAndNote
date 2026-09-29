@@ -18,6 +18,15 @@ struct AIDraftScope: DomainEventRouting {
         manager = AIDraftManager(service: service, store: sessionStore, eventBus: eventBus)
     }
 
+    static func handles(_ event: DomainEvent) -> Bool {
+        switch event {
+        case .noteDeleted, .aiDraftMetric:
+            return true
+        case .noteCreated, .noteUpdated, .meditationCompleted, .aiDraftGenerated, .noteInsightsUpdated:
+            return false
+        }
+    }
+
     func handle(_ event: DomainEvent) async {
         switch event {
         case .noteDeleted(let noteID):
