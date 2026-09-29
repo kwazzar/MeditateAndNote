@@ -52,6 +52,14 @@ final class NoteAIDraftViewModel {
         return session.suggestions.contains { !acceptedIDs.contains($0.id) }
     }
 
+    /// True while there is something to move into the note. Deliberately
+    /// independent of `hasPending`: after Accept All nothing is pending
+    /// anymore, and tying the two together stranded every accepted
+    /// suggestion behind a button that had just disappeared.
+    var canTransfer: Bool {
+        !acceptedSuggestions.isEmpty
+    }
+
       /// Fired with the chosen suggestion when the user taps "Insert".
       @MainActor var onInsert: ((AIDraftSession, AISuggestion) -> Void)?
       /// Fired with all accepted suggestions when the user taps "Transfer to Note".

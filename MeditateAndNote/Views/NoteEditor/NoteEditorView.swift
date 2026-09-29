@@ -122,7 +122,9 @@ private extension NoteEditorView {
                             Label("Accept All", systemImage: "checkmark.all")
                                 .font(.caption.weight(.semibold))
                         }
+                    }
 
+                    if vm.canTransfer {
                         Button {
                             viewModel.transferAccepted()
                         } label: {
