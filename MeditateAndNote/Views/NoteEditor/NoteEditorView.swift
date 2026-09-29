@@ -28,14 +28,10 @@ struct NoteEditorView: View {
                 if viewModel.showAIDraftBar {
                     aiDraftBar
                 }
-            }
-
-            VStack {
-                Spacer()
-                if isKeyboardVisible {
-                    FloatingToolbar(isKeyboardVisible: $isKeyboardVisible)
-                        .padding(.bottom, 8)
-                }
+                // ponytail: FloatingToolbar (bold/italic/list) has no
+                // actions wired, so it is not rendered. Render it in the
+                // stack, never as a ZStack overlay — an overlay covered
+                // the AI bar. Needs an AttributedString editor to be real.
             }
         }
         .onAppear {
