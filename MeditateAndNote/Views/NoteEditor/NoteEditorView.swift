@@ -95,7 +95,7 @@ private extension NoteEditorView {
                     let acceptedIDs = Set(vm.acceptedSuggestions.map { $0.id })
                     let pending = session.suggestions.filter { !acceptedIDs.contains($0.id) }
                     if !pending.isEmpty {
-                        Text("Proposals")
+                        Text(vm.canAccept ? "Proposals" : "Questions")
                             .font(.caption2.weight(.semibold))
                             .foregroundStyle(themeManager.current.textSecondary)
                             .padding(.horizontal, 4)
@@ -119,7 +119,7 @@ private extension NoteEditorView {
                 }
 
                 HStack(spacing: 12) {
-                    if !vm.acceptedSuggestions.isEmpty {
+                    if vm.canAccept, vm.hasPending {
                         Button {
                             Task { await vm.acceptAll(from: vm.sessions.first!) }
                         } label: {
@@ -154,18 +154,22 @@ private extension NoteEditorView {
 
             Spacer()
 
-            if state == .pending {
-                Button {
-                    Task { await vm.accept(suggestion, from: vm.sessions.first!) }
-                } label: {
-                    Label("Accept", systemImage: "plus.circle")
-                        .font(.caption2.weight(.semibold))
-                }
-            } else {
+            // Order matters: an ungrounded row is still `.pending`, so the
+            // accepted check must not fall through and offer Remove for it —
+            // rejecting a never-accepted suggestion is a no-op that looks
+            // like a dead button.
+            if state == .accepted {
                 Button {
                     Task { await vm.reject(suggestion, from: vm.sessions.first!) }
                 } label: {
                     Label("Remove", systemImage: "xmark.circle")
+                        .font(.caption2.weight(.semibold))
+                }
+            } else if vm.canAccept {
+                Button {
+                    Task { await vm.accept(suggestion, from: vm.sessions.first!) }
+                } label: {
+                    Label("Accept", systemImage: "plus.circle")
                         .font(.caption2.weight(.semibold))
                 }
             }
@@ -222,6 +226,7 @@ private extension NoteEditorView {
             .foregroundStyle(themeManager.current.iconPrimary)
             .frame(width: 36, height: 36)
             .disabled(viewModel.isAIDraftGenerating)
+            .accessibilityIdentifier("aiDraftButton")
 
             if !viewModel.isNewNote {
                 SwiftUI.Menu {

@@ -66,7 +66,7 @@ struct RemoteLLMDraftService: AIDraftService, @unchecked Sendable {
         let requestDTO = ChatCompletionRequest(
             model: settings.selectedModel,
             messages: [
-                .init(role: "system", content: systemInstructions),
+                .init(role: "system", content: systemInstructions(for: prompt)),
                 .init(role: "user", content: composeUserMessage(for: prompt))
             ],
             temperature: 0.7
@@ -79,6 +79,12 @@ struct RemoteLLMDraftService: AIDraftService, @unchecked Sendable {
         request.httpBody = try JSONEncoder().encode(requestDTO)
 
         let (data, response) = try await executeWithRetry(request: request, maxRetries: 3)
+
+        #if DEBUG
+        debug("[AIDraftRemote] === grounded=\(prompt.isGrounded) contextChars=\(prompt.context.rawValue.count) ===")
+        debug("[AIDraftRemote] --- system ---\n\(systemInstructions(for: prompt))")
+        debug("[AIDraftRemote] --- user ---\n\(composeUserMessage(for: prompt))")
+        #endif
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw AIDraftError.providerUnavailable
@@ -99,10 +105,25 @@ struct RemoteLLMDraftService: AIDraftService, @unchecked Sendable {
         }
 
         let suggestions = parseSuggestions(from: content, max: prompt.maxSuggestions)
+        #if DEBUG
+        debug("[AIDraftRemote] --- raw response ---\n\(content)")
+        debug("[AIDraftRemote] --- parsed \(suggestions.count)/\(prompt.maxSuggestions) ---")
+        for (index, suggestion) in suggestions.enumerated() {
+            debug("[AIDraftRemote] [\(index)] \(suggestion.text)")
+        }
+        #endif
         if suggestions.isEmpty {
             throw AIDraftError.emptyResponse
         }
         return suggestions
+    }
+
+    /// DEBUG-only trace: stdout for the Xcode console, os_log so the same
+    /// trace can be streamed off the simulator. Logs the request body, which
+    /// contains note text — DEBUG only, never a Release build.
+    private func debug(_ line: String) {
+        print(line)
+        logger.info("\(line, privacy: .public)")
     }
 
     // MARK: - Retry Policy
@@ -166,13 +187,26 @@ struct RemoteLLMDraftService: AIDraftService, @unchecked Sendable {
 
     // MARK: - Helpers
 
-    private var systemInstructions: String {
-        """
+    private func systemInstructions(for prompt: AIPrompt) -> String {
+        if prompt.isGrounded {
+            return """
+            You are a reflective journaling assistant in an app called MeditateAndNote. \
+            Read the user's note and their request, then offer concise, thoughtful \
+            suggestions to help them continue. Every suggestion must name a specific \
+            moment, detail or feeling from the note above — generic advice is not \
+            acceptable. Never invent personal facts. Keep each suggestion under 140 \
+            characters. Return suggestions as a JSON object in this format: \
+            {"suggestions": [{"text": "suggestion text", "rationale": "short reason"}]}
+            """
+        }
+
+        return """
         You are a reflective journaling assistant in an app called MeditateAndNote. \
-        Read the user's note and their request, then offer concise, thoughtful \
-        suggestions to help them continue. Never invent personal facts. Keep each \
-        suggestion under 140 characters. Return suggestions as a JSON object in this format: \
-        {"suggestions": [{"text": "suggestion text", "rationale": "short reason"}]}
+        The user has not written anything yet, so there is no note to continue. \
+        Ask reflective questions that help them start — never write the note for \
+        them, never invent personal facts. Keep each question under 140 characters. \
+        Return the questions as a JSON object in this format: \
+        {"suggestions": [{"text": "the question", "rationale": "short reason"}]}
         """
     }
 

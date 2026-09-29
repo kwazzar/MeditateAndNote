@@ -198,10 +198,17 @@ final class NoteEditorViewModel {
         aiDraftViewModel?.uiState == .loading
     }
 
-    /// Creates and starts the AI draft VM for this note.
-    /// Guarded — calling while already generating is a no-op.
+    /// Creates and starts the AI draft VM for this note, or re-runs the
+    /// existing one against the current text. The old `nil` guard made ✨ a
+    /// one-shot button: with nothing to accept there was no way back to a
+    /// fresh generation. `NoteAIDraftViewModel.start` drops a session whose
+    /// context no longer matches the note.
     func startAIDraft() async {
-        guard aiDraftViewModel == nil else { return }
+        if let vm = aiDraftViewModel {
+            vm.updateContext(NoteContent(body))
+            await vm.start()
+            return
+        }
         let noteID = currentNoteID ?? NoteID()
         let content = NoteContent(body)
         let vm = NoteAIDraftViewModel(

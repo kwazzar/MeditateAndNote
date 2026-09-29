@@ -29,7 +29,7 @@ struct FoundationModelsAIDraftService: AIDraftService {
             #if canImport(FoundationModels)
             let result = systemModelAvailability()
             #if DEBUG
-            print("[AIDraft] isAvailable check: \(result) — \(SystemLanguageModel.default.availability)")
+            debug("[AIDraft] isAvailable check: \(result) — \(SystemLanguageModel.default.availability)")
             #endif
             return result
             #else
@@ -44,12 +44,20 @@ struct FoundationModelsAIDraftService: AIDraftService {
         }
         #if canImport(FoundationModels)
         #if DEBUG
-        print("[AIDraft] suggest() called — isAvailable: \(await isAvailable)")
+        debug("[AIDraft] suggest() called — isAvailable: \(await isAvailable)")
         #endif
         return try await generate(prompt)
         #else
         throw AIDraftError.providerUnavailable
         #endif
+    }
+
+    /// DEBUG-only trace: stdout for the Xcode console, os_log so the same
+    /// trace can be streamed off the simulator. Content is the user's own note
+    /// text and never leaves DEBUG.
+    private func debug(_ line: String) {
+        print(line)
+        logger.info("\(line, privacy: .public)")
     }
 
     // MARK: - FoundationModels backed implementation
@@ -76,7 +84,7 @@ struct FoundationModelsAIDraftService: AIDraftService {
         } catch {
             #if DEBUG
             let nsError = error as NSError
-            print("[AIDraft] generate() error: \(error.localizedDescription) — domain: \(nsError.domain), code: \(nsError.code), isColdStartTransient: \(Self.isColdStartTransient(error))")
+            debug("[AIDraft] generate() error: \(error.localizedDescription) — domain: \(nsError.domain), code: \(nsError.code), isColdStartTransient: \(Self.isColdStartTransient(error))")
             #endif
             guard Self.isColdStartTransient(error) else {
                 logger.error("Foundation Models generation failed — \(error.localizedDescription)")
@@ -90,18 +98,18 @@ struct FoundationModelsAIDraftService: AIDraftService {
             // second failure maps to the regular error below.
             logger.info("Model assets not ready — warmup retry in \(Self.warmupDelaySeconds)s")
             #if DEBUG
-            print("[AIDraft] Warmup retry after 10s...")
+            debug("[AIDraft] Warmup retry after 10s...")
             #endif
             try await Task.sleep(nanoseconds: Self.warmupDelayNanoseconds)
             do {
                 let result = try await respond(prompt)
                 #if DEBUG
-                print("[AIDraft] Warmup retry SUCCESS — suggestions: \(result.count)")
+                debug("[AIDraft] Warmup retry SUCCESS — suggestions: \(result.count)")
                 #endif
                 return result
             } catch {
                 #if DEBUG
-                print("[AIDraft] Warmup retry FAILED — \(error.localizedDescription)")
+                debug("[AIDraft] Warmup retry FAILED — \(error.localizedDescription)")
                 #endif
                 logger.error("Foundation Models generation failed after warmup — \(error.localizedDescription)")
                 throw Self.mapError(error)
@@ -114,11 +122,26 @@ struct FoundationModelsAIDraftService: AIDraftService {
         let session = LanguageModelSession(
             model: .default,
             tools: [],
-            instructions: Self.systemInstructions
+            instructions: Self.systemInstructions(for: prompt)
         )
         let userMessage = Self.composeUserMessage(for: prompt)
+        #if DEBUG
+        debug("[AIDraft] === grounded=\(prompt.isGrounded) contextChars=\(prompt.context.rawValue.count) ===")
+        debug("[AIDraft] --- system ---\n\(Self.systemInstructions(for: prompt))")
+        debug("[AIDraft] --- user ---\n\(userMessage)")
+        #endif
         let response = try await session.respond(to: userMessage)
-        return Self.parseSuggestions(from: response.content, max: prompt.maxSuggestions)
+        #if DEBUG
+        debug("[AIDraft] --- raw response ---\n\(response.content)")
+        #endif
+        let parsed = Self.parseSuggestions(from: response.content, max: prompt.maxSuggestions)
+        #if DEBUG
+        debug("[AIDraft] --- parsed \(parsed.count)/\(prompt.maxSuggestions) ---")
+        for (index, suggestion) in parsed.enumerated() {
+            debug("[AIDraft] [\(index)] \(suggestion.text)")
+        }
+        #endif
+        return parsed
     }
 
     /// Bounded warmup before the single retry (failure path only — the hot
@@ -160,12 +183,25 @@ struct FoundationModelsAIDraftService: AIDraftService {
     }
 
     @available(iOS 26.0, *)
-    private static var systemInstructions: String {
-        """
+    private static func systemInstructions(for prompt: AIPrompt) -> String {
+        let body: String
+        if prompt.isGrounded {
+            body = """
+            Read the user's note and their request, then offer concise, thoughtful \
+            suggestions to help them continue. Every suggestion must name a specific \
+            moment, detail or feeling from the note below — generic advice is not \
+            acceptable.
+            """
+        } else {
+            body = """
+            The user has not written anything yet, so there is no note to continue. \
+            Ask reflective questions that help them start — never write the note for them.
+            """
+        }
+
+        return """
         You are a reflective journaling assistant in an app called MeditateAndNote. \
-        Read the user's note and their request, then offer concise, thoughtful \
-        suggestions to help them continue. Never invent personal facts. Keep each \
-        suggestion under 140 characters.
+        \(body) Never invent personal facts. Keep each suggestion under 140 characters.
 
         Respond with ONLY a single JSON object and nothing else — no markdown, no \
         explanations, no reasoning or inner monologue before or after. Use exactly \

@@ -10,6 +10,7 @@
 
 import Foundation
 import Observation
+import OSLog
 
 @MainActor
 @Observable
@@ -37,6 +38,20 @@ final class NoteAIDraftViewModel {
         !currentContent.rawValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
+    /// False when the note was empty: the provider can only ask questions,
+    /// so there is no text the user could accept into the note.
+    var canAccept: Bool {
+        sessions.first?.isGrounded ?? false
+    }
+
+    /// True while at least one suggestion is still pending. "Accept All" is
+    /// idempotent, so it is a dead button once the pending pool is empty.
+    var hasPending: Bool {
+        guard let session = sessions.first else { return false }
+        let acceptedIDs = Set(acceptedSuggestions.map(\.id))
+        return session.suggestions.contains { !acceptedIDs.contains($0.id) }
+    }
+
       /// Fired with the chosen suggestion when the user taps "Insert".
       @MainActor var onInsert: ((AIDraftSession, AISuggestion) -> Void)?
       /// Fired with all accepted suggestions when the user taps "Transfer to Note".
@@ -48,9 +63,13 @@ final class NoteAIDraftViewModel {
     // MARK: - Dependencies
 
     private let noteID: NoteID
-    private let currentContent: NoteContent
+    /// The editor's text as of the last push. Refreshed by `updateContext` on
+    /// every generation — freezing it at init left a note that was empty on
+    /// the first tap asking bare questions forever.
+    private var currentContent: NoteContent
     private let drafts: any AIDraftProvidable & AIDraftManageable
     private let eventBus: DomainEventPublisher
+    private let logger = Logger(subsystem: Config.bundleID, category: "AIDraftVM")
 
     init(
         noteID: NoteID,
@@ -73,23 +92,37 @@ final class NoteAIDraftViewModel {
 
     // MARK: - Actions
 
-    /// Kicks off a generation. If a terminal session already exists for this
-    /// note it is returned instead of spawning a duplicate.
-    func start(instructions: String = "Give me ideas to continue this note") async {
+    /// Push the editor's current text in before generating. The prompt still
+    /// takes its own frozen snapshot, so an in-flight generation is unaffected.
+    func updateContext(_ content: NoteContent) {
+        currentContent = content
+    }
+
+    /// Kicks off a generation. The default request depends on whether the note
+    /// has text: with content the model continues it, without it the model
+    /// asks questions. Every tap generates fresh — an earlier session is a
+    /// frozen snapshot, and replaying it made ✨ look dead on a note that
+    /// already had text. The old session is dropped so the note keeps exactly
+    /// one.
+    func start(instructions: String? = nil) async {
+        let grounded = hasContext
+        let request = instructions ?? (grounded
+            ? "Give me ideas to continue this note"
+            : "I have not written anything yet — ask me questions to start")
         do {
-            if let existing = try await drafts.session(for: noteID) {
-                if existing.state == .ready {
-                    presentReady(existing)
-                    return
-                }
+            if let existing = try await drafts.session(for: noteID), !existing.isInFlight {
+                logger.info("Discarding previous session \(existing.id.uuidString) state=\(String(describing: existing.state)) grounded=\(existing.isGrounded) hasContext=\(grounded)")
+                try await drafts.discardSessions(for: noteID)
             }
 
             uiState = .loading
+            logger.info("Start draft grounded=\(grounded) request=\(request)")
             let session = try await drafts.startDraft(
                 noteID: noteID,
-                instructions: instructions,
+                instructions: request,
                 context: currentContent
             )
+            logger.info("Session \(session.id.uuidString) state=\(String(describing: session.state)) suggestions=\(session.suggestions.count) canAccept=\(session.isGrounded)")
             present(session)
             lastError = nil
         } catch is CancellationError {
@@ -202,16 +235,13 @@ final class NoteAIDraftViewModel {
 
     private func present(_ session: AIDraftSession) {
         sessions = [session]
+        // A fresh generation replaces the accepted pool — keeping the old ids
+        // would leave Transfer counting suggestions that are no longer shown.
+        acceptedSuggestions = []
         uiState = session.state == .ready ? .ready : .failed(.noContext)
         if session.state == .ready {
             servedSuggestionCount = session.suggestions.count
         }
-    }
-
-    private func presentReady(_ session: AIDraftSession) {
-        sessions = [session]
-        uiState = .ready
-        servedSuggestionCount = session.suggestions.count
     }
 
     private func isTerminal(_ session: AIDraftSession) -> Bool {

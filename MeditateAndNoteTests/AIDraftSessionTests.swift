@@ -55,6 +55,24 @@ final class AIPromptTests: XCTestCase {
         content = NoteContent("changed")
         XCTAssertEqual(prompt.context.rawValue, "snapshot")
     }
+
+    // MARK: isGrounded
+
+    private func prompt(_ context: String) -> AIPrompt {
+        AIPrompt(instructions: "i", noteID: NoteID(), context: NoteContent(context))
+    }
+
+    func testIsGrounded_trueWhenContextHasText() {
+        XCTAssertTrue(prompt("Today I felt calm").isGrounded)
+    }
+
+    func testIsGrounded_falseWhenContextIsEmpty() {
+        XCTAssertFalse(prompt("").isGrounded)
+    }
+
+    func testIsGrounded_falseWhenContextIsOnlyWhitespace() {
+        XCTAssertFalse(prompt(" \n\t ").isGrounded)
+    }
 }
 
 // MARK: - AIDraftSession aggregate
@@ -87,6 +105,18 @@ final class AIDraftSessionTests: XCTestCase {
         XCTAssertEqual(session.prompt, prompt)
         XCTAssertEqual(session.state, .idle)
         XCTAssertTrue(session.suggestions.isEmpty)
+    }
+
+    // MARK: isGrounded
+
+    func testIsGrounded_followsPromptContext() {
+        XCTAssertTrue(makeSession().isGrounded)
+
+        let empty = AIDraftSession(
+            noteID: NoteID(),
+            prompt: AIPrompt(instructions: "i", noteID: NoteID(), context: NoteContent("  "))
+        )
+        XCTAssertFalse(empty.isGrounded, "an empty note yields questions, not insertable text")
     }
 
     // MARK: canGenerate / isInFlight

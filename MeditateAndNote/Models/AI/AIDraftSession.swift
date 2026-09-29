@@ -41,6 +41,10 @@ struct AIDraftSession: Identifiable, Equatable, Codable, Sendable {
     /// True when there are accepted suggestions waiting to be transferred.
     var hasAcceptedSuggestions: Bool { !acceptedSuggestions.isEmpty }
 
+    /// True when the prompt that produced this session carried note text.
+    /// An ungrounded session holds questions for the user, not text to write.
+    var isGrounded: Bool { prompt.isGrounded }
+
     init(
         id: UUID = UUID(),
         noteID: NoteID,

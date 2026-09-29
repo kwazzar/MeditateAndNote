@@ -21,6 +21,13 @@ struct AIPrompt: Hashable, Codable, Sendable {
     /// Upper bound the provider must respect (guardrail, enforced in Entity too).
     let maxSuggestions: Int
 
+    /// True when the prompt carries note text. Without it the provider can
+    /// only ask the user open questions — there is nothing to continue and
+    /// nothing worth transferring back into the note.
+    var isGrounded: Bool {
+        !context.rawValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
     init(
         instructions: String,
         noteID: NoteID,
