@@ -8,6 +8,7 @@
 @preconcurrency import CoreData
 import Foundation
 import OSLog
+import Observation
 
 @Observable
 final class CoreDataSessionStore {

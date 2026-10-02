@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import Observation
 
 // MARK: - StreakActivityStore (persistence boundary / ACL)
 

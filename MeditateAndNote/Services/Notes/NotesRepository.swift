@@ -10,7 +10,7 @@ import OSLog
 
 // MARK: - DataSource Protocol (Low-level storage)
 
-protocol NoteDataSource {
+protocol NoteDataSource: Sendable {
     associatedtype Item where Item == Note
 
     func fetchAll() async throws -> [Note]

@@ -17,7 +17,9 @@ enum AIDraftServiceFactory {
         // RemoteLLMDraftService is opt-in gated inside (settings toggle +
         // Keychain key), so wiring it by default is safe: without opt-in it
         // reports unavailable and the UI degrades exactly as before.
-        let remoteService: any AIDraftService = remote ?? RemoteLLMDraftService()
+        let remoteService: any AIDraftService = remote ?? RemoteLLMDraftService(
+            settingsStore: UserDefaultsAIDraftSettingsStore()
+        )
 
         if #available(iOS 26.0, *) {
             return CompositeFallbackAIDraftService(primary: onDevice, secondary: remoteService)

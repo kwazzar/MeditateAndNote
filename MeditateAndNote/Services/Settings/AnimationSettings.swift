@@ -7,6 +7,7 @@
 
 import Foundation
 import OSLog
+import Observation
 
 //MARK: - AnimationSettings
 

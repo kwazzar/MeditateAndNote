@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Observation
 
 /// Presentation value behind the info sheet. Distinct from the selected
 /// meditation so the view model never holds two optionals of the same type
