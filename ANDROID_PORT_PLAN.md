@@ -2,6 +2,13 @@
 
 > Базується на існуючій DDD-архітектурі (Presentation → Application → Domain ← Infrastructure) з протокольними `DataSource`/`Store` контрактами.
 
+> **Обраний шлях: Swift Core + Kotlin/Compose UI.** Swift SDK for Android (офіційний, swift.org) + `swift-java` для JNI-обгорток. UI не шариться — SwiftUI на iOS, Jetpack Compose на Android.
+>
+> Рекомендація KMP у попередній редакції документа **скасована**: її єдиним аргументом був `@Observable`, який на той час вважався непідтримуваним. Експеримент 2026-10-02 це спростував (див. «Перевірено експериментом»).
+
+> Додано: 2026-09-30, на основі аналізу структури проєкту (Models/, Services/, Persistence/)
+> Редакція: 2026-10-02 — шлях обрано після перевірки тулчейну; Рекомендації 1, 7 і Фаза 1 переписані за результатами тесту
+
 ## Принцип
 
 Domain-шар платформо-незалежний за визначенням DDD. Портування — це не переписування логіки, а **додавання нових реалізацій існуючих протоколів** під Android, там де Apple SDK не має прямого аналога.
@@ -12,14 +19,17 @@ Domain-шар платформо-незалежний за визначення�
 
 > Додано: 2026-09-30, на основі аналізу структури проєкту (Models/, Services/, Persistence/)
 
-### 1. Observation framework — найбільший прихований блокер
+### 1. Observation framework — перевірено, НЕ є блокером
 
-`@Observable` (Observation framework) **не є крос-платформенним**. Він входить до Apple SDK (iOS 17+, macOS 14+) і не компілюється під Swift SDK for Android. У проекті використовується не лише в Presentation, але й в Application-шарі (`StreakTracker`, `ReminderManager`, `ThemeManager`).
+> **Стара редакція була хибною.** Твердження «`@Observable` не компілюється під Swift SDK for Android, тому обов'язково KMP» **не підтвердилося**.
 
-**Рекомендація:** розглянути KMP (Kotlin Multiplatform) як основний шлях, а не Swift SDK for Android. Причини:
-- Swift SDK for Android експериментальний; `@Observable` гарантовано не працює
-- KMP дозволяє залишити Domain на Kotlin/Compose для Presentation, зберігаючи єдиний домен
-- Якщо Swift SDK обирається свідомо — потрібен абстрактний шар над Observation (протокол + дві реалізації: Apple `@Observable` та Android-еквівалент через `StateFlow`/`LiveData`)
+**Факт (перевірено компілятором, 2026-10-02):** пакет, який імпортує `Observation`, оголошує `@Observable`-клас і публічний протокол з `async throws`, **успішно зібрався** під `aarch64-unknown-linux-android28` і дав `libCore.so`.
+
+`@Observable` використовується в Application-шарі (`StreakTracker`, `ReminderManager`, `SoundSettings`, `AnimationSettings`, `ThemeManager`) — це перестало бути перешкодою.
+
+**Що лишається невирішеним:** `@Observable` зручний для SwiftUI, але **Compose не спостерігає за Swift-об'єктами**. Для Android UI потрібне окреме джерело стану (див. Фазу 4) — `@Observable` залишається iOS-механізмом, а не спільним контрактом стану.
+
+**Рекомендація:** рухатись з обраним шляхом (Swift Core). Абстрактний шар над Observation **не потрібен** — це була б абстракція заради абстракції.
 
 ### 2. AI-стратегія — pivot обов'язковий
 
@@ -58,15 +68,20 @@ CoreData-модель має сутності з зв'язками (`Note` → `
 
 **Рекомендація:** свідоме рішення — портувати міграцію або почати з чистого стану. Якщо застосунок ще не в проді — почати з чистого стану.
 
-### 7. Вибір шляху компіляції — KMP vs Swift SDK
+### 7. Шлях компіляції — обрано: Swift SDK for Android
 
-| | Swift SDK for Android | KMP (Kotlin Multiplatform) |
+KMP розглядався і **відхилений**: єдиним його аргументом був `@Observable` (див. Рекомендацію 1), що не підтвердився. Другий аргумент — «Swift SDK експериментальний» — не витримує: це офіційний шлях swift.org, з інструментарієм, який пройшов перевірку.
+
+| | Swift SDK for Android ✅ обрано | KMP ❌ відхилено |
 | --- | --- | --- |
-| Переваги | Domain-код не дублюється | Зріла екосистема, стабільний toolchain, Compose |
-| Ризики | Більше ручної роботи, WIP-статус | Ручна синхронізація логіки |
-| Коли обрати | Прототип, швидкий старт | Продакшн-реліз, довгострокова підтримка |
+| Домен | лишається на Swift, тести продовжують працювати | переписування на Kotlin + повторне покриття тестами |
+| Вартість входу | вже перевірена на цьому Mac | Gradle + KMP-тулінг + подвійна експертиза в команді |
+| UI | не шариться (SwiftUI / Compose) | не шариться (SwiftUI / Compose) |
+| Власний код | Бізнес-логіка не дублюється — багфікс у домені автоматично діє на обидві платформи | те саме, але ціною переписування |
 
-**Рекомендація:** для перевірки концепції — Swift SDK. Для продакшну — KMP з Compose.
+**Ціна цього вибору (чесно):** бізнес-логіка пишеться на Swift, тож команда, що робить Android UI, мусить читати Swift. Android-реалізації Store/Service пишуться на **Kotlin** (вони живуть у Gradle-модулі, не в Swift-пакеті) — це спільна точка трансферу: контракти читаються з Swift, реалізації пишуться Kotlin.
+
+**Де шлях ламається:** публічний API Core-пакета перетинає JNI-межу. Типи, які `swift-java jextract` не вміє перекласти, неможливо віддати Kotlin. Це найважливіше обмеження — див. «Обмеження JNI-межі».
 
 ### 8. Тестові стратегія — golden tests для domain-логіки
 
@@ -78,20 +93,289 @@ CoreData-модель має сутності з зв'язками (`Note` → `
 
 ---
 
+## Перевірено експериментом (2026-10-02)
+
+Тулчейн встановлено і перевірено на цьому Mac. Це **факти**, а не оцінки.
+
+### Що встановлено
+
+| Компонент | Версія / шлях |
+| --- | --- |
+| Swift toolchain (open source) | 6.4.0-RELEASE, `~/Library/Developer/Toolchains/swift-6.4.0-RELEASE.xctoolchain` |
+| Android SDK bundle | `swift-6.4.0-RELEASE_android.artifactbundle` (checksum звірено з офіційним) |
+| NDK | `android-ndk-r30` (2.9 GB розпакований) |
+| Підтримувані API levels | 23–36, архітектури `aarch64` / `x86_64` / `armv7` |
+
+### Що компілюється ✅
+
+Перевірено на реальному hello-world пакеті з `Foundation`, `Observation`, публічним `struct Note: Codable, Equatable, Sendable`, `@Observable final class` та `public protocol NoteStore: Sendable` з `async throws`:
+
+```bash
+export ANDROID_NDK_HOME="<ndk-r30>"
+~/Library/Developer/Toolchains/swift-6.4.0-RELEASE.xctoolchain/usr/bin/swift build \
+  --swift-sdk swift-6.4.0-RELEASE_android \
+  --triple aarch64-unknown-linux-android28
+# → Build complete!  →  libCore.so: ELF 64-bit LSB shared object, ARM aarch64
+```
+
+Отже, **Foundation + Observation + Codable + Sendable + async/throws + протоколи працюють під Android.**
+
+### Що лишається неперевіреним ⚠️
+
+- ~~Перелік непідтримуваних `jextract` типів~~ → **виміряно**, див. «Обмеження JNI-межі».
+- `Observation` **компілюється**, але `Compose` не спостерігає за Swift-об'єктами — bridge стану не спроєктовано.
+- **Жодного коду застосунку ще не компільовано** під Android — тільки синтетичні проби.
+- **Нічого ще не запущено на пристрої** — лише компіляція. Рантайм JNI (хто викликає `CompletableFuture`, з якого потоку) не перевірено.
+
+### Три ловушки налаштування
+
+1. **Triple мусить містити API level.** `--triple aarch64-unknown-linux-android` (без цифри) → `No Swift SDK found`. Правильно: `aarch64-unknown-linux-android28`.
+2. **`swiftly link` не перемикає поточний shell** — `swift` і далі 6.3.3 з Xcode. Треба викликати бінарник тулчейну напряму (`$TC/usr/bin/swift`).
+3. **`swift-java` не збирається тулчейном 6.4** — плагін `StaticBuildConfigPluginExecutable` викликає `swift frontend -print-static-build-config`, і `swift build` перезаписує `DEVELOPER_DIR` на шлях тулчейну, де немає `xcrun`; плагін падає. Робочий варіант: збирати `swift-java` **системним** `swift` (Xcode 6.3.3). Це не заважає — тулчейн генератора ніяк не пов'язаний з тулчейном, що компілює під Android.
+
+---
+
+## Обмеження JNI-межі — виміряно (2026-10-02)
+
+Kotlin бачить **тільки те, що `jextract` вміє перекласти**. Нижче — не оцінки: 10 окремих пробних пакетів, скомпільованих під `aarch64-unknown-linux-android28`, прогнаних через `swift-java jextract --mode jni`.
+
+### Головна небезпека: тихий пропуск
+
+Непідтримувані декларації **не дають помилки**. `jextract` повертає `exit 0`, пише `warning: Failed to import: ...` у лог — і методу просто немає в згенерованому Java. Помилку видно лише тоді, коли Kotlin каже «такого методу не існує», тобто вже під час компіляції Gradle-модуля.
+
+**Наслідок для процесу:** лог `jextract` треба перевіряти в CI так само строго, як вивід компілятора. «Успішний» `jextract` нічого не доводить.
+
+### Виміряно на реальному коді (2026-10-02)
+
+Синтетичні проби пройшли, але вони нічого не кажуть про застосунок. Тому `Models/` і `Services/` скопійовано в реальний SPM-пакет і зібрано під Android.
+
+| Крок | Результат |
+| --- | --- |
+| `Models/` (25 файлів) як є | ✅ **компілюється під Android без змін** |
+| `Services/` (29 файлів) як є | ❌ 8 класів блокерів, нижче |
+| Те саме + виправлення | ✅ **40 файлів, 4 063 рядки, 3.0M `.so`, 0 помилок на macOS і Android** |
+
+**Знайдені блокери (чотири з п'яти не були в плані):**
+
+| Блокер | Файлів | Складність |
+| --- | --- | --- |
+| **`OSLog`** (`os.Logger`) | **12** — включно з `NoteManager`, `NotesRepository`, `AIDraftManager` | Потрібен протокол логування. `swift-log` або власний `LogSink` |
+| **`any NoteDataSource` — не-Sendable existential** | 1 (`NoteManager`) | **24 помилки `sending ... risks causing data races`.** Лікується одним рядком `protocol NoteDataSource: Sendable` |
+| **`DateFormatter.weekdaySymbols`** — тип різниться | 2 (`StreakInsightEngine:206,750`) | На Apple `[String]?`, на corelibs `[String]`. `guard let` ламається лише на Android |
+| **`URLSession`** без `import FoundationNetworking` | 1 (`RemoteLLMDraftService`) | `#if canImport(FoundationNetworking)` — тривіально |
+| **`Config.bundleID`** — `Services` посилається на `Navigation/` | 4 | Порушення шару. Замінити літералом або винести константу |
+| **default-аргумент = concrete Store** | 1 (`RemoteLLMDraftService:29`) | `settingsStore: any AIDraftSettingsStore = UserDefaultsAIDraftSettingsStore()` — протокол є, але concrete тип leaks у сигнатурі |
+| **`@Observable` без `import Observation`** | ≥1 (`ReminderManager`) | В Xcode працює через єдиний модуль, в SPM — ні. Імпорт на кожен файл |
+| Managers → `Persistence` напряму | 7 | `NoteManager`, `StreakTracker`, `MeditationService`, `OnboardingStore`, `AnimationSettings`, `SoundSettings`, `ReminderManager` |
+
+#### Два блокери, яких не видно з macOS
+
+**Це головний висновок вимірювання.** Найстрашніші знайдення — ті, що компілюються на Mac і падають лише на Android. Обидва перевірено: одна й таса ж код, той самий тулчейн 6.4, macOS — 0 помилок.
+
+1. **`any NoteDataSource` не-Sendable** → 24 помилки region-isolation лише на Android.
+   `protocol NoteDataSource: Sendable` — один рядок, усі 24 зникли. Перевірено.
+2. **`DateFormatter.weekdaySymbols`** — `[String]?` в Apple Foundation, `[String]` у swift-corelibs. `guard let` компілюється на iOS, падає на Android.
+   Портний фікс — перегрузка на два випадки, без warning-ів:
+   ```swift
+   @inline(__always) func nonNilSymbols(_ v: [String]?) -> [String] { v ?? [] }
+   @inline(__always) func nonNilSymbols(_ v: [String]) -> [String] { v }
+   ```
+
+**Правило:** будь-яка перевірка «портується» має виконуватися на Android-тулчейні. Green на macOS нічого не доводить.
+
+#### Про `OSLog.privacy`
+
+`"\(value, privacy: .public)"` — це не API, а магія компілятора через `ExpressibleByStringInterpolation`. Простий протокол логування її не підхопить; shim-у довелося реалізувати `StringInterpolationProtocol`. У коді — **всього 2 місця**, тож не блокер, але видно, що «замінити імпорт» не вийде.
+
+#### Підсумок вимірювання
+
+Після усіх виправлень:
+
+| | |
+| --- | --- |
+| Файлів у core | **40** (`Models/` + `Services/`) |
+| Рядків | **4 063** |
+| `.so` | **3.0M** (динамічна) — проти 512K синтетичної проби |
+| macOS, swift 6.4 | ✅ 0 помилок |
+| Android, swift 6.4 | ✅ 0 помилок |
+
+Поза ядром лишилися 3 файли, яким потрібна справжня ін'єкція протоколів, а не видалення: `ReminderManager`, `StreakInsightManager`, `AIDraftServiceFactory`.
+
+**Найважливіше:** сім з восьми блокерів — механічні, разом ~25 рядків. Справжня робота — останній рядок: 7 Manager-ів залежать від конкретних `UserDefaults`/`CoreData` реалізацій, що прямо заборонено правилами проєкту. Це не обхід, а те, що DDD вимагав зробити в anyways.
+
+### Що перекладається ✅
+
+| Можливо | Згенерований Java |
+| --- | --- |
+| `struct: Codable, Sendable` | `Note.java` з `init(...)` |
+| `enum` (і з associated values) | звичайний Java-enum / клас |
+| Масив, словник, `Optional` | `Note[]`, `SwiftDictionaryMap<K,V>`, `java.util.Optional<T>` |
+| `Date`, `UUID`, `Data` | `java.util.Date` тощо |
+| `async throws` | `CompletableFuture<T>` |
+| `actor` | клас + `CompletableFuture<Void>` на кожен метод |
+| Existential **як параметр** | `<_T0 extends NoteStore> run(_T0 store)` |
+| Existential **як return** | `NoteStore makeStore(...)` + окремий `NoteStore.java` (interface) |
+| Existential **як stored property** | через `init` з generic-параметром |
+
+Актор, `@MainActor`-подібна ізоляція й existential-протоколи — **не проблема**. Це було відкрите питання, тепер закрите.
+
+### Що НЕ перекладається ❌
+
+| Не підтримується | Причина в лозі | Наслідок для `MeditateAndNote` |
+| --- | --- | --- |
+| **Generic-метод** `<T: Encodable>` | `unknown(IdentifierTypeSyntax)` | `generateStructured<T: Generable>` — **не проходить**. Потрібен не-generic варіант під конкретний тип |
+| **`AsyncStream<T>`** | `unknown(IdentifierTypeSyntax)` | `DomainEventBus`, стріми нотисок — **не проходять**. Потрібне інше рішення (див. нижче) |
+| **Клоузур** `(@Sendable (Note) -> Void)` | `unimplementedType(AttributedTypeSyntax)` | Callback-подій не перекласти. Замість closure — інтерфейс-протокол |
+
+### Найважливіший наслідок: `AsyncStream` не перекладається
+
+`DomainEventPublisher` побудований на `AsyncStream<DomainEvent>` — отже, **його не можна віддати Kotlin як є**. Розв'язок нижче.
+
+### Розв'язок, перевірений end-to-end
+
+**Форма вже є в проєкті.** `EventLoopCoordinator` визначає `protocol DomainEventRouting { func handle(_ event: DomainEvent) async }` — це рівно та форма, яка потрібна. Транспорт неправильний, не контракт.
+
+Заміна — протокол- підписка замість стріму:
+
+```swift
+public enum DomainEvent: Sendable { /* ... */ }
+
+public protocol DomainEventSubscriber: AnyObject, Sendable {
+    func handle(_ event: DomainEvent)
+}
+
+public final class DomainEventBus {
+    private var subs: [UUID: any DomainEventSubscriber] = [:]
+    public func subscribe(_ s: any DomainEventSubscriber) -> UUID
+    public func unsubscribe(_ id: UUID)
+    public func publish(_ e: DomainEvent)
+}
+```
+
+**Перевірено:** проба K-eventbus (повний `DomainEvent` enum з associated values + підписка) пройшла `jextract --mode jni` без жодного пропуску, а згенеровані Swift-thunk — компіляція під `aarch64-unknown-linux-android28` разом із рантаймом `SwiftJava` → `libCore.so`.
+
+| Swift | Згенерований Java |
+| --- | --- |
+| `public enum DomainEvent` | `DomainEvent.java` зі static-фабриками на кейс + `Discriminator` |
+| `protocol DomainEventSubscriber` | `interface DomainEventSubscriber { void handle(DomainEvent) }` |
+| `subscribe(_ s: any DomainEventSubscriber)` | `<_T0 extends DomainEventSubscriber> UUID subscribe(_T0)` |
+| `publish(_ e: DomainEvent)` | `void publish(DomainEvent)` |
+
+### Що це дає по кожній проблемі
+
+| Проблема | Рішення | Роботи в коді |
+| --- | --- | --- |
+| `AsyncStream` | `DomainEventSubscriber` (протокол) | 1 протокол + шина; 3 споживачі міняють `for await` на реєстрацію |
+| Клоузури | Те саме — `handle(_:)`. Closure-API шини **видалити** | `subscribe(_ handler:)` має **0 викликів** — мертвий, видалити разом з `AsyncStream` |
+| Generic-методи | **Нічого робити** | У `Models/`+`Services/` **нуль** generic-методів |
+
+**Де типовічно:** `DomainEventRouting` вже є протоколом — тож реалізація для Android це Kotlin-клас, що імплементує згенерований Java-інтерфейс. Спільна форма контрактів не роздвоюється.
+
+### Чому проблема з дженериками виявилась не проблемою
+
+`generateStructured<T: Generable>` / `StructuredAIWritingService`, які планували як небезпеку, **у коді відсутні** — вони були гіпотетикою Фази 3. Жоден generic-метод у `Models/` чи `Services/` не існує.
+
+Додатково перевірено й **відкинуто** запропонований type-erasure: `func f(_ v: any Encodable)` теж **не перекладається** (пропускається разом із generic-варіантом). Тобто escape hatch «замінити `<T>` на `any P`» не існує — прийняття проєкту: не вводити generic-методи в публічний API ядра.
+
+### Справжня вартість: каскад `public`
+
+Щоб `DomainEvent` перекладався, він мусить бути `public`, а з ним — увесь ланцюг типів, які він згадує (`Note`, `NoteID`, `MeditationSession`, `AIDraftMetric`).
+
+**Виміряно:** у `Models/` **58 типів без `public`, 1 з `public`**. Тобто майже весь домен треба зробити `public`.
+
+Це механічна, односпрямована зміна (не ламає iOS), але вона торкається майже кожного файлу в `Models/`. **Робити її до того, як створено SPM-пакет `MeditateAndNoteCore`, не можна** — інакше доведеться робити двічі.
+
+### Правило для публічного API ядра
+
+> Публічний API `MeditateAndNoteCore` не може містити: generic-методів, `AsyncStream`, клоузур і макросів. Усе інше з переліку вище — можна.
+>
+> Це означає, що доменний Swift-код лишається **нормальним Swift-кодом** (генеріки й клоузири в ньому лишаються), а JNI-сумісна поверхня — окремий шар `CoreAPI`, який збирається з перевірених типів.
+
+---
+
+## Чек-лист: що перевірити далі
+
+Відсортовано за тим, наскільки невідома відповідь блокує наступний крок. Позиції 1–4 **не** робляться без Android-пристрою або без зміни коду.
+
+### 1. Рантайм JNI на пристрої — найбільший невідомий
+
+**Чому перше:** усе, що встановлено вище, — це вивід генератора і компіляція. **Жодного рядка не виконано на Android.** Найімовірніші точки падіння:
+
+- **`SwiftArena` і власність.** Кожен згенерований метод бере `SwiftArena swiftArena`. Якщо Kotlin не тримає арену живою, об'єкт звільниться — use-after-free, падіння без діагностики. Треба з'ясувати й зафіксувати контракт: хто створює арену, коли звільняє.
+- **Хто завершує `CompletableFuture`.** `async` → `CompletableFuture`; який потік виконує `future.complete(...)` — головний потік, JNI-потік, чи пул Swift?
+- **Зворотний виклик Kotlin-об'єкта.** `subscribe(_T0 s)` передає об'єкт в Swift; thunk робить `load(as:) as! (any Subscriber)`. Чи не падає на GC.
+- **Стабільність пам'яті** під час Kotlin-збирання — можливий `SIGSEGV` без повідомлення.
+
+**Мінімальний тест:** один `struct`, один `func async throws`, один протокол- підписка. Виклик з Kotlin, перевірка значення, повторити 1000 разів.
+
+### 2. `Foundation`-семантика, не компільованість
+
+`Calendar`/`TimeZone`/`Locale` компілюються, але `swift-corelibs-foundation` **поводиться інакше** на DST-переходах, першому числі місяця, локалях. `ReminderScheduleBuilder` залежить від цього.
+
+**Перевірка:** golden-тести, прогнані на обох платформах, порівняння результатів. Компіляція тут нічого не гарантує — це клас багів, який проявиться в проді на конкретному пристрої.
+
+### 3. Каскад `public` — 58 типів
+
+**Чому не перше:** механічна робота без невідомих, але **робити до створення SPM-пакета марно** — доведеться двічі. Робити одразу після Фази -1, крок 1.
+
+**Перевірка після:** iOS-збірка лишається зеленою, тести 469/469 без змін.
+
+### 4. Семантика нової шини
+
+`AsyncStream` давав кожному споживачеві **послідовність у порядку публікації**. Протокол- підписка цього не дає.
+
+**Перевірка:** тест у Swift, без Android — 3 споживачі, 100 подій, перевірити що кожен бачить їх у однаковому порядку. Якщо тест не проходить — регресія в поведінці, яку тримають 3 ViewModel-и.
+
+### 5. Скільки бойлерплату пише Kotlin-реалізатор
+
+Згенеровано `DomainEventSubscriberBox` і `SwiftArena`. Питання: чи Kotlin-реалізатор успадковує щось готове, чи мусить реалізувати `memoryAddress()`/`typeMetadataAddress()` вручну. Від цього залежить, чи API придатний для написання руками.
+
+**Перевірка:** написати один Kotlin-клас, що імплементує інтерфейс, і викликати з нього `publish`. ~20 хвилин.
+
+### 6. Розмір `.so` та час старту
+
+Синтетична проба — 512K. Реальне ядро (43 файли, Foundation, async) буде помітно більшим. Має бути розумним для мобільного застосунку.
+
+### Вже закрито — не перевіряти заново
+
+- ✅ `Models/` компілюється під Android без змін
+- ✅ межа JNI (12 проб), зокрема несумісність `AsyncStream`/клоузур/generic
+- ✅ розв'язок через протокол- підписку — Java + thunk компілюються
+- ✅ `any Encodable` type-erasure **не** працює (відхилено)
+- ✅ блокери реального коду повністю перелічені вище
+
+---
+
 ## Фаза -1 — Аналіз переносу в Core (перше, що робиться)
 
 Мета: перевірити компілятором, а не на око, наскільки Domain+Application реально чисті, перш ніж писати будь-який план далі як факт.
 
-- [ ] Створити локальний SPM-пакет `Packages/MeditateAndNoteCore` усередині поточного репо (без зламу iOS-білду)
+**Вже виміряно (без оцінок, 2026-10-02):**
+
+| Метрика | Значення |
+| --- | --- |
+| Кандидат у ядро (`Models/` + `Services/` + `Persistence/`) | 54 файли / 5680 рядків |
+| `Views/` + `ViewModels/` (не портуються — UI дублюється) | 48 файлів / 7475 рядків |
+| Файлів з Apple-специфічними імпортами в `Models/` | **0** |
+| SPM-залежностей у проєкті | 0 |
+
+Тобто ~35% рядків коду — ядро, ~44% — UI. Порядок зусиль зрозумілий: UI дублюється (Compose з нуля), ядро переноситься без змін.
+
+- [ ] Створити локальний SPM-пакет `Packages/MeditateAndNoteCore` усередину поточного репо (без зламу iOS-білду)
 - [ ] Перенести `Models/` (entities, value objects, pure engines) у пакет першими — найбезпечніша частина
-- [ ] Скомпілювати пакет ізольовано — зафіксувати кожну помилку компіляції як приховану залежність від Apple SDK
+- [ ] Скомпілювати пакет під `aarch64-unknown-linux-android28` — зафіксувати кожну помилку компіляції як приховану залежність від Apple SDK
 - [ ] Для кожної знайденої залежності вирішити: абстрагувати протоколом (лишається в Core) чи визнати платформо-специфічною (переїжджає в Infrastructure)
 - [ ] Перенести `Services/` (Managers) — складніша частина, більше протокольних меж
 - [ ] Усунути виняток `CoreDataSessionStore` — дати йому протокол за зразком `CoreDataStreakStore`/`StreakActivityStore`, щоб з'явилась точка для Android-реалізації (наразі документовано як "accepted exception" без абстракції)
-- [ ] Смоук-тест concurrency на Swift SDK for Android: скомпілювати **і запустити** (не лише скомпілювати) один актор + один `AsyncStream`-consumer через `@MainActor`, аналогічно до `DomainEventBus`/`NoteManager` — перевірити рантайм-поведінку, а не лише компільованість
+- [x] ~~Прогнати `jextract` на пробному наборі~~ — **зроблено 2026-10-02**: 12 проб, перелік підтримуваних/непідтримуваних типів у розділі «Обмеження JNI-межі»
+- [x] ~~Знайти розв'язок для `AsyncStream` і клоузур~~ — **зроблено**: протокол- підписка, перевірена end-to-end (Java + thunk під Android)
+- [ ] **Вирішити, коли робити каскад `public`** для 58 типів `Models/` — тільки після створення SPM-пакета, інакше двічі
+- [ ] Зберегти семантику «послідовно, у порядку публікації» в новій шині (черга під замком), бо `AsyncStream` давав її кожному споживачеві
+- [ ] Перевірити рантайм JNI на пристрої: хто завершує `CompletableFuture` і з якого потоку приходить Kotlin-об'єкт
+- [ ] Зафіксувати `swift-java` як версіоновану залежність Core-пакета (thunk без неї не компілюється)
 - [ ] Зафіксувати фактичний % переносного коду (замість оцінки "90-95% на око") і звірити з рештою плану — за потреби скоригувати Фази 0-5 нижче
 
-**Результат фази:** підтверджена (не гіпотетична) межа Core/Infrastructure, на яку спираються всі наступні фази.
+**Результат фази:** підтверджена (не гіпотетична) межа Core/Infrastructure **і** межа JNI-межі, на які спираються всі наступні фази.
 
 ---
 
@@ -102,7 +386,7 @@ CoreData-модель має сутності з зв'язками (`Note` → `
 - **Доведений патерн градуйованої AI-доступності.** `AIDraftService` вже має три реалізації (`FoundationModelsAIDraftService` iOS 26+, `RemoteLLMDraftService` fallback, `DisabledAIDraftService`); `NoteAnalyzer` — дві (`HeuristicNoteAnalyzer` завжди, `FoundationModelsNoteAnalyzer` iOS 26+). Android-реалізація (`AICoreAIDraftService`) додається як ще один варіант за тим самим контрактом — не новий концепт, а розширення існуючого патерну.
 - **`CoreDataSessionStore` без протоколу** — єдиний Infrastructure-компонент без абстракції; без фіксу немає куди підставити Android-реалізацію.
 - **`@MainActor`/актори/`AsyncStream`** — базуються на Swift Concurrency, теоретично портовані через мову, але `@MainActor` як концепція головного UI-потоку потребує окремої перевірки рантайм-поведінки на Android (не лише компільованості).
-- **`@Observable` в Application-шарі, не лише Presentation** — `StreakTracker`, `ReminderManager`, `ThemeManager` використовують Observation framework поза ViewModels. Перевірити явно, чи Observation валідований для Swift SDK for Android (у публічному списку бібліотек станом на аналіз значились лише Foundation/Dispatch/XCTest/swift-log).
+- **`@Observable` в Application-шарі, не лише Presentation** — `StreakTracker`, `ReminderManager`, `ThemeManager` використовують Observation framework поза ViewModels. ~~Перевірити явно, чи Observation валідований для Swift SDK~~ → **перевірено 2026-10-02: `Observation` компілюється під Android.** Залишається окреме питання — як Compose отримує стан (див. Фазу 4).
 - **`Codable`-серіалізація** (`SessionDuration` та інші) — теоретично портована через Foundation, але варто протестувати на Android-компільованій збірці окремо, не покладаючись на припущення сумісності.
 - **`Calendar`/`Date`-математика** в `ReminderScheduleBuilder` — "чиста" логіка, але залежить від поведінки `Calendar`/`TimeZone` у swift-corelibs-foundation; потрібні edge-case тести (DST-перехід, локалі) саме на Android-збірці.
 - **Legacy-міграція в `UserDefaultsStreakStore`** — існує історія форматів даних, яку Android-еквівалент (SharedPreferences/DataStore) не успадковує автоматично; потрібне свідоме рішення — портувати міграцію чи почати з чистого стану.
@@ -121,12 +405,18 @@ CoreData-модель має сутності з зв'язками (`Note` → `
 
 ---
 
-## Фаза 1 — Вибір шляху компіляції домену
+## Фаза 1 — Пайплайн збірки: SPM → `jniLibs` → Gradle
 
-Два варіанти, обрати один до старту Фази 2:
+Шлях обрано (див. Рекомендацію 7), тулчейн перевірено. Залишилось з'єднати їх у робочий цикл: щоб зміна у Swift-ядрі перекомпілювала `.so` і потрапляла в Android-модуль однією командою.
 
-- [ ] Прототип: скомпілювати 2-3 чистих Domain-типи (одну Value Object, один pure engine) через обраний шлях
-- [ ] Виміряти розмір білду / складність toolchain-налаштування
+- [ ] Створити Gradle-модуль Android із папкою `src/main/jniLibs/arm64-v8a/`
+- [ ] Зібрати `MeditateAndNoteCore` під `aarch64-unknown-linux-android28` і покласти `libMeditateAndNoteCore.so` у `jniLibs`
+- [ ] **Автоматизувати крок зі Swift-білдом** — Gradle-задача або pre-build хук, інакше `lib*.so` розійдеться зі Swift-кодом (класичний спосіб зламати CI)
+- [ ] Прогнати `jextract` для генерації Java-обгорток; перевірити, що Kotlin бачить виклик до `NoteStore`
+- [ ] Найпростіший вертикальний зріз end-to-end: `NoteStore` (Swift) → Room-реалізація (Kotlin) → виклик із Compose-екрана
+- [ ] Зафіксувати `minSdk` — нижня межа: SDK підтримує API 23+, але JNI-обгортки генеруються під `javaSourceLevel` 17+
+
+**Результат фази:** зміна в Swift-домені → `./gradlew assembleDebug` → робочий Android-бинарник, без ручного копіювання `.so`.
 
 ---
 
@@ -177,6 +467,8 @@ protocol StructuredAIWritingService: AIWritingService {
 - [ ] Apple: пряма реалізація через `@Generable`
 - [ ] Android: або не реалізовувати (фічі, що залежать від structured output, автоматично деградують до рівня 1), або емулювати через "return strict JSON" prompt + ручний `Decodable`-парсинг
 
+> **Увага, JNI:** generic-метод `<T: Generable>` і макрос `@Generable` не мають шляху через JNI — generic-спеціалізація не перекладається в Java. Цей контракт **не має бути в публічному API ядра**; якщо Android їх потребує, доведеться заводити не-generic варіант (окремий метод під конкретний тип відповіді).
+
 ### 3.3 UI-адаптація під градуйовану доступність
 
 - [ ] `AIWritingViewModel` реагує на `AICapabilityLevel`, а не на бінарний прапорець
@@ -186,11 +478,13 @@ protocol StructuredAIWritingService: AIWritingService {
 
 ## Фаза 4 — Presentation: Compose з нуля
 
-Ніщо з SwiftUI не переноситься — але структура ViewModels (через `@Observable`) концептуально мапиться на Compose `State`/`ViewModel`.
+Ніщо з SwiftUI не переноситься. Важливе уточнення після перевірки: **`@Observable` не є спільним контрактом стану** — Compose не спостерігає за Swift-об'єктами, навіть якщо сам `@Observable` компілюється під Android. Тому ViewModels **не** переносяться як-is: їхня логіка йшла в `@Observable`-властивостях, а Android потребує свого джерела стану.
 
+- [ ] Обрати модель стану для Android: Kotlin `ViewModel` + `StateFlow` як дзеркало Swift-об'єкта, **чи** зробити Core джерелом істини й стримити стан через callback → `Flow`
 - [ ] Спроєктувати Compose-еквіваленти екранів у тому ж порядку, що й existing Views/ (onboarding → meditation list → breathing UI → journal → insights)
 - [ ] Breathing-анімації: `Canvas`/`TimelineView`/`trim(from:to:)` → Compose `Canvas` + `Animatable`/`rememberInfiniteTransition`
 - [ ] Router: адаптувати кастомну Router-навігацію під Navigation Compose, зберігаючи ті самі destinations/deep links на рівні контракту
+- [ ] Тема: `ThemeManager` живе у Swift-шарі й не портується — визначити, як Compose-тема синхронізується з нею (спільні токени, згенеровані з Swift, чи дублювання)
 
 ---
 
@@ -204,7 +498,36 @@ protocol StructuredAIWritingService: AIWritingService {
 
 ## Ризики й відкриті питання
 
-- Swift Java interop незрілий — може змінити оцінку Фази 1 під час прототипування
+**Неперекладне вирішено.** `AsyncStream` і клоузури замінюються протоколом- підпискою — перевірено end-to-end (генерація Java + компіляція thunk під Android). Generic-методів у домені немає взагалі. Див. «Розв'язок, перевірений end-to-end».
+
+**Головний ризик, що лишився — `jextract` мовчки пропускає непідтримувані методи.** `exit 0`, warning у лозі, методу немає. Помилка виявиться лише під час компіляції Kotlin. Тому перевірка логу `jextract` — обов'язковий крок CI, інакше «зелений» тулчейн систематично приховує діри в API.
+
+**Другий — семантика потоку зміниться.** `DomainEventBus` зараз публікує «on the emitter's thread», а `AsyncStream` давав кожному споживачеві власний послідовний потік. Протокол- підписка не дає цього без додаткової роботи: щоб зберегти «послідовно, у порядку публікації» для `EventLoopCoordinator`, потрібна черга з `NSLock`/актором усередині шини. Без неї три споживачі оброблятимуть події в довільному порядку — зміниться поведінка, яку тримають 3 ViewModel-и.
+
+**Третій — каскад `public` торкається 58 типів.** Працює, але великий diff у найбільшому шарі.
+
+- **Нічого ще не запущено на пристрої** — усі висновки з виводу генератора; рантайм JNI (хто завершує `CompletableFuture`, з якого потоку приходить Kotlin-об'єкт) не перевірено
+- **Жодного коду застосунку не скомпільовано** під Android — лише синтетичні проби; реальний `Models/`/`Services/` ще не пройшов перевірку
+- **Core-пакет залежатиме від `SwiftJava`** — згенеровані thunk не компілюються без рантайм-бібліотеки `swift-java`. Це зовнішня залежність у Cargo-стилі SwiftPM, її треба зафіксувати версією
+- **Розсинхрон `.so` зі Swift-кодом** — поки крок компіляції Swift не вбудований у Gradle, `lib*.so` буде розходитись із джерелом
+- **Повний двоплатформний CI** — iOS-збірка й Android-збірка мають перевірятися разом, інакше Domain-зміни зламають одну платформу непомітно
+- **`Compose` не бачить Swift-стан** — модель стану для Android ще не обрана
 - ML Kit GenAI APIs у статусі Beta — можливі breaking changes до GA
 - AICore не дає function calling / structured output "з коробки" — рівень 2 контракту на Android завжди буде емуляцією, не гарантією
 - CoreData → Room міграція даних існуючих користувачів (якщо застосунок вже в проді) окремо не покрита цим планом — потребує стратегії міграції/експорту
+
+---
+
+## Що змінилося в цій редакції (2026-10-02)
+
+Для чіткості — що було змінено відносно попередньої версії:
+
+1. **Рекомендація 1 переписана.** Твердження «`@Observable` не компілюється під Android» було хибним — перевірено компілятором. З ним зник і аргумент за KMP.
+2. **Рекомендація 7 переписана.** KMP відхилено, обрано Swift SDK for Android + Kotlin/Compose UI. Причина відхилення зафіксована, а не просто видалена.
+3. **Додано «Перевірено експериментом»** — версії, робоча команда, три ловушки налаштування (API level у triple, `swiftly link` не перемикає shell, `swift-java` не збирається тулчейном 6.4).
+4. **Розділ «Обмеження JNI-межі» переписано з здогадок на виміряні дані** (10 проб через `jextract --mode jni`): що перекладається, що ні, і чому це ламає `DomainEventBus` та `generateStructured<T>`.
+5. **Фаза 1 змінила предмет:** не «вибір шляху», а пайплайн складання `SPM → .so → jniLibs → Gradle`.
+6. **Фаза -1** тепер містить виміряні числа (54 файли / 5680 рядків у ядрі, 0 Apple-імпортів у `Models/`); проби `jextract` і пошук розв'язку позначено як виконані, додано пункти про каскад `public`, семантику черги та залежність від `SwiftJava`.
+7. **Додано «Розв'язок, перевірений end-to-end»** — замість `AsyncStream`/клоузур протокол- підписка; доведено, що дженериків у домені немає, а type-erasure `any Encodable` не працює.
+8. **Фаза 4** більше не припускає, що `@Observable` мапиться на Compose.
+9. **Рекомендація 2 (AI) і Фази 0, 2, 3, 5** залишені без змін — експеримент їх не зачіпає.
