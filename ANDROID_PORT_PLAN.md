@@ -160,7 +160,7 @@ Kotlin бачить **тільки те, що `jextract` вміє перекла
 | Блокер | Файлів | Складність |
 | --- | --- | --- |
 | **`OSLog`** (`os.Logger`) | **12** — включно з `NoteManager`, `NotesRepository`, `AIDraftManager` | Потрібен протокол логування. `swift-log` або власний `LogSink` |
-| **`any NoteDataSource` — не-Sendable existential** | 1 (`NoteManager`) | **24 помилки `sending ... risks causing data races`.** Лікується одним рядком `protocol NoteDataSource: Sendable` |
+| **`any NoteDataSource` — не-Sendable existential** | 1 (`NoteManager`) | **Помилки `sending ... risks causing data races` при переході в Swift 6 mode.** Лікується одним рядком `protocol NoteDataSource: Sendable`. **Це не особливість Android** — див. нижче |
 | **`DateFormatter.weekdaySymbols`** — тип різниться | 2 (`StreakInsightEngine:206,750`) | На Apple `[String]?`, на corelibs `[String]`. `guard let` ламається лише на Android |
 | **`URLSession`** без `import FoundationNetworking` | 1 (`RemoteLLMDraftService`) | `#if canImport(FoundationNetworking)` — тривіально |
 | **`Config.bundleID`** — `Services` посилається на `Navigation/` | 4 | Порушення шару. Замінити літералом або винести константу |
@@ -180,27 +180,50 @@ Kotlin бачить **тільки те, що `jextract` вміє перекла
 
 iOS build green, **477 tests passed, 0 failures**. Правки дають користь на iOS незалежно від порту.
 
-#### `Sendable` — це не один протокол, а цілий клас
+#### Три різні причини, не одна
 
-`NoteDataSource` був першим, бо він перший потрапив у компілятор. Решта — та сама помилка, ще не доведена:
+Перша версія цього розділу стверджувала, що блокери «невидимі з macOS». **Це було неправильно** — експеримент був змішаний: під час macOS-прогона я вже видалив `NoteManager` з набору файлів. Чисте повторне вимірювання:
 
-- `StreakActivityStore`, `AIDraftSettingsStore` — зберігаються як `any ...` в Manager-ах
-- `OnboardingStore`, `MeditationService`, `AnimationSettings`, `SoundSettings` — той же патерн
+| Блокер | Причина | macOS | Android |
+| --- | --- | --- | --- |
+| `sending ... data races` | **Swift 6 language mode** | **18 помилок** | 24 помилки |
+| `DateFormatter.weekdaySymbols` | **swift-corelibs Foundation** | 0 | **4 помилки** |
+| `@Observable` без імпорту | **структура модуля** | 0 | 0 |
 
-**Очікування:** кожен Store/Service-протокол, який живе в `any`-existential і викликається через `await`, доведеться зробити `Sendable`, а його concrete conformer — `@unchecked Sendable` (або `actor`, як `InMemoryNoteDataSource`). Робити це треба **зараз, на iOS**, до створення SPM-пакета: тоді в Android-ядро приїде вже коректний код.
+`NoteManager.swift` дає region-isolation помилки **на macOS теж** — у Swift 6 mode. У Swift 5 mode: macOS 0, Android 0. Справа не в платформі.
+
+**`DateFormatter.weekdaySymbols`** — справді платформна різниця: Apple Foundation дає `[String]?`, corelibs — `[String]`. Перевірено окремо в Swift 5 mode, тож незалежно від мови. Портний фікс — перегрузка без warning-ів:
+```swift
+@inline(__always) func nonNilSymbols(_ v: [String]?) -> [String] { v ?? [] }
+@inline(__always) func nonNilSymbols(_ v: [String]) -> [String] { v }
+```
+
+#### Проєкт живе в Swift 5 mode
+
+`SWIFT_VERSION = 5.0` у всіх конфігураціях Xcode-проєкту. Тому весь клас region-isolation помилок зараз **не видний** — Swift 5 mode робить їх мовчаннями.
+
+Наслідок: SPM-пакет доведеться створити з `swift-tools-version:6.0`, і тоді цей клас вистрелить одразу. Краще зробити це **на iOS** до створення пакета.
+
+#### Аудит решти Store/Service-протоколів: робити нічого не треба
+
+Перевірено скриптом по 4 actor-ах і 20 не-Sendable протоколах:
+
+- Усі existential-и, які тримають actor-и, **вже `Sendable`**: `NoteDataSource`, `AIDraftService`, `AIDraftSessionStore`, `EmbeddingService`, `NoteEmbeddingStore`, `NoteAnalyzer`, `NoteInsightStore`.
+- **Жоден** із 20 не-Sendable протоколів не тримається actor-ом. Їх тримають `@MainActor` ViewModel-и, звичайні `final class` або `struct`-и.
+
+За правилом «робити все Sendable — не робити нічого без потреби» (skill `swift-concurrency`, mistake #3) решта протоколів **не потребують** змін: вони не перетинають isolation-межу. Масова додача `: Sendable` була б 20 рядками шуму.
+
+**Висновок:** `NoteDataSource` був єдиним реальним випадком. Рефакторинг решти Store-протоколів — не потрібен.
 
 #### Правило, яке себе виправдало
 
 Concrete Store не можна упоминати в сигнатурі Service — навіть як default-аргументом. Точка, де concrete тип дозволений, — **Application-шар** (`AIDraftServiceFactory`). Перевірено: `RemoteLLMDraftService` вже мав `any AIDraftSettingsStore` у властивості, але `= UserDefaultsAIDraftSettingsStore()` у default-аргументі знову вносив Concrete у шар, який не має про нього знати.
 
-#### Два незалежні осі хибної «зеленості»
+#### Три осі хибної «зеленості»
 
-Підсумок вимірювання — обидві перевірені експериментом:
+Усі три перевірені експериментом (див. таблицю вище): **мова** (Swift 5 → 6), **платформа** (Apple Foundation → corelibs), **структура модуля** (хтось імпортує `Observation` чи ні).
 
-1. **Платформа.** Той самий код, той самий тулчейн: macOS 0 помилок, Android 24.
-2. **Структура модуля.** Той самий компілятор, той самий код: `@Observable` резолвиться, якщо хоч один файл імпортує `Observation`, і не резолвиться, якщо ніхто не імпортує. Xcode-проєкт «працював» випадково.
-
-Тому green на iOS/Xcode не доводить нічого про порт. Перевіряти треба на Android-тулчейні, у складі пакета, який реально піде в порт.
+Green на iOS/Xcode не доводить нічого про порт.
 
 
 
