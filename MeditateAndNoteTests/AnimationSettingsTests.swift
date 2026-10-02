@@ -8,22 +8,27 @@
 import XCTest
 @testable import MeditateAndNote
 
+@MainActor
 final class AnimationSettingsTests: XCTestCase {
 
     private var suiteName: String!
     private var defaults: UserDefaults!
 
-    override func setUp() {
-        super.setUp()
-        suiteName = "AnimationSettingsTests_\(UUID().uuidString)"
-        defaults = UserDefaults(suiteName: suiteName)!
+    override func setUp() async throws {
+        await MainActor.run {
+            suiteName = "AnimationSettingsTests_\(UUID().uuidString)"
+            defaults = UserDefaults(suiteName: suiteName)!
+        }
+        try await super.setUp()
     }
 
-    override func tearDown() {
-        defaults.removePersistentDomain(forName: suiteName)
-        defaults = nil
-        suiteName = nil
-        super.tearDown()
+    override func tearDown() async throws {
+        await MainActor.run {
+            defaults.removePersistentDomain(forName: suiteName)
+            defaults = nil
+            suiteName = nil
+        }
+        try await super.tearDown()
     }
 
     func testDefaultStyle_isPath() {

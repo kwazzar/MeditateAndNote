@@ -14,7 +14,7 @@ import XCTest
 @MainActor
 final class NoteEditorAIDraftTests: XCTestCase {
 
-    private final class RecordingDrafts: AIDraftProvidable, AIDraftManageable {
+    private final class RecordingDrafts: AIDraftProvidable, AIDraftManageable, @unchecked Sendable {
         private(set) var requestedContexts: [NoteContent] = []
         private(set) var requestedInstructions: [String] = []
         private var session: AIDraftSession?

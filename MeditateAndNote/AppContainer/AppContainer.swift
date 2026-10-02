@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-final class AppContainer {
+final class AppContainer: @unchecked Sendable {
 
     /// The production instance. `init()` starts the event loop as a side
     /// effect, so production must share one container — otherwise every extra
@@ -150,8 +150,8 @@ final class AppContainer {
     var insightManager: StreakInsightManager { streak.insightManager }
     var meditationSessionStore: CoreDataSessionStore { meditation.store }
     var reminderManager: ReminderManager { settings.reminderManager }
-    var soundSettings: SoundSettings { settings.soundSettings }
-    var animationSettings: AnimationSettings { settings.animationSettings }
+    @MainActor var soundSettings: SoundSettings { settings.soundSettings }
+    @MainActor var animationSettings: AnimationSettings { settings.animationSettings }
     var onboardingStore: any OnboardingStore { settings.onboardingStore }
     var noteManager: NoteManager { notes.manager }
     var aiDraftManager: AIDraftManager { aiDraft.manager }

@@ -17,12 +17,12 @@ import OSLog
 
 // MARK: - Protocols for ViewModels
 
-protocol NoteInsightProvidable {
+protocol NoteInsightProvidable: Sendable {
     func insights() async throws -> [NoteInsight]
     func insight(for noteID: NoteID) async throws -> NoteInsight?
 }
 
-protocol NoteInsightManageable {
+protocol NoteInsightManageable: Sendable {
     /// Analyze and persist insights for the given notes.
     func refresh(notes: [Note]) async
     /// Drop the insight for a deleted note.

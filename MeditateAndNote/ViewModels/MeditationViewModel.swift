@@ -92,7 +92,7 @@ extension MeditationViewModel {
 
         apply(engine.start(duration: duration, countdown: countdown))
         if engine.isCountingDown {
-            timer = scheduleTimer(interval: 1.0) { [weak self] _ in
+            timer = scheduleTimer(interval: 1.0) { [weak self] in
                 guard let self else { return }
                 self.tickCountdown()
             }
@@ -169,23 +169,25 @@ private extension MeditationViewModel {
     
     func scheduleSessionTimers() {
         guard engine.isActive else { return }
-        timer = scheduleTimer(interval: 1.0) { [weak self] _ in
+        timer = scheduleTimer(interval: 1.0) { [weak self] in
             guard let self else { return }
             self.tickSecond()
         }
-        phaseTimer = scheduleTimer(interval: 0.1) { [weak self] _ in
+        phaseTimer = scheduleTimer(interval: 0.1) { [weak self] in
             guard let self else { return }
             guard case .active(let clock, _, _, _, _) = self.engine.state, !clock.isPaused else { return }
             self.tickClock()
         }
     }
     
-    func scheduleTimer(interval: TimeInterval, block: @escaping @MainActor @Sendable (Timer) -> Void) -> Timer? {
-        Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { timer in
+    // ponytail: `Timer` не-Sendable, тому передавати його в `@MainActor`-блок
+    // вимагало б ізоляції. Усі три call-site його ігнорували — параметр мертвий.
+    func scheduleTimer(interval: TimeInterval, block: @escaping @MainActor @Sendable () -> Void) -> Timer? {
+        Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { _ in
             // Timer.scheduledTimer fires on the run loop it was created on,
             // which is the main run loop here (this VM is MainActor-isolated).
             MainActor.assumeIsolated {
-                block(timer)
+                block()
             }
         }
     }

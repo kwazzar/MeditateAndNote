@@ -13,6 +13,7 @@ import Observation
 
 /// Persisted meditation-animation preference. Mirrors the `SoundSettings` /
 /// `ThemeManager` pattern: an observable value backed by `UserDefaults`,
+@MainActor
 /// injected as a singleton via `shared`.
 @Observable
 final class AnimationSettings {

@@ -105,7 +105,7 @@ final class NoteManagerTests: XCTestCase {
     }
 }
 
-private final class EventCapture {
+private final class EventCapture: @unchecked Sendable {
     private(set) var events: [DomainEvent] = []
 
     init(bus: DomainEventBus) {

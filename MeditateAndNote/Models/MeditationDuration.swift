@@ -15,7 +15,7 @@ enum MeditationState {
 }
 
 // MARK: - MeditationDuration
-public enum MeditationDuration: TimeInterval, CaseIterable, Identifiable {
+public enum MeditationDuration: TimeInterval, CaseIterable, Identifiable, Sendable {
     case oneMin = 60
     case threeMin = 180
     case fiveMin = 300
