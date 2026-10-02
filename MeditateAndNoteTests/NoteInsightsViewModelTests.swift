@@ -10,7 +10,9 @@ import XCTest
 
 // MARK: - Stub provider
 
-private final class StubNoteInsightProvider: NoteInsightProvidable {
+// ponytail: @unchecked — лічильник дзвінків живе в межах одного тесту,
+// конкурентного доступу до нього немає.
+private final class StubNoteInsightProvider: NoteInsightProvidable, @unchecked Sendable {
     var insightsResult: [NoteInsight] = []
     private(set) var fetchAllCallCount = 0
 
@@ -31,7 +33,7 @@ private final class StubNoteInsightManager: NoteInsightManageable {
     func refreshNow() async {}
 }
 
-private final class FailingNoteInsightProvider: NoteInsightProvidable {
+private final class FailingNoteInsightProvider: NoteInsightProvidable, @unchecked Sendable {
     var fetchAllCallCount = 0
 
     func insights() async throws -> [NoteInsight] {

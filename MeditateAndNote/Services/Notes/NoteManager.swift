@@ -10,14 +10,14 @@ import OSLog
 
 // MARK: - Protocols for ViewModels
 
-protocol NoteProvidable {
+protocol NoteProvidable: Sendable {
     var currentNotes: [Note] { get async }
     func note(with id: NoteID) async throws -> Note?
     func notes(matching query: SearchQuery) async -> [Note]
     func refresh() async
 }
 
-protocol NoteManageable {
+protocol NoteManageable: Sendable {
     func add(_ note: Note) async throws
     func update(_ note: Note) async throws
     func delete(with id: NoteID) async throws

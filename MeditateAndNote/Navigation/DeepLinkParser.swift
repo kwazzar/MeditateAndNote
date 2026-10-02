@@ -9,7 +9,7 @@ import Foundation
 
 /// A function that matches a deep link URL to a destination if possible
 struct DeepLinkParser {
-    let parse: (URL) -> Destination?
+    let parse: @Sendable (URL) -> Destination?
 }
 
 extension URL {

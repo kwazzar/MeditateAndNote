@@ -13,19 +13,24 @@
 
 import XCTest
 
+@MainActor
 final class AIDraftGroundingUITests: XCTestCase {
     private var app: XCUIApplication!
 
-    override func setUp() {
-        super.setUp()
-        continueAfterFailure = false
-        app = XCUIApplication()
-        app.launch()
+    override func setUp() async throws {
+        await MainActor.run {
+            continueAfterFailure = false
+            app = XCUIApplication()
+            app.launch()
+        }
+        try await super.setUp()
     }
 
-    override func tearDown() {
-        app = nil
-        super.tearDown()
+    override func tearDown() async throws {
+        await MainActor.run {
+            app = nil
+        }
+        try await super.tearDown()
     }
 
     private func openEmptyEditor() -> XCUIElement {

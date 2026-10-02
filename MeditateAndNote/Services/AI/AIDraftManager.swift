@@ -13,11 +13,11 @@ import OSLog
 
 // MARK: - Protocols for ViewModels
 
-protocol AIDraftProvidable {
+protocol AIDraftProvidable: Sendable {
     func session(for noteID: NoteID) async throws -> AIDraftSession?
 }
 
-protocol AIDraftManageable {
+protocol AIDraftManageable: Sendable {
     /// Start a generation for a note. Returns the newly created session.
     @discardableResult
     func startDraft(noteID: NoteID, instructions: String, context: NoteContent) async throws -> AIDraftSession

@@ -14,16 +14,20 @@ final class NoteMenuViewModelTests: XCTestCase {
     private var bus: DomainEventBus!
     private var spy: NoteServiceSpy!
 
-    override func setUp() {
-        super.setUp()
-        bus = DomainEventBus()
-        spy = NoteServiceSpy()
+    override func setUp() async throws {
+        await MainActor.run {
+            bus = DomainEventBus()
+            spy = NoteServiceSpy()
+        }
+        try await super.setUp()
     }
 
-    override func tearDown() {
-        bus = nil
-        spy = nil
-        super.tearDown()
+    override func tearDown() async throws {
+        await MainActor.run {
+            bus = nil
+            spy = nil
+        }
+        try await super.tearDown()
     }
 
     private func makeNote(_ title: NoteTitle) -> Note {

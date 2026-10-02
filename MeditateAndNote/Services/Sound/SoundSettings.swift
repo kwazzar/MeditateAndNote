@@ -12,6 +12,7 @@ import Observation
 
 /// Persisted sound preferences for the meditation session. Mirrors the
 /// `ThemeManager` / `MeditationSelectionStore` pattern: an observable value
+@MainActor
 /// backed by `UserDefaults`, injected as a singletons via `shared`.
 @Observable
 final class SoundSettings {

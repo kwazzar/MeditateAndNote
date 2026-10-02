@@ -15,6 +15,7 @@ enum MeditationSound: Equatable {
 }
 
 //MARK: - SoundPlaying
+@MainActor
 protocol SoundPlaying: AnyObject {
     func play(_ sound: MeditationSound)
 }
@@ -37,6 +38,7 @@ protocol AudioResourceLoading: AnyObject {
     func player(forResource name: String) -> AudioPlayerHandle?
 }
 
+@MainActor
 //MARK: - SoundPlayer
 final class SoundPlayer: SoundPlaying {
 

@@ -24,7 +24,7 @@ enum CDEntity {
 
 // MARK: - CoreDataManager
 
-final class CoreDataManager {
+final class CoreDataManager: @unchecked Sendable {
 
     static let shared = CoreDataManager()
 
@@ -70,14 +70,14 @@ final class CoreDataManager {
         }
 
         container.viewContext.automaticallyMergesChangesFromParent = true
-        container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+        container.viewContext.mergePolicy = NSMergePolicy(merge: .mergeByPropertyObjectTrumpMergePolicyType)
     }
 
     // MARK: - Background context helper
 
     func newBackgroundContext() -> NSManagedObjectContext {
         let context = container.newBackgroundContext()
-        context.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+        context.mergePolicy = NSMergePolicy(merge: .mergeByPropertyObjectTrumpMergePolicyType)
         return context
     }
 

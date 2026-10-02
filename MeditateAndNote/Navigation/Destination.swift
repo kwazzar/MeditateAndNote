@@ -8,7 +8,7 @@
 import Foundation
 import SwiftUI
 
-enum Destination: Hashable {
+enum Destination: Hashable, Sendable {
     case tab(_ destination: TabDestination)
     case push(_ destination: PushDestination)
     case sheet(_ destination: SheetDestination)
@@ -30,7 +30,7 @@ extension Destination: CustomStringConvertible {
     }
 }
 
-enum PushDestination: Hashable, CustomStringConvertible {
+enum PushDestination: Hashable, Sendable, CustomStringConvertible {
     case newNote
     case noteDetails(noteId: NoteID)
     case readingView

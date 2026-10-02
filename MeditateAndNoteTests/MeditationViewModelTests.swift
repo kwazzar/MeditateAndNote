@@ -13,18 +13,22 @@ final class MeditationViewModelTests: XCTestCase {
     private var capture: MeditationEventCapture!
     private var sound: FakeSoundPlayer!
 
-    override func setUp() {
-        super.setUp()
-        bus = DomainEventBus()
-        capture = MeditationEventCapture(bus: bus)
-        sound = FakeSoundPlayer()
+    override func setUp() async throws {
+        await MainActor.run {
+            bus = DomainEventBus()
+            capture = MeditationEventCapture(bus: bus)
+            sound = FakeSoundPlayer()
+        }
+        try await super.setUp()
     }
 
-    override func tearDown() {
-        bus = nil
-        capture = nil
-        sound = nil
-        super.tearDown()
+    override func tearDown() async throws {
+        await MainActor.run {
+            bus = nil
+            capture = nil
+            sound = nil
+        }
+        try await super.tearDown()
     }
 
     private func makeMeditation() -> Meditation {
@@ -268,7 +272,7 @@ private final class FakeSoundPlayer: SoundPlaying {
     }
 }
 
-private final class MeditationEventCapture {
+private final class MeditationEventCapture: @unchecked Sendable {
     private(set) var events: [DomainEvent] = []
 
     init(bus: DomainEventBus) {

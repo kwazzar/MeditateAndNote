@@ -15,18 +15,22 @@ final class OnboardingViewModelTests: XCTestCase {
     private var defaults: UserDefaults!
     private var completionCalled = false
 
-    override func setUp() {
-        super.setUp()
-        suiteName = "OnboardingViewModelTests_\(UUID().uuidString)"
-        defaults = UserDefaults(suiteName: suiteName)
-        completionCalled = false
+    override func setUp() async throws {
+        await MainActor.run {
+            suiteName = "OnboardingViewModelTests_\(UUID().uuidString)"
+            defaults = UserDefaults(suiteName: suiteName)
+            completionCalled = false
+        }
+        try await super.setUp()
     }
 
-    override func tearDown() {
-        defaults.removePersistentDomain(forName: suiteName)
-        defaults = nil
-        suiteName = nil
-        super.tearDown()
+    override func tearDown() async throws {
+        await MainActor.run {
+            defaults.removePersistentDomain(forName: suiteName)
+            defaults = nil
+            suiteName = nil
+        }
+        try await super.tearDown()
     }
 
     private func makeStore() -> OnboardingStore {

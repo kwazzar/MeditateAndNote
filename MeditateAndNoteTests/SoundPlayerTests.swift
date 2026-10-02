@@ -34,6 +34,7 @@ final class MockAudioResourceLoader: AudioResourceLoading {
     }
 }
 
+@MainActor
 final class SoundPlayerTests: XCTestCase {
 
     private func makeSettings(volume: Float) -> SoundSettings {
