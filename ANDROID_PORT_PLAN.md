@@ -165,10 +165,44 @@ Kotlin бачить **тільки те, що `jextract` вміє перекла
 | **`URLSession`** без `import FoundationNetworking` | 1 (`RemoteLLMDraftService`) | `#if canImport(FoundationNetworking)` — тривіально |
 | **`Config.bundleID`** — `Services` посилається на `Navigation/` | 4 | Порушення шару. Замінити літералом або винести константу |
 | **default-аргумент = concrete Store** | 1 (`RemoteLLMDraftService:29`) | `settingsStore: any AIDraftSettingsStore = UserDefaultsAIDraftSettingsStore()` — протокол є, але concrete тип leaks у сигнатурі |
-| **`@Observable` без `import Observation`** | ≥1 (`ReminderManager`) | В Xcode працює через єдиний модуль, в SPM — ні. Імпорт на кожен файл |
+| **`@Observable` без `import Observation`** | 15 | **Видимість макроса модульна:** щойно *хоч один* файл імпортує `Observation`, `@Observable` резолвиться в усьому таргеті. Xcode-проєкт жив на 5 випадкових імпортах; SPM-пакет без жодного — падає. Виправлено явними імпортами |
 | Managers → `Persistence` напряму | 7 | `NoteManager`, `StreakTracker`, `MeditationService`, `OnboardingStore`, `AnimationSettings`, `SoundSettings`, `ReminderManager` |
 
-#### Два блокери, яких не видно з macOS
+#### Статус: три блокери вже виправлені
+
+Виправлено 2026-10-02, branch `portfix` (ще не злито):
+
+| Блокер | Фікс | Файлів |
+| --- | --- | --- |
+| `any NoteDataSource` не-Sendable | `protocol NoteDataSource: Sendable` + `@unchecked Sendable` на conformer | 2 |
+| concrete Store у default-аргументі | ін'єкція з `AIDraftServiceFactory` | 2 |
+| `@Observable` без імпорту | явний `import Observation` | 15 |
+
+iOS build green, **477 tests passed, 0 failures**. Правки дають користь на iOS незалежно від порту.
+
+#### `Sendable` — це не один протокол, а цілий клас
+
+`NoteDataSource` був першим, бо він перший потрапив у компілятор. Решта — та сама помилка, ще не доведена:
+
+- `StreakActivityStore`, `AIDraftSettingsStore` — зберігаються як `any ...` в Manager-ах
+- `OnboardingStore`, `MeditationService`, `AnimationSettings`, `SoundSettings` — той же патерн
+
+**Очікування:** кожен Store/Service-протокол, який живе в `any`-existential і викликається через `await`, доведеться зробити `Sendable`, а його concrete conformer — `@unchecked Sendable` (або `actor`, як `InMemoryNoteDataSource`). Робити це треба **зараз, на iOS**, до створення SPM-пакета: тоді в Android-ядро приїде вже коректний код.
+
+#### Правило, яке себе виправдало
+
+Concrete Store не можна упоминати в сигнатурі Service — навіть як default-аргументом. Точка, де concrete тип дозволений, — **Application-шар** (`AIDraftServiceFactory`). Перевірено: `RemoteLLMDraftService` вже мав `any AIDraftSettingsStore` у властивості, але `= UserDefaultsAIDraftSettingsStore()` у default-аргументі знову вносив Concrete у шар, який не має про нього знати.
+
+#### Два незалежні осі хибної «зеленості»
+
+Підсумок вимірювання — обидві перевірені експериментом:
+
+1. **Платформа.** Той самий код, той самий тулчейн: macOS 0 помилок, Android 24.
+2. **Структура модуля.** Той самий компілятор, той самий код: `@Observable` резолвиться, якщо хоч один файл імпортує `Observation`, і не резолвиться, якщо ніхто не імпортує. Xcode-проєкт «працював» випадково.
+
+Тому green на iOS/Xcode не доводить нічого про порт. Перевіряти треба на Android-тулчейні, у складі пакета, який реально піде в порт.
+
+
 
 **Це головний висновок вимірювання.** Найстрашніші знайдення — ті, що компілюються на Mac і падають лише на Android. Обидва перевірено: одна й таса ж код, той самий тулчейн 6.4, macOS — 0 помилок.
 
@@ -366,7 +400,7 @@ public final class DomainEventBus {
 - [ ] Скомпілювати пакет під `aarch64-unknown-linux-android28` — зафіксувати кожну помилку компіляції як приховану залежність від Apple SDK
 - [ ] Для кожної знайденої залежності вирішити: абстрагувати протоколом (лишається в Core) чи визнати платформо-специфічною (переїжджає в Infrastructure)
 - [ ] Перенести `Services/` (Managers) — складніша частина, більше протокольних меж
-- [ ] Усунути виняток `CoreDataSessionStore` — дати йому протокол за зразком `CoreDataStreakStore`/`StreakActivityStore`, щоб з'явилась точка для Android-реалізації (наразі документовано як "accepted exception" без абстракції)
+- [ ] ~~Усунути виняток `CoreDataSessionStore`~~ — **не робити.** Це задокументований прийнятий виняток (див. архітектурні правила): `CoreDataSessionStore` свідомо працює без Store-протоколу. Для Android-порту це означає лише «зроби окремий адаптер», а не «перероби існуючий тип».
 - [x] ~~Прогнати `jextract` на пробному наборі~~ — **зроблено 2026-10-02**: 12 проб, перелік підтримуваних/непідтримуваних типів у розділі «Обмеження JNI-межі»
 - [x] ~~Знайти розв'язок для `AsyncStream` і клоузур~~ — **зроблено**: протокол- підписка, перевірена end-to-end (Java + thunk під Android)
 - [ ] **Вирішити, коли робити каскад `public`** для 58 типів `Models/` — тільки після створення SPM-пакета, інакше двічі
