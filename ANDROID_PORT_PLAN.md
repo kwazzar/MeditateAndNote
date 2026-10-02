@@ -170,7 +170,7 @@ Kotlin бачить **тільки те, що `jextract` вміє перекла
 
 #### Статус: три блокери вже виправлені
 
-Виправлено 2026-10-02, branch `portfix` (ще не злито):
+Виправлено 2026-10-02, branch `portfix`, злито в `main` (merge `a2e00a9`):
 
 | Блокер | Фікс | Файлів |
 | --- | --- | --- |
@@ -198,22 +198,45 @@ iOS build green, **477 tests passed, 0 failures**. Правки дають ко�
 @inline(__always) func nonNilSymbols(_ v: [String]) -> [String] { v }
 ```
 
-#### Проєкт живе в Swift 5 mode
+#### Проєкт тепер живе в Swift 6 mode
 
-`SWIFT_VERSION = 5.0` у всіх конфігураціях Xcode-проєкту. Тому весь клас region-isolation помилок зараз **не видний** — Swift 5 mode робить їх мовчаннями.
+`SWIFT_VERSION = 6.0` у всіх шести конфігураціях Xcode-проєкту, разом з
+`SWIFT_APPROACHABLE_CONCURRENCY = YES`. Міграція зроблена на iOS 2026-10-02
+(branch `swift6`, merge `84a5b08`): 477 тестів проходять, sendability-попереджень — нуль.
 
-Наслідок: SPM-пакет доведеться створити з `swift-tools-version:6.0`, і тоді цей клас вистрелить одразу. Краще зробити це **на iOS** до створення пакета.
+Це закрито той самий клас region-isolation помилок, який інакше вистрілив би одразу
+в SPM-пакеті з `swift-tools-version:6.0`.
 
-#### Аудит решти Store/Service-протоколів: робити нічого не треба
+#### Аудит решти Store/Service-протоколів: перша версія була неповною
 
-Перевірено скриптом по 4 actor-ах і 20 не-Sendable протоколах:
+Скриптовий аудит по 4 actor-ах і 20 не-Sendable протоколах показав, що **Жоден** з них
+не тримається actor-ом, і на цьому було зроблено висновок «робити нічого не треба».
 
-- Усі existential-и, які тримають actor-и, **вже `Sendable`**: `NoteDataSource`, `AIDraftService`, `AIDraftSessionStore`, `EmbeddingService`, `NoteEmbeddingStore`, `NoteAnalyzer`, `NoteInsightStore`.
-- **Жоден** із 20 не-Sendable протоколів не тримається actor-ом. Їх тримають `@MainActor` ViewModel-и, звичайні `final class` або `struct`-и.
+**Цей висновок був хибним.** Скрипт перевіряв лише «хто тримає existential», але
+`@MainActor` ViewModel-и теж передають його в `async`-методи — і під Swift 6 mode це теж
+перетин isolation-межі. Реальна збірка показала `sending 'self.manager' risks causing
+data races` у `ReminderSettingsSection`, `NoteManager`, `NoteInsightManager`, `AIDraftManager`.
 
-За правилом «робити все Sendable — не робити нічого без потреби» (skill `swift-concurrency`, mistake #3) решта протоколів **не потребують** змін: вони не перетинають isolation-межу. Масова додача `: Sendable` була б 20 рядками шуму.
+Висновок, який тепер підтверджений компілятором: **Sendable-конформанс треба додавати
+там, де existential реально перетинає isolation boundary, а `Sendable` не робити
+бездумно масово.** Підтверджені зміни:
 
-**Висновок:** `NoteDataSource` був єдиним реальним випадком. Рефакторинг решти Store-протоколів — не потрібен.
+| Протокол / тип | Причина |
+| --- | --- |
+| `NoteProvidable` / `NoteManageable` | existential передається в `@MainActor` ViewModel-и з `await` |
+| `NoteInsightProvidable` / `NoteInsightManageable` | те саме, `NoteInsightsViewModel` |
+| `AIDraftProvidable` / `AIDraftManageable` | те саме, `NoteEditorViewModel` |
+| `Destination`, `PushDestination`, `MeditationDuration` | асоційовані значення в `Sendable`-типі |
+| `DeepLinkParser.parse` | `@Sendable`-closure, що зберігається |
+
+Плюс `@MainActor` на UI-синглтонах (`AnimationSettings`, `SoundSettings`, `SoundPlayer`)
+та `@unchecked Sendable` на immutable-контейнерах (`AppContainer`, `CoreDataManager`).
+
+**Чому `SWIFT_APPROACHABLE_CONCURRENCY` важливіший за ручну розсипку `@MainActor`:**
+async-функції успадковують ізоляцію викликача, тому `await` на `@MainActor`-коді з
+`@MainActor`-контексту більше не вимагає переходу. Перевірено експериментально: з
+цим прапорцем 8 помилок `sending 'self.manager'` у `ReminderSettingsSection` зникли
+**без** жодної зміни в `ReminderManager`.
 
 #### Правило, яке себе виправдало
 
