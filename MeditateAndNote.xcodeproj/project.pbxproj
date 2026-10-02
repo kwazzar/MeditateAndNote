@@ -26,6 +26,7 @@
 		3BCCAAAA0000000000000001 /* AIDraftSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BCCAAAA0000000000000003 /* AIDraftSettings.swift */; };
 		3BCCAAAA0000000000000002 /* AIDraftSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BCCAAAA0000000000000004 /* AIDraftSettingsView.swift */; };
 		3BCCAAAA0000000000000005 /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BCCAAAA0000000000000006 /* KeychainService.swift */; };
+		C4A976B81F1A4B1483080B70 /* AIDraftSettingsObservable.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE55C23FE1A24E7EA0A2A2A4 /* AIDraftSettingsObservable.swift */; };
 		3BCCAAAA0000000000000008 /* AIDraftMetricStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BCCAAAA0000000000000007 /* AIDraftMetricStore.swift */; };
 		3BCCAAAA0000000000000010 /* CoreDataAIDraftMetricStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BCCAAAA0000000000000009 /* CoreDataAIDraftMetricStore.swift */; };
 		3BCCAAAA0000000000000012 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 3BCCAAAA0000000000000011 /* PrivacyInfo.xcprivacy */; };
@@ -175,6 +176,7 @@
 		E918FB33F6CC56F39066F7DA /* ReminderManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FC0FF6183D64D88B5E241EC /* ReminderManagerTests.swift */; };
 		ED94EC7AAB0A4DEA9699E0DE /* NoteInsightsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07122C96FB9D45AD927BAB76 /* NoteInsightsSection.swift */; };
 		EE0000012026090500000008 /* UserDefaultsStreakStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE0000012026090500000004 /* UserDefaultsStreakStore.swift */; };
+		EE000001202609050000000A /* UserDefaultsAIDraftSettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE0000012026090500000009 /* UserDefaultsAIDraftSettingsStore.swift */; };
 		F05695A5D9AD47FAB496372B /* StreakInsightManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0283B1D3266C4E2A884A4011 /* StreakInsightManagerTests.swift */; };
 		F3D3C6379B3241BC96485A7E /* InsightsViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38F6895E04174D1A9BFEA320 /* InsightsViewModelTests.swift */; };
 		F78204ED1AFA449086104A36 /* NoteAnalysisError.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4AFEC1DFE2F4D45BD5C2DD6 /* NoteAnalysisError.swift */; };
@@ -230,6 +232,7 @@
 		38F6895E04174D1A9BFEA320 /* InsightsViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InsightsViewModelTests.swift; sourceTree = "<group>"; };
 		3BCCAAAA0000000000000003 /* AIDraftSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIDraftSettings.swift; sourceTree = "<group>"; };
 		3BCCAAAA0000000000000004 /* AIDraftSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIDraftSettingsView.swift; sourceTree = "<group>"; };
+		DE55C23FE1A24E7EA0A2A2A4 /* AIDraftSettingsObservable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIDraftSettingsObservable.swift; sourceTree = "<group>"; };
 		3BCCAAAA0000000000000006 /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
 		3BCCAAAA0000000000000007 /* AIDraftMetricStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIDraftMetricStore.swift; sourceTree = "<group>"; };
 		3BCCAAAA0000000000000009 /* CoreDataAIDraftMetricStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataAIDraftMetricStore.swift; sourceTree = "<group>"; };
@@ -379,6 +382,7 @@
 		E7D4CA8EC18784FA6B3313C1 /* AIDraftSessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIDraftSessionStore.swift; sourceTree = "<group>"; };
 		EC61CA12660E463FBF99E093 /* NoteEditorAIDraftTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NoteEditorAIDraftTests.swift; sourceTree = "<group>"; };
 		EE0000012026090500000004 /* UserDefaultsStreakStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDefaultsStreakStore.swift; sourceTree = "<group>"; };
+		EE0000012026090500000009 /* UserDefaultsAIDraftSettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDefaultsAIDraftSettingsStore.swift; sourceTree = "<group>"; };
 		F309EADEBFC34EA8AEDBC615 /* RouterTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RouterTests.swift; sourceTree = "<group>"; };
 		FBAB63B4D20C32569B0BAE55 /* StreakInsightManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StreakInsightManager.swift; sourceTree = "<group>"; };
 		FC3FB19986AD48CBB9285299 /* NoteInsightManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteInsightManager.swift; sourceTree = "<group>"; };
@@ -717,6 +721,7 @@
 				CC0000042026082800000004 /* CoreDataStreakStore.swift */,
 				C1C20BEA552DE5FA2D6680E4 /* UserDefaultsReminderSettingsStore.swift */,
 				EE0000012026090500000004 /* UserDefaultsStreakStore.swift */,
+				EE0000012026090500000009 /* UserDefaultsAIDraftSettingsStore.swift */,
 				6FF5CC1CC273909C3EF0192B /* CoreDataAIDraftSessionStore.swift */,
 				3BCCAAAA0000000000000009 /* CoreDataAIDraftMetricStore.swift */,
 				5BC160799DFD41468C12B455 /* CoreDataNoteInsightStore.swift */,
@@ -879,6 +884,7 @@
 				09E4AAB15B1383604B747363 /* InsightsViewModel.swift */,
 				C41C9EA24F3766528DEEC350 /* NoteAIDraftViewModel.swift */,
 				752F419E4E3F4F8E97054D73 /* NoteInsightsViewModel.swift */,
+				DE55C23FE1A24E7EA0A2A2A4 /* AIDraftSettingsObservable.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -1199,6 +1205,7 @@
 				3648450FC97396F2224840CD /* ReminderSettings.swift in Sources */,
 				096B78E3E88B87EA5E3E59B7 /* UserDefaultsReminderSettingsStore.swift in Sources */,
 				EE0000012026090500000008 /* UserDefaultsStreakStore.swift in Sources */,
+				EE000001202609050000000A /* UserDefaultsAIDraftSettingsStore.swift in Sources */,
 				2FC28D69C78D5561F2B28F30 /* NotificationScheduling.swift in Sources */,
 				1319DD5B5051A8A4C9C10470 /* ReminderManager.swift in Sources */,
 				E2972A3FC4C853E0382811E2 /* ReminderSettingsSection.swift in Sources */,
@@ -1213,6 +1220,7 @@
 				BCA229FAEFFF55C7207D8533 /* AIDraftSessionStore.swift in Sources */,
 				6A3A783F164CE76CEAB4DBEE /* AIDraftManager.swift in Sources */,
 				3BCCAAAA0000000000000005 /* KeychainService.swift in Sources */,
+				C4A976B81F1A4B1483080B70 /* AIDraftSettingsObservable.swift in Sources */,
 				3BCCAAAA0000000000000008 /* AIDraftMetricStore.swift in Sources */,
 				3BCCAAAA0000000000000010 /* CoreDataAIDraftMetricStore.swift in Sources */,
 				C51D477CB42F9FCB911391AD /* CoreDataAIDraftSessionStore.swift in Sources */,

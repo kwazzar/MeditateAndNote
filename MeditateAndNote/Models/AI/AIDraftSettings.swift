@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import Observation
 
 struct AIDraftSettings: Equatable, Codable, Sendable {
     /// Whether to use remote API fallback when on-device AI (Foundation Models) is unavailable.
@@ -40,7 +39,7 @@ struct AIDraftSettings: Equatable, Codable, Sendable {
     }
 }
 
-// MARK: - Settings Store Protocol & Implementation
+// MARK: - Settings Store Contract
 
 protocol AIDraftSettingsStore: Sendable {
     func loadSettings() -> AIDraftSettings
@@ -48,95 +47,4 @@ protocol AIDraftSettingsStore: Sendable {
     func getAPIKey() -> String?
     func saveAPIKey(_ key: String) throws
     func deleteAPIKey() throws
-}
-
-// MARK: - Observable Store Wrapper for SwiftUI
-
-@MainActor @Observable final class AIDraftSettingsStoreObservable {
-    var settings: AIDraftSettings
-    var showAPIKeySheet = false
-    /// Staging text for the key field. Memory-only — never persisted or
-    /// logged. Lives here (not in view @State) so view-identity churn can't
-    /// wipe typed/pasted text mid-entry.
-    var draftAPIKey = ""
-
-    private let store: any AIDraftSettingsStore
-
-    init(store: any AIDraftSettingsStore = UserDefaultsAIDraftSettingsStore()) {
-        self.store = store
-        self.settings = store.loadSettings()
-    }
-
-    func loadSettings() -> AIDraftSettings {
-        settings = store.loadSettings()
-        return settings
-    }
-
-    func saveSettings(_ settings: AIDraftSettings) {
-        self.settings = settings
-        store.saveSettings(settings)
-    }
-
-    func getAPIKey() -> String? {
-        store.getAPIKey()
-    }
-
-    func saveAPIKey(_ key: String) async throws {
-        try store.saveAPIKey(key)
-    }
-
-    func deleteAPIKey() throws {
-        try store.deleteAPIKey()
-    }
-
-    var apiKey: String? {
-        get { store.getAPIKey() }
-        set {
-            guard let newValue else { return }
-            try? store.saveAPIKey(newValue)
-        }
-    }
-}
-
-// MARK: - Settings Store Implementation
-
-final class UserDefaultsAIDraftSettingsStore: AIDraftSettingsStore, @unchecked Sendable {
-    private let userDefaults: UserDefaults
-    private let keychain: any KeychainServiceProtocol
-    private let settingsKey = "com.meditateandnote.ai.settings"
-    private let apiKeyAccount = "remote_llm_api_key"
-
-    init(
-        userDefaults: UserDefaults = .standard,
-        keychain: any KeychainServiceProtocol = KeychainService()
-    ) {
-        self.userDefaults = userDefaults
-        self.keychain = keychain
-    }
-
-    func loadSettings() -> AIDraftSettings {
-        guard let data = userDefaults.data(forKey: settingsKey),
-              let settings = try? JSONDecoder().decode(AIDraftSettings.self, from: data) else {
-            return AIDraftSettings()
-        }
-        return settings
-    }
-
-    func saveSettings(_ settings: AIDraftSettings) {
-        if let data = try? JSONEncoder().encode(settings) {
-            userDefaults.set(data, forKey: settingsKey)
-        }
-    }
-
-    func getAPIKey() -> String? {
-        keychain.read(key: apiKeyAccount)
-    }
-
-    func saveAPIKey(_ key: String) throws {
-        try keychain.save(key: apiKeyAccount, value: key)
-    }
-
-    func deleteAPIKey() throws {
-        try keychain.delete(key: apiKeyAccount)
-    }
 }

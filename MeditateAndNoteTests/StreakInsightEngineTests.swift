@@ -144,7 +144,7 @@ final class StreakInsightEngineTests: XCTestCase {
         }
 
         let snapshot = makeSnapshot(activities: activities)
-        let insights = sut.generateInsights(from: snapshot)
+        let insights = sut.generateInsights(from: snapshot, today: date(2026, 9, 3))
         let heatmap = insights.first { $0.title == "Weekly Heatmap" }
 
         XCTAssertNotNil(heatmap)
@@ -162,7 +162,7 @@ final class StreakInsightEngineTests: XCTestCase {
         }
 
         let snapshot = makeSnapshot(activities: activities)
-        let insights = sut.generateInsights(from: snapshot)
+        let insights = sut.generateInsights(from: snapshot, today: date(2026, 9, 3))
         let heatmap = insights.first { $0.title == "Weekly Heatmap" }
 
         XCTAssertNotNil(heatmap)
@@ -179,7 +179,7 @@ final class StreakInsightEngineTests: XCTestCase {
         }
         let snapshot = makeSnapshot(activities: activities)
 
-        let insights = sut.generateInsights(from: snapshot)
+        let insights = sut.generateInsights(from: snapshot, today: date(2026, 9, 4))
         let gap = insights.first { $0.title == "Note Gap" }
 
         XCTAssertNotNil(gap)
@@ -194,7 +194,7 @@ final class StreakInsightEngineTests: XCTestCase {
         }
         let snapshot = makeSnapshot(activities: activities)
 
-        let insights = sut.generateInsights(from: snapshot)
+        let insights = sut.generateInsights(from: snapshot, today: date(2026, 9, 4))
         let gap = insights.first { $0.title == "Meditation Gap" }
 
         XCTAssertNotNil(gap)
@@ -211,7 +211,7 @@ final class StreakInsightEngineTests: XCTestCase {
         }
         let snapshot = makeSnapshot(activities: activities)
 
-        let insights = sut.generateInsights(from: snapshot)
+        let insights = sut.generateInsights(from: snapshot, today: date(2026, 9, 4))
         let gap = insights.first { $0.title == "Note Gap" || $0.title == "Meditation Gap" }
 
         XCTAssertNil(gap)
@@ -229,7 +229,7 @@ final class StreakInsightEngineTests: XCTestCase {
         ]
         let snapshot = makeSnapshot(activities: activities)
 
-        let insights = sut.generateInsights(from: snapshot)
+        let insights = sut.generateInsights(from: snapshot, today: date(2026, 9, 4))
         let meditationTime = insights.first { $0.title == "Meditation Time" }
 
         XCTAssertNotNil(meditationTime)
@@ -245,7 +245,7 @@ final class StreakInsightEngineTests: XCTestCase {
         ]
         let snapshot = makeSnapshot(activities: activities)
 
-        let insights = sut.generateInsights(from: snapshot)
+        let insights = sut.generateInsights(from: snapshot, today: date(2026, 9, 4))
         let noteTime = insights.first { $0.title == "Note Time" }
 
         XCTAssertNotNil(noteTime)
@@ -259,7 +259,7 @@ final class StreakInsightEngineTests: XCTestCase {
         ]
         let snapshot = makeSnapshot(activities: activities)
 
-        let insights = sut.generateInsights(from: snapshot)
+        let insights = sut.generateInsights(from: snapshot, today: date(2026, 9, 4))
         let timeInsights = insights.filter { $0.title == "Meditation Time" || $0.title == "Note Time" }
 
         XCTAssertTrue(timeInsights.isEmpty)
@@ -318,7 +318,7 @@ final class StreakInsightEngineTests: XCTestCase {
         ]
         let snapshot = makeSnapshot(activities: activities, currentStreak: 5, longestStreak: 10)
 
-        let insights = sut.generateInsights(from: snapshot)
+        let insights = sut.generateInsights(from: snapshot, today: date(2026, 9, 4))
         let risk = insights.first { $0.title == "Streak at Risk!" }
 
         XCTAssertNotNil(risk)
@@ -332,7 +332,7 @@ final class StreakInsightEngineTests: XCTestCase {
         ]
         let snapshot = makeSnapshot(activities: activities, currentStreak: 0)
 
-        let insights = sut.generateInsights(from: snapshot)
+        let insights = sut.generateInsights(from: snapshot, today: date(2026, 9, 4))
         let risk = insights.first { $0.title == "Streak at Risk!" }
 
         XCTAssertNil(risk)
@@ -391,7 +391,7 @@ final class StreakInsightEngineTests: XCTestCase {
         }
         let snapshot = makeSnapshot(activities: activities, currentStreak: 8, longestStreak: 10)
 
-        let insights = sut.generateInsights(from: snapshot)
+        let insights = sut.generateInsights(from: snapshot, today: date(2026, 9, 4))
         let milestone = insights.first { $0.title == "Near Record!" }
 
         XCTAssertNotNil(milestone)
@@ -405,7 +405,7 @@ final class StreakInsightEngineTests: XCTestCase {
         }
         let snapshot = makeSnapshot(activities: activities, currentStreak: 10, longestStreak: 10)
 
-        let insights = sut.generateInsights(from: snapshot)
+        let insights = sut.generateInsights(from: snapshot, today: date(2026, 9, 4))
         let milestone = insights.first { $0.title == "Near Record!" }
 
         XCTAssertNil(milestone)
@@ -420,7 +420,7 @@ final class StreakInsightEngineTests: XCTestCase {
         ]
         let snapshot = makeSnapshot(activities: activities, currentStreak: 3)
 
-        let insights = sut.generateInsights(from: snapshot)
+        let insights = sut.generateInsights(from: snapshot, today: date(2026, 9, 4))
         let recs = sut.generateRecommendations(from: insights)
 
         let riskRec = recs.first { $0.title == "Don't break your streak!" }
@@ -435,7 +435,7 @@ final class StreakInsightEngineTests: XCTestCase {
         }
         let snapshot = makeSnapshot(activities: activities, currentStreak: 3)
 
-        let insights = sut.generateInsights(from: snapshot)
+        let insights = sut.generateInsights(from: snapshot, today: date(2026, 9, 4))
         let recs = sut.generateRecommendations(from: insights)
 
         for i in 1..<recs.count {
@@ -449,7 +449,7 @@ final class StreakInsightEngineTests: XCTestCase {
         let sut = makeSUT()
         let snapshot = makeSnapshot(activities: [])
 
-        let insights = sut.generateInsights(from: snapshot)
+        let insights = sut.generateInsights(from: snapshot, today: date(2026, 9, 4))
         // Should still produce completion rate insights (0%)
         let nonCompletion = insights.filter { $0.category != .completion }
         XCTAssertTrue(nonCompletion.isEmpty)
