@@ -9,7 +9,9 @@ import CoreData
 import Foundation
 import OSLog
 
-final class CoreDataNoteDataSource: NoteDataSource {
+// ponytail: @unchecked — immutable `manager` reference only; every method
+// hops isolation via `viewContext.perform`, so no context is ever shared.
+final class CoreDataNoteDataSource: NoteDataSource, @unchecked Sendable {
 
     typealias Item = Note
 

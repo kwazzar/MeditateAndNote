@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Observation
 
 struct NoteMenu: View {
     @State var viewModel: NoteMenuViewModel

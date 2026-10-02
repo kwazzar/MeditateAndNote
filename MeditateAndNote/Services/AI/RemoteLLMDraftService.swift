@@ -23,7 +23,7 @@ struct RemoteLLMDraftService: AIDraftService, @unchecked Sendable {
 
     init(
         session: URLSession = .shared,
-        settingsStore: any AIDraftSettingsStore = UserDefaultsAIDraftSettingsStore(),
+        settingsStore: any AIDraftSettingsStore,
         userDefaults: UserDefaults = .standard
     ) {
         self.session = session

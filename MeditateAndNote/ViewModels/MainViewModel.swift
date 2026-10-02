@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Observation
 
 // Home tab: resolves the last selected meditation and streak display.
 // Note-list responsibilities live in NoteMenuViewModel (Notes tab).
