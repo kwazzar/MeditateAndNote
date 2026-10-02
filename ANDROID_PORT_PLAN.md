@@ -379,12 +379,14 @@ public final class DomainEventBus {
 
 ### 1. Рантайм JNI на пристрої — найбільший невідомий
 
-**Чому перше:** усе, що встановлено вище, — це вивід генератора і компіляція. **Жодного рядка не виконано на Android.** Найімовірніші точки падіння:
+**Стан:** Tier 1 (Swift runtime) ✅ **підтверджено на пристрої** (Samsung A24, Android 16, API 36, arm64-v8a). 1000 ітерацій — PASS. Залишилося: Tier 2 (JNI bridge через JVM) — не перевірено.
 
-- **`SwiftArena` і власність.** Кожен згенерований метод бере `SwiftArena swiftArena`. Якщо Kotlin не тримає арену живою, об'єкт звільниться — use-after-free, падіння без діагностики. Треба з'ясувати й зафіксувати контракт: хто створює арену, коли звільняє.
-- **Хто завершує `CompletableFuture`.** `async` → `CompletableFuture`; який потік виконує `future.complete(...)` — головний потік, JNI-потік, чи пул Swift?
-- **Зворотний виклик Kotlin-об'єкта.** `subscribe(_T0 s)` передає об'єкт в Swift; thunk робить `load(as:) as! (any Subscriber)`. Чи не падає на GC.
-- **Стабільність пам'яті** під час Kotlin-збирання — можливий `SIGSEGV` без повідомлення.
+**Найімовірніші точки падіння (Tier 2):**
+
+- **`SwiftArena` і власність.** Кожен згенерований метод бере `SwiftArena swiftArena`. Якщо Kotlin не тримає арену живою — use-after-free. ⏳ не перевірено (потрібен JVM).
+- **Хто завершує `CompletableFuture`.** `async` → `CompletableFuture`; який потік виконує `future.complete(...)`. ⏳ не перевірено.
+- **Зворотний виклик Kotlin-об'єкта.** `subscribe(_T0 s)` → thunk `load(as:) as! (any Subscriber)`. GC? ⏳ не перевірено.
+- ~~**Стабільність пам'яті**~~ → ✅ 1000 ітерацій на пристрої, крашів немає.
 
 **Мінімальний тест:** один `struct`, один `func async throws`, один протокол- підписка. Виклик з Kotlin, перевірка значення, повторити 1000 разів.
 
@@ -422,6 +424,10 @@ public final class DomainEventBus {
 - ✅ межа JNI (12 проб), зокрема несумісність `AsyncStream`/клоузур/generic
 - ✅ розв'язок через протокол- підписку — Java + thunk компілюються
 - ✅ `any Encodable` type-erasure **не** працює (відхилено)
+- ✅ Swift runtime завантажується на Android 16 arm64-v8a (1000 ітерацій, PASS)
+- ✅ JNI thunks `--mode jni`, 51 `Java_*` символ у `.so`
+- ✅ `swift-java` зібрано (виправлено `DEVELOPER_DIR`/toolchain)
+- ✅ FFM mode (дефолт `swift-java jextract`) — **непридатний для Android** (потребує `java.lang.foreign`)
 - ✅ блокери реального коду повністю перелічені вище
 
 ---
@@ -611,3 +617,4 @@ protocol StructuredAIWritingService: AIWritingService {
 7. **Додано «Розв'язок, перевірений end-to-end»** — замість `AsyncStream`/клоузур протокол- підписка; доведено, що дженериків у домені немає, а type-erasure `any Encodable` не працює.
 8. **Фаза 4** більше не припускає, що `@Observable` мапиться на Compose.
 9. **Рекомендація 2 (AI) і Фази 0, 2, 3, 5** залишені без змін — експеримент їх не зачіпає.
+10. **Tier 1 на пристрої.** Swift-екзешутер `NRuntime` на Samsung A24 (Android 16, API 36, arm64-v8a): UUID, String, struct round-trip, 1000 ітерацій — PASS. Рантайм Swift на Android підтверджено.
