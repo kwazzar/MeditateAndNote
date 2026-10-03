@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import MeditateAndNoteCore
 
 struct MeditationScope: DomainEventRouting {
     let service: MeditationService

@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import MeditateAndNoteCore
 
 struct MainView: View {
     @State var viewModel: MainViewModel

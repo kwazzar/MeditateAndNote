@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import MeditateAndNoteCore
 
 struct SettingsScope {
     let onboardingStore: any OnboardingStore

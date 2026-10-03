@@ -7,18 +7,17 @@
 //
 
 import Foundation
-import MeditateAndNoteCore
 
-struct StreakInsightEngine {
+public struct StreakInsightEngine {
     private let calendar: Calendar
 
-    init(calendar: Calendar = .current) {
+    public init(calendar: Calendar = .current) {
         self.calendar = calendar
     }
 
     // MARK: - Public API
 
-    func generateInsights(from snapshot: StreakSnapshot, range: StreakRange = .last30, today: Date = Date()) -> [StreakInsight] {
+    public func generateInsights(from snapshot: StreakSnapshot, range: StreakRange = .last30, today: Date = Date()) -> [StreakInsight] {
         var insights: [StreakInsight] = []
         let today = calendar.startOfDay(for: today)
 
@@ -37,7 +36,7 @@ struct StreakInsightEngine {
     /// Weekly buckets over the given range, newest bucket last.
     /// Buckets are aligned to the engine's `firstWeekday` and trimmed so the
     /// trailing bucket never extends past `today`.
-    func weeklyBreakdown(from snapshot: StreakSnapshot, range: StreakRange, today: Date = Date()) -> [WeeklyBucket] {
+    public func weeklyBreakdown(from snapshot: StreakSnapshot, range: StreakRange, today: Date = Date()) -> [WeeklyBucket] {
         let startDay = calendar.startOfDay(for: today)
         guard let rangeStart = calendar.date(byAdding: .day, value: -(range.dayCount - 1), to: startDay) else {
             return []
@@ -104,7 +103,7 @@ struct StreakInsightEngine {
         return calendar.date(byAdding: .day, value: -offset, to: date) ?? date
     }
 
-    func generateRecommendations(from insights: [StreakInsight]) -> [UserRecommendation] {
+    public func generateRecommendations(from insights: [StreakInsight]) -> [UserRecommendation] {
         var recommendations: [UserRecommendation] = []
 
         for insight in insights {
@@ -148,7 +147,7 @@ struct StreakInsightEngine {
         return insights
     }
 
-    func completionRate(in range: StreakRange, snapshot: StreakSnapshot, today: Date) -> Double {
+    public func completionRate(in range: StreakRange, snapshot: StreakSnapshot, today: Date) -> Double {
         let activities = snapshot.activities
         var completeCount = 0
         for offset in 0..<range.dayCount {
@@ -604,7 +603,7 @@ struct StreakInsightEngine {
     /// `[1 / 2 / 3 / 4-6 / 7-13 / 14+]` and computes the median length.
     /// Returns an empty distribution (zero streaks) for an empty
     /// snapshot.
-    func streakLengthDistribution(from snapshot: StreakSnapshot) -> StreakLengthDistribution {
+    public func streakLengthDistribution(from snapshot: StreakSnapshot) -> StreakLengthDistribution {
         let runs = extractStreakRuns(from: snapshot)
         let lengths = runs.map(\.length)
 
@@ -642,7 +641,7 @@ struct StreakInsightEngine {
     /// fraction of runs of length >= n that survived to length n+1.
     /// `avgRecoveryDays` is the mean of recovery gaps; 0 when there are
     /// no recoveries.
-    func resilience(from snapshot: StreakSnapshot) -> StreakResilience {
+    public func resilience(from snapshot: StreakSnapshot) -> StreakResilience {
         let runs = extractStreakRuns(from: snapshot)
         guard !runs.isEmpty else {
             return StreakResilience(
@@ -724,7 +723,7 @@ struct StreakInsightEngine {
     /// Returns, for each weekday (1...7), the fraction of streak breaks
     /// whose first missing day fell on that weekday. Days with no
     /// recorded breaks get 0.
-    func weekdayBreakPattern(from snapshot: StreakSnapshot) -> [Int: Double] {
+    public func weekdayBreakPattern(from snapshot: StreakSnapshot) -> [Int: Double] {
         let runs = extractStreakRuns(from: snapshot)
         let breakWeekdays = runs.compactMap(\.breakWeekday)
         guard !breakWeekdays.isEmpty else { return [:] }
@@ -741,7 +740,7 @@ struct StreakInsightEngine {
     /// with the lifetime `breakRate` for each weekday. Use this when
     /// rendering the lifetime section; the existing `weakDayInsights`
     /// path remains unchanged for the range-aware UI.
-    func weekdayBreakHeatmapData(from snapshot: StreakSnapshot) -> WeekdayHeatmapData {
+    public func weekdayBreakHeatmapData(from snapshot: StreakSnapshot) -> WeekdayHeatmapData {
         let completionStats = lifetimeWeekdayCompletionStats(snapshot: snapshot)
         let breakPattern = weekdayBreakPattern(from: snapshot)
 

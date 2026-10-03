@@ -678,6 +678,53 @@ Gradle 9.8.0 встановлено через brew — знадобиться �
 1. `ReminderManager` **вже** залежав від протоколу, а не від concrete-типу. Помилка в пробі виникла тому, що видалений файл `NotificationScheduling.swift` містив і протокол, і адаптер — вилучивши файл, ми втратили й протокол. Тобто «замінити concrete на протокол» не було потрібно; потрібно було лише **розділити файл**.
 2. `AIDraftServiceFactory` — це **composition root**, а не порушення. Він навмисно вибирає реалізацію через `#available(iOS 26.0, *)`, тобто залежно від можливостей платформи. Такий вибір лишається в app, у Core йому не місце. Android матиме власну фабрику.
 
+## Винесення `Services/` у пакет — перша хвиля (11 файлів)
+
+Перенесено все, що не тягне жодного Apple-only import:
+
+| Файл | Що це |
+| --- | --- |
+| `Events/DomainEvents.swift` | шина доменних подій, JNI-контракт |
+| `Streak/StreakInsightEngine.swift` | чистий engine інсайтів |
+| `Streak/StreakInsightManager.swift` | оркестратор інсайтів |
+| `AI/AIDraftService.swift`, `AI/AIDraftSessionStore.swift` | protocol + disabled stub |
+| `AI/EmbeddingService.swift`, `AI/NoteAnalyzer.swift` | protocol-и |
+| `AI/HeuristicNoteAnalyzer.swift` | портативний евристичний analyzer |
+| `Meditation/MeditationService.swift` | protocol + `SampleMeditationService` |
+| `Onboarding/OnboardingStore.swift` | store protocol + `UserDefaultsOnboardingStore` |
+| `Telemetry/AIDraftMetricStore.swift` | store protocol + in-memory |
+
+Залишено в app як composition root або платформну реалізацію: `AIDraftServiceFactory`,
+`ThemeManager`, `FoundationModels*`, `NLEmbeddingService`, `KeychainService`,
+`SoundPlayer`, `SystemNotificationScheduler`, `RemoteLLMDraftService`, `NoteManager`,
+`NotesRepository`, `StreakTracker`, `ReminderManager`, `AIDraftManager`,
+`NoteInsightManager`, `SemanticSearchManager`.
+
+`StreakInsightManager` мав `convenience init(streakTracker: StreakTracker)` —
+єдину залежність від concrete-типу. Видалено: основний `init` уже приймає
+`any StreakSnapshotProvidable`, якого `StreakTracker` реалізує.
+
+**Скрипт каскаду `public` довелось переписати.** Перша версия орієнтувалася на
+відступи і вставляла `public` усередині тіл функцій (`HeuristicNoteAnalyzer.swift:17`
+набув `public let analyzable` всередині `func analyze`), а також не враховувала, що
+`public protocol` не матчить патерн `^protocol`. Друга версия чинила те саме, бо
+`^(public\s+)+` не допускав відступу перед `public`. Правильна версия відстежує
+**глибину дужок**, а не відступи: `public` дозволений лише на глибині 0 (типи) та
+1 (їхні члени), ніколи всередині протоколу, `public extension` чи `enum case`.
+Перевірено: другий прогін — 0 файлів, тобто ідемпотентно.
+
+Три типи потребували явних `public init()`, бо синтезований memberwise-`init`
+завжди `internal`: `HeuristicNoteAnalyzer`, `SampleMeditationService`,
+`DomainEventBus`. `DisabledAIDraftService` — той самий випадок.
+
+Каскадні помилки в `MeditationView.swift` («explicit `return` in `ViewBuilder`»)
+виявилися наслідком недоступного `SampleMeditationService()` — компілятор просто
+не доходив до перевірки ViewBuilder.
+
+Дві попередження на Android у `StreakInsightEngine` (`?? []` зайвий) — очікувані:
+corelibs декларує `weekdaySymbols` як неопціональний `[String]`, тоді як Darwin
+має `[String]?`. Ціна за єдиний вислів, який компілюється на обох платформах.
+
 `SearchState` і `OnboardingPage` **не** переносилися в Core: `SearchState` — `@Observable` стан презентації, `OnboardingPage` містить SF Symbol-и. Обидва лишаються в застосунку, але вже не всередині `Views/`, щоб ViewModel не залежав від View-шару. Для Android UI дублюється — їм у Core не місце.
 - [ ] Перенести `Services/` (Managers) — складніша частина, більше протокольних меж
 - [ ] ~~Усунути виняток `CoreDataSessionStore`~~ — **не робити.** Це задокументований прийнятий виняток (див. архітектурні правила): `CoreDataSessionStore` свідомо працює без Store-протоколу. Для Android-порту це означає лише «зроби окремий адаптер», а не «перероби існуючий тип».

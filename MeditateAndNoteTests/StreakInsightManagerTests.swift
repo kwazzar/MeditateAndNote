@@ -56,7 +56,7 @@ final class StreakInsightManagerTests: XCTestCase {
         )
         let store = SeededStreakStore(seededSnapshot: snapshot)
         let tracker = StreakTracker(calendar: calendar, store: store)
-        return (StreakInsightManager(streakTracker: tracker), tracker, store)
+        return (StreakInsightManager(snapshotProvider: tracker), tracker, store)
     }
 
     // MARK: - Insights generation

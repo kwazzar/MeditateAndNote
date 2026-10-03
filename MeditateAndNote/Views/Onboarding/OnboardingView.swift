@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import MeditateAndNoteCore
 
 /// Paging container for the onboarding flow: swipe between slides with a
 /// page-dots indicator, "Skip" button on every slide and a

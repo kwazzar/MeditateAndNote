@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import MeditateAndNoteCore
 
 /// Coordinates the launch-time gating between the onboarding flow and the main
 /// tab bar, plus the Router transition that runs when onboarding finishes.

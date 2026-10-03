@@ -8,9 +8,8 @@
 //
 
 import Foundation
-import MeditateAndNoteCore
 
-protocol EmbeddingService: Sendable {
+public protocol EmbeddingService: Sendable {
     /// Whether an embedding model is available on this device right now.
     var isAvailable: Bool { get }
 
@@ -21,14 +20,14 @@ protocol EmbeddingService: Sendable {
 
 // MARK: - Unavailable stub (tests, previews, unsupported languages)
 
-struct DisabledEmbeddingService: EmbeddingService {
-    var isAvailable: Bool { false }
+public struct DisabledEmbeddingService: EmbeddingService {
+    public var isAvailable: Bool { false }
 
-    func embed(_ text: String) async throws -> [Float] {
+    public func embed(_ text: String) async throws -> [Float] {
         throw EmbeddingError.modelUnavailable
     }
 }
 
-enum EmbeddingError: Error {
+public enum EmbeddingError: Error {
     case modelUnavailable
 }

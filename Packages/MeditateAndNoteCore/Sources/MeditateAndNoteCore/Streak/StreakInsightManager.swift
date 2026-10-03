@@ -6,11 +6,10 @@
 //
 
 import Foundation
-import MeditateAndNoteCore
 
 // MARK: - Protocol for ViewModels
 
-protocol StreakInsightProvidable {
+public protocol StreakInsightProvidable {
     func insights(for range: StreakRange) -> [StreakInsight]
     func recommendations(for range: StreakRange) -> [UserRecommendation]
     func weeklyBreakdown(for range: StreakRange) -> [WeeklyBucket]
@@ -23,7 +22,7 @@ protocol StreakInsightProvidable {
 
 // MARK: - Streak Insight Manager
 
-final class StreakInsightManager: StreakInsightProvidable {
+public final class StreakInsightManager: StreakInsightProvidable {
     private let snapshotProvider: any StreakSnapshotProvidable
     private let engine = StreakInsightEngine()
 
@@ -40,16 +39,11 @@ final class StreakInsightManager: StreakInsightProvidable {
     private var cachedBreakHeatmap: [Int: WeekdayHeatmapData] = [:]
     private var lastSnapshotSignature: Int?
 
-    init(snapshotProvider: any StreakSnapshotProvidable) {
+    public init(snapshotProvider: any StreakSnapshotProvidable) {
         self.snapshotProvider = snapshotProvider
     }
 
-    /// Backwards-compatible initializer for existing call sites and tests.
-    convenience init(streakTracker: StreakTracker) {
-        self.init(snapshotProvider: streakTracker as any StreakSnapshotProvidable)
-    }
-
-    func insights(for range: StreakRange) -> [StreakInsight] {
+    public func insights(for range: StreakRange) -> [StreakInsight] {
         let key = cacheKey(for: range)
         if let cached = cachedInsights[key] {
             return cached
@@ -59,7 +53,7 @@ final class StreakInsightManager: StreakInsightProvidable {
         return result
     }
 
-    func recommendations(for range: StreakRange) -> [UserRecommendation] {
+    public func recommendations(for range: StreakRange) -> [UserRecommendation] {
         let key = cacheKey(for: range)
         if let cached = cachedRecommendations[key] {
             return cached
@@ -70,11 +64,11 @@ final class StreakInsightManager: StreakInsightProvidable {
         return result
     }
 
-    func weeklyBreakdown(for range: StreakRange) -> [WeeklyBucket] {
+    public func weeklyBreakdown(for range: StreakRange) -> [WeeklyBucket] {
         engine.weeklyBreakdown(from: snapshotProvider.snapshot, range: range)
     }
 
-    func streakLengthDistribution() -> StreakLengthDistribution {
+    public func streakLengthDistribution() -> StreakLengthDistribution {
         let signature = currentSnapshotSignature()
         if let cached = cachedDistribution[signature] {
             return cached
@@ -84,7 +78,7 @@ final class StreakInsightManager: StreakInsightProvidable {
         return result
     }
 
-    func resilience() -> StreakResilience {
+    public func resilience() -> StreakResilience {
         let signature = currentSnapshotSignature()
         if let cached = cachedResilience[signature] {
             return cached
@@ -94,7 +88,7 @@ final class StreakInsightManager: StreakInsightProvidable {
         return result
     }
 
-    func weekdayBreakPattern() -> [Int: Double] {
+    public func weekdayBreakPattern() -> [Int: Double] {
         let signature = currentSnapshotSignature()
         if let cached = cachedBreakPattern[signature] {
             return cached
@@ -104,7 +98,7 @@ final class StreakInsightManager: StreakInsightProvidable {
         return result
     }
 
-    func weekdayBreakHeatmap() -> WeekdayHeatmapData {
+    public func weekdayBreakHeatmap() -> WeekdayHeatmapData {
         let signature = currentSnapshotSignature()
         if let cached = cachedBreakHeatmap[signature] {
             return cached
@@ -114,7 +108,7 @@ final class StreakInsightManager: StreakInsightProvidable {
         return result
     }
 
-    func invalidateCache() {
+    public func invalidateCache() {
         cachedInsights.removeAll()
         cachedRecommendations.removeAll()
         cachedDistribution.removeAll()
@@ -129,7 +123,7 @@ final class StreakInsightManager: StreakInsightProvidable {
     /// Exhaustive switch: snapshot-mutating events drop memoized results.
     /// The per-(range, signature) cache already regenerates on signature
     /// change; explicit invalidation frees stale entries eagerly.
-    func handle(_ event: DomainEvent) {
+    public func handle(_ event: DomainEvent) {
         switch event {
         case .noteCreated, .meditationCompleted:
             invalidateCache()

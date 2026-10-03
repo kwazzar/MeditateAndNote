@@ -12,6 +12,7 @@
 import Foundation
 import NaturalLanguage
 import OSLog
+import MeditateAndNoteCore
 
 final class NLEmbeddingService: EmbeddingService {
 

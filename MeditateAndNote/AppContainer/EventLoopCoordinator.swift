@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import MeditateAndNoteCore
 
 protocol DomainEventRouting {
     func handle(_ event: DomainEvent) async

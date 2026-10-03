@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import MeditateAndNoteCore
 
 struct NoteScope: DomainEventRouting {
     let manager: NoteManager

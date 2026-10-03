@@ -12,7 +12,7 @@ import Foundation
 /// Persistence contract for the onboarding completion flag.
 /// Concrete stores live in Infrastructure (this file or Persistence/),
 /// mimicking the `StreakActivityStore` / `UserDefaultsStreakStore` split.
-protocol OnboardingStore {
+public protocol OnboardingStore {
     /// Whether the user has already finished (or skipped) onboarding.
     var hasCompletedOnboarding: Bool { get }
     /// Persists the fact that onboarding is done; next launch shows the tab bar.
@@ -22,20 +22,20 @@ protocol OnboardingStore {
 // MARK: - UserDefaults implementation
 
 /// UserDefaults-backed implementation of `OnboardingStore`.
-final class UserDefaultsOnboardingStore: OnboardingStore {
-    static let storageKey = "hasCompletedOnboarding"
+public final class UserDefaultsOnboardingStore: OnboardingStore {
+    public static let storageKey = "hasCompletedOnboarding"
 
     private let defaults: UserDefaults
 
-    init(defaults: UserDefaults = .standard) {
+    public init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
     }
 
-    var hasCompletedOnboarding: Bool {
+    public var hasCompletedOnboarding: Bool {
         defaults.bool(forKey: Self.storageKey)
     }
 
-    func markOnboardingCompleted() {
+    public func markOnboardingCompleted() {
         defaults.set(true, forKey: Self.storageKey)
     }
 }

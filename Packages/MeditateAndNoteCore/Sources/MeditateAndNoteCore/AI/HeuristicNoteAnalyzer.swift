@@ -9,12 +9,13 @@
 //
 
 import Foundation
-import MeditateAndNoteCore
 
-struct HeuristicNoteAnalyzer: NoteAnalyzer {
-    var isAvailable: Bool { true }
+public struct HeuristicNoteAnalyzer: NoteAnalyzer {
+    public init() {}
 
-    func analyze(notes: [Note]) async throws -> [NoteInsight] {
+    public var isAvailable: Bool { true }
+
+    public func analyze(notes: [Note]) async throws -> [NoteInsight] {
         let analyzable = notes.filter { !Self.combinedText(of: $0).isEmpty }
         guard !analyzable.isEmpty else {
             throw NoteAnalysisError.insufficientData
@@ -40,7 +41,7 @@ struct HeuristicNoteAnalyzer: NoteAnalyzer {
 
     // MARK: - Text helpers
 
-    static func combinedText(of note: Note) -> String {
+    public static func combinedText(of note: Note) -> String {
         let title = note.title.rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
         let body = note.content.rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
         let titlePart = (title.isEmpty || title == "Untitled") ? "" : title
@@ -71,7 +72,7 @@ struct HeuristicNoteAnalyzer: NoteAnalyzer {
         return counts
     }
 
-    static func tokens(in text: String) -> [String] {
+    public static func tokens(in text: String) -> [String] {
         text
             .lowercased()
             .split { !$0.isLetter && !$0.isNumber }

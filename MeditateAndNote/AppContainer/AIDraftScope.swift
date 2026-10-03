@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import MeditateAndNoteCore
 
 struct AIDraftScope: DomainEventRouting {
     let service: any AIDraftService

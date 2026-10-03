@@ -9,11 +9,10 @@
 //
 
 import Foundation
-import MeditateAndNoteCore
 
 // MARK: - Service protocol
 
-protocol AIDraftService: Sendable {
+public protocol AIDraftService: Sendable {
     /// Whether this provider can serve requests right now.
     var isAvailable: Bool { get async }
 
@@ -25,10 +24,12 @@ protocol AIDraftService: Sendable {
 
 /// Always unavailable. Used so the app degrades gracefully instead of crashing
 /// when the device doesn't support on-device AI and no remote is configured.
-struct DisabledAIDraftService: AIDraftService {
-    var isAvailable: Bool { get async { false } }
+public struct DisabledAIDraftService: AIDraftService {
 
-    func suggest(_ prompt: AIPrompt) async throws -> [AISuggestion] {
+    public init() {}
+    public var isAvailable: Bool { get async { false } }
+
+    public func suggest(_ prompt: AIPrompt) async throws -> [AISuggestion] {
         throw AIDraftError.providerUnavailable
     }
 }

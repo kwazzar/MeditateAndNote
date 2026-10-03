@@ -6,14 +6,14 @@
 //
 
 import Foundation
-import MeditateAndNoteCore
 
-protocol MeditationService {
+public protocol MeditationService {
     func getMeditations() -> [Meditation]
 }
 
-final class SampleMeditationService: MeditationService {
-    func getMeditations() -> [Meditation] {
+public final class SampleMeditationService: MeditationService {
+    public init() {}
+    public func getMeditations() -> [Meditation] {
         return [
             Meditation(id: "1", title: MeditationTitle("Morning Mindfulness"), breathingStyle: .fourEight, description: "Start your day with awareness and presence. This gentle session helps wake up the mind and body, grounding you in the here and now.", category: .mindfulness),
             Meditation(id: "2", title: MeditationTitle("Deep Breathing"),breathingStyle: .box, description: "Focus on your breath with a steady box pattern. Calm your nervous system and reset your attention with this simple, powerful technique.", category: .breathing),
@@ -27,16 +27,16 @@ final class SampleMeditationService: MeditationService {
 
 // MARK: - MeditationSelectionStore
 
-final class MeditationSelectionStore {
+public final class MeditationSelectionStore {
     private static let storageKey = "lastSelectedMeditationId"
 
     private let defaults: UserDefaults
 
-    init(defaults: UserDefaults = .standard) {
+    public init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
     }
 
-    var lastSelectedID: MeditationID? {
+    public var lastSelectedID: MeditationID? {
         get { defaults.string(forKey: Self.storageKey).map(MeditationID.init(rawValue:)) }
         set {
             if let newValue {

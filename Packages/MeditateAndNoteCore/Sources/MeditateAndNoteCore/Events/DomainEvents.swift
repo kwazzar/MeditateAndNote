@@ -8,11 +8,10 @@
 //
 
 import Foundation
-import MeditateAndNoteCore
 
 // MARK: - Domain Event (sum type)
 
-enum DomainEvent: Sendable {
+public enum DomainEvent: Sendable {
     case noteCreated(Note)
     case noteUpdated(Note)
     case noteDeleted(NoteID)
@@ -24,7 +23,7 @@ enum DomainEvent: Sendable {
 
 // MARK: - Publisher Protocol
 
-protocol DomainEventPublisher: AnyObject, Sendable {
+public protocol DomainEventPublisher: AnyObject, Sendable {
     typealias Handler = @Sendable (DomainEvent) -> Void
 
     /// AsyncStream of published events, consumed sequentially via `for await`.
@@ -61,12 +60,14 @@ private final class Subscriptions: @unchecked Sendable {
 
 // MARK: - In-Memory Event Bus
 
-final class DomainEventBus: DomainEventPublisher, @unchecked Sendable {
+public final class DomainEventBus: DomainEventPublisher, @unchecked Sendable {
+
+    public init() {}
     private let storage = Subscriptions()
     private var streamContinuations: [UUID: AsyncStream<DomainEvent>.Continuation] = [:]
     private let streamLock = NSLock()
 
-    var events: AsyncStream<DomainEvent> {
+    public var events: AsyncStream<DomainEvent> {
         AsyncStream { continuation in
             let id = UUID()
             self.streamLock.withLock { self.streamContinuations[id] = continuation }
@@ -78,15 +79,15 @@ final class DomainEventBus: DomainEventPublisher, @unchecked Sendable {
     }
 
     @discardableResult
-    func subscribe(_ handler: @escaping @Sendable (DomainEvent) -> Void) -> UUID {
+    public func subscribe(_ handler: @escaping @Sendable (DomainEvent) -> Void) -> UUID {
         storage.add(handler)
     }
 
-    func unsubscribe(_ id: UUID) {
+    public func unsubscribe(_ id: UUID) {
         storage.remove(id)
     }
 
-    nonisolated func publish(_ event: DomainEvent) {
+    public nonisolated func publish(_ event: DomainEvent) {
         storage(event)
         let snapshot = streamLock.withLock { Array(streamContinuations.values) }
         snapshot.forEach { $0.yield(event) }
@@ -95,6 +96,6 @@ final class DomainEventBus: DomainEventPublisher, @unchecked Sendable {
 
 // MARK: - Global Event Bus (for convenience)
 
-extension DomainEventBus {
+public extension DomainEventBus {
     static let shared = DomainEventBus()
 }

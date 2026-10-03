@@ -9,11 +9,10 @@
 //
 
 import Foundation
-import MeditateAndNoteCore
 
 // MARK: - Analyzer protocol
 
-protocol NoteAnalyzer: Sendable {
+public protocol NoteAnalyzer: Sendable {
     /// Whether this analyzer can serve requests right now.
     /// The heuristic implementation is always available; the
     /// Foundation Models one only on iOS 26+ with Apple Intelligence.

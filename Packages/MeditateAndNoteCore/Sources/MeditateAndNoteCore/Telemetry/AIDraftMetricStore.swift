@@ -8,11 +8,10 @@
 //
 
 import Foundation
-import MeditateAndNoteCore
 
 // MARK: - Store Protocol
 
-protocol AIDraftMetricStore: Sendable {
+public protocol AIDraftMetricStore: Sendable {
     func record(_ metric: AIDraftMetric) async throws
     func fetchAll() async throws -> [AIDraftMetric]
     func deleteAll() async throws
@@ -20,7 +19,7 @@ protocol AIDraftMetricStore: Sendable {
 
 // MARK: - Domain Event Subscription
 
-extension AIDraftMetricStore {
+public extension AIDraftMetricStore {
     /// Reacts to telemetry events published on the event bus. Ignored unless
     /// it is an AI draft metric, so a store can subscribe to the bus and only
     /// ever persist the shape it owns.
@@ -32,22 +31,22 @@ extension AIDraftMetricStore {
 
 // MARK: - In-Memory Implementation (tests + previews)
 
-final actor InMemoryAIDraftMetricStore: AIDraftMetricStore {
+public final actor InMemoryAIDraftMetricStore: AIDraftMetricStore {
     private var metrics: [AIDraftMetric]
 
-    init(seed: [AIDraftMetric] = []) {
+    public init(seed: [AIDraftMetric] = []) {
         self.metrics = seed
     }
 
-    func record(_ metric: AIDraftMetric) async throws {
+    public func record(_ metric: AIDraftMetric) async throws {
         metrics.append(metric)
     }
 
-    func fetchAll() async throws -> [AIDraftMetric] {
+    public func fetchAll() async throws -> [AIDraftMetric] {
         metrics
     }
 
-    func deleteAll() async throws {
+    public func deleteAll() async throws {
         metrics.removeAll()
     }
 }
