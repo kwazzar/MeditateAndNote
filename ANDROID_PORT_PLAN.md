@@ -412,9 +412,35 @@ apksigner sign --ks debug.keystore --ks-pass pass:android aligned.apk
 
 ### 2. `Foundation`-семантика, не компільованість
 
-`Calendar`/`TimeZone`/`Locale` компілюються, але `swift-corelibs-foundation` **поводиться інакше** на DST-переходах, першому числі місяця, локалях. `ReminderScheduleBuilder` залежить від цього.
+**Стан: ✅ ПЕРЕВІРЕНО golden-дифом (2026-10-03). 145 рядків, 0 розбіжностей.**
 
-**Перевірка:** golden-тести, прогнані на обох платформах, порівняння результатів. Компіляція тут нічого не гарантує — це клас багів, який проявиться в проді на конкретному пристрої.
+Один Swift-файл (144 спостереження) зібрано під macOS і під `aarch64-unknown-linux-android28`, запущено на Samsung A24, вивід записано `key|value` рядками. Диф двох файлів: **єдиний відмінний рядок — `platform`**. Уся решта — побайтово однаково.
+
+Обкрите: tz database (443 зони, offsets для 8 зон), DST gap/fold для Kyiv/London/NY, портований дослівно `ReminderScheduleBuilder.nextFireDates`, місячна/річна арифметика, `startOfDay`, `firstWeekday`/`minimumDaysInFirstWeek` для 7 локалей, `DateFormatter` (включно з арабськими/тайськими цифрами), `ISO8601DateFormatter`, `Date` Codable, `Double`/`Float` description, `localizedCaseInsensitiveCompare`, `NumberFormatter`, 8 `Calendar.Identifier` (.chinese/.islamic/.hebrew/.japanese/.coptic).
+
+**Наслідок:** `ReminderSettingsTests` і `StreakInsightEngineTests` можна ганяти на Android очікуючи той самий результат. Golden-тести Фази 1 не потребують окремої Android-версії очікувань.
+
+Три знахідки, які треба врахувати в коді, а не в тесті:
+
+| Знахідка | Симптом | Наслідок |
+| --- | --- | --- |
+| `TimeZone(identifier: "Asia/Cairo")` | **nil** | `Africa/Cairo` працює. Неофіційний alias — не спиратись |
+| `DateComponents(hour: 25)` (Єгипетський DST) | `date(from:)` → **nil** | Историчні 25:00 не представляються. Не призначати `hour` без перевірки |
+| `DateComponents(hour: 3, day: 31, month: 3, zone: Europe/Kyiv)` | `date(from:)` → **nil** | Kyiv переводить 03:00→04:00 — цієї години не існує. Код, що будує `DateComponents` напряму, **мусить** переживати `nil` на DST-день. `ReminderScheduleBuilder` цього не робить, бо бере `startDay` через `calendar.date(from:)` (00:00) і додає години вже через `date(byAdding:)` |
+
+Golden-файли: `probes/F-foundation/Sources/FProbe/main.swift`. Відтворювано:
+```bash
+# macOS baseline
+swift build -c release && ./.build/release/FProbe > /tmp/f_macos.txt
+# Android
+swift build -c release --scratch-path .build-android \
+  --swift-sdk swift-6.4.0-RELEASE_android --triple aarch64-unknown-linux-android28
+adb push .build-android/out/Products/Release-android-aarch64/FProbe /data/local/tmp/
+adb shell "LD_LIBRARY_PATH=/data/local/tmp ./FProbe" > /tmp/f_android.txt
+diff /tmp/f_macos.txt /tmp/f_android.txt
+```
+
+> **Ловушка:** `--scratch-path` обов'язковий. Без нього macOS-збірка перезаписує Android-бінарь (обидва в `.build/out/Products/`), і на пристрій їде Mach-O — `syntax error: unexpected '('`. Шлях Android-збірки має суфікс `-android-aarch64`.
 
 ### 3. Каскад `public` — 58 типів
 
@@ -446,6 +472,7 @@ apksigner sign --ks debug.keystore --ks-pass pass:android aligned.apk
 - ✅ `any Encodable` type-erasure **не** працює (відхилено)
 - ✅ Swift runtime завантажується на Android 16 arm64-v8a (1000 ітерацій, PASS)
 - ✅ **sync JNI bridge на пристрої** — struct/enum через `SwiftArena`, 1000 ітерацій, PASS; розгортання без Gradle
+- ✅ **`Foundation`-семантика — golden-диф macOS ↔ Android, 145 рядків, 0 розбіжностей** (DST, локалі, календарі, формати)
 - ✅ JNI thunks `--mode jni`, 51 `Java_*` символ у `.so`
 - ✅ `swift-java` зібрано (виправлено `DEVELOPER_DIR`/toolchain)
 - ✅ FFM mode (дефолт `swift-java jextract`) — **непридатний для Android** (потребує `java.lang.foreign`)
@@ -478,7 +505,7 @@ apksigner sign --ks debug.keystore --ks-pass pass:android aligned.apk
 - [x] ~~Знайти розв'язок для `AsyncStream` і клоузур~~ — **зроблено**: протокол- підписка, перевірена end-to-end (Java + thunk під Android)
 - [ ] **Вирішити, коли робити каскад `public`** для 58 типів `Models/` — тільки після створення SPM-пакета, інакше двічі
 - [ ] Зберегти семантику «послідовно, у порядку публікації» в новій шині (черга під замком), бо `AsyncStream` давав її кожному споживачеві
-- [ ] Перевірити рантайм JNI на пристрої: хто завершує `CompletableFuture` і з якого потоку приходить Kotlin-об'єкт
+- [ ] Перевірити рантайм JNI на пристрої: **async** — хто завершує `CompletableFuture` і з якого потоку приходить Kotlin-об'єкт (sync-шлях ✅)
 - [ ] Зафіксувати `swift-java` як версіоновану залежність Core-пакета (thunk без неї не компілюється)
 - [ ] Зафіксувати фактичний % переносного коду (замість оцінки "90-95% на око") і звірити з рештою плану — за потреби скоригувати Фази 0-5 нижче
 
