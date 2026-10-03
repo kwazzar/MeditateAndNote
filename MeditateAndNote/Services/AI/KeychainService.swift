@@ -8,7 +8,6 @@
 
 import Foundation
 import Security
-import OSLog
 import MeditateAndNoteCore
 
 struct KeychainService: KeychainServiceProtocol {

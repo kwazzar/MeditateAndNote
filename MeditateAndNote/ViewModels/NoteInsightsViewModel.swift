@@ -8,7 +8,6 @@
 //
 
 import Foundation
-import OSLog
 import Observation
 import MeditateAndNoteCore
 

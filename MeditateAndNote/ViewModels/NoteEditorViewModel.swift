@@ -7,7 +7,6 @@
 
 import Foundation
 import Observation
-import OSLog
 import MeditateAndNoteCore
 
 //MARK: - EditTarget (draft state machine)

@@ -11,7 +11,6 @@ import Foundation
 #if canImport(FoundationNetworking)
 import FoundationNetworking
 #endif
-import OSLog
 import MeditateAndNoteCore
 
 struct RemoteLLMDraftService: AIDraftService, @unchecked Sendable {
@@ -127,7 +126,7 @@ struct RemoteLLMDraftService: AIDraftService, @unchecked Sendable {
     /// contains note text — DEBUG only, never a Release build.
     private func debug(_ line: String) {
         print(line)
-        logger.info("\(line, privacy: .public)")
+        logger.info(line)
     }
 
     // MARK: - Retry Policy

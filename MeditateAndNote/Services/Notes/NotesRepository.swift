@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import OSLog
 import MeditateAndNoteCore
 
 // MARK: - DataSource Protocol (Low-level storage)

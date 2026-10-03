@@ -7,7 +7,6 @@
 
 import Foundation
 import Observation
-import OSLog
 import MeditateAndNoteCore
 
 /// Orchestrates the onboarding flow: current page, paging and completion state.

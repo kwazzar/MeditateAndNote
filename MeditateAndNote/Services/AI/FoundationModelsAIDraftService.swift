@@ -13,7 +13,6 @@
 //
 
 import Foundation
-import OSLog
 
 #if canImport(FoundationModels)
 import FoundationModels
@@ -58,7 +57,7 @@ struct FoundationModelsAIDraftService: AIDraftService {
     /// text and never leaves DEBUG.
     private func debug(_ line: String) {
         print(line)
-        logger.info("\(line, privacy: .public)")
+        logger.info(line)
     }
 
     // MARK: - FoundationModels backed implementation

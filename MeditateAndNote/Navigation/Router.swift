@@ -7,7 +7,7 @@
 
 import Foundation
 import Observation
-import OSLog
+import MeditateAndNoteCore
 
 @Observable
 final class Router {

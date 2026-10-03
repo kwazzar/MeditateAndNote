@@ -7,7 +7,6 @@
 
 import CoreData
 import Foundation
-import OSLog
 import MeditateAndNoteCore
 
 // ponytail: @unchecked — immutable `manager` reference only; every method

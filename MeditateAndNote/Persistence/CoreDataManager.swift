@@ -7,7 +7,7 @@
 
 import CoreData
 import Foundation
-import OSLog
+import MeditateAndNoteCore
 
 // MARK: - Entity Names (constants for KVC / fetch requests)
 

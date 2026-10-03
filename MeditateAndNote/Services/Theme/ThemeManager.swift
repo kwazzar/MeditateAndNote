@@ -6,8 +6,8 @@
 //
 
 import SwiftUI
-import OSLog
 import Observation
+import MeditateAndNoteCore
 
 @Observable
 final class ThemeManager {

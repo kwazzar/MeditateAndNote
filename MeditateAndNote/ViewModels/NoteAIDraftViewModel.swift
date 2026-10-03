@@ -10,7 +10,6 @@
 
 import Foundation
 import Observation
-import OSLog
 import MeditateAndNoteCore
 
 @MainActor

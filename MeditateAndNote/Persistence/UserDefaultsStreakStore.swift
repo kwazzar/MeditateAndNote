@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import OSLog
 import MeditateAndNoteCore
 
 final class UserDefaultsStreakStore: StreakActivityStore {

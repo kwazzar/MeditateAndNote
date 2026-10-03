@@ -12,7 +12,6 @@
 //
 
 import Foundation
-import OSLog
 
 #if canImport(FoundationModels)
 import FoundationModels
