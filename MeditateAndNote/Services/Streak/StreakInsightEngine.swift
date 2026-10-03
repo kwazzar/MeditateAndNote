@@ -204,9 +204,9 @@ struct StreakInsightEngine {
         formatter.locale = Locale(identifier: "en_US")
 
         let shortSymbols = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]
-        guard let fullSymbols = formatter.weekdaySymbols else {
-            return WeekdayHeatmapData(days: [])
-        }
+        // Darwin: `[String]?`, corelibs: `[String]`. The index fallback below
+        // already tolerates an empty array.
+        let fullSymbols = formatter.weekdaySymbols ?? []
 
         let days: [WeekdayHeatmapData.Day] = (1...7).map { weekday in
             let rate = stats[weekday] ?? 0
@@ -748,9 +748,9 @@ struct StreakInsightEngine {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US")
         let shortSymbols = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]
-        guard let fullSymbols = formatter.weekdaySymbols else {
-            return WeekdayHeatmapData(days: [])
-        }
+        // Darwin: `[String]?`, corelibs: `[String]`. The index fallback below
+        // already tolerates an empty array.
+        let fullSymbols = formatter.weekdaySymbols ?? []
 
         let days: [WeekdayHeatmapData.Day] = (1...7).map { weekday in
             let stats = completionStats[weekday]

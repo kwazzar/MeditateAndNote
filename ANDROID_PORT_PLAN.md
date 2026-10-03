@@ -664,15 +664,21 @@ Gradle 9.8.0 встановлено через brew — знадобиться �
 
 Порушення шарів (ViewModel → View, або Manager → конкретна платформна реалізація):
 
-| Файл | Проблема | Рішення |
+| Файл | Проблема | Що зроблено |
 | --- | --- | --- |
-| `ViewModels/NoteMenuViewModel.swift:23,29` | посилається на `SearchState`, який живе в `Views/NoteMenu/` | перенести enum у `Models/` |
-| `ViewModels/OnboardingViewModel.swift:27,38` | посилається на `OnboardingPage` із `Views/Onboarding/OnboardingPageModel.swift` | перенести struct у `Models/` |
-| `Services/Reminders/ReminderManager.swift:36,50` | залежить від concrete `NotificationScheduling` (`UserNotifications`) | замінити на протокол у Core |
-| `Services/AI/AIDraftServiceFactory.swift:16` | залежить від concrete `FoundationModelsAIDraftService` | замінити на протокол у Core |
-| `Persistence/UserDefaultsAIDraftSettingsStore.swift:12,18` | залежить від `KeychainServiceProtocol` (`Security`) | винести протокол у Core, impl лишається в Infrastructure |
+| `RemoteLLMDraftService.swift` | `URLSession`/`URLRequest`/`URLResponse` у `FoundationNetworking` | `#if canImport(FoundationNetworking)` |
+| `StreakInsightEngine.swift` (2 місця) | `weekdaySymbols`: Darwin `[String]?`, corelibs `[String]` — `guard let` не компілюється на Android | `?? []`; індексний fallback нижче вже терпить порожній масив |
+| `ViewModels/NoteMenuViewModel.swift:23,29` | `SearchState` живе у `Views/NoteMenu/` | файл перенесено в `ViewModels/` |
+| `ViewModels/OnboardingViewModel.swift:27,38` | `OnboardingPage` живе у `Views/Onboarding/` | файл перенесено в `ViewModels/`, перейменовано |
+| `Services/Reminders/ReminderManager.swift` | протокол `NotificationScheduling` ділив файл з `UserNotifications`-адаптером | протокол винесено в Core, `SystemNotificationScheduler` лишився в app |
+| `Persistence/UserDefaultsAIDraftSettingsStore.swift:12,18` | `KeychainServiceProtocol` ділив файл з `Security`-реалізацією | протокол винесено в Core, `KeychainService` лишився в app |
 
-Останні три — рівно ті `ReminderManager` / `AIDraftServiceFactory`, які вже позначені як «потрібна ін'єкція протоколу». `SearchState` і `OnboardingPage` — нові знахідки: ViewModel зараз не має права знати про View-шар.
+**Дві знахідки виявилися хибними при перевірці, і це важливо:**
+
+1. `ReminderManager` **вже** залежав від протоколу, а не від concrete-типу. Помилка в пробі виникла тому, що видалений файл `NotificationScheduling.swift` містив і протокол, і адаптер — вилучивши файл, ми втратили й протокол. Тобто «замінити concrete на протокол» не було потрібно; потрібно було лише **розділити файл**.
+2. `AIDraftServiceFactory` — це **composition root**, а не порушення. Він навмисно вибирає реалізацію через `#available(iOS 26.0, *)`, тобто залежно від можливостей платформи. Такий вибір лишається в app, у Core йому не місце. Android матиме власну фабрику.
+
+`SearchState` і `OnboardingPage` **не** переносилися в Core: `SearchState` — `@Observable` стан презентації, `OnboardingPage` містить SF Symbol-и. Обидва лишаються в застосунку, але вже не всередині `Views/`, щоб ViewModel не залежав від View-шару. Для Android UI дублюється — їм у Core не місце.
 - [ ] Перенести `Services/` (Managers) — складніша частина, більше протокольних меж
 - [ ] ~~Усунути виняток `CoreDataSessionStore`~~ — **не робити.** Це задокументований прийнятий виняток (див. архітектурні правила): `CoreDataSessionStore` свідомо працює без Store-протоколу. Для Android-порту це означає лише «зроби окремий адаптер», а не «перероби існуючий тип».
 - [x] ~~Прогнати `jextract` на пробному наборі~~ — **зроблено 2026-10-02**: 12 проб, перелік підтримуваних/непідтримуваних типів у розділі «Обмеження JNI-межі»

@@ -5,22 +5,11 @@
 
 import Foundation
 import UserNotifications
-
-/// Thin abstraction over `UNUserNotificationCenter` so `ReminderManager` stays
-/// testable without the system framework. Deliberately keeps the domain free of
-/// `UserNotifications` types — only `Bool`/`Date` flow across the boundary.
-protocol NotificationScheduling {
-    func isAuthorized() async -> Bool
-    func requestAuthorization() async -> Bool
-    /// Removes this app's reminder notifications (scoped to their identifier
-    /// prefix), never every pending request on the system.
-    func removeAllPendingNotifications()
-    func scheduleNotification(id: String, title: String, body: String, at date: Date)
-}
+import MeditateAndNoteCore
 
 /// Adapter over `UNUserNotificationCenter`. Also acts as its delegate so
 /// banners still appear while the app is in the foreground.
-final class SystemNotificationScheduler: NSObject, NotificationScheduling, UNUserNotificationCenterDelegate {
+final class SystemNotificationScheduler: NSObject, NotificationScheduling, UNUserNotificationCenterDelegate, @unchecked Sendable {
     private let center: UNUserNotificationCenter
 
     init(center: UNUserNotificationCenter = .current()) {

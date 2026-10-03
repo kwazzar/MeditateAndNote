@@ -7,7 +7,7 @@ import XCTest
 @testable import MeditateAndNote
 import MeditateAndNoteCore
 
-private final class FakeScheduler: NotificationScheduling {
+private final class FakeScheduler: NotificationScheduling, @unchecked Sendable {
     var authorized = false
     var grantOnRequest = true
     private(set) var scheduled: [(id: String, date: Date)] = []

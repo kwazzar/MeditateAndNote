@@ -9,12 +9,7 @@
 import Foundation
 import Security
 import OSLog
-
-protocol KeychainServiceProtocol: Sendable {
-    func save(key: String, value: String) throws
-    func read(key: String) -> String?
-    func delete(key: String) throws
-}
+import MeditateAndNoteCore
 
 struct KeychainService: KeychainServiceProtocol {
     private let serviceName: String

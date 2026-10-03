@@ -161,7 +161,7 @@
 		OB0100010000000000000001 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0000010000000000000001 /* OnboardingView.swift */; };
 		OB0100020000000000000002 /* OnboardingPageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0000020000000000000002 /* OnboardingPageView.swift */; };
 		OB0100030000000000000003 /* OnboardingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0000030000000000000003 /* OnboardingViewModel.swift */; };
-		OB0100040000000000000004 /* OnboardingPageModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0000040000000000000004 /* OnboardingPageModel.swift */; };
+		OB0100040000000000000004 /* OnboardingPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0000040000000000000004 /* OnboardingPage.swift */; };
 		OB0100050000000000000005 /* OnboardingCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0000050000000000000005 /* OnboardingCoordinator.swift */; };
 		OB0100060000000000000006 /* OnboardingStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0000060000000000000006 /* OnboardingStore.swift */; };
 		OB0100070000000000000007 /* OnboardingViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0000070000000000000007 /* OnboardingViewModelTests.swift */; };
@@ -343,7 +343,7 @@
 		OB0000010000000000000001 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		OB0000020000000000000002 /* OnboardingPageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingPageView.swift; sourceTree = "<group>"; };
 		OB0000030000000000000003 /* OnboardingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewModel.swift; sourceTree = "<group>"; };
-		OB0000040000000000000004 /* OnboardingPageModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingPageModel.swift; sourceTree = "<group>"; };
+		OB0000040000000000000004 /* OnboardingPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingPage.swift; sourceTree = "<group>"; };
 		OB0000050000000000000005 /* OnboardingCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingCoordinator.swift; sourceTree = "<group>"; };
 		OB0000060000000000000006 /* OnboardingStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingStore.swift; sourceTree = "<group>"; };
 		OB0000070000000000000007 /* OnboardingViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewModelTests.swift; sourceTree = "<group>"; };
@@ -417,7 +417,6 @@
 				E32C6BBC2ED9C39F0093F735 /* NoteMenu.swift */,
 				E32C6BC02ED9CD6D0093F735 /* SearchBar.swift */,
 				78421A36302C1C4C001B52A6 /* ScrollDetector.swift */,
-				E32C6BC22ED9CEBB0093F735 /* SearchState.swift */,
 				07122C96FB9D45AD927BAB76 /* NoteInsightsSection.swift */,
 			);
 			path = NoteMenu;
@@ -789,6 +788,8 @@
 		E361878D2D68FF37000E326D /* ViewModels */ = {
 			isa = PBXGroup;
 			children = (
+				OB0000040000000000000004 /* OnboardingPage.swift */,
+				E32C6BC22ED9CEBB0093F735 /* SearchState.swift */,
 				788513DB3033D32C0052F4BC /* NoteEditorViewModel.swift */,
 				E361878E2D68FF88000E326D /* MainViewModel.swift */,
 				E32C6BBE2ED9C6600093F735 /* NoteMenuViewModel.swift */,
@@ -841,7 +842,6 @@
 			children = (
 				OB0000010000000000000001 /* OnboardingView.swift */,
 				OB0000020000000000000002 /* OnboardingPageView.swift */,
-				OB0000040000000000000004 /* OnboardingPageModel.swift */,
 			);
 			path = Onboarding;
 			sourceTree = "<group>";
@@ -1108,7 +1108,7 @@
 				OB0100010000000000000001 /* OnboardingView.swift in Sources */,
 				OB0100020000000000000002 /* OnboardingPageView.swift in Sources */,
 				OB0100030000000000000003 /* OnboardingViewModel.swift in Sources */,
-				OB0100040000000000000004 /* OnboardingPageModel.swift in Sources */,
+				OB0100040000000000000004 /* OnboardingPage.swift in Sources */,
 				OB0100050000000000000005 /* OnboardingCoordinator.swift in Sources */,
 				OB0100060000000000000006 /* OnboardingStore.swift in Sources */,
 				3221E85D880F3E3F3CC7D7E5 /* StreakInsightEngine.swift in Sources */,
