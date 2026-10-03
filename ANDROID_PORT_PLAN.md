@@ -379,16 +379,36 @@ public final class DomainEventBus {
 
 ### 1. Рантайм JNI на пристрої — найбільший невідомий
 
-**Стан:** Tier 1 (Swift runtime) ✅ **підтверджено на пристрої** (Samsung A24, Android 16, API 36, arm64-v8a). 1000 ітерацій — PASS. Залишилося: Tier 2 (JNI bridge через JVM) — не перевірено.
+**Стан:** Tier 1 (Swift runtime) ✅ і Tier 2 sync (JNI bridge) ✅ **підтверджено на пристрої** (Samsung A24, Android 16, API 36, arm64-v8a). Залишилося: `async` → `CompletableFuture` і протокол- підписка.
 
-**Найімовірніші точки падіння (Tier 2):**
+#### Tier 2 — що встановлено (2026-10-03)
 
-- **`SwiftArena` і власність.** Кожен згенерований метод бере `SwiftArena swiftArena`. Якщо Kotlin не тримає арену живою — use-after-free. ⏳ не перевірено (потрібен JVM).
-- **Хто завершує `CompletableFuture`.** `async` → `CompletableFuture`; який потік виконує `future.complete(...)`. ⏳ не перевірено.
-- **Зворотний виклик Kotlin-об'єкта.** `subscribe(_T0 s)` → thunk `load(as:) as! (any Subscriber)`. GC? ⏳ не перевірено.
-- ~~**Стабільність пам'яті**~~ → ✅ 1000 ітерацій на пристрої, крашів немає.
+Sync JNI пройшов end-to-end через справжній ART на пристрої: `struct` + `String` через `SwiftArena`, `enum` з associated values, 1000 ітерацій — crash/leak немає.
 
-**Мінімальний тест:** один `struct`, один `func async throws`, один протокол- підписка. Виклик з Kotlin, перевірка значення, повторити 1000 разів.
+**Розгортання без Gradle — 4 кроки** (корисне і для Фази 1):
+
+```bash
+aapt2 link -o base.apk -I android.jar --manifest AndroidManifest.xml \
+  --min-sdk-version 28 --target-sdk-version 36
+zip base.apk classes.dex && zip -r base.apk lib
+zipalign -p -f 4 base.apk aligned.apk
+apksigner sign --ks debug.keystore --ks-pass pass:android aligned.apk
+```
+
+**Дві ловушки, що коштували час:**
+
+| Ловушка | Симптом | Причина |
+| --- | --- | --- |
+| `libc++_shared.so` **не в Swift SDK** | `UnsatisfiedLinkError: dlopen failed: library "libc++_shared.so" not found` | Береться з NDK: `$NDK/toolchains/llvm/prebuilt/*/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so`. Разом з ним тягне `libswiftSwiftOnoneSupport.so`, `libswiftCore.so` — тобто весь ланцюг. |
+| `libSwiftJava.so` + `libSwiftRuntimeFunctions.so` — це `DT_NEEDED` для `libCore.so` | та сама помилка, але на `libSwiftJava.so` | `SwiftLibraries.loadLibraryWithFallbacks` вантажить їх за іменем; вони **не** входять у Swift SDK, а збираються як `.dynamic` продукти `swift-java` — і лежать у `.build/out/Products/<triple>/`, а не в SDK-ресурсах |
+
+`app_process64` як спосіб запуску **не працює** на Android 16: ART ініціалізується, потім процес тихо отримує `SIGKILL` без crash-трейсу (перевірено з `ANDROID_DATA` у writable-каталозі). Не витрачати на це час — APK.
+
+**Що лишилося невідомим у Tier 2:**
+
+- **Хто завершує `CompletableFuture`.** `async` → `CompletableFuture`; який потік виконує `future.complete(...)`.
+- **Зворотний виклик об'єкта.** `subscribe(_T0 s)` → thunk `load(as:) as! (any Subscriber)`. GC/lifetime.
+- ~~`SwiftArena` і власність~~ → ✅ sync-шлях перевірено (arena закриваєтьсяtry-with-resources, crashів немає). Async-шлях із `Arena` у життєвому циклі future — ще ні.
 
 ### 2. `Foundation`-семантика, не компільованість
 
@@ -425,6 +445,7 @@ public final class DomainEventBus {
 - ✅ розв'язок через протокол- підписку — Java + thunk компілюються
 - ✅ `any Encodable` type-erasure **не** працює (відхилено)
 - ✅ Swift runtime завантажується на Android 16 arm64-v8a (1000 ітерацій, PASS)
+- ✅ **sync JNI bridge на пристрої** — struct/enum через `SwiftArena`, 1000 ітерацій, PASS; розгортання без Gradle
 - ✅ JNI thunks `--mode jni`, 51 `Java_*` символ у `.so`
 - ✅ `swift-java` зібрано (виправлено `DEVELOPER_DIR`/toolchain)
 - ✅ FFM mode (дефолт `swift-java jextract`) — **непридатний для Android** (потребує `java.lang.foreign`)
