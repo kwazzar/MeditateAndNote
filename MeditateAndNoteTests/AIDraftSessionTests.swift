@@ -5,6 +5,7 @@
 
 import XCTest
 @testable import MeditateAndNote
+import MeditateAndNoteCore
 
 // MARK: - AIPrompt value object
 

@@ -4,6 +4,7 @@
 //
 
 import SwiftUI
+import MeditateAndNoteCore
 
 // MARK: - Insights Section (embeddable in StreakDetailView)
 

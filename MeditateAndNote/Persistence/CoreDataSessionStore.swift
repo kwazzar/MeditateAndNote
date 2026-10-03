@@ -9,6 +9,7 @@
 import Foundation
 import OSLog
 import Observation
+import MeditateAndNoteCore
 
 @Observable
 final class CoreDataSessionStore {

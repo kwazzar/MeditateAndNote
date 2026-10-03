@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import MeditateAndNoteCore
 
 struct MeditationCard: View {
     let meditation: Meditation

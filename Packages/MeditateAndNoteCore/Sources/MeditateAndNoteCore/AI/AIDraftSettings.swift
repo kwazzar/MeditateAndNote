@@ -8,25 +8,25 @@
 
 import Foundation
 
-struct AIDraftSettings: Equatable, Codable, Sendable {
+public struct AIDraftSettings: Equatable, Codable, Sendable {
     /// Whether to use remote API fallback when on-device AI (Foundation Models) is unavailable.
     /// Default is false for privacy-first opt-in.
-    var useRemoteFallback: Bool
+    public var useRemoteFallback: Bool
     
     /// Remote LLM provider endpoint URL (OpenAI / Anthropic compatible).
-    var remoteEndpointURL: String
+    public var remoteEndpointURL: String
     
     /// Selected model for remote generation.
-    var selectedModel: String
+    public var selectedModel: String
     
     /// Daily generation budget cap per user to prevent API cost runaway.
-    var dailyGenerationLimit: Int
+    public var dailyGenerationLimit: Int
 
-    static let defaultEndpointURL = "https://api.openai.com/v1/chat/completions"
-    static let defaultModel = "gpt-4o-mini"
-    static let defaultDailyLimit = 5
+    public static let defaultEndpointURL = "https://api.openai.com/v1/chat/completions"
+    public static let defaultModel = "gpt-4o-mini"
+    public static let defaultDailyLimit = 5
 
-    init(
+    public init(
         useRemoteFallback: Bool = false,
         remoteEndpointURL: String = defaultEndpointURL,
         selectedModel: String = defaultModel,
@@ -41,7 +41,7 @@ struct AIDraftSettings: Equatable, Codable, Sendable {
 
 // MARK: - Settings Store Contract
 
-protocol AIDraftSettingsStore: Sendable {
+public protocol AIDraftSettingsStore: Sendable {
     func loadSettings() -> AIDraftSettings
     func saveSettings(_ settings: AIDraftSettings)
     func getAPIKey() -> String?

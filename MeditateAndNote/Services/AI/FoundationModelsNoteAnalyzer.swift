@@ -16,6 +16,7 @@ import OSLog
 
 #if canImport(FoundationModels)
 import FoundationModels
+import MeditateAndNoteCore
 #endif
 
 struct FoundationModelsNoteAnalyzer: NoteAnalyzer {

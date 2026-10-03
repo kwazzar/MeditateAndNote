@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import MeditateAndNoteCore
 
 /// Full-screen launch loader shown on every app entry.
 /// Purely presentational: sources every color and the hero artwork from

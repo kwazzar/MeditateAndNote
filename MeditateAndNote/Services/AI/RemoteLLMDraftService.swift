@@ -9,6 +9,7 @@
 
 import Foundation
 import OSLog
+import MeditateAndNoteCore
 
 struct RemoteLLMDraftService: AIDraftService, @unchecked Sendable {
     private let session: URLSession

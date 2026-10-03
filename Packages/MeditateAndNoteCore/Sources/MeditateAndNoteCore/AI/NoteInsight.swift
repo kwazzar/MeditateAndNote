@@ -11,16 +11,16 @@
 
 import Foundation
 
-struct NoteInsight: Identifiable, Equatable, Codable, Sendable {
-    var id: NoteID { noteID }
+public struct NoteInsight: Identifiable, Equatable, Codable, Sendable {
+    public var id: NoteID { noteID }
 
-    let noteID: NoteID
-    let themes: [NoteTheme]
-    let summary: String
-    let suggestedTags: [String]
-    let generatedAt: Date
+    public let noteID: NoteID
+    public let themes: [NoteTheme]
+    public let summary: String
+    public let suggestedTags: [String]
+    public let generatedAt: Date
 
-    init(
+    public init(
         noteID: NoteID,
         themes: [NoteTheme] = [],
         summary: String = "",
@@ -36,19 +36,19 @@ struct NoteInsight: Identifiable, Equatable, Codable, Sendable {
 
     // MARK: - Limits
 
-    static let maxThemes = 5
-    static let maxTags = 5
-    static let maxSummaryLength = 500
+    public static let maxThemes = 5
+    public static let maxTags = 5
+    public static let maxSummaryLength = 500
 
     // MARK: - Behavior
 
     /// True when the insight carries no signal (used to skip persistence).
-    var isEmpty: Bool {
+    public var isEmpty: Bool {
         themes.isEmpty && summary.isEmpty && suggestedTags.isEmpty
     }
 
     /// Returns a copy re-stamped with fresh analysis output, preserving identity.
-    func refreshed(themes: [NoteTheme], summary: String, suggestedTags: [String], at date: Date = Date()) -> NoteInsight {
+    public func refreshed(themes: [NoteTheme], summary: String, suggestedTags: [String], at date: Date = Date()) -> NoteInsight {
         NoteInsight(
             noteID: noteID,
             themes: themes,

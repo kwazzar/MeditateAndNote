@@ -11,7 +11,7 @@ import Foundation
 
 // MARK: - ErrorKind
 
-enum ErrorKind: String, Codable, Sendable {
+public enum ErrorKind: String, Codable, Sendable {
     case timeout
     case rateLimited
     case unavailable
@@ -21,7 +21,7 @@ enum ErrorKind: String, Codable, Sendable {
 
 // MARK: - AIDraftMetric
 
-enum AIDraftMetric: Equatable, Sendable, Codable {
+public enum AIDraftMetric: Equatable, Sendable, Codable {
     case generationStarted(warmCold: Bool)
     case generationCompleted(latencyMs: Int, suggestionCount: Int)
     case generationFailed(errorKind: ErrorKind)
@@ -29,7 +29,7 @@ enum AIDraftMetric: Equatable, Sendable, Codable {
     case suggestionRejected(index: Int)
 }
 
-extension AIDraftMetric {
+public extension AIDraftMetric {
     /// Stable scalar label for cheap Core Data rollups (avoids decoding every
     /// payload JSON blob just to bucket events by type).
     var kindRawValue: String {

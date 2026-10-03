@@ -96,7 +96,6 @@ fastlane/test_output
 iOSInjectionProject/
 
 ### SwiftPackageManager ###
-Packages
 xcuserdata
 *.pbxuser
 *.mode1v3

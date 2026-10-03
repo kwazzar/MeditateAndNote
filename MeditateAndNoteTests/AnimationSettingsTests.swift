@@ -7,6 +7,7 @@
 
 import XCTest
 @testable import MeditateAndNote
+import MeditateAndNoteCore
 
 @MainActor
 final class AnimationSettingsTests: XCTestCase {

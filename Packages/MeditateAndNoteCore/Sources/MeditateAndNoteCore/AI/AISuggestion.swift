@@ -10,14 +10,14 @@ import Foundation
 
 // MARK: - AISuggestion
 
-struct AISuggestion: Identifiable, Hashable, Codable, Sendable {
-    let id: UUID
+public struct AISuggestion: Identifiable, Hashable, Codable, Sendable {
+    public let id: UUID
     /// The suggestion text to insert into a note. Guardrailed to a length.
-    let text: String
+    public let text: String
     /// A short human-readable reason ("fits your journaling goal").
-    let rationale: String
+    public let rationale: String
 
-    init(
+    public init(
         id: UUID = UUID(),
         text: String,
         rationale: String = ""

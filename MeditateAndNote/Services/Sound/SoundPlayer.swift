@@ -4,6 +4,7 @@
 //
 
 import AVFoundation
+import MeditateAndNoteCore
 
 //MARK: - MeditationSound
 enum MeditationSound: Equatable {

@@ -6,6 +6,7 @@
 import CoreData
 import XCTest
 @testable import MeditateAndNote
+import MeditateAndNoteCore
 
 final class CoreDataManagerTests: XCTestCase {
 

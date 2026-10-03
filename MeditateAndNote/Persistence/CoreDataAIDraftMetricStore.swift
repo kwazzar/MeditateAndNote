@@ -10,6 +10,7 @@
 import CoreData
 import Foundation
 import OSLog
+import MeditateAndNoteCore
 
 final class CoreDataAIDraftMetricStore: AIDraftMetricStore {
 

@@ -8,18 +8,18 @@
 import Foundation
 //MARK: - MeditationID
 
-struct MeditationID: Hashable, Codable, ExpressibleByStringLiteral {
-    let rawValue: String
+public struct MeditationID: Hashable, Codable, Sendable, ExpressibleByStringLiteral {
+    public let rawValue: String
 
-    init(rawValue: String) { self.rawValue = rawValue }
-    init(stringLiteral value: String) { self.rawValue = value }
+    public init(rawValue: String) { self.rawValue = rawValue }
+    public init(stringLiteral value: String) { self.rawValue = value }
 
-    init(from decoder: Decoder) throws {
+    public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         self.init(rawValue: try container.decode(String.self))
     }
 
-    func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
         try container.encode(rawValue)
     }
@@ -27,20 +27,20 @@ struct MeditationID: Hashable, Codable, ExpressibleByStringLiteral {
 
 //MARK: - MeditationTitle
 
-struct MeditationTitle: Hashable, Codable {
-    let rawValue: String
+public struct MeditationTitle: Hashable, Codable, Sendable {
+    public let rawValue: String
 
-    init(_ rawValue: String) {
+    public init(_ rawValue: String) {
         let trimmed = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
         self.rawValue = trimmed.isEmpty ? "Untitled" : trimmed
     }
 }
 
 extension MeditationTitle: ExpressibleByStringLiteral {
-    init(stringLiteral value: String) { self.init(value) }
+    public init(stringLiteral value: String) { self.init(value) }
 }
 
-extension MeditationTitle {
+public extension MeditationTitle {
     init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         let value = try container.decode(String.self)
@@ -54,14 +54,14 @@ extension MeditationTitle {
 }
 
 //MARK: - Meditation
-struct Meditation: Identifiable, Hashable {
-    let id: MeditationID
-    let title: MeditationTitle
-    let breathingStyle: BreathingStyle
-    let description: String?
-    let category: MeditationCategory
+public struct Meditation: Identifiable, Hashable, Sendable {
+    public let id: MeditationID
+    public let title: MeditationTitle
+    public let breathingStyle: BreathingStyle
+    public let description: String?
+    public let category: MeditationCategory
 
-    init(id: MeditationID, title: MeditationTitle, breathingStyle: BreathingStyle, description: String? = nil, category: MeditationCategory = .mindfulness) {
+    public init(id: MeditationID, title: MeditationTitle, breathingStyle: BreathingStyle, description: String? = nil, category: MeditationCategory = .mindfulness) {
         self.id = id
         self.title = title
         self.breathingStyle = breathingStyle
@@ -70,12 +70,12 @@ struct Meditation: Identifiable, Hashable {
     }
 }
 
-enum MeditationError: Error {
+public enum MeditationError: Error {
     case notFound(id: MeditationID)
 }
 
 //MARK: - MeditationCategory
-enum MeditationCategory: String, CaseIterable {
+public enum MeditationCategory: String, CaseIterable, Sendable {
     case mindfulness = "Mindfulness"
     case breathing = "Breathing"
     case sleep = "Sleep"

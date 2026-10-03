@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import MeditateAndNoteCore
 
 struct TimeMeditationSheet: View {
     @Environment(Router.self) private var router

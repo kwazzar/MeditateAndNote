@@ -7,6 +7,7 @@
 
 import XCTest
 @testable import MeditateAndNote
+import MeditateAndNoteCore
 
 /// In-memory `StreakActivityStore` double: seeds the tracker's initial
 /// snapshot and records every persisted save.

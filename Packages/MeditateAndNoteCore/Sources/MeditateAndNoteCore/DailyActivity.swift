@@ -8,33 +8,47 @@ import Foundation
 /// The four possible states a calendar day can be in with respect to the
 /// streak invariant. Streak days are only `.complete` — the other three
 /// are partial or empty and never contribute to a streak.
-enum CoreDayState: Hashable {
+public enum CoreDayState: Hashable, Sendable {
     case empty
     case meditationOnly
     case noteOnly
     case complete
 
     /// The two states that satisfy the streak invariant.
-    static let streakContributing: Set<CoreDayState> = [.complete]
+    public static let streakContributing: Set<CoreDayState> = [.complete]
 
     /// True iff this day is a streak day (both meditation and note present).
-    var isStreakDay: Bool { self == .complete }
+    public var isStreakDay: Bool { self == .complete }
 }
 
-struct DailyActivity: Identifiable, Hashable {
-    var id: Date { date }
+public struct DailyActivity: Identifiable, Hashable {
+    public var id: Date { date }
 
-    let date: Date
-    var hasMeditation: Bool
-    var hasNote: Bool
-    var meditationTime: Date?
-    var noteTime: Date?
+    public let date: Date
+    public var hasMeditation: Bool
+    public var hasNote: Bool
+    public var meditationTime: Date?
+    public var noteTime: Date?
 
-    var isComplete: Bool { hasMeditation && hasNote }
+    public init(
+        date: Date,
+        hasMeditation: Bool,
+        hasNote: Bool,
+        meditationTime: Date? = nil,
+        noteTime: Date? = nil
+    ) {
+        self.date = date
+        self.hasMeditation = hasMeditation
+        self.hasNote = hasNote
+        self.meditationTime = meditationTime
+        self.noteTime = noteTime
+    }
+
+    public var isComplete: Bool { hasMeditation && hasNote }
 
     /// Derived domain state. The streak engine and UI both consume this
     /// rather than pattern-matching on the two booleans separately.
-    var coreDayState: CoreDayState {
+    public var coreDayState: CoreDayState {
         switch (hasMeditation, hasNote) {
         case (true, true): return .complete
         case (true, false): return .meditationOnly
@@ -47,13 +61,13 @@ struct DailyActivity: Identifiable, Hashable {
     /// Without this, callers could set `hasMeditation = true` and forget
     /// `meditationTime`, or vice versa — leaving the entity in a state
     /// the engine can't reason about.
-    mutating func markMeditation(at time: Date) {
+    public mutating func markMeditation(at time: Date) {
         hasMeditation = true
         meditationTime = time
     }
 
     /// Marks a note as created and records the time atomically.
-    mutating func markNote(at time: Date) {
+    public mutating func markNote(at time: Date) {
         hasNote = true
         noteTime = time
     }

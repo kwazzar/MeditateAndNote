@@ -7,13 +7,21 @@
 
 import Foundation
 //MARK: - BreathingPattern
-struct BreathingPattern {
-    let name: String
-    let phases: [BreathingPhase]
+public struct BreathingPattern {
+    public let name: String
+    public let phases: [BreathingPhase]
+
+    public init(
+        name: String,
+        phases: [BreathingPhase]
+    ) {
+        self.name = name
+        self.phases = phases
+    }
 }
 
 //MARK: - BreathingPhaseType
-enum BreathingPhaseType: String {
+public enum BreathingPhaseType: String {
     case inhale
     case holdAfterInhale
     case exhale
@@ -21,23 +29,31 @@ enum BreathingPhaseType: String {
 }
 
 //MARK: - BreathingPhase
-struct BreathingPhase: Identifiable, Equatable {
-    var id: String { type.rawValue }
+public struct BreathingPhase: Identifiable, Equatable {
+    public var id: String { type.rawValue }
 
-    let type: BreathingPhaseType
-    let duration: TimeInterval
+    public let type: BreathingPhaseType
+    public let duration: TimeInterval
+
+    public init(
+        type: BreathingPhaseType,
+        duration: TimeInterval
+    ) {
+        self.type = type
+        self.duration = duration
+    }
 }
 
 //MARK: - BreathingStyle
-enum BreathingStyle: String, CaseIterable, Identifiable {
+public enum BreathingStyle: String, CaseIterable, Identifiable, Sendable {
     case fourSevenEight = "4-7-8"
     case box = "Box"
     case fourEight = "4-8"
     case custom = "Custom"
 
-    var id: String { rawValue }
+    public var id: String { rawValue }
 
-    var pattern: BreathingPattern {
+    public var pattern: BreathingPattern {
         switch self {
         case .fourSevenEight:
             return BreathingPattern(
@@ -80,44 +96,44 @@ enum BreathingStyle: String, CaseIterable, Identifiable {
 
 //MARK: - BreathingClock
 
-struct BreathingClock {
-    enum RunState {
+public struct BreathingClock {
+    public enum RunState {
         case running(phaseStart: Date)
         case paused(elapsed: TimeInterval)
     }
 
-    let pattern: BreathingPattern
-    private(set) var phaseIndex: Int
-    private(set) var runState: RunState
+    public let pattern: BreathingPattern
+    public private(set) var phaseIndex: Int
+    public private(set) var runState: RunState
 
-    var isPaused: Bool {
+    public var isPaused: Bool {
         if case .paused = runState { return true }
         return false
     }
 
-    init(pattern: BreathingPattern, now: Date = Date()) {
+    public init(pattern: BreathingPattern, now: Date = Date()) {
         self.pattern = pattern
         self.phaseIndex = 0
         self.runState = .running(phaseStart: now)
     }
 
-    var currentPhase: BreathingPhase? {
+    public var currentPhase: BreathingPhase? {
         pattern.phases.indices.contains(phaseIndex) ? pattern.phases[phaseIndex] : nil
     }
 
-    mutating func pause(now: Date = Date()) {
+    public mutating func pause(now: Date = Date()) {
         if case let .running(phaseStart) = runState {
             runState = .paused(elapsed: now.timeIntervalSince(phaseStart))
         }
     }
 
-    mutating func resume(now: Date = Date()) {
+    public mutating func resume(now: Date = Date()) {
         if case let .paused(elapsed) = runState {
             runState = .running(phaseStart: now.addingTimeInterval(-elapsed))
         }
     }
 
-    func phaseProgress(now: Date = Date()) -> Double {
+    public func phaseProgress(now: Date = Date()) -> Double {
         guard let phase = currentPhase else { return 0 }
         let elapsed: TimeInterval
         switch runState {
@@ -129,7 +145,7 @@ struct BreathingClock {
         return min(max(elapsed / phase.duration, 0), 1)
     }
 
-    mutating func advanceIfPhaseCompleted(now: Date = Date()) -> Bool {
+    public mutating func advanceIfPhaseCompleted(now: Date = Date()) -> Bool {
         guard phaseProgress(now: now) >= 1 else { return false }
         phaseIndex = (phaseIndex + 1) % max(pattern.phases.count, 1)
         runState = .running(phaseStart: now)

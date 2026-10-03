@@ -9,6 +9,7 @@
 
 import SwiftUI
 import Observation
+import MeditateAndNoteCore
 
 struct NoteInsightsSection: View {
     /// Plain `let`: @Observable reference type owned by AppContainer.

@@ -7,7 +7,7 @@ import Foundation
 
 // MARK: - ReminderSettingsStore (persistence boundary)
 
-protocol ReminderSettingsStore {
+public protocol ReminderSettingsStore {
     /// Loads the last saved settings, or the default when nothing is stored.
     func load() -> ReminderSettings
     /// Persists the settings.
@@ -24,19 +24,19 @@ protocol ReminderSettingsStore {
 /// - `minute` is clamped to `0...59`
 /// - `weekdays` is a non-empty subset of `1...7` (Calendar weekday:
 ///   1 = Sunday … 7 = Saturday)
-struct ReminderSettings: Equatable {
-    let isEnabled: Bool
-    let hour: Int
-    let minute: Int
-    let weekdays: Set<Int>
+public struct ReminderSettings: Equatable {
+    public let isEnabled: Bool
+    public let hour: Int
+    public let minute: Int
+    public let weekdays: Set<Int>
 
-    static let allWeekdays: ClosedRange<Int> = 1...7
+    public static let allWeekdays: ClosedRange<Int> = 1...7
 
-    static var defaultValue: ReminderSettings {
+    public static var defaultValue: ReminderSettings {
         ReminderSettings(isEnabled: false, hour: 20, minute: 0, weekdays: Set(1...7))
     }
 
-    init(isEnabled: Bool, hour: Int, minute: Int, weekdays: Set<Int>) {
+    public init(isEnabled: Bool, hour: Int, minute: Int, weekdays: Set<Int>) {
         self.isEnabled = isEnabled
         self.hour = min(max(hour, 0), 23)
         self.minute = min(max(minute, 0), 59)
@@ -46,7 +46,7 @@ struct ReminderSettings: Equatable {
     }
 
     /// Sorted weekday numbers (1 = Sunday … 7 = Saturday).
-    var sortedWeekdays: [Int] {
+    public var sortedWeekdays: [Int] {
         weekdays.sorted()
     }
 }
@@ -56,17 +56,17 @@ struct ReminderSettings: Equatable {
 /// Computes the concrete dates a weekly reminder should fire, starting after a
 /// reference date. Pure domain logic — no `UNUserNotificationCenter` involved,
 /// so it can be unit-tested cheaply.
-struct ReminderScheduleBuilder {
+public struct ReminderScheduleBuilder {
     private let calendar: Calendar
 
-    init(calendar: Calendar = .current) {
+    public init(calendar: Calendar = .current) {
         self.calendar = calendar
     }
 
     /// Returns the next `count` fire dates strictly after `after`, restricted to
     /// `after`'s day boundary — i.e. if `hour:minute` today has not passed yet,
     /// today is included; otherwise scanning starts tomorrow.
-    func nextFireDates(
+    public func nextFireDates(
         settings: ReminderSettings,
         after: Date,
         count: Int

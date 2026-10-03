@@ -9,6 +9,7 @@
 //
 
 import Foundation
+import MeditateAndNoteCore
 
 // MARK: - Service protocol
 

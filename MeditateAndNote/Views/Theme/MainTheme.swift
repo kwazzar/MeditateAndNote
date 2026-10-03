@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import MeditateAndNoteCore
 
 enum MainTheme: String, CaseIterable {
     case liquidGlass, breathing, softDawn, darkZen, obsidian

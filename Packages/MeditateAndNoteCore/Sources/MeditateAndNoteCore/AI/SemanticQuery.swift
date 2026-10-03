@@ -8,14 +8,14 @@
 
 import Foundation
 
-struct SemanticQuery: Equatable, Sendable {
-    let text: String
-    let minSimilarity: Float
+public struct SemanticQuery: Equatable, Sendable {
+    public let text: String
+    public let minSimilarity: Float
 
-    init(text: String, minSimilarity: Float = 0.25) {
+    public init(text: String, minSimilarity: Float = 0.25) {
         self.text = text.trimmingCharacters(in: .whitespacesAndNewlines)
         self.minSimilarity = minSimilarity
     }
 
-    var isEmpty: Bool { text.isEmpty }
+    public var isEmpty: Bool { text.isEmpty }
 }

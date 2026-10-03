@@ -4,6 +4,7 @@
 //
 
 import SwiftUI
+import MeditateAndNoteCore
 
 struct StreakDayDetailSheet: View {
     @Environment(ThemeManager.self) private var themeManager

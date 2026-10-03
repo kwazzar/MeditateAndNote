@@ -9,6 +9,7 @@
 
 import XCTest
 @testable import MeditateAndNote
+import MeditateAndNoteCore
 
 #if canImport(FoundationModels)
 import FoundationModels

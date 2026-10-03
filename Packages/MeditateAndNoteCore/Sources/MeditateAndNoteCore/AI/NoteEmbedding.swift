@@ -9,22 +9,22 @@
 
 import Foundation
 
-struct NoteEmbedding: Equatable, Sendable {
-    let noteID: NoteID
-    let vector: [Float]
+public struct NoteEmbedding: Equatable, Sendable {
+    public let noteID: NoteID
+    public let vector: [Float]
     /// FNV-1a hash of title + content — lets callers regenerate embeddings
     /// when (and only when) a note's text actually changed.
-    let contentHash: UInt64
-    let updatedAt: Date
+    public let contentHash: UInt64
+    public let updatedAt: Date
 
-    init(noteID: NoteID, vector: [Float], contentHash: UInt64, updatedAt: Date = .now) {
+    public init(noteID: NoteID, vector: [Float], contentHash: UInt64, updatedAt: Date = .now) {
         self.noteID = noteID
         self.vector = vector
         self.contentHash = contentHash
         self.updatedAt = updatedAt
     }
 
-    static func contentHash(title: String, content: String) -> UInt64 {
+    public static func contentHash(title: String, content: String) -> UInt64 {
         var hash: UInt64 = 0xcbf2_9ce4_8422_2325 // FNV offset basis (64-bit)
         for byte in "\(title)\u{1F}\(content)".utf8 {
             hash ^= UInt64(byte)
@@ -34,7 +34,7 @@ struct NoteEmbedding: Equatable, Sendable {
     }
 
     /// Cosine similarity in [-1, 1]; 0 when either vector is zero-length.
-    func cosineSimilarity(to other: [Float]) -> Float {
+    public func cosineSimilarity(to other: [Float]) -> Float {
         guard vector.count == other.count, !vector.isEmpty else { return 0 }
         var dot: Float = 0
         var normA: Float = 0

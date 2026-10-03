@@ -5,6 +5,7 @@
 
 import Foundation
 import Observation
+import MeditateAndNoteCore
 
 // MARK: - StreakActivityStore (persistence boundary / ACL)
 

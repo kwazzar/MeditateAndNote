@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import MeditateAndNoteCore
 
 struct ConcentricRing: View {
     let index: Int

@@ -9,7 +9,7 @@
 
 import Foundation
 
-enum NoteAnalysisError: String, Error, Equatable, Codable, Sendable {
+public enum NoteAnalysisError: String, Error, Equatable, Codable, Sendable {
     /// Not enough note content to produce a meaningful insight.
     case insufficientData
     /// No analyzer is available (e.g. on-device AI off, remote disabled).

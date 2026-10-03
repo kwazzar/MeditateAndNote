@@ -8,10 +8,10 @@
 
 import Foundation
 
-struct NoteInsightsCollection: Equatable, Codable, Sendable {
+public struct NoteInsightsCollection: Equatable, Codable, Sendable {
     private var insightsByNoteID: [NoteID: NoteInsight]
 
-    init(insights: [NoteInsight] = []) {
+    public init(insights: [NoteInsight] = []) {
         var map: [NoteID: NoteInsight] = [:]
         for insight in insights {
             let existing = map[insight.noteID]
@@ -24,20 +24,20 @@ struct NoteInsightsCollection: Equatable, Codable, Sendable {
         self.insightsByNoteID = map
     }
 
-    subscript(noteID: NoteID) -> NoteInsight? {
+    public subscript(noteID: NoteID) -> NoteInsight? {
         insightsByNoteID[noteID]
     }
 
     /// All insights, newest first.
-    var allInsights: [NoteInsight] {
+    public var allInsights: [NoteInsight] {
         insightsByNoteID.values.sorted { $0.generatedAt > $1.generatedAt }
     }
 
-    var count: Int { insightsByNoteID.count }
+    public var count: Int { insightsByNoteID.count }
 
-    var isEmpty: Bool { insightsByNoteID.isEmpty }
+    public var isEmpty: Bool { insightsByNoteID.isEmpty }
 
-    mutating func upsert(_ insight: NoteInsight) {
+    public mutating func upsert(_ insight: NoteInsight) {
         if let existing = insightsByNoteID[insight.noteID] {
             insightsByNoteID[insight.noteID] =
                 existing.generatedAt >= insight.generatedAt ? existing : insight
@@ -46,11 +46,11 @@ struct NoteInsightsCollection: Equatable, Codable, Sendable {
         }
     }
 
-    mutating func remove(noteID: NoteID) {
+    public mutating func remove(noteID: NoteID) {
         insightsByNoteID.removeValue(forKey: noteID)
     }
 
-    mutating func removeAll() {
+    public mutating func removeAll() {
         insightsByNoteID.removeAll()
     }
 
@@ -60,13 +60,13 @@ struct NoteInsightsCollection: Equatable, Codable, Sendable {
         case insights
     }
 
-    init(from decoder: Decoder) throws {
+    public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let insights = try container.decode([NoteInsight].self, forKey: .insights)
         self.init(insights: insights)
     }
 
-    func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(allInsights, forKey: .insights)
     }

@@ -5,6 +5,7 @@
 
 import Foundation
 import Observation
+import MeditateAndNoteCore
 
 @Observable
 final class InsightsViewModel {

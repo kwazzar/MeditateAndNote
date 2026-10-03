@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import MeditateAndNoteCore
 
 /// Persists `ReminderSettings` in `UserDefaults`, mirroring the
 /// `UserDefaultsStreakStore` / `SoundSettings` pattern.

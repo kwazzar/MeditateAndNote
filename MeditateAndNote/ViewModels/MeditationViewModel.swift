@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Observation
+import MeditateAndNoteCore
 
 //MARK: - MeditationViewModel
 @MainActor

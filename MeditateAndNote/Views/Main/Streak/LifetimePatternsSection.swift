@@ -8,6 +8,7 @@
 //
 
 import SwiftUI
+import MeditateAndNoteCore
 
 struct LifetimePatternsSection: View {
     @Environment(ThemeManager.self) private var themeManager

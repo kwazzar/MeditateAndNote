@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import MeditateAndNoteCore
 
 struct SearchScope: DomainEventRouting {
     let embeddingService: any EmbeddingService

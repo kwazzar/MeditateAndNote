@@ -5,6 +5,7 @@
 
 import SwiftUI
 import UIKit
+import MeditateAndNoteCore
 
 struct ReminderSettingsSection: View {
     @Environment(ThemeManager.self) private var themeManager

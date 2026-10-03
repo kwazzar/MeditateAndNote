@@ -7,6 +7,7 @@
 
 import Foundation
 import Observation
+import MeditateAndNoteCore
 
 @MainActor @Observable final class AIDraftSettingsStoreObservable {
     var settings: AIDraftSettings

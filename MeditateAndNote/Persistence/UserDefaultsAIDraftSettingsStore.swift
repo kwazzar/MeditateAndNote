@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import MeditateAndNoteCore
 
 final class UserDefaultsAIDraftSettingsStore: AIDraftSettingsStore, @unchecked Sendable {
     private let userDefaults: UserDefaults

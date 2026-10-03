@@ -7,6 +7,7 @@
 
 import XCTest
 @testable import MeditateAndNote
+import MeditateAndNoteCore
 
 private final class StubOnboardingStore: OnboardingStore {
     var hasCompletedOnboarding: Bool = false

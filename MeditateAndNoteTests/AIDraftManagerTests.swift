@@ -5,6 +5,7 @@
 
 import XCTest
 @testable import MeditateAndNote
+import MeditateAndNoteCore
 
 // MARK: - Stub service
 

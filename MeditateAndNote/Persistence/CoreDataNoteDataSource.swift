@@ -8,6 +8,7 @@
 import CoreData
 import Foundation
 import OSLog
+import MeditateAndNoteCore
 
 // ponytail: @unchecked — immutable `manager` reference only; every method
 // hops isolation via `viewContext.perform`, so no context is ever shared.

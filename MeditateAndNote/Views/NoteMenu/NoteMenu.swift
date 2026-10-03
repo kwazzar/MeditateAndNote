@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Observation
+import MeditateAndNoteCore
 
 struct NoteMenu: View {
     @State var viewModel: NoteMenuViewModel

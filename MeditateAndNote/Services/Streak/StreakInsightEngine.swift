@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import MeditateAndNoteCore
 
 struct StreakInsightEngine {
     private let calendar: Calendar

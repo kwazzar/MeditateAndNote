@@ -1,4 +1,5 @@
 import SwiftUI
+import MeditateAndNoteCore
 
 struct MeditationCompletionView: View {
     @Environment(Router.self) private var router

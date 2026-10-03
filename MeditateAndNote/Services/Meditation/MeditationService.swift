@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import MeditateAndNoteCore
 
 protocol MeditationService {
     func getMeditations() -> [Meditation]

@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import MeditateAndNoteCore
 
 final class AppContainer: @unchecked Sendable {
 

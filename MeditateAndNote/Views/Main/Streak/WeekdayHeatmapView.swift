@@ -4,6 +4,7 @@
 //
 
 import SwiftUI
+import MeditateAndNoteCore
 
 struct WeekdayHeatmapView: View {
     @Environment(ThemeManager.self) private var themeManager

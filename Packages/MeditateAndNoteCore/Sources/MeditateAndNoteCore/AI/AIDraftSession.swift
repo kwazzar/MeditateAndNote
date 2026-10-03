@@ -15,7 +15,7 @@ import Foundation
 
 // MARK: - State machine
 
-enum AIDraftState: Equatable, Codable, Sendable {
+public enum AIDraftState: Equatable, Codable, Sendable {
     case idle
     case generating
     case ready
@@ -25,27 +25,27 @@ enum AIDraftState: Equatable, Codable, Sendable {
 
 // MARK: - Aggregate
 
-struct AIDraftSession: Identifiable, Equatable, Codable, Sendable {
-    let id: UUID
-    let noteID: NoteID
+public struct AIDraftSession: Identifiable, Equatable, Codable, Sendable {
+    public let id: UUID
+    public let noteID: NoteID
     /// Frozen prompt that produced (or is producing) this session.
-    let prompt: AIPrompt
-    private(set) var suggestions: [AISuggestion]
-    private(set) var acceptedSuggestions: [AISuggestion]
-    private(set) var state: AIDraftState
-    private(set) var createdAt: Date
+    public let prompt: AIPrompt
+    public private(set) var suggestions: [AISuggestion]
+    public private(set) var acceptedSuggestions: [AISuggestion]
+    public private(set) var state: AIDraftState
+    public private(set) var createdAt: Date
 
     /// Count of suggestions the user has accepted.
-    var acceptedCount: Int { acceptedSuggestions.count }
+    public var acceptedCount: Int { acceptedSuggestions.count }
 
     /// True when there are accepted suggestions waiting to be transferred.
-    var hasAcceptedSuggestions: Bool { !acceptedSuggestions.isEmpty }
+    public var hasAcceptedSuggestions: Bool { !acceptedSuggestions.isEmpty }
 
     /// True when the prompt that produced this session carried note text.
     /// An ungrounded session holds questions for the user, not text to write.
-    var isGrounded: Bool { prompt.isGrounded }
+    public var isGrounded: Bool { prompt.isGrounded }
 
-    init(
+    public init(
         id: UUID = UUID(),
         noteID: NoteID,
         prompt: AIPrompt,
@@ -68,7 +68,7 @@ struct AIDraftSession: Identifiable, Equatable, Codable, Sendable {
     /// True when this session may start (or restart) generation. A fresh
     /// `.idle` session can generate; a `.failed` or `.cancelled` session can
     /// be retried. A `.ready` session is final — it already produced results.
-    var canGenerate: Bool {
+    public var canGenerate: Bool {
         switch state {
         case .idle, .failed, .cancelled: return true
         case .generating, .ready: return false
@@ -77,14 +77,14 @@ struct AIDraftSession: Identifiable, Equatable, Codable, Sendable {
 
     /// True while a generation is pending or in flight. Used to reject a
     /// second concurrent draft for the same note.
-    var isInFlight: Bool {
+    public var isInFlight: Bool {
         state == .idle || state == .generating
     }
 
     // MARK: - Domain transitions (behavior, not bare assignment)
 
     /// Move a fresh session into generation.
-    mutating func beginGeneration() {
+    public mutating func beginGeneration() {
         guard canGenerate else { return }
         state = .generating
     }
@@ -92,7 +92,7 @@ struct AIDraftSession: Identifiable, Equatable, Codable, Sendable {
     /// Deliver a batch of suggestions. Enforces the max-suggestions invariant
     /// and the "no generation after ready/cancelled" invariant.
     /// Resets accepted suggestions since a fresh generation replaces the pool.
-    mutating func fulfil(with newSuggestions: [AISuggestion]) {
+    public mutating func fulfil(with newSuggestions: [AISuggestion]) {
         guard state == .generating else { return }
         suggestions = Array(newSuggestions.prefix(prompt.maxSuggestions))
         acceptedSuggestions = []
@@ -102,7 +102,7 @@ struct AIDraftSession: Identifiable, Equatable, Codable, Sendable {
     /// Accept a pending suggestion into the accepted pool.
     /// Returns true if the suggestion was moved from pending to accepted.
     @discardableResult
-    mutating func accept(_ suggestion: AISuggestion) -> Bool {
+    public mutating func accept(_ suggestion: AISuggestion) -> Bool {
         guard let index = suggestions.firstIndex(where: { $0.id == suggestion.id }),
               !acceptedSuggestions.contains(where: { $0.id == suggestion.id }) else { return false }
         acceptedSuggestions.append(suggestions[index])
@@ -111,32 +111,32 @@ struct AIDraftSession: Identifiable, Equatable, Codable, Sendable {
 
     /// Remove a suggestion from the accepted pool back to pending.
     @discardableResult
-    mutating func reject(_ suggestion: AISuggestion) -> Bool {
+    public mutating func reject(_ suggestion: AISuggestion) -> Bool {
         guard let index = acceptedSuggestions.firstIndex(where: { $0.id == suggestion.id }) else { return false }
         acceptedSuggestions.remove(at: index)
         return true
     }
 
     /// Accept all pending suggestions.
-    mutating func acceptAll() {
+    public mutating func acceptAll() {
         for suggestion in suggestions where !acceptedSuggestions.contains(where: { $0.id == suggestion.id }) {
             acceptedSuggestions.append(suggestion)
         }
     }
 
     /// Clear all accepted suggestions.
-    mutating func clearAccepted() {
+    public mutating func clearAccepted() {
         acceptedSuggestions = []
     }
 
     /// Surface a provider failure.
-    mutating func fail(_ error: AIDraftError) {
+    public mutating func fail(_ error: AIDraftError) {
         guard state == .generating else { return }
         state = .failed(error)
     }
 
     /// Cancellation is allowed from any non-terminal state.
-    mutating func cancel() {
+    public mutating func cancel() {
         switch state {
         case .idle, .generating:
             state = .cancelled

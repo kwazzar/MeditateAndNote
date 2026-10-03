@@ -9,6 +9,7 @@
 //
 
 import Foundation
+import MeditateAndNoteCore
 
 struct HeuristicNoteAnalyzer: NoteAnalyzer {
     var isAvailable: Bool { true }

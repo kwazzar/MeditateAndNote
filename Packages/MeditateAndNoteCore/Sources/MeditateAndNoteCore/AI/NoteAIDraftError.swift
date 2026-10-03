@@ -9,7 +9,7 @@
 
 import Foundation
 
-enum AIDraftError: String, Error, Equatable, Codable, Sendable {
+public enum AIDraftError: String, Error, Equatable, Codable, Sendable {
     /// No valid note context to generate from.
     case noContext
     /// The provider was rate-limited or the daily budget was exceeded.

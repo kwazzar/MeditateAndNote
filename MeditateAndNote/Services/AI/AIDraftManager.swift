@@ -10,6 +10,7 @@
 
 import Foundation
 import OSLog
+import MeditateAndNoteCore
 
 // MARK: - Protocols for ViewModels
 

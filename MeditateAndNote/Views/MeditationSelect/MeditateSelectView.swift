@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import MeditateAndNoteCore
 
 struct MeditateSelectView: View {
     @State var viewModel: MeditateSelectViewModel

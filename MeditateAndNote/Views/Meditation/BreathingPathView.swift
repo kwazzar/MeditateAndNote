@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import MeditateAndNoteCore
 
 struct BreathingPathView: View {
     @Environment(ThemeManager.self) private var themeManager

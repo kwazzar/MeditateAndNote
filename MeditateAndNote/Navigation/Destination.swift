@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import MeditateAndNoteCore
 
 enum Destination: Hashable, Sendable {
     case tab(_ destination: TabDestination)

@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import MeditateAndNoteCore
 
 // MARK: - Meditation Info Sheet
 struct MeditationInfoSheet: View {

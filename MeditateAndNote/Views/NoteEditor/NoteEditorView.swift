@@ -4,6 +4,7 @@
 //
 
 import SwiftUI
+import MeditateAndNoteCore
 
 struct NoteEditorView: View {
     @State var viewModel: NoteEditorViewModel

@@ -13,11 +13,11 @@ import Foundation
 /// persistence here — every transition is deterministic given its inputs,
 /// and any side effects the caller must perform (play a sound, publish a
 /// completion, advance the UI) are returned as `Event`s.
-struct MeditationSessionEngine {
+public struct MeditationSessionEngine {
 
     // Remaining time exists only while active, so idle/finished states
     // cannot carry stale progress values.
-    enum SessionState {
+    public enum SessionState {
         case idle
         case countdown(remaining: Int, duration: SessionDuration)
         /// `remaining` is the time left as of `anchoredAt`. Deriving it from a
@@ -34,7 +34,7 @@ struct MeditationSessionEngine {
         case finished
     }
 
-    enum Event: Equatable {
+    public enum Event: Equatable {
         case countdownTick
         case sessionStarted
         case phaseChanged(BreathingPhase)
@@ -44,60 +44,60 @@ struct MeditationSessionEngine {
     }
 
     private let pattern: BreathingPattern
-    private(set) var state: SessionState = .idle
+    public private(set) var state: SessionState = .idle
 
-    init(pattern: BreathingPattern) {
+    public init(pattern: BreathingPattern) {
         self.pattern = pattern
     }
 
-    var isIdle: Bool {
+    public var isIdle: Bool {
         if case .idle = state { return true }
         return false
     }
 
-    var isCountingDown: Bool {
+    public var isCountingDown: Bool {
         if case .countdown = state { return true }
         return false
     }
 
-    var isActive: Bool {
+    public var isActive: Bool {
         if case .active = state { return true }
         return false
     }
 
-    var isFinished: Bool {
+    public var isFinished: Bool {
         if case .finished = state { return true }
         return false
     }
 
     /// Duration currently running when the session is active; nil otherwise.
-    var activeDuration: SessionDuration? {
+    public var activeDuration: SessionDuration? {
         guard case .active(_, let duration, _, _, _) = state else { return nil }
         return duration
     }
 
-    var currentPhase: BreathingPhase? {
+    public var currentPhase: BreathingPhase? {
         guard case .active(let clock, _, _, _, _) = state else { return nil }
         return clock.currentPhase
     }
 
-    var currentPhaseIndex: Int {
+    public var currentPhaseIndex: Int {
         guard case .active(let clock, _, _, _, _) = state else { return 0 }
         return clock.phaseIndex
     }
 
-    var countdownRemaining: Int? {
+    public var countdownRemaining: Int? {
         guard case .countdown(let remaining, _) = state else { return nil }
         return remaining
     }
 
-    var progress: Float {
+    public var progress: Float {
         guard case .active(_, let duration, let remaining, _, _) = state else { return 0 }
         guard duration.seconds > 0 else { return 0 }
         return Float((duration.seconds - remaining) / duration.seconds)
     }
 
-    func phaseProgress(now: Date = Date()) -> Double {
+    public func phaseProgress(now: Date = Date()) -> Double {
         guard case .active(let clock, _, _, _, _) = state else { return 0 }
         return clock.phaseProgress(now: now)
     }
@@ -105,7 +105,7 @@ struct MeditationSessionEngine {
     // MARK: - Transitions
 
     @discardableResult
-    mutating func start(duration: SessionDuration, countdown: Int = 0, now: Date = Date()) -> [Event] {
+    public mutating func start(duration: SessionDuration, countdown: Int = 0, now: Date = Date()) -> [Event] {
         if countdown > 0 {
             state = .countdown(remaining: countdown, duration: duration)
             return [.countdownTick]
@@ -115,7 +115,7 @@ struct MeditationSessionEngine {
     }
 
     @discardableResult
-    mutating func tickCountdown(now: Date = Date()) -> [Event] {
+    public mutating func tickCountdown(now: Date = Date()) -> [Event] {
         guard case .countdown(let remaining, let duration) = state else { return [] }
         if remaining > 1 {
             state = .countdown(remaining: remaining - 1, duration: duration)
@@ -126,7 +126,7 @@ struct MeditationSessionEngine {
     }
 
     @discardableResult
-    mutating func tickClock(now: Date = Date()) -> [Event] {
+    public mutating func tickClock(now: Date = Date()) -> [Event] {
         guard case .active(var clock, let duration, let remaining, let anchoredAt, let finishing) = state, !clock.isPaused else { return [] }
         let previousPhaseIndex = clock.phaseIndex
         let wasExhale = clock.currentPhase?.type == .exhale
@@ -153,7 +153,7 @@ struct MeditationSessionEngine {
     }
 
     @discardableResult
-    mutating func tickSecond(now: Date = Date()) -> [Event] {
+    public mutating func tickSecond(now: Date = Date()) -> [Event] {
         guard case .active(let clock, let duration, let remaining, let anchoredAt, let finishing) = state, !clock.isPaused else { return [] }
         if finishing { return [] }
         // Recompute from the wall-clock anchor instead of blindly subtracting
@@ -174,7 +174,7 @@ struct MeditationSessionEngine {
     }
 
     @discardableResult
-    mutating func pause(now: Date = Date()) -> [Event] {
+    public mutating func pause(now: Date = Date()) -> [Event] {
         guard case .active(var clock, let duration, let remaining, _, let finishing) = state, !clock.isPaused else { return [] }
         clock.pause(now: now)
         // Anchor to now so the frozen remaining does not drift while paused.
@@ -183,7 +183,7 @@ struct MeditationSessionEngine {
     }
 
     @discardableResult
-    mutating func resume(now: Date = Date()) -> [Event] {
+    public mutating func resume(now: Date = Date()) -> [Event] {
         guard case .active(var clock, let duration, let remaining, _, let finishing) = state, clock.isPaused else { return [] }
         clock.resume(now: now)
         // Re-anchor so time counting resumes from this moment, not from before
@@ -193,7 +193,7 @@ struct MeditationSessionEngine {
     }
 
     @discardableResult
-    mutating func stop() -> [Event] {
+    public mutating func stop() -> [Event] {
         state = .idle
         return []
     }
@@ -202,7 +202,7 @@ struct MeditationSessionEngine {
     /// completion event. Used to drive the UI without waiting for real
     /// timers (tests and user-facing "I'm done" affordances).
     @discardableResult
-    mutating func forceComplete(duration: SessionDuration? = nil) -> [Event] {
+    public mutating func forceComplete(duration: SessionDuration? = nil) -> [Event] {
         guard case .active(_, let activeDuration, _, _, _) = state else { return [] }
         let completed = duration ?? activeDuration
         state = .finished

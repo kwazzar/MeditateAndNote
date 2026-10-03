@@ -8,6 +8,7 @@
 //
 
 import Foundation
+import MeditateAndNoteCore
 
 protocol EmbeddingService: Sendable {
     /// Whether an embedding model is available on this device right now.

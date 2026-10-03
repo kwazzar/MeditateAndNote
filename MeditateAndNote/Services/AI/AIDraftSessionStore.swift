@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import MeditateAndNoteCore
 
 // MARK: - Store protocol
 

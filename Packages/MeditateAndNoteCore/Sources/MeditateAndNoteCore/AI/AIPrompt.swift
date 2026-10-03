@@ -11,24 +11,24 @@ import Foundation
 
 // MARK: - AIPrompt
 
-struct AIPrompt: Hashable, Codable, Sendable {
+public struct AIPrompt: Hashable, Codable, Sendable {
     /// The user-facing instruction ("Summarize my mood", "Give me ideas...").
-    let instructions: String
+    public let instructions: String
     /// The note whose content this prompt is asking about.
-    let noteID: NoteID
+    public let noteID: NoteID
     /// A frozen copy of the note's content at generation time.
-    let context: NoteContent
+    public let context: NoteContent
     /// Upper bound the provider must respect (guardrail, enforced in Entity too).
-    let maxSuggestions: Int
+    public let maxSuggestions: Int
 
     /// True when the prompt carries note text. Without it the provider can
     /// only ask the user open questions — there is nothing to continue and
     /// nothing worth transferring back into the note.
-    var isGrounded: Bool {
+    public var isGrounded: Bool {
         !context.rawValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
-    init(
+    public init(
         instructions: String,
         noteID: NoteID,
         context: NoteContent,
@@ -41,7 +41,7 @@ struct AIPrompt: Hashable, Codable, Sendable {
     }
 }
 
-extension AIPrompt {
+public extension AIPrompt {
     /// Matches the aggregate's invariant: at most 5 suggestions per session.
     static let defaultMaxSuggestions = 5
 }

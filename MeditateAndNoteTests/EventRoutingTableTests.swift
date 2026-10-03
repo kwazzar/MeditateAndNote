@@ -11,6 +11,7 @@
 
 import XCTest
 @testable import MeditateAndNote
+import MeditateAndNoteCore
 
 final class EventRoutingTableTests: XCTestCase {
 

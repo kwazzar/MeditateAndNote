@@ -25,6 +25,7 @@
 
 import XCTest
 @testable import MeditateAndNote
+import MeditateAndNoteCore
 
 final class DomainEventBusOrderingTests: XCTestCase {
 

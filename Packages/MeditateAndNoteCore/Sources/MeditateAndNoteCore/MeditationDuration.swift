@@ -7,7 +7,7 @@ import Foundation
 
 // MARK: - MeditationState
 
-enum MeditationState {
+public enum MeditationState {
     case notStarted
     case started
     case paused

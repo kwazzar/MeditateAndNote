@@ -4,6 +4,7 @@
 //
 
 import SwiftUI
+import MeditateAndNoteCore
 
 struct StreakHeaderView: View {
     @Environment(ThemeManager.self) private var themeManager

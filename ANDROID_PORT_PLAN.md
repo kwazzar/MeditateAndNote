@@ -621,9 +621,31 @@ Gradle 9.8.0 встановлено через brew — знадобиться �
 
 - [x] ~~Скомпілювати під `aarch64-unknown-linux-android28` — зафіксувати кожну помилку як приховану залежність~~ — **ВИМІРЯНО 2026-10-03 див. нижче**
 - [x] ~~Для кожної знайденої залежності вирішити: абстрагувати чи визнати платформо-специфічною~~ — **вирішено, див. «Приховані залежності»**
-- [ ] Створити локальний SPM-пакет `Packages/MeditateAndNoteCore` усередину поточного репо (без зламу iOS-білду)
-- [ ] Перенести `Models/` (entities, value objects, pure engines) у пакет першими — найбезпечніша частина
+- [x] ~~Створити локальний SPM-пакет `Packages/MeditateAndNoteCore`~~ — **зроблено 2026-10-03**, ітерований у `project.pbxproj` як `XCLocalSwiftPackageReference`
+- [x] ~~Перенести `Models/` у пакет першими~~ — **зроблено**: 25 файлів, 59 публічних типів
 - [ ] Перенести `Services/` (Managers) — складніша частина, більше протокольних меж
+
+#### Каскад `public`: що реально довелось зробити
+
+Головна робота — не `git mv`, а доступність. Виміряно по ходу:
+
+| категорія | кількість | примітка |
+| --- | --- | --- |
+| типи без `public` | 58 | лише `MeditationDuration` був публічний |
+| явні `public init` | 11 | див. нижче |
+| `Sendable`, доданий вручну | 8 | див. нижче |
+| `import MeditateAndNoteCore` в app-файлах | 69 | тільки там, де реально є Core-типи |
+| `import MeditateAndNoteCore` у тестах | 37 | усі `@testable import` |
+
+**Найбільша неочікувана знахідка: синтезований memberwise `init` для `public struct` лишається `internal`.** Довелось написати 11 явних `public init` — інакше зовнішній модуль не міг створити `DailyActivity`, `StreakSnapshot`, `StreakInsight`, `WeekdayHeatmapData`, `StreakResilience`, `StreakLengthDistribution`, `StreakDayDetail`, `UserRecommendation`, `BreathingPattern`, `BreathingPhase` і два вкладені (`Day`, `Bucket`). Для `StreakInsight`/`UserRecommendation` довелось також змінити `let id = UUID()` на `let id: UUID`, бо `let` з початковим значенням не перепризначається в `init`.
+
+Другий неочікуваний наслідок: **`public` змушує проявити питання `Sendable`.** Раніше `internal`-типи не перетинали межу модуля, тому компілятор не перевіряв їхню конкурентну безпеку. Піднявши `DomainEvent`, `SearchQuery`, `MeditationSession` до `public`, отримали 8 реальних помилок у Swift 6 strict concurrency. Усі — виправні додаванням `Sendable` до незмінних enum/struct, які цього правда заслуговують (`CoreDayState`, `MeditationID`, `SessionID`, `SessionDuration`, `Meditation`, `MeditationTitle`, `BreathingStyle`, `MeditationCategory`, `SearchQuery`, `NoteFilter`).
+
+**Скриптовий каскад небезпечніший за компілятор.** Regex-скрипт спершу додав `public` у `case` всередині `switch`, у тіла протоколів і на `extension X: P` — усі три місця Swift це відкидає. Роботи довелось робити ітеративно: скрипт для масового підйому + компілятор як джерело правди для всього, що скрипт не бачить. Остаточний стан — 0 помилок і 0 warnings на macOS та Android.
+
+**Перевірено:** пакет збирається окремо під `aarch64-unknown-linux-android28` (0/0) і разом з iOS-застосунком (BUILD SUCCEEDED); 475 unit + 8 UI тестів, 0 помилок.
+
+**Побічний ефект `.gitignore`:** рядок `Packages` у секції SwiftPackageManager ігнорував би **каталог пакета з джерелками**. Xcode тримає свій SPM-кэш у DerivedData, тому рядок не мав призначення — прибрано.
 
 #### Виміряно: приховані залежності від Apple SDK
 

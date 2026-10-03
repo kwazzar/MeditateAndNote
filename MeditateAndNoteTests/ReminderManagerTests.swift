@@ -5,6 +5,7 @@
 
 import XCTest
 @testable import MeditateAndNote
+import MeditateAndNoteCore
 
 private final class FakeScheduler: NotificationScheduling {
     var authorized = false

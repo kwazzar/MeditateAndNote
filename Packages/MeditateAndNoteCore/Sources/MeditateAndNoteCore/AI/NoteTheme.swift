@@ -9,13 +9,13 @@
 
 import Foundation
 
-struct NoteTheme: Hashable, Codable, Sendable, Comparable {
+public struct NoteTheme: Hashable, Codable, Sendable, Comparable {
     /// Human-readable label, trimmed. Empty labels are filtered by NoteInsight.
-    let label: String
+    public let label: String
     /// Relevance score, always within 0...1.
-    let relevance: Double
+    public let relevance: Double
 
-    init(label: String, relevance: Double) {
+    public init(label: String, relevance: Double) {
         self.label = label.trimmingCharacters(in: .whitespacesAndNewlines)
         if relevance.isNaN {
             self.relevance = 0
@@ -25,7 +25,7 @@ struct NoteTheme: Hashable, Codable, Sendable, Comparable {
     }
 
     /// Sorts by relevance descending (most relevant first).
-    static func < (lhs: NoteTheme, rhs: NoteTheme) -> Bool {
+    public static func < (lhs: NoteTheme, rhs: NoteTheme) -> Bool {
         lhs.relevance < rhs.relevance
     }
 }

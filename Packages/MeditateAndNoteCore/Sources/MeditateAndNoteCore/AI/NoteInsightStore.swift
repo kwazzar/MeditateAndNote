@@ -11,7 +11,7 @@ import Foundation
 
 // MARK: - Store protocol
 
-protocol NoteInsightStore: Sendable {
+public protocol NoteInsightStore: Sendable {
     func fetchAll() async throws -> [NoteInsight]
     func fetch(noteID: NoteID) async throws -> NoteInsight?
     func save(_ insight: NoteInsight) async throws
@@ -21,30 +21,30 @@ protocol NoteInsightStore: Sendable {
 
 // MARK: - In-Memory Implementation (tests + previews)
 
-final actor InMemoryNoteInsightStore: NoteInsightStore {
+public final actor InMemoryNoteInsightStore: NoteInsightStore {
     private var collection: NoteInsightsCollection
 
-    init(seed: [NoteInsight] = []) {
+    public init(seed: [NoteInsight] = []) {
         self.collection = NoteInsightsCollection(insights: seed)
     }
 
-    func fetchAll() async throws -> [NoteInsight] {
+    public func fetchAll() async throws -> [NoteInsight] {
         collection.allInsights
     }
 
-    func fetch(noteID: NoteID) async throws -> NoteInsight? {
+    public func fetch(noteID: NoteID) async throws -> NoteInsight? {
         collection[noteID]
     }
 
-    func save(_ insight: NoteInsight) async throws {
+    public func save(_ insight: NoteInsight) async throws {
         collection.upsert(insight)
     }
 
-    func delete(noteID: NoteID) async throws {
+    public func delete(noteID: NoteID) async throws {
         collection.remove(noteID: noteID)
     }
 
-    func deleteAll() async throws {
+    public func deleteAll() async throws {
         collection.removeAll()
     }
 }

@@ -8,6 +8,7 @@
 //
 
 import Foundation
+import MeditateAndNoteCore
 
 // MARK: - Domain Event (sum type)
 
