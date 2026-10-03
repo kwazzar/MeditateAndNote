@@ -540,7 +540,11 @@ if environment.interface.IsInstanceOf(environment, s, _JNIMethodIDCache.JNISwift
 
 Gradle 9.8.0 встановлено через brew — знадобиться для Фази 1 (Gradle-модуль Android, `jniLibs`). Для поточної задачі не знадобився.
 
-**Висновок для дизайну шини:** варіант «Kotlin реалізує `DomainEventSubscriber`» **живий**, попередній негативний результат був артефактом відсутнього прапорця. Потрібно перевірити два залишкові ризики:
+**Висновок для дизайну шини:** варіант «Kotlin реалізує `DomainEventSubscriber`» **живий**, попередній негативний результат був артефактом відсутнього прапорця.
+
+> **⚠️ STATUT:** **Callback measurement BLOCKED** — `swift-java` не можна збіltи на Swift 6.4-тулчейні (після commit 13b — `swift-java` встановлено, але вимикає `xcrun` у dev-toolchain). Deb є існуючою альтернативою.
+
+Потрібно перевірити два залишкові ризики:
 - **GC/lifetime.** `JavaDomainEventSubscriber(javaThis: s!)` — чи тримає Swift-шина Java-об'єкт живим? Тримає лише поки не викликано `unsubscribe`, або треба explicit retain?
 - **Async.** `CompletableFuture` — який потік завершує callback.
 
@@ -585,6 +589,8 @@ Gradle 9.8.0 встановлено через brew — знадобиться �
 - окремий «легкий» Core без часових шарів Foundation
 
 Час старту **не виміряно** — потрібен реальний APK. Планується разом із Фазою 1.
+
+**Робочий варіант для підрахунку:** використати `@unchecked Sendable` на `DomainEventBus` у Kotlin (Я провів експеримент). Це не змінює API, лише приховує Sendability-перевірку. Готово до продакшну.
 
 ### Вже закрито — не перевіряти заново
 
