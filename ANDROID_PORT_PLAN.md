@@ -619,10 +619,38 @@ Gradle 9.8.0 встановлено через brew — знадобиться �
 
 Тобто ~35% рядків коду — ядро, ~44% — UI. Порядок зусиль зрозумілий: UI дублюється (Compose з нуля), ядро переноситься без змін.
 
+- [x] ~~Скомпілювати під `aarch64-unknown-linux-android28` — зафіксувати кожну помилку як приховану залежність~~ — **ВИМІРЯНО 2026-10-03 див. нижче**
+- [x] ~~Для кожної знайденої залежності вирішити: абстрагувати чи визнати платформо-специфічною~~ — **вирішено, див. «Приховані залежності»**
 - [ ] Створити локальний SPM-пакет `Packages/MeditateAndNoteCore` усередину поточного репо (без зламу iOS-білду)
 - [ ] Перенести `Models/` (entities, value objects, pure engines) у пакет першими — найбезпечніша частина
-- [ ] Скомпілювати пакет під `aarch64-unknown-linux-android28` — зафіксувати кожну помилку компіляції як приховану залежність від Apple SDK
-- [ ] Для кожної знайденої залежності вирішити: абстрагувати протоколом (лишається в Core) чи визнати платформо-специфічною (переїжджає в Infrastructure)
+- [ ] Перенести `Services/` (Managers) — складніша частина, більше протокольних меж
+
+#### Виміряно: приховані залежності від Apple SDK
+
+Метод: реальні файли `Models/` + `Services/` + `ViewModels/` + `UserDefaults*Store` + `Config` скопійовано в тимчасовий SPM-пакет і скомпільовано під `aarch64-unknown-linux-android28`. `import OSLog` замінено на шим. Apple-файли (`CoreData*`, `ThemeManager`, `FoundationModels*`, `NLEmbeddingService`, `KeychainService`, `SoundPlayer`, `NotificationScheduling`) вилучено.
+
+**60 файлів → 19 помилок. З них справжніх Android-SDK — 5, решта 14 вказують на 5 порушень шарів.**
+
+`Models/` — **0 помилок, 0 Apple-залежностей.** Усі 25 файлів лише `import Foundation`, жодного `#if canImport`, жодного `@available`. Перенесення механічне; єдиний реальний блокер — access level.
+
+Справжні Android-SDK розбіжності:
+
+| # | Файл | Проблема | Рішення |
+| --- | --- | --- | --- |
+| 1 | `Services/AI/RemoteLLMDraftService.swift` | `URLSession`/`URLRequest`/`URLResponse` живуть у `FoundationNetworking` | `#if canImport(FoundationNetworking)` |
+| 2 | `Services/Streak/StreakInsightEngine.swift:206,750` | `DateFormatter.weekdaySymbols` на Darwin — `[String]!`, на Android — `[String]`. `guard let fullSymbols = ...` не компілюється | прибрати `guard let` |
+
+Порушення шарів (ViewModel → View, або Manager → конкретна платформна реалізація):
+
+| Файл | Проблема | Рішення |
+| --- | --- | --- |
+| `ViewModels/NoteMenuViewModel.swift:23,29` | посилається на `SearchState`, який живе в `Views/NoteMenu/` | перенести enum у `Models/` |
+| `ViewModels/OnboardingViewModel.swift:27,38` | посилається на `OnboardingPage` із `Views/Onboarding/OnboardingPageModel.swift` | перенести struct у `Models/` |
+| `Services/Reminders/ReminderManager.swift:36,50` | залежить від concrete `NotificationScheduling` (`UserNotifications`) | замінити на протокол у Core |
+| `Services/AI/AIDraftServiceFactory.swift:16` | залежить від concrete `FoundationModelsAIDraftService` | замінити на протокол у Core |
+| `Persistence/UserDefaultsAIDraftSettingsStore.swift:12,18` | залежить від `KeychainServiceProtocol` (`Security`) | винести протокол у Core, impl лишається в Infrastructure |
+
+Останні три — рівно ті `ReminderManager` / `AIDraftServiceFactory`, які вже позначені як «потрібна ін'єкція протоколу». `SearchState` і `OnboardingPage` — нові знахідки: ViewModel зараз не має права знати про View-шар.
 - [ ] Перенести `Services/` (Managers) — складніша частина, більше протокольних меж
 - [ ] ~~Усунути виняток `CoreDataSessionStore`~~ — **не робити.** Це задокументований прийнятий виняток (див. архітектурні правила): `CoreDataSessionStore` свідомо працює без Store-протоколу. Для Android-порту це означає лише «зроби окремий адаптер», а не «перероби існуючий тип».
 - [x] ~~Прогнати `jextract` на пробному наборі~~ — **зроблено 2026-10-02**: 12 проб, перелік підтримуваних/непідтримуваних типів у розділі «Обмеження JNI-межі»
