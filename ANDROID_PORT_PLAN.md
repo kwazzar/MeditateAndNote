@@ -546,7 +546,45 @@ Gradle 9.8.0 встановлено через brew — знадобиться �
 
 ### 6. Розмір `.so` та час старту
 
-Синтетична проба — 512K. Реальне ядро (43 файли, Foundation, async) буде помітно більшим. Має бути розумним для мобільного застосунку.
+**Стан: ✅ ВИМІРЯНО (2026-10-03). Число неприємне, але кероване.**
+
+Попередня оцінка «синтетична проба 512K» була нерелевантна — вона рахувала лише власний код, не рантайм. Виміряно транзитивний closure через `llvm-readelf -d`.
+
+**Динамічна лінковка: 98.9 MB uncompressed.** Closure від `libCore.so` + `libSwiftJava.so`:
+
+| .so | MB |
+| --- | --- |
+| `lib_FoundationICU.so` | **43.7** |
+| `libswiftCore.so` | 11.1 |
+| `libFoundationEssentials.so` | 10.0 |
+| `libc++_shared.so` | 9.0 |
+| `libFoundation.so` | 8.6 |
+| `libSwiftJava.so` | 6.9 |
+| `libFoundationInternationalization.so` | 3.6 |
+| інші 13 | ~5.4 |
+
+`lib_FoundationICU.so` — **hard NEEDED** обома (`libFoundation.so`, `libFoundationInternationalization.so`), не dlopen. Перевірено: 5444 експортовані функції, нуль залежностей від системного ICU → це повний статичний білд ICU, вбудований у toolchain. Обрізати неможливо.
+
+**Попередній APK у 39.3 MB був спакований надлишково** — кожна `.so` з каталогу toolchain підряд, а не closure. Не лінкуються ні `libFoundationNetworking.so` (15.7 MB), ні `libXCTest`/`libTesting` (4.2 MB).
+
+**Статична лінковка — головний важіль.** `swift build -c release --static-swift-stdlib`:
+
+| збірка | розмір | ICU |
+| --- | --- | --- |
+| динамічний closure | 98.9 MB | повний |
+| статична, мінімум Foundation (K-eventbus) | **8.1 MB** | вирізано (0 маркерів) |
+| статична, Foundation-heavy (FProbe) | **65 MB** | повний (4877 маркерів) |
+
+Перевірка «ICU вирізано» — не за експортами, а за вмістом: у 8.1 MB немає жодного маркера `icudt`/`ures_open`/`ucnv_open` і жодного `Europe/Kyiv`; у 65 MB їх 4877 і tzdb присутній. Тобто `--gc-sections` працює, але те, що Foundation реально використовує, лишається.
+
+**Що це означає для `MeditateAndNoteCore`.** Реальне ядро потребує `DateFormatter`, `Calendar`, `TimeZone`, `NumberFormatter` (`ReminderScheduleBuilder`, `StreakInsightEngine`) — тобто **повний ICU**. Очікування: **~65 MB до власного коду застосунку**, плюс Compose, ресурси, DEX.
+
+Це не блокер, але це головний ризик розміру й має бути в бюджеті застосунку з дня 1. Варіанти поменшення, якщо стане критично:
+- не тягнути `NumberFormatter`/локалізацію в Core (інакше ICU не виріжеться)
+- AAB + per-device split — але ICU все одно в кожному split
+- окремий «легкий» Core без часових шарів Foundation
+
+Час старту **не виміряно** — потрібен реальний APK. Планується разом із Фазою 1.
 
 ### Вже закрито — не перевіряти заново
 
@@ -556,6 +594,8 @@ Gradle 9.8.0 встановлено через brew — знадобиться �
 - ✅ `any Encodable` type-erasure **не** працює (відхилено)
 - ✅ Swift runtime завантажується на Android 16 arm64-v8a (1000 ітерацій, PASS)
 - ✅ **sync JNI bridge на пристрої** — struct/enum через `SwiftArena`, 1000 ітерацій, PASS; розгортання без Gradle
+- ✅ **Kotlin-реалізатор subscriber-а = 1 метод** — `jextract --enable-java-callbacks` (див. п. 5)
+- ✅ **розмір runtime** — статична лінковка дає 8.1 MB мінімум / 65 MB з повним ICU (див. п. 6)
 - ✅ **`Foundation`-семантика — golden-диф macOS ↔ Android, 145 рядків, 0 розбіжностей** (DST, локалі, календарі, формати)
 - ✅ JNI thunks `--mode jni`, 51 `Java_*` символ у `.so`
 - ✅ `swift-java` зібрано (виправлено `DEVELOPER_DIR`/toolchain)
