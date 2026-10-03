@@ -6,8 +6,9 @@
 //
 
 import Foundation
+import MeditateAndNoteCore
 
 public enum Config {
-    public static let bundleID = "com.quasar.MeditateAndNote"
+    public static let bundleID = LogSubsystem.main
     public static let deepLinkScheme: String = "meditateandnote"
 }
