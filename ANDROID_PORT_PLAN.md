@@ -486,61 +486,63 @@ diff /tmp/f_macos.txt /tmp/f_android.txt
 
 ### 5. Скільки бойлерплату пише Kotlin-реалізатор
 
-**Стан: ❌ НЕ ПРАЦЮЄ. Припущення плану хибні (2026-10-03).**
+**Стан: ✅ ВИРІШЕНО. Kotlin-реалізатор пише ОДИН метод (2026-10-03).**
 
-У плані було: «написати один Kotlin-клас, що імплементує інтерфейс». Kotlin не може цього зробити. Виміряно:
+Розгадка — прапорець `jextract --enable-java-callbacks`, якого не було в першій пробі. Без нього генератор вважає, що протокол реалізує лише Swift, і додає `JNISwiftInstance` (умова в `JNISwift2JavaGenerator+JavaBindingsPrinting.swift:197`):
 
-**Kotlin — непридатний.** Згенерований jextract інтерфейс успадковує `JNISwiftInstance`, методи якого починаються з `$`:
-
-```java
-public interface DomainEventSubscriber extends JNISwiftInstance, SwiftDowncastable {
-  void handle(DomainEvent event);
+```swift
+// If we cannot generate Swift wrappers that allows the user to implement
+// the wrapped interface in Java then we require only JExtracted types can conform
+if !self.interfaceProtocolWrappers.keys.contains(decl) && !extends.contains("JNISwiftInstance") {
+    extends.append("JNISwiftInstance")
 }
 ```
 
-Kotlin **забороняє `$` в ідентифікаторах** (це маркер string-інтерполяції). `override fun $memoryAddress()` — синтаксична помилка: `function declaration must have a name`. Тобто Kotlin-реалізатор неможливий у принципі, а не складний.
-
-**Java — компілюється, але лише з трьома методами без змістовного тіла:**
-
+**Без** прапорця:
 ```java
-public class NoLowLevel implements DomainEventSubscriber {
-    @Override public void handle(DomainEvent event) {}
+public interface DomainEventSubscriber extends JNISwiftInstance, SwiftDowncastable { ... }
+```
+
+**З** прапорцем:
+```java
+public interface DomainEventSubscriber extends SwiftDowncastable {
+  public void handle(DomainEvent event);
 }
-// error: does not override abstract method $typeMetadataAddress() in JNISwiftInstance
 ```
 
-Третій аргумент — згенерований thunk (`Core+SwiftJava.swift`), який робить:
+Kotlin-реалізатор — усе:
+
+```kotlin
+class LoggingSubscriber : DomainEventSubscriber {
+    override fun handle(event: DomainEvent) { println("Kotlin got: $event") }
+}
+```
+
+Скомпільовано `kotlinc 2.3.20` (з Android Studio) проти згенерованого Java — **без помилок**. Жодних `$*` методів.
+
+Thunk тепер має дві гілки (`Core+SwiftJava.swift`, `subscribe`):
 
 ```swift
-let spointer$   = s.$memoryAddress()        // JNI CallLongMethodA
-let stypeMetadata$ = s.$typeMetadataAddress()
-let dynamicType = unsafeBitCast(stypeMetadata$, to: Any.Type.self)
-let existential = UnsafeMutableRawPointer(bitPattern: Int(spointer$))!.load(as: dynamicType)
-    as! (any DomainEventSubscriber)          // ← force-cast
+if environment.interface.IsInstanceOf(environment, s, _JNIMethodIDCache.JNISwiftInstance.class) != 0 {
+    // шлях Swift-значення: $memoryAddress + load(as:) + as!  (старий, недосяжний для Java)
+} else {
+    // шлях Java-реалізатора: Swift-обгортка, handle форвардиться в Java
+    sswiftObject$ = _DomainEventBus_subscribe_s_Wrapper(
+        _javaDomainEventSubscriberInterface: JavaDomainEventSubscriber(javaThis: s!, environment: environment))
+}
 ```
 
-`$typeMetadataAddress()` має віддати **справжню Swift-conforming metadata**, а `$memoryAddress()` — вказівник на Swift-значення. У Java-об'єкта такого значення немає. Тіла `return 0L;` компілюються і зроблять `as!` — crash.
+Гілка `else` — та сама `_DomainEventBus_subscribe_s_Wrapper: SwiftJavaDomainEventSubscriberWrapper`, що її генерує jextract. Жодного `$memoryAddress`, жодного `as!`, жодної metadata.
 
-Базису з готовою реалізацією цих трьох методів у `SwiftKitCore` **немає** (перевірено: 4 реалізації `$memoryAddress()` у всьому репо — усі у тестах або в jextract-обгортках).
+**Gradle НЕ потрібен для цього напряму.** `jextract --mode jni --enable-java-callbacks` працює standalone; Java-обгортка для callback-протоколу генерується самим jextract. `java-callbacks-build` (з Gradle) потрібен для зворотного напряму — коли Swift викликає Java-клас, оголошений користувачем.
 
-**`wrap-java` не рятує.** `swift-java configure --jar` + `wrap-java` працюють без Gradle і генерують Swift-обгортку:
+**Обмеження прапорця** (з `--help`): вимагає вимкнення SwiftPM Sandbox (`--disable-sandbox`). Під час інтеграції з SPM це окрема налаштовка.
 
-```swift
-@JavaClass("probe.LoggingSubscriber", implements: DomainEventSubscriber.self)
-open class LoggingSubscriber: JavaObject { ... }
-```
+Gradle 9.8.0 встановлено через brew — знадобиться для Фази 1 (Gradle-модуль Android, `jniLibs`). Для поточної задачі не знадобився.
 
-але вона знову йде в Java через `@JavaMethod("$memoryAddress")` / `@JavaMethod("$typeMetadataAddress")` — тобто низькорівневі методи лишаються на Java-стороні. Це замкнене коло: обгортка потребує їх, а значить їх треба десь написати.
-
-**Підтримуваний шлях — `java-callbacks-build`**, і він **вимагає Gradle** (`gradleExecutable`, `gradleProjectDir` — обов'язкові аргументи). Gradle не встановлено.
-
-**Наслідок для дизайну шини.** Варіант «Kotlin реалізує `DomainEventSubscriber`» мертвий. Три живі варіанти:
-
-1. **Інвертувати напрям.** Swift не зберігає Kotlin-об'єкт, а сам тягне дані: `publish` не приймає subscriber, а Kotlin періодично/через callback читає. Але тоді треба інший механізм доставки — фактично це `AsyncStream` знову.
-2. **Замість протоколу — примітивний тип із одним методом.** Спробувати `subscribe(handle: @convention(c) (Int32, DomainEvent) -> Void)` — функціональний тип C-convention **може** бути jextract-сумісним (це не клоура). Треба окремо перевірити `unknown(IdentifierTypeSyntax)` для `@convention(c)`. Якщо пройде — Kotlin-реалізатор лишається без базових класів.
-3. **Java + Gradle.** Встановити Gradle, підняти `java-callbacks-build`, з'ясувати, чи він реально дає ready-to-use базу для conformer-ів.
-
-Варіант 2 — найдешевший і найперспективніший: він не тягне за собою Gradle і знімає проблему metadata. Перевірка — одна проба, як попередні.
+**Висновок для дизайну шини:** варіант «Kotlin реалізує `DomainEventSubscriber`» **живий**, попередній негативний результат був артефактом відсутнього прапорця. Потрібно перевірити два залишкові ризики:
+- **GC/lifetime.** `JavaDomainEventSubscriber(javaThis: s!)` — чи тримає Swift-шина Java-об'єкт живим? Тримає лише поки не викликано `unsubscribe`, або треба explicit retain?
+- **Async.** `CompletableFuture` — який потік завершує callback.
 
 ### 6. Розмір `.so` та час старту
 
