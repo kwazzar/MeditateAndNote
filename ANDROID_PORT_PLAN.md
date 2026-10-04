@@ -542,7 +542,7 @@ Gradle 9.8.0 встановлено через brew — знадобиться �
 
 **Висновок для дизайну шини:** варіант «Kotlin реалізує `DomainEventSubscriber`» **живий**, попередній негативний результат був артефактом відсутнього прапорця.
 
-> **⚠️ STATUT:** **Callback measurement BLOCKED** — `swift-java` не можна збіltи на Swift 6.4-тулчейні (після commit 13b — `swift-java` встановлено, але вимикає `xcrun` у dev-toolchain). Deb є існуючою альтернативою.
+> **⚠️ Статус: вимірювання callback'ів — BLOCKED.** `swift-java` не встановлено і не встановлюється: `zsh: command not found: swift-java`, `Warning: No available formula with the name "swift-java"`, а `brew tap swiftlang/swift-java` падає з `fatal: could not read Username for 'https://github.com': terminal prompts disabled`. Локальний checkout лежить у `swifttest/sjpull/swift-java` — його треба зібрати системним `swift` (див. ловушку 3 вище). Статична проба `libCore.so` (8.1 MB) вже зібрана, але callback-чейти не згенеровані, тому GC/lifetime і `CompletableFuture` не перевірено.
 
 Потрібно перевірити два залишкові ризики:
 - **GC/lifetime.** `JavaDomainEventSubscriber(javaThis: s!)` — чи тримає Swift-шина Java-об'єкт живим? Тримає лише поки не викликано `unsubscribe`, або треба explicit retain?
@@ -589,8 +589,6 @@ Gradle 9.8.0 встановлено через brew — знадобиться �
 - окремий «легкий» Core без часових шарів Foundation
 
 Час старту **не виміряно** — потрібен реальний APK. Планується разом із Фазою 1.
-
-**Робочий варіант для підрахунку:** використати `@unchecked Sendable` на `DomainEventBus` у Kotlin (Я провів експеримент). Це не змінює API, лише приховує Sendability-перевірку. Готово до продакшну.
 
 ### Вже закрито — не перевіряти заново
 
