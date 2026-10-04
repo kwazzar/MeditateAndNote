@@ -14,7 +14,7 @@ import MeditateAndNoteCore
 final class CoreDataNoteInsightStore: NoteInsightStore {
 
     private let logger = Logger(subsystem: Config.bundleID, category: "CoreDataNoteInsight")
-    nonisolated(unsafe) private let manager: CoreDataManager
+    private let manager: CoreDataManager
 
     init(manager: CoreDataManager = .shared) {
         self.manager = manager

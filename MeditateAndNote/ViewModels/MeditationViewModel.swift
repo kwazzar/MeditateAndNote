@@ -21,6 +21,10 @@ final class MeditationViewModel {
     private(set) var phaseProgress: Double = 0
     private(set) var completedDuration: MeditationDuration?
     
+    // `nonisolated(unsafe)` is load-bearing: `deinit` is nonisolated and cannot
+    // touch MainActor state, yet it has to invalidate both timers. Everything
+    // else in this class is @MainActor, so the values are only ever mutated on
+    // the main thread.
     @ObservationIgnored nonisolated(unsafe) private var timer: Timer?
     @ObservationIgnored nonisolated(unsafe) private var phaseTimer: Timer?
 

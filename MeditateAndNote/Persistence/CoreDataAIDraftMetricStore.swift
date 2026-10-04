@@ -14,7 +14,7 @@ import MeditateAndNoteCore
 final class CoreDataAIDraftMetricStore: AIDraftMetricStore {
 
     private let logger = Logger(subsystem: Config.bundleID, category: "CoreDataAIDraftMetrics")
-    nonisolated(unsafe) private let manager: CoreDataManager
+    private let manager: CoreDataManager
 
     init(manager: CoreDataManager = .shared) {
         self.manager = manager
