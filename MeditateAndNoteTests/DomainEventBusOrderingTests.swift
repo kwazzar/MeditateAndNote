@@ -199,6 +199,36 @@ final class DomainEventBusOrderingTests: XCTestCase {
         XCTAssertEqual(sequenceNumbers(received.value), Array(0..<10).map(Optional.some))
     }
 
+    /// `subscribe`/`unsubscribe` mutate the handler `Dictionary` while
+    /// `publish` copies it. Without the lock in `Subscriptions` that is a data
+    /// race, not just a lost update: on Android it reproduced as SIGSEGV inside
+    /// `_ss32_copyCollectionToContiguousArray` rather than as an assertion
+    /// failure, so it would never have been caught by a macOS-only suite that
+    /// only published concurrently. Run it enough rounds to overlap the copy
+    /// with the mutation.
+    func testConcurrentSubscribeDuringPublishIsSafe() {
+        let bus = DomainEventBus()
+        let delivered = LockedBox(0)
+        bus.subscribe { _ in delivered.mutate { $0 += 1 } }
+
+        let rounds = 200
+        let perRound = 50
+        DispatchQueue.concurrentPerform(iterations: rounds) { round in
+            if round % 2 == 0 {
+                for i in 0..<perRound {
+                    let id = bus.subscribe { _ in }
+                    bus.unsubscribe(id)
+                }
+            } else {
+                for i in 0..<perRound {
+                    bus.publish(.noteInsightsUpdated([payload(i)]))
+                }
+            }
+        }
+
+        XCTAssertGreaterThan(delivered.value, 0, "publishing half stopped delivering")
+    }
+
     /// Sanity check on the non-guarantee above, so a future change that starts
     /// depending on cross-consumer order is caught rather than silently flaky.
     func testCrossConsumerInvocationOrderIsNotGuaranteed() {
