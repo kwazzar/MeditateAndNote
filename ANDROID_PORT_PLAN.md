@@ -534,7 +534,7 @@ if environment.interface.IsInstanceOf(environment, s, _JNIMethodIDCache.JNISwift
 
 Гілка `else` — та сама `_DomainEventBus_subscribe_s_Wrapper: SwiftJavaDomainEventSubscriberWrapper`, що її генерує jextract. Жодного `$memoryAddress`, жодного `as!`, жодної metadata.
 
-**Gradle НЕ потрібен для цього напряму.** `jextract --mode jni --enable-java-callbacks` працює standalone; Java-обгортка для callback-протоколу генерується самим jextract. `java-callbacks-build` (з Gradle) потрібен для зворотного напряму — коли Swift викликає Java-клас, оголошений користувачем.
+**Потрібні ДВА кроки, не один.** `jextract --mode jni --enable-java-callbacks` генерує Java-інтерфейс (`DomainEventSubscriber`) і Swift-thunk'и, які посилаються на `JavaDomainEventSubscriber` — але самого класу `JavaDomainEventSubscriber` він **не** пише. Його дає `wrap-java` (через `configure`), тобто фаза `java-callbacks-build`. Прапорця самого `jextract` недостатньо: без фази 2 компілятор падає з `cannot find type 'JavaDomainEventSubscriber' in scope`.
 
 **Обмеження прапорця** (з `--help`): вимагає вимкнення SwiftPM Sandbox (`--disable-sandbox`). Під час інтеграції з SPM це окрема налаштовка.
 
@@ -542,11 +542,23 @@ Gradle 9.8.0 встановлено через brew — знадобиться �
 
 **Висновок для дизайну шини:** варіант «Kotlin реалізує `DomainEventSubscriber`» **живий**, попередній негативний результат був артефактом відсутнього прапорця.
 
-> **⚠️ Статус: вимірювання callback'ів — BLOCKED.** `swift-java` не встановлено і не встановлюється: `zsh: command not found: swift-java`, `Warning: No available formula with the name "swift-java"`, а `brew tap swiftlang/swift-java` падає з `fatal: could not read Username for 'https://github.com': terminal prompts disabled`. Локальний checkout лежить у `swifttest/sjpull/swift-java` — його треба зібрати системним `swift` (див. ловушку 3 вище). Статична проба `libCore.so` (8.1 MB) вже зібрана, але callback-чейти не згенеровані, тому GC/lifetime і `CompletableFuture` не перевірено.
+**СТАТУС: callback round-trip ПЕРЕВІРЕНО (2026-10-04).** `swift-java` був уже зібраний у `sjpull/swift-java/.build/arm64-apple-macosx/release/swift-java` — його просто не було в `PATH`, тому й здавалося, що інструмент недоступний. JBR від Android Studio (`/Applications/Android Studio.app/Contents/jbr`, JDK 25) дає `javac`; системного JDK у системі немає.
 
-Потрібно перевірити два залишкові ризики:
-- **GC/lifetime.** `JavaDomainEventSubscriber(javaThis: s!)` — чи тримає Swift-шина Java-об'єкт живим? Тримає лише поки не викликано `unsubscribe`, або треба explicit retain?
-- **Async.** `CompletableFuture` — який потік завершує callback.
+Перевірено на host-JVM (справжній JNI, справжній GC), probe `K-eventbus`:
+
+| питання | результат |
+| --- | --- |
+| `subscribe` → `publish` → callback у Java | ✅ спрацьовує, обидва підписники отримали подію |
+| `unsubscribe` | ✅ після нього другий publish дістав лише alive-підписника |
+| **GC/lifetime** | ✅ підписник пережив 5× `System.gc()` після втрати Java-покликань. Swift-шина тримає strong ref через box — **explicit retain не потрібен** |
+| **Потік callback** | ✅ `main`, коли публікує main; `worker-1`, коли публікує інший потік. Тобто **на потік емітера**, без маршалингу |
+| `UUID` мапінг | ✅ `java.util.UUID.fromString` → Swift `UUID` і назад; але Swift `UUID.description`uppercase, тому назад приходить `...-AAAAAAAAAAAA`. Якщо порівнювати рядки — врахувати регістр |
+
+Згенеровані Java-типи не потребують жодних `$memoryAddress`/`$typeMetadataAddress`/`$cleanup` stubs — їх дає макрос `@JavaInterface` на Swift-стороні. Раніший рукописний stub-файл був зайвим.
+
+**Розмір callback-closure:** статична `libCore.so` з callbacks — **78 MB** (dynamic-хости: 4.2 MB `libCore.dylib` + `libSwiftJava.dylib`). Порівняно з 8.1 MB без callbacks: `@JavaInterface`/`JavaObject` тягнуть повний `Foundation` closure разом з ICU. Це та сама ціна, яку доведеться заплатити за `DomainEventSubscriber`.
+
+**Лишається неперевіреним:** `CompletableFuture` (async-функцій у probe немає) і запуск на пристрої — емулятор не стартує, бракує ~7.4 GB вільного диска (`FATAL | Not enough space to create userdata partition`), є лише ~4.3 GB.
 
 ### 6. Розмір `.so` та час старту
 
