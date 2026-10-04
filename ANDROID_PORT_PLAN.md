@@ -587,7 +587,37 @@ Gradle 9.8.0 встановлено через brew — знадобиться �
 
 **Async-функції коштують ~41 KB** у статичній бібліотеці: 78,232,912 → 78,273,952 байт.
 
-### Concurrency: `DomainEventBus` був не thread-safe — підтверджено SIGSEGV
+### Розмір: `llvm-objcopy --strip-all` дає −28% без зміни коду
+
+Секції `.so` (75.3 MiB корисного навантаження + symbol/debug):
+
+| секція | розмір | що це |
+| --- | --- | --- |
+| `.rodata` | 35.4 MiB | реальні дані — переважно ICU (9457 символів) |
+| `.text` | 13.7 MiB | реальний код |
+| `.strtab` + `.symtab` | **15.3 MiB** | символьна таблиця — чистий waste |
+| `.debug_*` | **5.8 MiB** | debug info |
+| `.eh_frame` (+hdr) | 2.5 MiB | unwind |
+
+**78,276,024 → 56,138,568 байт (−21.1 MiB, −28%)** одним викликом:
+
+```
+$TC/usr/bin/llvm-objcopy --strip-all libCore.so libCore.stripped.so
+```
+
+`llvm-strip` з NDK — битий symlink на `llvm-objcopy`, тому треба `llvm-objcopy` зі Swift toolchain.
+
+Strip **не** можна вшити в `swift build`: `-Xlinker --strip-all` ламає лінкування хостового плагіна макросів (`SwiftJavaMacros: clang: error: linker command failed`), а `-Xswiftc -gnone` не прибирає `.symtab`. Тому strip — окремий крок після збірки.
+
+**Перевірено на пристрої** (Samsung SM-A245F, Android 16) на stripped-бібліотеці: subscribe/publish/unsubscribe ✅, GC ✅, `CompletableFuture` ✅ (`Thread-2`/`Thread-3`), concurrency 1600/1600 ✅, mutation 300 раундів × 40 subscribe = **12 000 subscribe, 0 помилок, 0 сигналів** ✅. JNI-символи живуть у `.dynsym`, тому strip їх не зачіпає.
+
+Старт на stripped: `WaitTime: 1071 ms`, probe `elapsedMs=671` (далі dlopen). Нестріпнута збірка давала `WaitTime` 597-800 ms, але з меншим probe — різниця в межах шуму install'у, окремий висновок про dlopen робити рано.
+
+**Що лишилось:** `.rodata` 35 MiB — це ICU, який тягне FoundationEssentials. Прибрати `Foundation` з `MeditateAndNoteCore` **не вийде**: згенерований `Foundation+SwiftJava.swift` сам `import Foundation` (там thunks для `UUID`), тож Foundation у closure потрапляє через JNI-шар, а не через наш доменний код. Значить реальний floor задає swift-java, не ми.
+
+**Два висновки про harness, обидва заплатили час:**
+- `Log.i` на кожен callback блокує потік, коли logcat ring buffer заповнений. Мільйони рядків → тест завмирає на випадковому раунді, і це виглядає як deadlock, хоча ним не є. Логувати перші 8 callback, далі лише лічити.
+- Не роби `join()` на довгому тесті з main — `am start -W` віддає `Status: timeout` / `WaitTime: 10163`, і стартове число стає сміттям.
 
 `DomainEventBus` мав `@unchecked Sendable`, але під ним був звичайний `Dictionary`. Тест: 8 потоків × 200 `publish()` без мутації пройшов (1600/1600) — **це нічого не доводить**, бо read-only ітерація не ламається. Реальний тест — мутація під час publish: один потік робить `subscribe`/`unsubscribe`, другий безперервно `publish`.
 
