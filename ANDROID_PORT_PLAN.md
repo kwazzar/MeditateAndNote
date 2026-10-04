@@ -587,6 +587,44 @@ Gradle 9.8.0 встановлено через brew — знадобиться �
 
 **Async-функції коштують ~41 KB** у статичній бібліотеці: 78,232,912 → 78,273,952 байт.
 
+### Concurrency: `DomainEventBus` був не thread-safe — підтверджено SIGSEGV
+
+`DomainEventBus` мав `@unchecked Sendable`, але під ним був звичайний `Dictionary`. Тест: 8 потоків × 200 `publish()` без мутації пройшов (1600/1600) — **це нічого не доводить**, бо read-only ітерація не ламається. Реальний тест — мутація під час publish: один потік робить `subscribe`/`unsubscribe`, другий безперервно `publish`.
+
+Відтворилося за кілька раундів:
+
+```
+signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x0080000000000010 (read)
+  #00 _ss32_copyCollectionToContiguousArray...Dictionary<UUID, DomainEventSubscriber>
+  #01 Core...DomainEventBus...publish
+  #04 com.mn.core.DomainEventBus.publish
+```
+
+Це `Array(subs.values)` (копіювання буфера) на трьохінг dictionary, який інший потік одночасно мутує. `@unchecked Sendable` просто вимкнув компіляторну перевірку, а не зробив тип безпечним.
+
+**Фікс** — `NSLock` + snapshot під замком, dispatch поза ним:
+
+```swift
+private let lock = NSLock()
+public func subscribe(_ s: any DomainEventSubscriber) -> UUID {
+  let id = UUID(); lock.withLock { subs[id] = s }; return id
+}
+public func unsubscribe(_ id: UUID) { lock.withLock { _ = subs.removeValue(forKey: id) } }
+// Snapshot under the lock, dispatch outside it: a handler may subscribe or
+// unsubscribe re-entrantly, and holding a non-recursive lock across the call
+// would deadlock.
+public func publish(_ e: DomainEvent) {
+  let snapshot = lock.withLock { Array(subs.values) }
+  snapshot.forEach { $0.handle(e) }
+}
+```
+
+Dispatch навмисно **поза** замком: підписник має право підписатися зсередини `handle`, а тримати non-recursive `NSLock` через виклик — це гарантований deadlock.
+
+Після фікса: 235+ раундів, 114k+ callback, **0 сигналів** замість падіння. Тест не друкує фінальний рядок лише тому, що 114k рядків `Log.i` у logcat стає bottleneck, а не тому що щось зависло.
+
+**Наслідок для порту:** `@unchecked Sendable` у Core неприпустимий без реальної синхронізації. Кожен спільний mutable-стан у `MeditateAndNoteCore` треба або захищати замком, або робити імутабельним ззовні.
+
 ### 6. Розмір `.so` та час старту
 
 **Стан: ✅ ВИМІРЯНО (2026-10-03). Число неприємне, але кероване.**
