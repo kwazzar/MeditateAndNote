@@ -574,7 +574,18 @@ Gradle 9.8.0 встановлено через brew — знадобиться �
 1. **Згенерований Java завжди намагається завантажити `libSwiftJava.so`** — `static { SwiftLibraries.loadLibraryWithFallbacks(SwiftLibraries.LIB_NAME_SWIFT_JAVA); ... }`. При статичному лінкуванні цієї бібліотеки немає, тому падає `dlopen failed: library "libSwiftJava.so" not found`. Прапорця в `jextract` немає — рядок треба вирізати з.generated Java (8 файлів у probe). Альтернатива — класти `libSwiftJava.so` окремо, але це +9 MB даремно.
 2. **`--static-swift-stdlib` не робить бібліотеку самодостатньою** — `libCore.so` все одно має `NEEDED libc++_shared.so`. Його треба класти в `lib/arm64-v8a/` (є в NDK r30: `sysroot/usr/lib/aarch64-linux-android/libc++_shared.so`, 9.5 MB).
 
-**Лишається неперевіреним:** `CompletableFuture` — async-функцій у probe немає, тож нитка про потік завершення callback лишається відкритою.
+**`CompletableFuture` — перевірено на пристрої.** Додано дві async-функції в probe: `slowGreeting(_:millis:) async -> String` та `asyncPublish(_:_:millis:)` (спить, потім публікує подію). `jextract` сам мапить `async` у `java.util.concurrent.CompletableFuture<T>`, окремий код не потрібен.
+
+| спостереження | результат |
+| --- | --- |
+| `Core.slowGreeting("android", 250)` | ✅ `value=hello android from swift`, `waitedMs=254` |
+| `Core.asyncPublish(bus, event, 150)` | ✅ `waitedMs=155`, подія дійшла |
+| потік завершення future | ⚠️ **`Thread-2`**, не `main` (`isSameThread=false`) |
+| callback з async-функції | ⚠️ **`Thread-2`** — підписник викликаний з Swift-кооперативного потоку |
+
+**Головний висновок для порту:** синхронний `publish()` з Java виконує підписника на поточному потоці (на пристрої — `main`), але будь-який `async` контекст у Swift піднімає власний потік. Значить підписник на Android **мусить** сам маршалити на головний потік (`Handler(Looper.getMainLooper())` / `Dispatchers.Main`), бо `DomainEventBus` нічого не гарантує. Ані `CompletableFuture`, ані JNI не повертають управління в `main` — це поведінка cooperative pool, а не баг обгортки.
+
+**Async-функції коштують ~41 KB** у статичній бібліотеці: 78,232,912 → 78,273,952 байт.
 
 ### 6. Розмір `.so` та час старту
 
