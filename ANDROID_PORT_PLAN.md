@@ -558,7 +558,23 @@ Gradle 9.8.0 встановлено через brew — знадобиться �
 
 **Розмір callback-closure:** статична `libCore.so` з callbacks — **78 MB** (dynamic-хости: 4.2 MB `libCore.dylib` + `libSwiftJava.dylib`). Порівняно з 8.1 MB без callbacks: `@JavaInterface`/`JavaObject` тягнуть повний `Foundation` closure разом з ICU. Це та сама ціна, яку доведеться заплатити за `DomainEventSubscriber`.
 
-**Лишається неперевіреним:** `CompletableFuture` (async-функцій у probe немає) і запуск на пристрої — емулятор не стартує, бракує ~7.4 GB вільного диска (`FATAL | Not enough space to create userdata partition`), є лише ~4.3 GB.
+**Перевірено на реальному пристрої** Samsung SM-A245F, Android 16 / API 36, arm64-v8a — APK `com.probe`, статична `libCore.so` (78 MB) + `libc++_shared.so` (9.5 MB).
+
+| крок | результат |
+| --- | --- |
+| `subscribe` × 2 → `publish(noteCreated)` | ✅ обидва підписники отримали подію (count=2) |
+| `unsubscribe(A)` → `publish(noteDeleted)` | ✅ count=3 — лише alive-підписник |
+| GC-стрес: 5× `System.gc()` + `Thread.sleep` | ✅ count=4 — підписник живий після втрати Java-покликань |
+| `UUID` мапінг | ✅ `...-AAAAAAAAAAAA` — Swift повертає uppercase |
+
+Час старту: `am start -W` → `WaitTime: 609 ms`, сам probe (dlopen 78 MB + JNI + publish) → `elapsedMs=446`.
+
+**Дві обов'язкові пост-обробки для статичної Android-збірки** (обидві впали на пристрої, обидві виправлені):
+
+1. **Згенерований Java завжди намагається завантажити `libSwiftJava.so`** — `static { SwiftLibraries.loadLibraryWithFallbacks(SwiftLibraries.LIB_NAME_SWIFT_JAVA); ... }`. При статичному лінкуванні цієї бібліотеки немає, тому падає `dlopen failed: library "libSwiftJava.so" not found`. Прапорця в `jextract` немає — рядок треба вирізати з.generated Java (8 файлів у probe). Альтернатива — класти `libSwiftJava.so` окремо, але це +9 MB даремно.
+2. **`--static-swift-stdlib` не робить бібліотеку самодостатньою** — `libCore.so` все одно має `NEEDED libc++_shared.so`. Його треба класти в `lib/arm64-v8a/` (є в NDK r30: `sysroot/usr/lib/aarch64-linux-android/libc++_shared.so`, 9.5 MB).
+
+**Лишається неперевіреним:** `CompletableFuture` — async-функцій у probe немає, тож нитка про потік завершення callback лишається відкритою.
 
 ### 6. Розмір `.so` та час старту
 
