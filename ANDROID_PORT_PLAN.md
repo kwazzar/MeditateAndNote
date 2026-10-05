@@ -907,7 +907,17 @@ corelibs декларує `weekdaySymbols` як неопціональний `[S
 | `No implementation found for long com.mn.core.InMemoryAIDraftMetricStore.$init(long[])` | Тейки не були скомпільовані в `.so`: бібліотека завантажується, але `Java_*` символів у ній немає |
 | `dlopen failed: library "libMeditateAndNoteCore.so" not found` | Застарілий `System.loadLibrary` в Activity вказував на стару назву. Тому в `MetricsActivity` більше немає жодного `loadLibrary` — згенерований код робить це у власному static initializer, а `libc++_shared.so` приїжджає через `NEEDED` |
 
-**Результат фази:** зміна в Swift-домені → `./Scripts/build-android.sh` → `gradle -PswiftJavaPath=~/Developer/swift-java :app:installDebug` → робочий Android-бинарник, без ручного копіювання `.so`.
+### `.so` прив'язана до Gradle
+
+Одного `Scripts/build-android.sh` мало: `gradle assembleDebug` збирав би APK зі **старою** `.so`, і зміна у Swift виглядала б як «нічого не сталося» замість падіння збірки. Тепер є задача `:app:swiftCore`, від якої залежить `preBuild`:
+
+- оновлюється за змінами у `Packages/MeditateAndNoteCore/Sources` і самого скрипта, тому правка лише в Kotlin/Compose не платить за перебудову Swift;
+- `./gradlew assembleDebug``./gradlew assembleDebug` ніколи не буває протухлим;
+- `Scripts/build-android-apk.sh` — одна команда від зміни у Swift до встановленого APK (встановлює `JAVA_HOME` з Android Studio JBR, якщо його немає в оточенні);
+- `./gradlew` — власний wrapper (Gradle 9.8.0), системний `gradle` більше не потрібен;
+- `swiftJavaPath` має значення за замовчуванням (`~/Developer/swift-java`), бо конфігурація виконується навіть для `gradle wrapper`, і вимога передати прапорець роняла навіть цю команду.
+
+**Результат фази:** зміна в Swift-домені → `./Scripts/build-android-apk.sh` → встановлений APK, без ручного копіювання `.so`.
 
 ---
 

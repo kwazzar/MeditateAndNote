@@ -44,9 +44,42 @@ android {
     }
 }
 
-// libMeditateAndNoteCore.so and libc++_shared.so land in
-// src/main/jniLibs/arm64-v8a/ from Scripts/build-android.sh; AGP picks them up
-// from there with no extra config.
+/**
+ * Rebuilds the Swift core into src/main/jniLibs before AGP packages it.
+ *
+ * Without this the APK happily ships whatever .so was there last, so a Swift
+ * edit shows up as "my change did nothing" rather than as a build failure. The
+ * task is up-to-date-checked on the Swift sources and the build script, so an
+ * ordinary Kotlin/Compose edit does not pay for a Swift rebuild.
+ */
+val swiftCoreDir = file("$rootDir/../Packages/MeditateAndNoteCore/Sources/MeditateAndNoteCore")
+val buildScript = rootProject.file("../Scripts/build-android.sh")
+val swiftJavaHomeFile = swiftJavaHome()
+
+val swiftCore by tasks.registering(Exec::class) {
+    group = "build"
+    description = "Compiles MeditateAndNoteCore for Android into src/main/jniLibs"
+
+    workingDir = rootProject.projectDir.parentFile
+    commandLine(buildScript.absolutePath)
+
+    environment("SWIFT_JAVA_HOME", swiftJavaHomeFile.absolutePath)
+
+    inputs.dir(swiftCoreDir).withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.file(buildScript)
+    inputs.property("swiftJavaHome", swiftJavaHomeFile.absolutePath)
+    outputs.dir(file("src/main/jniLibs"))
+    outputs.dir("$rootDir/../Packages/MeditateAndNoteCore/.generated/java")
+
+    // jextract's warnings about un-annotated properties and unimplemented types
+    // are its own gaps in coverage, not failures of this build; a nonzero exit
+    // is what matters.
+    isIgnoreExitValue = false
+}
+
+tasks.named("preBuild") {
+    dependsOn(swiftCore)
+}
 
 dependencies {
     // Built by the swift-java checkout. Not on Maven Central under a stable
@@ -67,18 +100,31 @@ dependencies {
 /**
  * Resolves the swiftkit-core jar built by the swift-java checkout.
  *
- * Override with -PswiftJavaPath=/path/to/swift-java or the SWIFT_JAVA_PATH
- * environment variable; both build-android.sh and this file need the same
- * checkout, and if they disagree the app compiles against a different
- * SwiftArena API than the one the .so was built with.
+ * Order: -PswiftJavaPath, then SWIFT_JAVA_PATH, then ~/Developer/swift-java.
+ * A default exists because this runs during configuration, and demanding a flag
+ * made even `gradle wrapper` fail. build-android.sh resolves the checkout the
+ * same way, so the two cannot silently disagree about which SwiftArena API the
+ * app compiles against.
  */
+fun swiftJavaHome(): File {
+    val fromProp = (project.findProperty("swiftJavaPath") as String?)
+    val fromEnv = System.getenv("SWIFT_JAVA_PATH")
+    val home = File(
+        when {
+            fromProp != null -> fromProp
+            fromEnv != null -> fromEnv
+            else -> "${System.getProperty("user.home")}/Developer/swift-java"
+        }
+    )
+    check(home.isDirectory) {
+        "swift-java checkout not found at $home. Set -PswiftJavaPath=/path/to/swift-java " +
+            "or SWIFT_JAVA_PATH."
+    }
+    return home
+}
+
 fun swiftKitCoreJar(): File {
-    val root = (project.findProperty("swiftJavaPath") as String?)
-        ?: System.getenv("SWIFT_JAVA_PATH")
-        ?: error(
-            "Point me at the swift-java checkout: -PswiftJavaPath=/path/to/swift-java " +
-                "or SWIFT_JAVA_PATH. Needed for org.swift.swiftkit.core (SwiftArena)."
-        )
+    val root = swiftJavaHome()
     val jar = File(root, "SwiftKitCore/build/libs/swiftkit-core-d6ff36c.jar")
     check(jar.exists()) {
         "swiftkit-core jar not built. Run: cd $root && ./gradlew :SwiftKitCore:jar"
