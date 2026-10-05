@@ -917,7 +917,24 @@ corelibs декларує `weekdaySymbols` як неопціональний `[S
 - `./gradlew` — власний wrapper (Gradle 9.8.0), системний `gradle` більше не потрібен;
 - `swiftJavaPath` має значення за замовчуванням (`~/Developer/swift-java`), бо конфігурація виконується навіть для `gradle wrapper`, і вимога передати прапорець роняла навіть цю команду.
 
-**Результат фази:** зміна в Swift-домені → `./Scripts/build-android-apk.sh` → встановлений APK, без ручного копіювання `.so`.
+### Зворотний JNI перевірено: Swift може викликати Kotlin ✅
+
+Усе, що було доведено дотепер — це Kotlin → Swift, єдиний напрямок, який генерує `jextract`. Для Фази 2 потрібен протилежний: Swift-домен має сам керувати Kotlin-реалізацією свого протоколу. Перевірено окремим probe-ом (`ReverseJniProbe.kt` + `ReverseJniProbe.swift`), перш ніж писати будь-який Store.
+
+Результат: **працює**. Екран показує `reverse jni: 1` — Swift викликав `ReverseJniProbe.ping()`, отримав назад той самий рядок, і `echo(20)` повернуло `41`.
+
+| Що перевірено | Як |
+| --- | --- |
+| Java-об'єкт як owner виклику | `@JavaClass("com.mn.android.ReverseJniProbe")` + `JavaClass<T>()` |
+| Статичний метод | `dynamicJavaStaticMethodCall(methodName:resultType:)` |
+| Аргументи | `echo(20): Long` → `41`, не лише виклик без аргументів |
+| Рядки назад | `String` конвертується через `JavaString` |
+
+Обгортки для Kotlin-класів **не генерувалися** — `ReverseJniProbeClass.swift` написано вручну. `swift-java wrap-java` для цього не використовувався: питання було «чи працює напрямок на рантаймі», а не «чи працює генератор». Якщо Фаза 2 піде шляхом B, генерація обгорток — окрема й менша задача.
+
+`print` зі Swift не видно в logcat, тому результат повертається числом через `@_cdecl`, а не логується. Див. `ReverseJniProbeEntry.swift`.
+
+**Результат фази:**
 
 ---
 

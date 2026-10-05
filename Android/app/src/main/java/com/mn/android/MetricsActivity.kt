@@ -62,6 +62,7 @@ private fun MetricsScreen() {
     val context = LocalContext.current
     var rows by remember { mutableStateOf<List<AiDraftMetricEntity>>(emptyList()) }
     var status by remember { mutableStateOf("loading") }
+    var reverseStatus by remember { mutableStateOf("reverse jni: untested") }
 
     LaunchedEffect(Unit) {
         val dao = MeditateDatabase.get(context).aiDraftMetricDao()
@@ -96,10 +97,16 @@ private fun MetricsScreen() {
         }.onFailure { error ->
             status = "failed: ${error.javaClass.simpleName}: ${error.message}"
         }
+
+        // Reverse direction, on the same screen so one screenshot answers both
+        // questions. 1 = Swift called Kotlin and got the expected string back.
+        val reverse = runCatching { NativeProbe.reverseJNI() }.getOrElse { -2L }
+        reverseStatus = "reverse jni: $reverse"
     }
 
     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(status, style = MaterialTheme.typography.bodyMedium)
+        Text(reverseStatus, style = MaterialTheme.typography.bodyMedium)
         LazyColumn(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             items(rows) { Text(it.describe(), style = MaterialTheme.typography.bodySmall) }
         }
