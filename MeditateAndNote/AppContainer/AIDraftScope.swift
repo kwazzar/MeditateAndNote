@@ -33,7 +33,7 @@ struct AIDraftScope: DomainEventRouting {
         case .noteDeleted(let noteID):
             try? await manager.discardSessions(for: noteID)
         case .aiDraftMetric:
-            await metricStore.handle(event)
+            await handleAIDraftMetricEvent(event) { try await metricStore.record($0) }
         default:
             break
         }

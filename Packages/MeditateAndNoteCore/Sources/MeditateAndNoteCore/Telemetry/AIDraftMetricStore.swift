@@ -19,14 +19,22 @@ public protocol AIDraftMetricStore: Sendable {
 
 // MARK: - Domain Event Subscription
 
-public extension AIDraftMetricStore {
-    /// Reacts to telemetry events published on the event bus. Ignored unless
-    /// it is an AI draft metric, so a store can subscribe to the bus and only
-    /// ever persist the shape it owns.
-    func handle(_ event: DomainEvent) async {
-        guard case let .aiDraftMetric(metric) = event else { return }
-        try? await record(metric)
-    }
+/// Reacts to telemetry events published on the event bus. Ignored unless it is
+/// an AI draft metric, so a store can subscribe to the bus and only ever persist
+/// the shape it owns.
+///
+/// A free function rather than a protocol extension: jextract emits protocol
+/// extension members as *abstract* interface methods, which makes every
+/// generated implementation fail to compile with "does not override abstract
+/// method handle(DomainEvent)". Implementing conformances to this protocol in
+/// Kotlin is the whole point of the Android port, so the shared logic lives here
+/// and conformances forward to it.
+public func handleAIDraftMetricEvent(
+    _ event: DomainEvent,
+    recording record: @Sendable (AIDraftMetric) async throws -> Void
+) async {
+    guard case let .aiDraftMetric(metric) = event else { return }
+    try? await record(metric)
 }
 
 // MARK: - In-Memory Implementation (tests + previews)
@@ -48,5 +56,9 @@ public final actor InMemoryAIDraftMetricStore: AIDraftMetricStore {
 
     public func deleteAll() async throws {
         metrics.removeAll()
+    }
+
+    public func handle(_ event: DomainEvent) async {
+        await handleAIDraftMetricEvent(event) { try await self.record($0) }
     }
 }

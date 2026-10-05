@@ -54,6 +54,10 @@ final class CoreDataAIDraftMetricStore: AIDraftMetricStore {
         }
     }
 
+    func handle(_ event: DomainEvent) async {
+        await handleAIDraftMetricEvent(event) { try await self.record($0) }
+    }
+
     // MARK: - Mapping Helpers
 
     private static func toMetric(_ object: NSManagedObject) -> AIDraftMetric? {

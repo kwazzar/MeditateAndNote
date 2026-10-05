@@ -130,3 +130,4 @@ Android/.gradle/
 Android/build/
 Android/app/build/
 .gradle/
+local.properties
