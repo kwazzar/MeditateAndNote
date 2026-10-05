@@ -5,7 +5,12 @@ let package = Package(
     name: "MeditateAndNoteCore",
     platforms: [.iOS(.v17), .macOS(.v14)],
     products: [
-        .library(name: "MeditateAndNoteCore", targets: ["MeditateAndNoteCore"])
+        // Xcode/app builds link this one; static is the right default there.
+        .library(name: "MeditateAndNoteCore", targets: ["MeditateAndNoteCore"]),
+        // Android needs a loadable .so for jniLibs, and SwiftPM only emits one
+        // for a product declared `.dynamic`. Same target, so the iOS/macOS
+        // static product is unaffected.
+        .library(name: "MeditateAndNoteCoreDynamic", type: .dynamic, targets: ["MeditateAndNoteCore"])
     ],
     targets: [
         .target(
