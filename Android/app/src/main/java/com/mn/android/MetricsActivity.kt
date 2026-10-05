@@ -1,4 +1,4 @@
-package com.mn.android.data
+package com.mn.android
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -22,6 +22,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.mn.android.data.AiDraftMetricEntity
+import com.mn.android.data.MeditateDatabase
+import com.mn.android.data.toEntity
 import com.mn.core.AIDraftMetric
 import com.mn.core.ErrorKind
 import com.mn.core.InMemoryAIDraftMetricStore
@@ -39,8 +41,12 @@ import org.swift.swiftkit.core.SwiftMemoryManagement
 class MetricsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        System.loadLibrary("MeditateAndNoteCore")
-        System.loadLibrary("c++_shared")
+        // No System.loadLibrary here on purpose: every generated class already
+        // loads the library from its own static initializer, and its LIB_NAME is
+        // generated to match. Hardcoding a name here is what broke when the .so had
+        // to be renamed: this one loaded a stale copy (or nothing) while the
+        // generated code loaded the right one. libc++_shared.so comes along via
+        // the library's NEEDED entry, so it needs no explicit load either.
         setContent {
             MaterialTheme {
                 Surface(Modifier.fillMaxSize()) {

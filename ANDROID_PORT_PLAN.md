@@ -877,18 +877,37 @@ corelibs декларує `weekdaySymbols` як неопціональний `[S
 
 ---
 
-## Фаза 1 — Пайплайн збірки: SPM → `jniLibs` → Gradle
+## Фаза 1 — Пайплайн збірки: SPM → `jniLibs` → Gradle ✅
 
-Шлях обрано (див. Рекомендацію 7), тулчейн перевірено. Залишилось з'єднати їх у робочий цикл: щоб зміна у Swift-ядрі перекомпілювала `.so` і потрапляла в Android-модуль однією командою.
+**Закрито 2026-10-05.** Вертикальний зріз працює на фізичному пристрої: Samsung SM-A245F, Android 16 / API 36, arm64-v8a. Екран показує `swift returned 2, room stored 2` і рядки `GENERATIONCOMPLETED latencyMs=1234 suggestions=3` та `GENERATIONFAILED error=TIMEOUT` — тобто цикл Swift enum → JNI → Kotlin → Room → Compose замкнений.
 
-- [ ] Створити Gradle-модуль Android із папкою `src/main/jniLibs/arm64-v8a/`
-- [ ] Зібрати `MeditateAndNoteCore` під `aarch64-unknown-linux-android28` і покласти `libMeditateAndNoteCore.so` у `jniLibs`
-- [ ] **Автоматизувати крок зі Swift-білдом** — Gradle-задача або pre-build хук, інакше `lib*.so` розійдеться зі Swift-кодом (класичний спосіб зламати CI)
-- [ ] Прогнати `jextract` для генерації Java-обгорток; перевірити, що Kotlin бачить виклик до `NoteStore`
-- [ ] Найпростіший вертикальний зріз end-to-end: `NoteStore` (Swift) → Room-реалізація (Kotlin) → виклик із Compose-екрана
-- [ ] Зафіксувати `minSdk` — нижня межа: SDK підтримує API 23+, але JNI-обгортки генеруються під `javaSourceLevel` 17+
+- [x] Gradle-модуль Android із `src/main/jniLibs/arm64-v8a/`
+- [x] Збірка під `aarch64-unknown-linux-android28` + strip + копіювання в `jniLibs`
+- [x] `Scripts/build-android.sh` — одна команда замість ручного копіювання `.so`
+- [x] `jextract` у JNI-режимі; Kotlin бачить згенеровані виклики
+- [x] Вертикальний зріз end-to-end: `AIDraftMetricStore` (Swift) → Room (Kotlin) → Compose
+- [x] `minSdk` зафіксовано: 28 (нижня межа — SDK підтримує API 23+, але JNI-обгортки генеруються під `javaSourceLevel` 17+)
 
-**Результат фази:** зміна в Swift-домені → `./gradlew assembleDebug` → робочий Android-бинарник, без ручного копіювання `.so`.
+### Чому окремий пакет `MeditateAndNoteCoreJNI`
+
+Згенеровані `@_cdecl`-тьюки живуть у Java-обгортках, але компілюються як Swift. `MeditateAndNoteCore` не може їх містити: вони імпортують `SwiftJava`, а цей пакет лінкує Xcode-збірку застосунку. Тому є окремий `Packages/MeditateAndNoteCoreJNI`, який залежить від `MeditateAndNoteCore` і від локального checkout-у `swift-java` (`~/Developer/swift-java`, перекривається `SWIFT_JAVA_PATH`). Три наслідки, кожен із яких обійшовся в реальний crash на пристрої:
+
+- **Продукт названо `MeditateAndNoteCoreJNI`, а не `MeditateAndNoteCore`.** SwiftPM відхиляє два продукти з однаковим іменем в одному package graph (`Found multiple targets named 'MeditateAndNoteCore-product'`), тому `LIB_NAME` у згенерованій Java переписується на `MeditateAndNoteCoreJNI`, а `.so` перейменовується на `jniLibs`.
+- **У згенеровані Swift-файли треба додати `import MeditateAndNoteCore`.** `jextract` вважає, що тейки живуть у тому ж модулі, що й типи, які вони обгортають, і імпорту для них не пише. Без нього все падає з `cannot find type 'AIDraftMetric' in scope`.
+- **`DomainEvents+SwiftJava.swift` виключено з компіляції.** `jextract` не вміє виразити `DomainEvent`: payload-и ламають конформанс до `JavaValue`, а згенерований код посилається на типи, які сам не оголошує (`cannot find '_0Class' in scope`). Android-сторінка `DomainEvent` не торкається. Якщо знадобиться — повернути.
+
+### Ловушки, знайдені саме на пристрої
+
+Кожна з них виглядає як баг у нашому коді й не є ним:
+
+| Симптом | Причина |
+|---|---|
+| `cannot locate symbol "_ZNSt6__ndk113__hash_memoryEPKvm"` | `libc++_shared.so` з r27c не експортує цей символ; Swift-рантайм зібрано проти r30. Версія NDK не косметика |
+| `dlopen failed: library "libSwiftJava.so" not found` | `jextract` безумовно вантажить `libSwiftJava.so` у кожен згенерований клас, бо зазвичай рантайм живе в окремій бібліотеці. Ми збираємо `--static-swift-stdlib`, тож рядок прибирається |
+| `No implementation found for long com.mn.core.InMemoryAIDraftMetricStore.$init(long[])` | Тейки не були скомпільовані в `.so`: бібліотека завантажується, але `Java_*` символів у ній немає |
+| `dlopen failed: library "libMeditateAndNoteCore.so" not found` | Застарілий `System.loadLibrary` в Activity вказував на стару назву. Тому в `MetricsActivity` більше немає жодного `loadLibrary` — згенерований код робить це у власному static initializer, а `libc++_shared.so` приїжджає через `NEEDED` |
+
+**Результат фази:** зміна в Swift-домені → `./Scripts/build-android.sh` → `gradle -PswiftJavaPath=~/Developer/swift-java :app:installDebug` → робочий Android-бинарник, без ручного копіювання `.so`.
 
 ---
 
