@@ -101,7 +101,9 @@ private fun MetricsScreen() {
         // Reverse direction, on the same screen so one screenshot answers both
         // questions. 1 = Swift called Kotlin and got the expected string back.
         val reverse = runCatching { NativeProbe.reverseJNI() }.getOrElse { -2L }
-        reverseStatus = "reverse jni: $reverse"
+        val store = runCatching { ReminderSettingsProbe.roundTrip(context) }
+            .getOrElse { "store failed: ${it.javaClass.simpleName}: ${it.message}" }
+        reverseStatus = "reverse jni: $reverse\n$store"
     }
 
     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {

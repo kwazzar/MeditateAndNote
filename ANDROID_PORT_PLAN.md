@@ -7,7 +7,7 @@
 > Рекомендація KMP у попередній редакції документа **скасована**: її єдиним аргументом був `@Observable`, який на той час вважався непідтримуваним. Експеримент 2026-10-02 це спростував (див. «Перевірено експериментом»).
 
 > Додано: 2026-09-30, на основі аналізу структури проєкту (Models/, Services/, Persistence/)
-> Редакція: 2026-10-02 — шлях обрано після перевірки тулчейну; Рекомендації 1, 7 і Фаза 1 переписані за результатами тесту
+> Редакція: 2026-10-05 — Фаза 2.1: перший Store `ReminderSettingsStore` з замкненим round trip на пристрої
 
 ## Принцип
 
@@ -955,6 +955,33 @@ corelibs декларує `weekdaySymbols` як неопціональний `[S
 - [ ] ExoPlayer-based sound service
 - [ ] AlarmManager-based reminder service (враховуючи 7-денний notification horizon)
 - [ ] AI-сервіс — див. Фазу 3 окремо, найскладніша частина
+
+### 2.1 Перший Store: `ReminderSettingsStore` ✅ (2026-10-05)
+
+Обрано першим, бо він малий і не тягне за собою Room: одне налаштування, одне значення.
+
+| | Apple | Android |
+| --- | --- | --- |
+| Протокол | `ReminderSettingsStore` | той самий, без змін |
+| Реалізація | `UserDefaultsReminderSettingsStore` | `SharedPrefsReminderSettingsStore` (Kotlin) + `KotlinReminderSettingsStore` (Swift-адаптер) |
+
+**Доведено на пристрої** (`SM-A245F`, Android 16), `ReminderSettingsProbe`:
+
+```
+save->load enabled=1 hour=23 minute=7 weekdays=1,3,5 reload enabled=1 hour=23 minute=7 weekdays=1,3,5
+```
+
+Круг замкнуто повністю: Kotlin → Swift store → Kotlin-персистентність → Swift `load()` → назад у Kotlin.
+
+**Виміряні висновки для наступних Store:**
+
+1. **Інваріант лишився в домені.** Kotlin передав `hour = 99`, прийшло `23`: clamp робить `ReminderSettings.init`, а не Kotlin. Якби clamp був на Kotlin-стороні, інваріант існував би у двох місцях.
+2. **Дані не ходять через JNI структурами.** `SwiftSet`, `SwiftArena`, `Set<Int>` через `dynamicJavaStaticMethodCall` не працюють (`Set<Int64>` ≠ `Set<Int>`). Працює плоский `LongArray`; результат Swift пише у масив, який виділив Kotlin.
+3. **Kotlin не бачить, як Swift замінює out-param.** `out: UnsafeMutablePointer<jobject?>` з боку Swift не відображається на референс у Kotlin. Тому буфер належить Kotlin (32 елементи), Swift заповнює його через `SetLongArrayRegion`.
+4. **`package` має збігатися з директорією.** Kotlin компілює `com/mn/android/data/X.kt` у `com.mn.android.data.X` лише якщо там написано `package com.mn.android.data`. Інакше — `ClassNotFoundException` від `@JavaClass`, приховано за `try!` і `SIGTRAP` без жодного Kotlin-стеку.
+5. **`print` зі Swift не потрапляє в logcat.** Результат JNI-проби логується з Kotlin через `android.util.Log`.
+
+**Ловушка JNI-Environment:** `environment!.pointee.GetArrayLength` не компілюється — `pointee` вже `JNIEnv?`. Працюють типізований `[Int64](fromJNI:in:)` і `Int64.jniSetArrayRegion(in:)`.
 
 ---
 

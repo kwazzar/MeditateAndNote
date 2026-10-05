@@ -20,4 +20,22 @@ object NativeProbe {
      * Kotlin's `ping()` and got the expected string back, -1 if the call threw.
      */
     external fun reverseJNI(): Long
+
+    /**
+     * Saves through the Swift store, then reads back and fills [out].
+     *
+     * The result is written into an array Kotlin allocated rather than returned:
+     * Swift cannot swap the reference Kotlin passed, so the buffer has to belong
+     * to Kotlin. Swift side: KotlinReminderSettingsStore.swift
+     */
+    external fun saveReminders(
+        enabled: Boolean,
+        hour: Int,
+        minute: Int,
+        weekdays: LongArray,
+        out: LongArray,
+    )
+
+    /** Reads through the Swift store. Same [out] shape as saveReminders. */
+    external fun loadReminders(out: LongArray)
 }
