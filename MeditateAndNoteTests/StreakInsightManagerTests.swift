@@ -11,7 +11,7 @@ import MeditateAndNoteCore
 
 /// In-memory `StreakActivityStore` double: seeds the tracker's initial
 /// snapshot and records every persisted save.
-final class SeededStreakStore: StreakActivityStore {
+final class SeededStreakStore: StreakActivityStore, @unchecked Sendable {
     let seededSnapshot: StreakSnapshot?
     private(set) var savedSnapshots: [StreakSnapshot] = []
 

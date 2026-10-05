@@ -7,7 +7,7 @@
 > Рекомендація KMP у попередній редакції документа **скасована**: її єдиним аргументом був `@Observable`, який на той час вважався непідтримуваним. Експеримент 2026-10-02 це спростував (див. «Перевірено експериментом»).
 
 > Додано: 2026-09-30, на основі аналізу структури проєкту (Models/, Services/, Persistence/)
-> Редакція: 2026-10-05 — Фаза 2.1: перший Store `ReminderSettingsStore` з замкненим round trip на пристрої
+> Редакція: 2026-10-05 — Фази 2.1 (перший Store) і 2.2 (контракти Store в Core)
 
 ## Принцип
 
@@ -982,6 +982,27 @@ save->load enabled=1 hour=23 minute=7 weekdays=1,3,5 reload enabled=1 hour=23 mi
 5. **`print` зі Swift не потрапляє в logcat.** Результат JNI-проби логується з Kotlin через `android.util.Log`.
 
 **Ловушка JNI-Environment:** `environment!.pointee.GetArrayLength` не компілюється — `pointee` вже `JNIEnv?`. Працюють типізований `[Int64](fromJNI:in:)` і `Int64.jniSetArrayRegion(in:)`.
+
+### 2.2 Контракти Store перенесені в `MeditateAndNoteCore`
+
+Обов'язковий крок перед Room. Android-збірка компілює **лише** `MeditateAndNoteCore` + `MeditateAndNoteCoreJNI`. Але два persistence-контракти жили в app-таргеті, тобто на Android їх просто не існувало:
+
+| Контракт | Було | Стало |
+| --- | --- | --- |
+| `NoteDataSource` | `APP/Services/Notes/NotesRepository.swift` | `CORE/Notes/NoteDataSource.swift` |
+| `StreakActivityStore` | `APP/Services/Streak/StreakTracker.swift` | `CORE/Streak/StreakActivityStore.swift` |
+
+`ReminderSettingsStore` пройшов, а `NoteDataSource` — ні: не через Room, а через те, що контракт лежав не в домені. Swift-адаптер поверх Room DAO фізично нема де покласти.
+
+Імплементації лишились на Apple-стороні (`CoreDataNoteDataSource`, `InMemoryNoteDataSource`, `CoreDataStreakStore`, `UserDefaultsStreakStore`) — це Infrastructure.
+
+**Побічний наслідок, який коштував часу:** `public protocol StreakActivityStore: Sendable` тепер вимагається. Поки протокол був internal, компілятор ставився до не-Sendable existential в actor-і м'якше; публічний з іншого модуля — консервативніше. Довелося додати `Sendable` до `StreakSnapshot` і `DailyActivity` (усі поля `Date`/`Bool`, тож це декларація, а не обіцянка) та `@unchecked Sendable` до трьох конформерів.
+
+Це не похибність, а слід відсутності контракту: `StreakSnapshot` не був `Sendable` узагалі — просто ніхто не перевіряв.
+
+**Лишається в app-таргеті:** `NoteProvidable` / `NoteManageable`, `NoteInsight*`, `AIDraft*`, `Reminder*`, `SoundPlaying` — це application-шар, не persistence-контракти.
+
+**Наступний такий самий крок буде для:** `SoundPlaying` (перед ExoPlayer) і контракту для сесій, якого зараз немає — `CoreDataSessionStore` працює без протоколу.
 
 ---
 

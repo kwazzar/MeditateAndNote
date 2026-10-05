@@ -7,17 +7,6 @@ import Foundation
 import Observation
 import MeditateAndNoteCore
 
-// MARK: - StreakActivityStore (persistence boundary / ACL)
-
-protocol StreakActivityStore {
-    /// Loads the last saved snapshot, or nil when nothing valid is stored.
-    /// Implementations must never return a partially populated snapshot.
-    func load() -> StreakSnapshot?
-    /// Persists the snapshot atomically: either every field lands in storage,
-    /// or none does.
-    func save(_ snapshot: StreakSnapshot) async
-}
-
 // MARK: - ActivityHistory
 
 struct ActivityHistory {

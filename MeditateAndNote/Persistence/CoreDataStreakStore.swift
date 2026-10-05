@@ -9,7 +9,7 @@
 import Foundation
 import MeditateAndNoteCore
 
-final class CoreDataStreakStore: StreakActivityStore {
+final class CoreDataStreakStore: StreakActivityStore, @unchecked Sendable {
 
     private let logger = Logger(subsystem: Config.bundleID, category: "CoreDataStreaks")
     private let manager: CoreDataManager

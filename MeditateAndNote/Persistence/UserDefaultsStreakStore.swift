@@ -9,7 +9,7 @@
 import Foundation
 import MeditateAndNoteCore
 
-final class UserDefaultsStreakStore: StreakActivityStore {
+final class UserDefaultsStreakStore: StreakActivityStore, @unchecked Sendable {
     private static let snapshotKey = "streakSnapshot"
     private static let legacyActivitiesKey = "streakDailyActivities"
     private static let legacyCurrentKey = "streakCurrent"

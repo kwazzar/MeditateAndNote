@@ -8,18 +8,6 @@
 import Foundation
 import MeditateAndNoteCore
 
-// MARK: - DataSource Protocol (Low-level storage)
-
-protocol NoteDataSource: Sendable {
-    associatedtype Item where Item == Note
-
-    func fetchAll() async throws -> [Note]
-    func fetch(id: NoteID) async throws -> Note?
-    func save(_ note: Note) async throws
-    func delete(id: NoteID) async throws
-    func deleteAll() async throws
-}
-
 // MARK: - In-Memory Implementation
 
 /// Actor: its mutable array is shared across isolation domains (the NoteManager
