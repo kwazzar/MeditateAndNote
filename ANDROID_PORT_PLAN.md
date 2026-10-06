@@ -7,7 +7,7 @@
 > Рекомендація KMP у попередній редакції документа **скасована**: її єдиним аргументом був `@Observable`, який на той час вважався непідтримуваним. Експеримент 2026-10-02 це спростував (див. «Перевірено експериментом»).
 
 > Додано: 2026-09-30, на основі аналізу структури проєкту (Models/, Services/, Persistence/)
-> Редакція: 2026-10-06 — Фази 2.1 (перший Store), 2.2 (контракти Store в Core), 2.3 (`NoteDataSource` blob-таблиця), 2.4 (`StreakActivityStore`), 2.5 (`MeditationSessionStore`)
+> Редакція: 2026-10-06 — Фази 2.1 (перший Store), 2.2 (контракти Store в Core), 2.3 (`NoteDataSource` blob-таблиця), 2.4 (`StreakActivityStore`), 2.5 (`MeditationSessionStore`), Фаза 4: медитаційний список у Compose + вибір моделі стану
 
 ## Принцип
 
@@ -1156,9 +1156,11 @@ protocol StructuredAIWritingService: AIWritingService {
 
 Ніщо з SwiftUI не переноситься. Важливе уточнення після перевірки: **`@Observable` не є спільним контрактом стану** — Compose не спостерігає за Swift-об'єктами, навіть якщо сам `@Observable` компілюється під Android. Тому ViewModels **не** переносяться як-is: їхня логіка йшла в `@Observable`-властивостях, а Android потребує свого джерела стану.
 
-- [ ] Обрати модель стану для Android: Kotlin `ViewModel` + `StateFlow` як дзеркало Swift-об'єкта, **чи** зробити Core джерелом істини й стримити стан через callback → `Flow`
+- [x] Обрати модель стану для Android: Kotlin `ViewModel` + `StateFlow` як дзеркало Swift-об'єкта, **чи** зробити Core джерелом істини й стримити стан через callback → `Flow` — **обрано дзеркало, Kotlin-сторін state holder** (`remember`/`mutableStateOf`; `ViewModel` + `StateFlow` — коли екран матиме стан, що переживає композицію). Core не стримить: жоден екран поки не потребує живого стану з кількох Store-ів. Стрімінг додати з першим таким екраном (insights/streak), а не заздалегідь.
 - [x] Спроєктувати Compose-еквіваленти екранів у тому ж порядку, що й existing Views/ (onboarding → meditation list → breathing UI → journal → insights)
   - [x] Onboarding (Compose): MnTheme, OnboardingStore (SharedPrefs), OnboardingScreen, HomeScreen, NavHost; MainActivity launcher, MetricsActivity kept as probe (2026-10-06)
+  - [x] Meditation list (Compose): `MeditateSelectScreen` + `MeditationCatalog` (каталог із Core через згенеровані `com.mn.core.SampleMeditationService`, згенерована Java-обгортка мапиться в `MeditationUi` одразу, обмежувачі JNI-об'єктів у Compose не потрапляють) + `MeditationSelection` (SharedPreferences під ключем Swift `MeditationSelectionStore.storageKey`, схема `OnboardingStore`) (2026-10-06)
+    - Свідомо без місця: кнопка Start (ціль — breathing-екран, його ще нема), sound settings sheet (немає `SoundPlayer`), штучна затримка 500 мс з iOS-ViewModel. Перевірено на emulator-5554 (arm64, API 37): шість карток із назвами й паттернами зі Swift, вибір переживає перехід назад/вперед, long-press → діалог із описом.
 - [ ] Breathing-анімації: `Canvas`/`TimelineView`/`trim(from:to:)` → Compose `Canvas` + `Animatable`/`rememberInfiniteTransition`
 - [ ] Router: адаптувати кастомну Router-навігацію під Navigation Compose, зберігаючи ті самі destinations/deep links на рівні контракту
 - [ ] Тема: `ThemeManager` живе у Swift-шарі й не портується — визначити, як Compose-тема синхронізується з нею (спільні токени, згенеровані з Swift, чи дублювання)

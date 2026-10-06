@@ -14,6 +14,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.mn.android.data.OnboardingStore
 import com.mn.android.ui.home.HomeScreen
+import com.mn.android.ui.meditate.MeditateSelectScreen
 import com.mn.android.ui.onboarding.OnboardingScreen
 import com.mn.android.ui.theme.MnTheme
 
@@ -72,6 +73,11 @@ private fun MnNav() {
                 }
             )
         }
-        composable("home") { HomeScreen() }
+        composable("home") {
+            HomeScreen(onMeditate = { navController.navigate("meditate") })
+        }
+        composable("meditate") {
+            MeditateSelectScreen(onBack = { navController.popBackStack() })
+        }
     }
 }

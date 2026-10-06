@@ -37,4 +37,19 @@ object MnTheme {
 
     /** `DarkZenStarfield` dots: white at 0.08 opacity, 2pt across. */
     val star = Color(0x14FFFFFF)
+
+    /** `MainTheme.streakCellBackground` darkZen: `Color.white.opacity(0.06)`. */
+    val cardBackground = Color(0x0FFFFFFF)
+
+    /**
+     * `MainTheme.streakSuccess` darkZen: `.green.opacity(0.85)`.
+     * `Color.green` on iOS is UIColor.green = #009900, so alpha 0.85 → #D9.
+     */
+    val streakSuccess = Color(0xD9009900)
+
+    /**
+     * `MainTheme.streakActiveNote` darkZen: `.blue.opacity(0.85)`.
+     * `Color.blue` on iOS is UIColor.blue = #0000FF, so alpha 0.85 → #D9.
+     */
+    val streakActiveNote = Color(0xD90000FF)
 }
