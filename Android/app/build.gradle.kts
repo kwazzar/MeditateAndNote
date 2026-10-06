@@ -91,6 +91,11 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
     implementation("androidx.compose.ui:ui:1.7.6")
     implementation("androidx.compose.material3:material3:1.3.1")
+    implementation("androidx.navigation:navigation-compose:2.8.4")
+    // Onboarding slides mirror the SF Symbols placeholders in OnboardingPage
+    // (leaf / note.text / flame). None of those are in the core icon set, and
+    // R8 shrinks the rest away.
+    implementation("androidx.compose.material:material-icons-extended:1.7.6")
 
     implementation("androidx.room:room-runtime:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")

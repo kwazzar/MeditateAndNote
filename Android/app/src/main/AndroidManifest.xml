@@ -7,14 +7,20 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MeditationCompose">
         <activity
-            android:name=".MetricsActivity"
-            android:exported="true"
-            android:label="Metrics">
+            android:name=".MainActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <!-- Kept exported but without a LAUNCHER filter: the device probes start
+             it explicitly with `adb shell am start -n com.mn.android/.MetricsActivity`,
+             and the app itself now opens on MainActivity. -->
+        <activity
+            android:name=".MetricsActivity"
+            android:exported="true"
+            android:label="Metrics" />
     </application>
 
 </manifest>
