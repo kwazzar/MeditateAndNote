@@ -38,4 +38,13 @@ object NativeProbe {
 
     /** Reads through the Swift store. Same [out] shape as saveReminders. */
     external fun loadReminders(out: LongArray)
+
+    /**
+     * Runs the full note blob round trip through Swift and fills [out] with
+     * counts and flags. Same out-param rule as saveReminders: the buffer is
+     * allocated by Kotlin because Kotlin cannot see Swift replace a reference.
+     *
+     * Swift side: KotlinNoteDataSource.swift
+     */
+    external fun noteProbe(out: LongArray)
 }

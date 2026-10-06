@@ -23,14 +23,6 @@ protocol NoteManageable: Sendable {
     func delete(with id: NoteID) async throws
 }
 
-// MARK: - Errors
-
-enum NoteOperationError: Error, Sendable {
-    case loadFailed(NoteID)
-    case saveFailed
-    case deleteFailed(NoteID)
-}
-
 // MARK: - Note Manager (Application Service)
 
 final actor NoteManager: NoteProvidable, NoteManageable {

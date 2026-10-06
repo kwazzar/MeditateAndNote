@@ -34,10 +34,6 @@ public struct KotlinReminderSettingsStore: ReminderSettingsStore {
         category: "ReminderSettingsStore"
     )
 
-    static func logOverflow(_ count: Int) {
-        logger.warning("settings need \(count) slots but the Kotlin buffer holds \(settingsBufferSize)")
-    }
-
     public init() {}
 
     public func load() -> ReminderSettings {
@@ -104,11 +100,6 @@ public struct KotlinReminderSettingsStore: ReminderSettingsStore {
 
 // MARK: - Kotlin entry points
 
-/// Fixed size of the array Kotlin passes in: 3 scalars + a count + 7 weekdays.
-/// Kotlin cannot observe Swift replacing an out-param, so the array is allocated
-/// by Kotlin and filled in place instead.
-private let settingsBufferSize = 32
-
 /// Saves through Kotlin, then reads back and writes the result into `out`.
 ///
 /// `out` receives [enabled, hour, minute, weekdayCount, ...weekdays].
@@ -137,7 +128,7 @@ public func Java_com_mn_android_NativeProbe_saveReminders(
         minute: Int(minute),
         weekdays: Set(weekdayValues)
     ))
-    write(store.load(), to: out, in: environment)
+    writeValues(flatten(store.load()), to: out, in: environment)
 }
 
 /// Reads through Kotlin and writes [enabled, hour, minute, weekdayCount,
@@ -150,31 +141,19 @@ public func Java_com_mn_android_NativeProbe_loadReminders(
     thisClass: jclass,
     out: jlongArray
 ) {
-    write(KotlinReminderSettingsStore().load(), to: out, in: environment)
+    writeValues(flatten(KotlinReminderSettingsStore().load()), to: out, in: environment)
 }
 
-/// Writes the flattened settings into the array Kotlin allocated.
+/// Flattens settings to the wire shape Kotlin expects:
+/// [enabled, hour, minute, weekdayCount, ...weekdays].
 ///
-/// Bounded by the array's real length: writing past it would corrupt whatever the
-/// allocator put next, and the bound is the only thing standing between a
-/// 7-weekday set and a heap corruption.
-private func write(_ settings: ReminderSettings, to out: jlongArray, in environment: UnsafeMutablePointer<JNIEnv?>!) {
-    let values: [Int64] = [
+/// Sorted weekdays so a save/load round trip compares equal rather than
+/// depending on Set's iteration order.
+private func flatten(_ settings: ReminderSettings) -> [Int64] {
+    [
         settings.isEnabled ? 1 : 0,
         Int64(settings.hour),
         Int64(settings.minute),
         Int64(settings.weekdays.count),
     ] + settings.sortedWeekdays.map(Int64.init)
-
-    guard values.count <= settingsBufferSize else {
-        KotlinReminderSettingsStore.logOverflow(values.count)
-        return
-    }
-
-    // SetLongArrayRegion rather than GetLongArrayElements: no copy out, no
-    // matching Release, and it writes straight into the array Kotlin allocated.
-    let setRegion = Int64.jniSetArrayRegion(in: environment)
-    values.withUnsafeBufferPointer { source in
-        setRegion(environment, out, 0, jsize(values.count), source.baseAddress)
-    }
 }

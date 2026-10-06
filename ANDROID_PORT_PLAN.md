@@ -7,7 +7,7 @@
 > Рекомендація KMP у попередній редакції документа **скасована**: її єдиним аргументом був `@Observable`, який на той час вважався непідтримуваним. Експеримент 2026-10-02 це спростував (див. «Перевірено експериментом»).
 
 > Додано: 2026-09-30, на основі аналізу структури проєкту (Models/, Services/, Persistence/)
-> Редакція: 2026-10-05 — Фази 2.1 (перший Store) і 2.2 (контракти Store в Core)
+> Редакція: 2026-10-06 — Фази 2.1 (перший Store), 2.2 (контракти Store в Core), 2.3 (`NoteDataSource` blob-таблиця)
 
 ## Принцип
 
@@ -950,7 +950,7 @@ corelibs декларує `weekdaySymbols` як неопціональний `[S
 | UserNotifications | `ReminderScheduler`-подібний протокол | AlarmManager + NotificationManager |
 | FoundationModels | `AIWritingService` / `StructuredAIWritingService` | AICore SDK / ML Kit GenAI |
 
-- [ ] Room/SQLDelight реалізація `<X>Store` — мігрувати схему з CoreData моделі
+- [x] `NoteDataSource` — **blob-таблиця, Room відкинуто** (див. 2.3); далі по тому ж шаблону: `MeditationSession`/`DailyActivity`/`StreakMeta`
 - [ ] Keystore-based `SecureStore`
 - [ ] ExoPlayer-based sound service
 - [ ] AlarmManager-based reminder service (враховуючи 7-денний notification horizon)
@@ -981,6 +981,16 @@ save->load enabled=1 hour=23 minute=7 weekdays=1,3,5 reload enabled=1 hour=23 mi
 4. **`package` має збігатися з директорією.** Kotlin компілює `com/mn/android/data/X.kt` у `com.mn.android.data.X` лише якщо там написано `package com.mn.android.data`. Інакше — `ClassNotFoundException` від `@JavaClass`, приховано за `try!` і `SIGTRAP` без жодного Kotlin-стеку.
 5. **`print` зі Swift не потрапляє в logcat.** Результат JNI-проби логується з Kotlin через `android.util.Log`.
 
+**Четверта ловушка — втрата `~/Library/org.swift.swiftpm`.** Каталог зник цілком за день (сам `swift-sdks` був лише симлінком на нього), наслідок — `error: android swift-sdk not found: /Users/nazar/.swiftpm/swift-sdks/swift-6.4.0-RELEASE_android.artifactbundle/swift-android (set ANDROID_SDK_BUNDLE)`. Відновлення офіційним бандлом із контрольною сумою, ~1 хв:
+
+```bash
+~/Library/Developer/Toolchains/swift-6.4.0-RELEASE.xctoolchain/usr/bin/swift sdk install \
+  https://download.swift.org/swift-6.4.0-release/android-sdk/swift-6.4.0-RELEASE/swift-6.4.0-RELEASE_android.artifactbundle.tar.gz \
+  --checksum 21fb555122a3d801ad943d48df7ebffdd8824de61c25c180bb792d3edaee0b43
+```
+
+Ідентифікатор має стати `swift-6.4.0-RELEASE_android` (`swift sdk list`), а симлінк `~/.swiftpm/swift-sdks` знову вкаже на відновлений каталог. Тулчейн, NDK і `~/Developer/swift-java` при цій втраті не страждають — вони живуть окремо.
+
 **Ловушка JNI-Environment:** `environment!.pointee.GetArrayLength` не компілюється — `pointee` вже `JNIEnv?`. Працюють типізований `[Int64](fromJNI:in:)` і `Int64.jniSetArrayRegion(in:)`.
 
 ### 2.2 Контракти Store перенесені в `MeditateAndNoteCore`
@@ -1003,6 +1013,41 @@ save->load enabled=1 hour=23 minute=7 weekdays=1,3,5 reload enabled=1 hour=23 mi
 **Лишається в app-таргеті:** `NoteProvidable` / `NoteManageable`, `NoteInsight*`, `AIDraft*`, `Reminder*`, `SoundPlaying` — це application-шар, не persistence-контракти.
 
 **Наступний такий самий крок буде для:** `SoundPlaying` (перед ExoPlayer) і контракту для сесій, якого зараз немає — `CoreDataSessionStore` працює без протоколу.
+
+### 2.3 `NoteDataSource` — blob-таблиця, Room відкинуто ✅ (2026-10-06)
+
+| | Apple | Android |
+| --- | --- | --- |
+| Протокол | `NoteDataSource` | той самий, без змін |
+| Реалізація | `CoreDataNoteDataSource` | `NoteBlobStore.kt` (Kotlin, `SQLiteOpenHelper`) + `KotlinNoteDataSource` (Swift-адаптер) |
+| Схема | `CoreDataManager.buildModel()` програмно | `notes(id TEXT PK, date INTEGER, payload TEXT)` |
+
+**Чому не Room** — поверхня запитів вузька, це виміряно, а не оцінено:
+
+- `CoreDataNoteDataSource` використовує лише `NSPredicate(format: "id == %@")` і сортування за `date` desc.
+- `SemanticSearchManager.search(matching:in: [Note])` шукає по масиву `[Note]` в пам'яті — на обох платформах, не в SQL.
+- `.xcdatamodeld` у репозиторії немає: модель намальована кодом у `CoreDataManager.buildModel()`.
+- Room додав би **третю** декларацію полів `Note` (структура Swift, `buildModel()`, `@Entity`) — і всі три мусили б змінюватися разом.
+
+**Поділ володіння:** Swift володіє байтами (закодований `JSONEncoder` JSON у `payload`), Kotlin володіє таблицею і віддає payload непрозорим. Єдина колонка, яку інтерпретують обидві сторони, — `date`.
+
+**Доведено на пристрої** (`SM-A245F`, Android 16), `NoteProbe`:
+
+```
+note blob PASS: save=2 rows fetchAllOk=true orderOk=true loadOk=true afterDelete=1 rows afterDeleteAll=0 rows
+```
+
+Поруч `ReminderSettingsProbe` у цьому ж запуску лишився зеленим — обидва Store живуть в одному процесі.
+
+**Виміряні висновки:**
+
+1. **`NoteOperationError` переїхав у Core.** Без цього Swift-адаптер не міг кидати той самий тип, що чекає `NoteManager`. Побічно додано два кейси, яких бракувало: `.deleteAllFailed`, `.loadAllFailed` — бо видалення всіх і пустий завантаження через цей протокол раніше не існували.
+2. **`Optional<String>` не conform до `JavaValue`.** Nullable String не перетинає JNI — взагалі. `load` на Kotlin повертає `""`; порожній рядок = не знайдено. Те саме стосується будь-якого іншого nullable-рядка, який знадобиться для `SecureStore`.
+3. **Async у `@_cdecl` не компілюється.** Проба `@_cdecl` + `async` — мимо. Розділено: синхронне ядро (`fetchAllSync`/`fetchSync`/`saveSync`/`deleteSync`/`deleteAllSync`) з `@_cdecl`, поверх — async-обгортки, які задовольняють протокол. Той самий ход і для будь-якого іншого async-протоколу.
+4. **Один `writeValues` замість трьох копій.** Bounds беруться з реального масиву, не з магічної константи. Через це `KotlinReminderSettingsStore` позбувся `settingsBufferSize`, `logOverflow` і приватного `write` — старий Store став коротшим, ніж був.
+5. **Підпис логу — це теж вимога.** Перший варіант друкував `fetchAll=1`, що читається як «один рядок», коли там прапорець «перевірка пройшла». Counts і flags розділено виводом. Лог проби має бути однозначним без знання коду.
+
+**Залишок (відома межа, свідомо лишена):** `fetchAll` тягне всю таблицю одним JSON. Підміна на пагінацію потрібна лише коли таблиця почне рахуватися мільйонами рядків — зараз `note` — це ручні нотатки користувача.
 
 ---
 

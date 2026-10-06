@@ -103,7 +103,9 @@ private fun MetricsScreen() {
         val reverse = runCatching { NativeProbe.reverseJNI() }.getOrElse { -2L }
         val store = runCatching { ReminderSettingsProbe.roundTrip(context) }
             .getOrElse { "store failed: ${it.javaClass.simpleName}: ${it.message}" }
-        reverseStatus = "reverse jni: $reverse\n$store"
+        val notes = runCatching { NoteProbe.roundTrip(context) }
+            .getOrElse { "note probe failed: ${it.javaClass.simpleName}: ${it.message}" }
+        reverseStatus = "reverse jni: $reverse\n$store\n$notes"
     }
 
     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
