@@ -1157,7 +1157,8 @@ protocol StructuredAIWritingService: AIWritingService {
 Ніщо з SwiftUI не переноситься. Важливе уточнення після перевірки: **`@Observable` не є спільним контрактом стану** — Compose не спостерігає за Swift-об'єктами, навіть якщо сам `@Observable` компілюється під Android. Тому ViewModels **не** переносяться як-is: їхня логіка йшла в `@Observable`-властивостях, а Android потребує свого джерела стану.
 
 - [ ] Обрати модель стану для Android: Kotlin `ViewModel` + `StateFlow` як дзеркало Swift-об'єкта, **чи** зробити Core джерелом істини й стримити стан через callback → `Flow`
-- [ ] Спроєктувати Compose-еквіваленти екранів у тому ж порядку, що й existing Views/ (onboarding → meditation list → breathing UI → journal → insights)
+- [x] Спроєктувати Compose-еквіваленти екранів у тому ж порядку, що й existing Views/ (onboarding → meditation list → breathing UI → journal → insights)
+  - [x] Onboarding (Compose): MnTheme, OnboardingStore (SharedPrefs), OnboardingScreen, HomeScreen, NavHost; MainActivity launcher, MetricsActivity kept as probe (2026-10-06)
 - [ ] Breathing-анімації: `Canvas`/`TimelineView`/`trim(from:to:)` → Compose `Canvas` + `Animatable`/`rememberInfiniteTransition`
 - [ ] Router: адаптувати кастомну Router-навігацію під Navigation Compose, зберігаючи ті самі destinations/deep links на рівні контракту
 - [ ] Тема: `ThemeManager` живе у Swift-шарі й не портується — визначити, як Compose-тема синхронізується з нею (спільні токени, згенеровані з Swift, чи дублювання)
