@@ -2,7 +2,7 @@
 //  CoreDataSessionStore.swift
 //  MeditateAndNote
 //
-//  Core Data implementation of MeditationSessionStoring.
+//  Core Data implementation of MeditationSessionStore.
 //
 
 @preconcurrency import CoreData
@@ -11,7 +11,12 @@ import Observation
 import MeditateAndNoteCore
 
 @Observable
-final class CoreDataSessionStore {
+final class CoreDataSessionStore: MeditationSessionStore, @unchecked Sendable {
+    // `@unchecked` because the protocol is `Sendable` and this class holds only
+    // a `CoreDataManager` reference and a logger — no mutable state of its own.
+    // Same call as `CoreDataStreakStore`, where `@Observable` also made the
+    // compiler refuse the conformance.
+
 
     private let logger = Logger(subsystem: Config.bundleID, category: "CoreDataSessions")
     private let manager: CoreDataManager

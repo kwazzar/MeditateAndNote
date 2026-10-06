@@ -56,4 +56,13 @@ object NativeProbe {
      * Swift side: KotlinStreakActivityStore.swift
      */
     external fun streakProbe(out: LongArray)
+
+    /**
+     * Runs the meditation session round trip through Swift and fills [out] with
+     * one flag per check. Same out-param rule as the probes above: the buffer is
+     * allocated by Kotlin because Kotlin cannot see Swift replace a reference.
+     *
+     * Swift side: KotlinMeditationSessionStore.swift
+     */
+    external fun sessionProbe(out: LongArray)
 }

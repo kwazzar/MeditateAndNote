@@ -7,7 +7,7 @@
 > Рекомендація KMP у попередній редакції документа **скасована**: її єдиним аргументом був `@Observable`, який на той час вважався непідтримуваним. Експеримент 2026-10-02 це спростував (див. «Перевірено експериментом»).
 
 > Додано: 2026-09-30, на основі аналізу структури проєкту (Models/, Services/, Persistence/)
-> Редакція: 2026-10-06 — Фази 2.1 (перший Store), 2.2 (контракти Store в Core), 2.3 (`NoteDataSource` blob-таблиця), 2.4 (`StreakActivityStore`)
+> Редакція: 2026-10-06 — Фази 2.1 (перший Store), 2.2 (контракти Store в Core), 2.3 (`NoteDataSource` blob-таблиця), 2.4 (`StreakActivityStore`), 2.5 (`MeditationSessionStore`)
 
 ## Принцип
 
@@ -952,7 +952,7 @@ corelibs декларує `weekdaySymbols` як неопціональний `[S
 
 - [x] `NoteDataSource` — **blob-таблиця, Room відкинуто** (див. 2.3)
 - [x] `StreakActivityStore` — SharedPreferences з опаким JSON (див. 2.4)
-- [ ] `MeditationSession`/`StreakMeta` — той самий шаблон; `CoreDataSessionStore` досі без протоколу
+- [x] `MeditationSessionStore` — контракт у Core, останній відомий виняток закрито (див. 2.5)
 - [ ] Keystore-based `SecureStore`
 - [ ] ExoPlayer-based sound service
 - [ ] AlarmManager-based reminder service (враховуючи 7-денний notification horizon)
@@ -1079,6 +1079,40 @@ streak blob PASS: loadedOk=true currentStreakOk=true countOk=true lastCountedOk=
 ```
 
 **Залишок:** `CoreDataSessionStore` досі без протоколу (прийнятий виняток за AGENTS.md) — перш ніж робити його Android-версію, контракт треба ввести.
+
+### 2.5 `MeditationSessionStore` — контракт для останнього винятку ✅ (2026-10-06)
+
+| | Apple | Android |
+| --- | --- | --- |
+| Протокол | **новий** `MeditationSessionStore` → `CORE/Sessions/` | той самий |
+| Реалізація | `CoreDataSessionStore` (тепер `: MeditationSessionStore, @unchecked Sendable`) | `SessionBlobStore.kt` + `KotlinMeditationSessionStore` |
+| Схема | entity `session` у програмній моделі | `sessions.db`, таблиця `sessions(id, completedAt, payload)` |
+
+`CoreDataSessionStore` був прийнятим винятком у AGENTS.md — «використовується як конкретний тип без протокольної абстракції». Тепер винятку нема: три його методи стали контрактом, конформнія збіркою, конкретний клас лишився в app-таргеті як інфраструктура.
+
+**Що свідомо НЕ винесено в протокол:**
+
+1. **`handle(_ event:)`.** Реакція на `DomainEvent` — це оркестрація, а не персистентність: `EventLoopCoordinator` роздає події скоупам (`MeditationScope`), а ті вже кличуть `store.handle`. Додавши його в контракт, ми б змусили кожну реалізацію підписуватися на шину, яка їй не потрібна.
+2. **`<X>Manager` + `Providable`/`Manageable`.** Споживача-ViewModel у цього store нема: сесія записується лише через `.meditationCompleted`, а читається поки ніким. Менеджер без жодного виклику — робота заради роботи.
+
+**Чому без доменних змін** (на відміну від 2.4): `MeditationSession` уже `Codable` — він ніс цю конформнію ще до порту. Новим у домені був лише протокол.
+
+**Виміряні висновки:**
+
+1. **Протокол без `throws` — адаптер ковтає, проба кличе sync-форми.** Другий випадок поспіль (`StreakActivityStore` був першим): публічні методи логують і повертають порожній результат, внутрішні `throws`-форми потрібні пробі, щоб відрізнити «даних нема» від «виклик не дійшов».
+2. **Async-протокол + `@_cdecl`-проба несумісні.** Повторено з 2.3: компілятор відмовляє з `'async' call in a function that does not support concurrency`. Розв'язок уже встановлений — sync-ядро, async-обгортки поверх нього, і виклик sync-форми з проби.
+3. **Один запит покриває оба методи.** `sessions(for:)` робить `completedAt >= start AND completedAt < end`; `allSessionDates()` — те саме з `[Long.MIN_VALUE, Long.MAX_VALUE)`. Другого методу в Kotlin не знадобилося.
+4. **Колонка безпечно тримає похідне значення лише тому, що поле імутабельне.** `completedAt` — `let`, тож колонка не може розійтися з payload. Те саме правило вже працювало для `Note.date`.
+
+**Доведено на пристрої** (`SM-A245F`, Android 16), чотири проби в одному процесі:
+
+```
+session blob PASS: dayOneOk=true dayTwoOk=true unrelatedOk=true distinctDaysOk=true orderOk=true durationOk=true afterDeleteOk=true
+```
+
+iOS: build зелений, **478 тестів** зелені (без нових — конформнія перевіряється збіркою, а поведінку вже покриває `CoreDataSessionStoreTests`).
+
+**Стан Фази 2:** чотири Store-и закриті. Решта в списку (`SecureStore`, `SoundPlaying`, AlarmManager) споживача на Android поки не має.
 
 ---
 
