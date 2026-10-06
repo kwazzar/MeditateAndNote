@@ -47,4 +47,13 @@ object NativeProbe {
      * Swift side: KotlinNoteDataSource.swift
      */
     external fun noteProbe(out: LongArray)
+
+    /**
+     * Runs the streak snapshot round trip through Swift and fills [out] with
+     * one flag per check. Same out-param rule as the probes above: the buffer is
+     * allocated by Kotlin because Kotlin cannot see Swift replace a reference.
+     *
+     * Swift side: KotlinStreakActivityStore.swift
+     */
+    external fun streakProbe(out: LongArray)
 }

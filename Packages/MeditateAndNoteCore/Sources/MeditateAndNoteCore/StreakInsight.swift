@@ -239,7 +239,7 @@ public struct StreakDayDetail: Hashable, Identifiable {
 /// Point-in-time view of streak state. Produced by `StreakEngine`,
 /// persisted via `StreakActivityStore`, consumed by `StreakInsightEngine`.
 /// Pure domain — no CoreData / SwiftUI.
-public struct StreakSnapshot: Sendable {
+public struct StreakSnapshot: Sendable, Codable {
     public let activities: [DailyActivity]
     public let currentStreak: Int
     public let longestStreak: Int

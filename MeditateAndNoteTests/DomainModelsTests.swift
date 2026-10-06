@@ -390,3 +390,62 @@ final class MeditationModelTests: XCTestCase {
         XCTAssertEqual(captured, id)
     }
 }
+
+// MARK: - StreakSnapshot persistence
+
+/// `StreakSnapshot` and `DailyActivity` became `Codable` when the Android store
+/// needed to encode them, which deleted the `CodableSnapshot` /
+/// `CodableDailyActivity` mirrors from `UserDefaultsStreakStore`.
+///
+/// Those mirrors were what had been writing users' streaks to UserDefaults, so
+/// the conformance has to read exactly what they wrote — otherwise every
+/// installed copy would silently lose its streak on upgrade. The document below
+/// is that shape, keys and date strategy included.
+final class StreakSnapshotCodableTests: XCTestCase {
+
+    private let legacyDocument = """
+    {"activities":[{"date":0,"hasMeditation":true,"hasNote":true,"meditationTime":100,"noteTime":null}],"currentStreak":4,"longestStreak":9,"lastCountedDay":0}
+    """
+
+    func testDecode_readsWhatTheDeletedMirrorWrote() throws {
+        let snapshot = try JSONDecoder().decode(
+            StreakSnapshot.self,
+            from: Data(legacyDocument.utf8)
+        )
+
+        XCTAssertEqual(snapshot.currentStreak, 4)
+        XCTAssertEqual(snapshot.longestStreak, 9)
+        XCTAssertEqual(snapshot.lastCountedDay, Date(timeIntervalSinceReferenceDate: 0))
+        XCTAssertEqual(snapshot.activities.count, 1)
+
+        let day = try XCTUnwrap(snapshot.activities.first)
+        XCTAssertEqual(day.date, Date(timeIntervalSinceReferenceDate: 0))
+        XCTAssertTrue(day.hasMeditation)
+        XCTAssertTrue(day.hasNote)
+        XCTAssertEqual(day.meditationTime, Date(timeIntervalSinceReferenceDate: 100))
+        XCTAssertNil(day.noteTime)
+    }
+
+    func testRoundTrip_survivesEncodeThenDecode() throws {
+        let original = StreakSnapshot(
+            activities: [
+                DailyActivity(
+                    date: Date(timeIntervalSinceReferenceDate: 700),
+                    hasMeditation: true,
+                    hasNote: true
+                ),
+            ],
+            currentStreak: 12,
+            longestStreak: 30,
+            lastCountedDay: Date(timeIntervalSinceReferenceDate: 700)
+        )
+
+        let data = try JSONEncoder().encode(original)
+        let decoded = try JSONDecoder().decode(StreakSnapshot.self, from: data)
+
+        XCTAssertEqual(decoded.currentStreak, original.currentStreak)
+        XCTAssertEqual(decoded.longestStreak, original.longestStreak)
+        XCTAssertEqual(decoded.lastCountedDay, original.lastCountedDay)
+        XCTAssertEqual(decoded.activities, original.activities)
+    }
+}

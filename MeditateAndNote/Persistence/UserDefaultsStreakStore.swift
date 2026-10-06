@@ -16,55 +16,6 @@ final class UserDefaultsStreakStore: StreakActivityStore, @unchecked Sendable {
     private static let legacyLongestKey = "streakLongest"
     private static let legacyLastCountedKey = "streakLastCountedDay"
 
-    private struct CodableDailyActivity: Codable {
-        let date: Date
-        let hasMeditation: Bool
-        let hasNote: Bool
-        let meditationTime: Date?
-        let noteTime: Date?
-
-        init(from activity: DailyActivity) {
-            self.date = activity.date
-            self.hasMeditation = activity.hasMeditation
-            self.hasNote = activity.hasNote
-            self.meditationTime = activity.meditationTime
-            self.noteTime = activity.noteTime
-        }
-
-        func toDailyActivity() -> DailyActivity {
-            DailyActivity(
-                date: date,
-                hasMeditation: hasMeditation,
-                hasNote: hasNote,
-                meditationTime: meditationTime,
-                noteTime: noteTime
-            )
-        }
-    }
-
-    private struct CodableSnapshot: Codable {
-        let activities: [CodableDailyActivity]
-        let currentStreak: Int
-        let longestStreak: Int
-        let lastCountedDay: Date?
-
-        init(from snapshot: StreakSnapshot) {
-            self.activities = snapshot.activities.map(CodableDailyActivity.init(from:))
-            self.currentStreak = snapshot.currentStreak
-            self.longestStreak = snapshot.longestStreak
-            self.lastCountedDay = snapshot.lastCountedDay
-        }
-
-        func toSnapshot() -> StreakSnapshot {
-            StreakSnapshot(
-                activities: activities.map { $0.toDailyActivity() },
-                currentStreak: currentStreak,
-                longestStreak: longestStreak,
-                lastCountedDay: lastCountedDay
-            )
-        }
-    }
-
     private let logger = Logger(subsystem: Config.bundleID, category: "StreakPersistence")
     private let defaults: UserDefaults
     private var lastKnownGood: StreakSnapshot?
@@ -76,7 +27,7 @@ final class UserDefaultsStreakStore: StreakActivityStore, @unchecked Sendable {
     func load() -> StreakSnapshot? {
         if let data = defaults.data(forKey: Self.snapshotKey) {
             do {
-                let snapshot = try JSONDecoder().decode(CodableSnapshot.self, from: data).toSnapshot()
+                let snapshot = try JSONDecoder().decode(StreakSnapshot.self, from: data)
                 lastKnownGood = snapshot
                 return snapshot
             } catch {
@@ -98,7 +49,7 @@ final class UserDefaultsStreakStore: StreakActivityStore, @unchecked Sendable {
     /// `load()` (which must stay synchronous for `StreakTracker.init`).
     private func persist(_ snapshot: StreakSnapshot) {
         do {
-            let data = try JSONEncoder().encode(CodableSnapshot(from: snapshot))
+            let data = try JSONEncoder().encode(snapshot)
             defaults.set(data, forKey: Self.snapshotKey)
             lastKnownGood = snapshot
         } catch {
@@ -109,8 +60,7 @@ final class UserDefaultsStreakStore: StreakActivityStore, @unchecked Sendable {
     private func migrateLegacyState() -> StreakSnapshot? {
         guard let data = defaults.data(forKey: Self.legacyActivitiesKey) else { return nil }
         do {
-            let activities = try JSONDecoder().decode([CodableDailyActivity].self, from: data)
-                .map { $0.toDailyActivity() }
+            let activities = try JSONDecoder().decode([DailyActivity].self, from: data)
             let snapshot = StreakSnapshot(
                 activities: activities,
                 currentStreak: defaults.integer(forKey: Self.legacyCurrentKey),

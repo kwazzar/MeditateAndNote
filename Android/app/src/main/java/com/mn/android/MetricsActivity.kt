@@ -105,7 +105,9 @@ private fun MetricsScreen() {
             .getOrElse { "store failed: ${it.javaClass.simpleName}: ${it.message}" }
         val notes = runCatching { NoteProbe.roundTrip(context) }
             .getOrElse { "note probe failed: ${it.javaClass.simpleName}: ${it.message}" }
-        reverseStatus = "reverse jni: $reverse\n$store\n$notes"
+        val streak = runCatching { StreakProbe.roundTrip(context) }
+            .getOrElse { "streak probe failed: ${it.javaClass.simpleName}: ${it.message}" }
+        reverseStatus = "reverse jni: $reverse\n$store\n$notes\n$streak"
     }
 
     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {

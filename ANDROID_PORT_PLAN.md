@@ -7,7 +7,7 @@
 > Рекомендація KMP у попередній редакції документа **скасована**: її єдиним аргументом був `@Observable`, який на той час вважався непідтримуваним. Експеримент 2026-10-02 це спростував (див. «Перевірено експериментом»).
 
 > Додано: 2026-09-30, на основі аналізу структури проєкту (Models/, Services/, Persistence/)
-> Редакція: 2026-10-06 — Фази 2.1 (перший Store), 2.2 (контракти Store в Core), 2.3 (`NoteDataSource` blob-таблиця)
+> Редакція: 2026-10-06 — Фази 2.1 (перший Store), 2.2 (контракти Store в Core), 2.3 (`NoteDataSource` blob-таблиця), 2.4 (`StreakActivityStore`)
 
 ## Принцип
 
@@ -950,7 +950,9 @@ corelibs декларує `weekdaySymbols` як неопціональний `[S
 | UserNotifications | `ReminderScheduler`-подібний протокол | AlarmManager + NotificationManager |
 | FoundationModels | `AIWritingService` / `StructuredAIWritingService` | AICore SDK / ML Kit GenAI |
 
-- [x] `NoteDataSource` — **blob-таблиця, Room відкинуто** (див. 2.3); далі по тому ж шаблону: `MeditationSession`/`DailyActivity`/`StreakMeta`
+- [x] `NoteDataSource` — **blob-таблиця, Room відкинуто** (див. 2.3)
+- [x] `StreakActivityStore` — SharedPreferences з опаким JSON (див. 2.4)
+- [ ] `MeditationSession`/`StreakMeta` — той самий шаблон; `CoreDataSessionStore` досі без протоколу
 - [ ] Keystore-based `SecureStore`
 - [ ] ExoPlayer-based sound service
 - [ ] AlarmManager-based reminder service (враховуючи 7-денний notification horizon)
@@ -1048,6 +1050,35 @@ note blob PASS: save=2 rows fetchAllOk=true orderOk=true loadOk=true afterDelete
 5. **Підпис логу — це теж вимога.** Перший варіант друкував `fetchAll=1`, що читається як «один рядок», коли там прапорець «перевірка пройшла». Counts і flags розділено виводом. Лог проби має бути однозначним без знання коду.
 
 **Залишок (відома межа, свідомо лишена):** `fetchAll` тягне всю таблицю одним JSON. Підміна на пагінацію потрібна лише коли таблиця почне рахуватися мільйонами рядків — зараз `note` — це ручні нотатки користувача.
+
+### 2.4 `StreakActivityStore` — SharedPreferences з опаким JSON ✅ (2026-10-06)
+
+| | Apple | Android |
+| --- | --- | --- |
+| Протокол | `StreakActivityStore` (уже в Core після 2.2) | той самий, без змін |
+| Реалізація | `UserDefaultsStreakStore` / `CoreDataStreakStore` | `StreakSnapshotStore.kt` + `KotlinStreakActivityStore` (Swift-адаптер) |
+| Схема | один `Data` у UserDefaults під ключем `streakSnapshot` | один рядок у SharedPreferences під ключем `snapshot` |
+
+Нових entity і нових протоколів нема — 2.2 уже поклав контракт у Core. Зміна лише одна і в домені: **`StreakSnapshot` і `DailyActivity` стали `Codable`.**
+
+**Чому це видалення, а не додавання.** `UserDefaultsStreakStore` тримав два дзеркала — `CodableSnapshot` і `CodableDailyActivity`, 47 рядків, які перелічували поля один в один і тільки перекладали їх туди-сюди. З конформнією в домені вони стали мертвими і прибрані. Мережевий формат не змінився: назви ключів і стратегія дат у дзеркал і в синтезованому `Codable` тотожні.
+
+**Було підтверджено тестом, а не припущенням.** Жодного тесту на `UserDefaultsStreakStore` не існувало, тож теза «старі дані ще декодяться» спиралася б лише на звірку полів — це ризик втрати чиєїсь серії при оновленні. `StreakSnapshotCodableTests` декодує записаний колишніми дзеркалами документ і проганяє round trip. 476 → **478 тестів**.
+
+**Виміряні висновки:**
+
+1. **Протокол без `throws` — значить, адаптер ковтає.** `load()` повертає опціонал, `save(_:)` мовчить; логування всередині. Щоб проба могла відрізнити «документ битий» від «виклик не дійшшо до Kotlin» (обидва виглядають як `nil`), у адаптера є внутрішні `throws`-форми, а публічні їх обгортають. Той самий ход для будь-якого небезкидаючого протоколу.
+2. **«Ніколи не повертати частковий snapshot» живе в реалізації, не в домені.** Битий JSON → `nil` з попередженням у лог, не набудований структура. `lastKnownGood` — політика лише UserDefaults-реалізації, у протокол не лізе.
+3. **Протокол не має `delete`.** Не треба його додавати: одне сховище — один ключ, `save` замінює. Чистий початок для проби робить перший `save`. Коректність «наступний запуск не залежить від попереднього» досягається тим самим, без окремої операції.
+4. **Три проби живуть в одному процесі.** `ReminderSettingsProbe`, `NoteProbe`, `StreakProbe` у тому самому logcat-рядку — `configure(context)` для трьох різних `SharedPreferences`/БД не конфліктують.
+
+**Доведено на пристрої** (`SM-A245F`, Android 16):
+
+```
+streak blob PASS: loadedOk=true currentStreakOk=true countOk=true lastCountedOk=true flagsOk=true replacedOk=true corruptNilOk=true
+```
+
+**Залишок:** `CoreDataSessionStore` досі без протоколу (прийнятий виняток за AGENTS.md) — перш ніж робити його Android-версію, контракт треба ввести.
 
 ---
 

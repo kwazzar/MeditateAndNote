@@ -21,7 +21,7 @@ public enum CoreDayState: Hashable, Sendable {
     public var isStreakDay: Bool { self == .complete }
 }
 
-public struct DailyActivity: Identifiable, Hashable, Sendable {
+public struct DailyActivity: Identifiable, Hashable, Sendable, Codable {
     public var id: Date { date }
 
     public let date: Date
