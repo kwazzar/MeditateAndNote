@@ -1163,7 +1163,7 @@ protocol StructuredAIWritingService: AIWritingService {
     - Свідомо без місця: кнопка Start (ціль — breathing-екран, його ще нема), sound settings sheet (немає `SoundPlayer`), штучна затримка 500 мс з iOS-ViewModel. Перевірено на emulator-5554 (arm64, API 37): шість карток із назвами й паттернами зі Swift, вибір переживає перехід назад/вперед, long-press → діалог із описом.
 - [x] Breathing-анімації: `Canvas`/`TimelineView`/`trim(from:to:)` → Compose `Canvas` + `Animatable`/`rememberInfiniteTransition`
 - [x] Router: адаптувати кастомну Router-навігацію під Navigation Compose, зберігаючи ті самі destinations/deep links на рівні контракту
-- [ ] Тема: `ThemeManager` живе у Swift-шарі й не портується — визначити, як Compose-тема синхронізується з нею (спільні токени, згенеровані з Swift, чи дублювання)
+- [x] Тема: `ThemeManager` живе у Swift-шарі й не портується — визначити, як Compose-тема синхронізується з нею (спільні токени, згенеровані з Swift, чи дублювання)
 
 ---
 
