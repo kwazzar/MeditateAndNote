@@ -18,6 +18,8 @@ data class MeditationUi(
     val description: String?,
     /** `MeditationCategory` raw value: mindfulness/breathing/sleep/focus/relaxation. */
     val category: String,
+    /** `Meditation.breathingStyle.rawValue`: `4-7-8`, `Box`, `4-8`, `Custom`. */
+    val breathingStyleRawValue: String,
 )
 
 /**
@@ -42,6 +44,7 @@ object MeditationCatalog {
                     patternName = meditation.getBreathingStyle(arena).getPattern(arena).getName(),
                     description = meditation.description.orElse(null),
                     category = meditation.getCategory(arena).getRawValue(),
+                    breathingStyleRawValue = meditation.getBreathingStyle(arena).getRawValue(),
                 )
             }
     }

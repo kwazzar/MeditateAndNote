@@ -71,7 +71,10 @@ import kotlinx.coroutines.withContext
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun MeditateSelectScreen(onBack: () -> Unit) {
+fun MeditateSelectScreen(
+    onBack: () -> Unit,
+    onStartMeditation: (String) -> Unit = {},
+) {
     val context = LocalContext.current
     var items by remember { mutableStateOf<List<MeditationUi>>(emptyList()) }
     var error by remember { mutableStateOf<String?>(null) }
@@ -174,6 +177,7 @@ fun MeditateSelectScreen(onBack: () -> Unit) {
                     columns = GridCells.Fixed(2),
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.weight(1f),
                 ) {
                     items(items, key = { it.id }) { meditation ->
                         MeditationCard(
@@ -186,6 +190,27 @@ fun MeditateSelectScreen(onBack: () -> Unit) {
                             onLongPress = { infoItem = meditation },
                         )
                     }
+                }
+
+                Spacer(Modifier.height(16.dp))
+
+                androidx.compose.material3.Button(
+                    onClick = {
+                        selectedId?.let { onStartMeditation(it) }
+                    },
+                    enabled = selectedId != null,
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                        containerColor = MnTheme.accentButton,
+                    ),
+                    modifier = Modifier.fillMaxWidth().height(50.dp),
+                    shape = RoundedCornerShape(12.dp),
+                ) {
+                    Text(
+                        "Start Meditation",
+                        color = MnTheme.buttonText,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                    )
                 }
             }
         }

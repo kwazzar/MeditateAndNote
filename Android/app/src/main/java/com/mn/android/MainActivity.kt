@@ -14,6 +14,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.mn.android.data.OnboardingStore
 import com.mn.android.ui.home.HomeScreen
+import com.mn.android.ui.meditate.BreathingScreen
 import com.mn.android.ui.meditate.MeditateSelectScreen
 import com.mn.android.ui.onboarding.OnboardingScreen
 import com.mn.android.ui.theme.MnTheme
@@ -77,7 +78,18 @@ private fun MnNav() {
             HomeScreen(onMeditate = { navController.navigate("meditate") })
         }
         composable("meditate") {
-            MeditateSelectScreen(onBack = { navController.popBackStack() })
+            MeditateSelectScreen(
+                onBack = { navController.popBackStack() },
+                onStartMeditation = { id -> navController.navigate("breathing/$id") },
+            )
+        }
+        composable("breathing/{meditationId}") { backStackEntry ->
+            val id = backStackEntry.arguments?.getString("meditationId") ?: ""
+            BreathingScreen(
+                meditationId = id,
+                onDone = { navController.popBackStack("meditate", inclusive = false) },
+                onBack = { navController.popBackStack() },
+            )
         }
     }
 }
