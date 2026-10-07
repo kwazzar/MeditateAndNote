@@ -1161,7 +1161,7 @@ protocol StructuredAIWritingService: AIWritingService {
   - [x] Onboarding (Compose): MnTheme, OnboardingStore (SharedPrefs), OnboardingScreen, HomeScreen, NavHost; MainActivity launcher, MetricsActivity kept as probe (2026-10-06)
   - [x] Meditation list (Compose): `MeditateSelectScreen` + `MeditationCatalog` (каталог із Core через згенеровані `com.mn.core.SampleMeditationService`, згенерована Java-обгортка мапиться в `MeditationUi` одразу, обмежувачі JNI-об'єктів у Compose не потрапляють) + `MeditationSelection` (SharedPreferences під ключем Swift `MeditationSelectionStore.storageKey`, схема `OnboardingStore`) (2026-10-06)
     - Свідомо без місця: кнопка Start (ціль — breathing-екран, його ще нема), sound settings sheet (немає `SoundPlayer`), штучна затримка 500 мс з iOS-ViewModel. Перевірено на emulator-5554 (arm64, API 37): шість карток із назвами й паттернами зі Swift, вибір переживає перехід назад/вперед, long-press → діалог із описом.
-- [ ] Breathing-анімації: `Canvas`/`TimelineView`/`trim(from:to:)` → Compose `Canvas` + `Animatable`/`rememberInfiniteTransition`
+- [x] Breathing-анімації: `Canvas`/`TimelineView`/`trim(from:to:)` → Compose `Canvas` + `Animatable`/`rememberInfiniteTransition`
 - [ ] Router: адаптувати кастомну Router-навігацію під Navigation Compose, зберігаючи ті самі destinations/deep links на рівні контракту
 - [ ] Тема: `ThemeManager` живе у Swift-шарі й не портується — визначити, як Compose-тема синхронізується з нею (спільні токени, згенеровані з Swift, чи дублювання)
 
