@@ -18,6 +18,11 @@ import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -262,21 +267,32 @@ private fun BreathContent(
 
 @Composable
 private fun BreathingRings(discriminator: String, phaseProgress: Double) {
+    val inf = rememberInfiniteTransition(label = "breath")
+    val pulse = inf.animateFloat(
+        initialValue = 0.95f,
+        targetValue = 1.05f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(4000),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "pulse"
+    )
     val targetScale = when (discriminator) {
-        "inhale" -> 1 + 0.35 * phaseProgress
+        "inhale" -> 1.0 + 0.35 * phaseProgress
         "exhale" -> 1.35 - 0.35 * phaseProgress
         else -> if (discriminator == "inhale") 1.35 else 0.65
     }
     val density = LocalDensity.current
     val sizePx = with(density) { 250.dp.toPx() }
+    val base = (targetScale * pulse.value)
     Canvas(Modifier.size(250.dp)) {
         repeat(5) { i ->
             val lag = i * 0.08
-            val scale = (targetScale - 1) * (1 - lag).coerceIn(0.4, 1.0) + 1
+            val scale = ((base - 1) * (1 - lag).coerceIn(0.4, 1.0) + 1).toFloat()
             val opacity = ((0.25 + i * 0.12) as Float).coerceIn(0.2f, 0.9f)
             drawCircle(
                 color = phaseColor(discriminator).copy(alpha = opacity),
-                radius = (sizePx * 0.4 * scale).toFloat() / 2,
+                radius = (sizePx * 0.4f * scale) / 2f,
                 center = Offset(sizePx / 2, sizePx / 2),
                 style = Stroke(width = with(density) { 3.dp.toPx() }),
             )
