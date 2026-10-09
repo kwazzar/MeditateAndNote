@@ -12,9 +12,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.Air
 import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.Create
+import androidx.compose.material.icons.outlined.Schedule
+import androidx.compose.material.icons.outlined.Spa
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -38,13 +44,18 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.mn.android.R
 import com.mn.android.ui.theme.MnBreathing
 import com.mn.android.ui.theme.MnTheme
 import com.mn.core.MeditationDuration
@@ -86,6 +97,7 @@ fun BreathingScreen(
     meditationId: String,
     onDone: () -> Unit,
     onBack: () -> Unit,
+    onWriteNote: () -> Unit,
 ) {
     val vm: BreathingSessionViewModel = viewModel(key = "breath_$meditationId")
     var sheetOpen by rememberSaveable { mutableStateOf(true) }
@@ -148,7 +160,13 @@ fun BreathingScreen(
                     )
                 }
                 is BreathingSessionViewModel.UiState.Finished -> {
-                    FinishedView(durationSeconds = s.durationSeconds, onDone = onDone)
+                    FinishedView(
+                        title = vm.meditationTitle,
+                        breathingStyle = vm.breathingStyle,
+                        durationSeconds = s.durationSeconds,
+                        onWriteNote = onWriteNote,
+                        onSkip = onDone,
+                    )
                 }
             }
         }
@@ -289,7 +307,7 @@ private fun BreathingRings(discriminator: String, phaseProgress: Double) {
         repeat(5) { i ->
             val lag = i * 0.08
             val scale = ((base - 1) * (1 - lag).coerceIn(0.4, 1.0) + 1).toFloat()
-            val opacity = ((0.25 + i * 0.12) as Float).coerceIn(0.2f, 0.9f)
+            val opacity = (0.25 + i * 0.12).toFloat().coerceIn(0.2f, 0.9f)
             drawCircle(
                 color = phaseColor(discriminator).copy(alpha = opacity),
                 radius = (sizePx * 0.4f * scale) / 2f,
@@ -311,15 +329,21 @@ private fun ProgressBar(progress: Float) {
 }
 
 @Composable
-private fun FinishedView(durationSeconds: Double, onDone: () -> Unit) {
+private fun FinishedView(
+    title: String,
+    breathingStyle: String,
+    durationSeconds: Double,
+    onWriteNote: () -> Unit,
+    onSkip: () -> Unit,
+) {
     Column(
-        Modifier.fillMaxSize(),
+        Modifier.fillMaxSize().padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
         Icon(
             Icons.Outlined.CheckCircle,
-            contentDescription = "Done",
+            contentDescription = null,
             tint = MnTheme.streakSuccess,
             modifier = Modifier.size(64.dp),
         )
@@ -330,18 +354,55 @@ private fun FinishedView(durationSeconds: Double, onDone: () -> Unit) {
             style = MaterialTheme.typography.displaySmall,
             fontWeight = FontWeight.Bold,
         )
-        Text("You completed your meditation session", color = MnTheme.textSecondary)
         Spacer(Modifier.height(8.dp))
         Text(
-            String.format("%d:%02d", durationSeconds.toInt() / 60, durationSeconds.toInt() % 60),
-            color = MnTheme.textPrimary,
+            "You completed your meditation session",
+            color = MnTheme.textSecondary,
+            textAlign = TextAlign.Center,
         )
         Spacer(Modifier.height(24.dp))
-        Button(
-            onClick = onDone,
-            colors = ButtonDefaults.buttonColors(containerColor = MnTheme.accentButton),
+        Column(
+            Modifier.fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(MnTheme.cardBackground)
+                .padding(horizontal = 20.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text("Done", color = MnTheme.buttonText, fontWeight = FontWeight.SemiBold)
+            InfoRow(Icons.Outlined.Spa, title)
+            InfoRow(Icons.Outlined.Air, breathingStyle)
+            InfoRow(Icons.Outlined.Schedule, formatDuration(durationSeconds))
+        }
+        Spacer(Modifier.height(24.dp))
+        Button(
+            onClick = onWriteNote,
+            colors = ButtonDefaults.buttonColors(containerColor = MnTheme.accentButton),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Icon(
+                Icons.Outlined.Create,
+                contentDescription = null,
+                tint = MnTheme.buttonText,
+            )
+            Spacer(Modifier.width(8.dp))
+            Text(stringResource(R.string.write_a_note), color = MnTheme.buttonText, fontWeight = FontWeight.SemiBold)
+        }
+        TextButton(onClick = onSkip) {
+            Text(stringResource(R.string.skip_for_now), color = MnTheme.textSecondary)
         }
     }
+}
+
+@Composable
+private fun InfoRow(icon: ImageVector, label: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(icon, contentDescription = null, tint = MnTheme.textSecondary, modifier = Modifier.size(16.dp))
+        Spacer(Modifier.width(12.dp))
+        Text(label, color = MnTheme.textPrimary, style = MaterialTheme.typography.bodyLarge)
+    }
+}
+
+private fun formatDuration(seconds: Double): String {
+    val mins = seconds.toInt() / 60
+    val secs = seconds.toInt() % 60
+    return if (secs == 0) "$mins min" else "$mins min $secs sec"
 }

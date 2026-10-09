@@ -33,4 +33,6 @@
     <string name="delete">Delete</string>
     <string name="delete_note_title">Delete note?</string>
     <string name="delete_note_body">This action cannot be undone.</string>
+    <string name="write_a_note">Write a Note</string>
+    <string name="skip_for_now">Skip for Now</string>
 </resources>

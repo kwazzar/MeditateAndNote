@@ -22,6 +22,7 @@ class BreathingSessionViewModel(private val savedStateHandle: SavedStateHandle) 
   private val meditationId: String = checkNotNull(savedStateHandle.get<String>("meditationId"))
   val arena = SwiftMemoryManagement.DEFAULT_SWIFT_JAVA_AUTO_ARENA
   val meditationTitle: String = MeditationCatalog.load().firstOrNull { it.id == meditationId }?.title ?: "Meditation"
+  val breathingStyle: String = MeditationCatalog.load().firstOrNull { it.id == meditationId }?.breathingStyleRawValue ?: "box"
 
   private val engine = MeditationSessionEngine.init(pattern(), arena)
   private var ticker: HandlerTicker? = null

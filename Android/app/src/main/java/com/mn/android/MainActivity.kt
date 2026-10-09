@@ -197,8 +197,9 @@ private fun MnNav() {
                 val id = backStackEntry.arguments?.getString("meditationId") ?: ""
                 BreathingScreen(
                     meditationId = id,
-                    onDone = { navController.popBackStack("meditate", inclusive = false) },
+                    onDone = { navController.popBackStack("home", inclusive = false) },
                     onBack = { navController.popBackStack() },
+                    onWriteNote = { navController.navigate("newNote") },
                 )
             }
         }
