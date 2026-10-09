@@ -8,11 +8,21 @@
   "mcp": {
     "XcodeBuildMCP": {
       "type": "local",
-      "command": ["npx", "-y", "xcodebuildmcp@latest", "mcp"],
+      "command": [
+        "npx",
+        "-y",
+        "xcodebuildmcp@latest",
+        "mcp"
+      ],
       "environment": {
         "XCODEBUILDMCP_ENABLED_WORKFLOWS": "simulator,project-discovery",
         "XCODEBUILDMCP_SENTRY_DISABLED": "true"
       }
+    }
+  },
+  "permission": {
+    "skill": {
+      "android-jetpack-compose-m3": "deny"
     }
   }
 }

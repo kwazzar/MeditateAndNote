@@ -110,15 +110,20 @@ Why: the rule "an already-archived note can't be archived again" is a domain inv
 ### Definition of done
 
 Before considering a task complete:
-1. Run the build/tests via XcodeBuildMCP.
-2. Verify Domain files don't import `CoreData`/`SwiftUI`.
-3. If Router/navigation was touched, verify the ViewModel doesn't reference a concrete View directly.
-4. For a full DDD-compliance check on the feature, use the `ddd-audit` skill.
+1. Load `superpowers/verification-before-completion` and follow it: never claim "done" / "fixed" / "passing" without running the verification command and reading its actual output.
+2. Run the build/tests via XcodeBuildMCP.
+3. Verify Domain files don't import `CoreData`/`SwiftUI`.
+4. If Router/navigation was touched, verify the ViewModel doesn't reference a concrete View directly.
+5. For a full DDD-compliance check on the feature, use the `ddd-audit` skill.
+
+For Android-only tasks (`Android/`, Kotlin), skip steps 2-4 (Xcode-specific); still run step 1 and verify with the Gradle build instead (`./gradlew assembleDebug` in `Android/`).
 
 ### Available skills
 
+- `superpowers/verification-before-completion` — evidence before claims: run build/tests and read the output before saying a task is complete. Invoke at the end of every task.
 - `ddd-audit` — checklist for reviewing code/PRs against DDD principles. Invoke before finishing a significant feature, or on explicit request like "check this for DDD compliance".
 - `new-aggregate` — recipe for adding a new domain type in the project's actual style (`<X>DataSource`/`<X>Store` protocol + `CoreData`/`InMemory`/`UserDefaults` implementation + `<X>Manager` with `<X>Providable`/`<X>Manageable`). Invoke when adding a new domain entity.
+- `android-jetpack-compose-m3` — Material 3 / Jetpack Compose UI. Load ONLY when editing Android code (`Android/`, Kotlin, Compose). Never for SwiftUI/iOS tasks.
 
 ---
 
