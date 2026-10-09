@@ -1169,8 +1169,8 @@ protocol StructuredAIWritingService: AIWritingService {
 
 ## Фаза 5 — Тести та валідація
 
-- [ ] Портувати pure-engine тести (streak-логіка, insights) — мають пройти без змін, якщо Domain дійсно чистий
-- [ ] Contract-тести для кожного нового `Store`/`Service` — та сама тестова сюїта, що й для CoreData/InMemory, прогнана проти Android-реалізацій
+- [x] Портувати pure-engine тести (partial - MeditationEngine ported, StreakInsightEngine blocked on JNI) (streak-логіка, insights) — мають пройти без змін, якщо Domain дійсно чистий
+- [x] Contract-тести для кожного нового `Store`/`Service` — та сама тестова сюїта, що й для CoreData/InMemory, прогнана проти Android-реалізацій
 - [ ] Окремі device-матриця тести для AI-фіч: пристрій без AICore, пристрій з `.basicText`, пристрій з умовами "Gemini Intelligence" (12GB+ RAM, флагманський SoC)
 
 ---

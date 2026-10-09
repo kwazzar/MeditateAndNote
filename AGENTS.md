@@ -124,6 +124,7 @@ For Android-only tasks (`Android/`, Kotlin), skip steps 2-4 (Xcode-specific); st
 - `ddd-audit` — checklist for reviewing code/PRs against DDD principles. Invoke before finishing a significant feature, or on explicit request like "check this for DDD compliance".
 - `new-aggregate` — recipe for adding a new domain type in the project's actual style (`<X>DataSource`/`<X>Store` protocol + `CoreData`/`InMemory`/`UserDefaults` implementation + `<X>Manager` with `<X>Providable`/`<X>Manageable`). Invoke when adding a new domain entity.
 - `android-jetpack-compose-m3` — Material 3 / Jetpack Compose UI. Load ONLY when editing Android code (`Android/`, Kotlin, Compose). Never for SwiftUI/iOS tasks.
+- `port-ios-screen-to-android` — port a SwiftUI screen to Compose/M3. Invoke when asked to port/migrate/recreate an iOS screen on Android.
 
 ---
 
