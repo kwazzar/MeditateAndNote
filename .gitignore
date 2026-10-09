@@ -138,3 +138,9 @@ local.properties
 
 ### Android IDE ###
 .idea/
+
+# Backup files
+Android/app/build.gradle.kts.bak
+
+# Tombstones (crash logs)
+tombstones/
