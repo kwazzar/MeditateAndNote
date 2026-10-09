@@ -35,4 +35,11 @@
     <string name="delete_note_body">This action cannot be undone.</string>
     <string name="write_a_note">Write a Note</string>
     <string name="skip_for_now">Skip for Now</string>
+    <string name="reminders">Reminders</string>
+    <string name="reminder_time">Reminder time</string>
+    <string name="repeat_on">Repeat on</string>
+    <string name="allow">Allow</string>
+    <string name="allow_notifications_message">Allow notifications to receive reminders</string>
+    <string name="show_onboarding_again">Show onboarding again</string>
+    <string name="ok">OK</string>
 </resources>

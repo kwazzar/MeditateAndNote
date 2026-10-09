@@ -37,8 +37,10 @@ import androidx.navigation.compose.rememberNavController
 import com.mn.android.R
 import com.mn.android.data.NoteBlobStore
 import com.mn.android.data.OnboardingStore
+import com.mn.android.data.SharedPrefsReminderSettingsStore
 import com.mn.android.data.StreakSnapshotStore
 import com.mn.android.ui.home.HomeScreen
+import com.mn.android.ui.settings.SettingsScreen
 import com.mn.android.ui.meditate.BreathingScreen
 import com.mn.android.ui.meditate.MeditateSelectScreen
 import com.mn.android.ui.notes.NoteEditorScreen
@@ -90,6 +92,7 @@ private fun MnNav() {
     OnboardingStore.configure(LocalContext.current)
     StreakSnapshotStore.configure(LocalContext.current)
     NoteBlobStore.configure(LocalContext.current)
+    SharedPrefsReminderSettingsStore.configure(LocalContext.current)
 
     val navController = rememberNavController()
     val startDestination =
@@ -172,7 +175,13 @@ private fun MnNav() {
                 PlaceholderScreen("Streak Detail")
             }
             composable("settings") {
-                PlaceholderScreen("Settings")
+                SettingsScreen(
+                    onBack = { navController.popBackStack() },
+                    onShowOnboarding = {
+                        OnboardingStore.hasCompletedOnboarding = false
+                        navController.navigate("onboarding")
+                    },
+                )
             }
             composable("newNote") {
                 NoteEditorScreen(
