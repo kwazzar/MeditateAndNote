@@ -209,3 +209,136 @@ extension KotlinNoteDataSource {
         Self.logger.warning("note probe failed: \(error)")
     }
 }
+
+// MARK: - Note menu (notes tab)
+
+/// Feeds the notes list: Swift decodes the stored payloads (the only place
+/// `Note` is ever decoded), Kotlin gets one flat record per note plus its
+/// date.
+///
+/// The wire format is this file's contract, not Core's schema: a JSON array of
+/// {"id", "title", "content"} built with `JSONSerialization`, written by
+/// Swift, read by Kotlin's org.json. Dates go in the LongArray because 1ms
+/// precision suffices for the "d MMMM" label and the integer avoids the
+/// Double tolerance dance. A field added to `Note` that the list must show
+/// means adding it to this record — where it lives in Core is irrelevant
+/// here.
+///
+/// Count and dates: [0] = note count, [1+i] = note.date in epoch millis,
+/// newest first (NoteBlobStore.fetchAll's ORDER BY DESC). The buffer is
+/// allocated before Swift knows the count, so sizes are bounded: when the
+/// notes would not fit, [0] = -1 and Kotlin fails loudly instead of reading
+/// a truncated list.
+///
+/// Kotlin side: NoteMenuSource.kt
+@_cdecl("Java_com_mn_android_data_NoteMenuSource_read")
+public func Java_com_mn_android_data_NoteMenuSource_read(
+    environment: UnsafeMutablePointer<JNIEnv?>!,
+    thisClass: jclass,
+    out: jlongArray
+) -> jstring? {
+    let store = KotlinNoteDataSource()
+    guard let notes = try? store.fetchAllSync() else {
+        writeValues([0], to: out, in: environment)
+        return "[]".getJNILocalRefValue(in: environment)
+    }
+
+    let capacity = Int(environment.interface.GetArrayLength(environment, out))
+    guard notes.count + 1 <= capacity else {
+        writeValues([-1], to: out, in: environment)
+        return "[]".getJNILocalRefValue(in: environment)
+    }
+
+    var dates = [Int64](repeating: 0, count: notes.count + 1)
+    dates[0] = Int64(notes.count)
+    var records: [[String: String]] = []
+    records.reserveCapacity(notes.count)
+    for (i, note) in notes.enumerated() {
+        dates[i + 1] = Int64(note.date.timeIntervalSince1970 * 1000.0)
+        records.append([
+            "id": note.id.rawValue.uuidString,
+            "title": note.title.rawValue,
+            "content": note.content.rawValue,
+        ])
+    }
+    writeValues(dates, to: out, in: environment)
+
+    guard let payload = try? JSONSerialization.data(withJSONObject: records),
+          let json = String(data: payload, encoding: .utf8) else {
+        return "[]".getJNILocalRefValue(in: environment)
+    }
+    return json.getJNILocalRefValue(in: environment)
+}
+
+// MARK: - Note editor (new note / note details)
+
+/// One note for the editor. JSON {"title","content","dateMillis"}; "" means
+/// the id is unknown — Kotlin shows a blank note rather than a parser error.
+@_cdecl("Java_com_mn_android_data_NoteEditorSource_load")
+public func Java_com_mn_android_data_NoteEditorSource_load(
+    environment: UnsafeMutablePointer<JNIEnv?>!,
+    thisClass: jclass,
+    jId: jstring?
+) -> jstring? {
+    let id = String(fromJNI: jId, in: environment)
+    let store = KotlinNoteDataSource()
+    guard let uuid = UUID(uuidString: id),
+          let note = try? store.fetchSync(id: NoteID(rawValue: uuid)) else {
+        return "".getJNILocalRefValue(in: environment)
+    }
+    let record: [String: Any] = [
+        "title": note.title.rawValue,
+        "content": note.content.rawValue,
+        "dateMillis": Int64(note.date.timeIntervalSince1970 * 1000.0),
+    ]
+    guard let payload = try? JSONSerialization.data(withJSONObject: record),
+          let json = String(data: payload, encoding: .utf8) else {
+        return "".getJNILocalRefValue(in: environment)
+    }
+    return json.getJNILocalRefValue(in: environment)
+}
+
+/// Creates or overwrites one note. The title normalisation rule (trim, blank
+/// → "Untitled") is not Kotlin's to know: raw text comes in, the NoteTitle
+/// value object applies the rule, and the normalised title comes back so the
+/// editor field matches what was persisted. The date of an existing note is
+/// preserved (matches NoteEditorViewModel.saveExisting); a new note is
+/// stamped Date(). Returns "" on failure.
+@_cdecl("Java_com_mn_android_data_NoteEditorSource_save")
+public func Java_com_mn_android_data_NoteEditorSource_save(
+    environment: UnsafeMutablePointer<JNIEnv?>!,
+    thisClass: jclass,
+    jId: jstring?,
+    jTitle: jstring?,
+    jContent: jstring?
+) -> jstring? {
+    let id = String(fromJNI: jId, in: environment)
+    let title = NoteTitle(String(fromJNI: jTitle, in: environment))
+    let content = NoteContent(String(fromJNI: jContent, in: environment))
+    guard let uuid = UUID(uuidString: id) else {
+        return "".getJNILocalRefValue(in: environment)
+    }
+    let store = KotlinNoteDataSource()
+    let existing = try? store.fetchSync(id: NoteID(rawValue: uuid))
+    let note = Note(
+        id: NoteID(rawValue: uuid),
+        title: title,
+        content: content,
+        date: existing?.date ?? Date()
+    )
+    guard (try? store.saveSync(note)) != nil else {
+        return "".getJNILocalRefValue(in: environment)
+    }
+    return title.rawValue.getJNILocalRefValue(in: environment)
+}
+
+@_cdecl("Java_com_mn_android_data_NoteEditorSource_delete")
+public func Java_com_mn_android_data_NoteEditorSource_delete(
+    environment: UnsafeMutablePointer<JNIEnv?>!,
+    thisClass: jclass,
+    jId: jstring?
+) {
+    let id = String(fromJNI: jId, in: environment)
+    guard let uuid = UUID(uuidString: id) else { return }
+    _ = try? KotlinNoteDataSource().deleteSync(id: NoteID(rawValue: uuid))
+}

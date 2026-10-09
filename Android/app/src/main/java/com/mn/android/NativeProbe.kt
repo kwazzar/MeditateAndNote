@@ -58,6 +58,15 @@ object NativeProbe {
     external fun streakProbe(out: LongArray)
 
     /**
+     * Exercises the home-screen header read (`StreakHeaderSource_read`): Swift
+     * writes a known snapshot, then fills the day flags the header thunk would.
+     * Same out-param rule.
+     *
+     * Swift side: KotlinStreakActivityStore.swift
+     */
+    external fun streakHeaderProbe(out: LongArray)
+
+    /**
      * Runs the meditation session round trip through Swift and fills [out] with
      * one flag per check. Same out-param rule as the probes above: the buffer is
      * allocated by Kotlin because Kotlin cannot see Swift replace a reference.

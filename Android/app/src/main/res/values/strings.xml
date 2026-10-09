@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- StreakHeaderView: "1 day" / "n days" -->
+    <plurals name="streak_days">
+        <item quantity="one">day</item>
+        <item quantity="other">days</item>
+    </plurals>
+
+    <string name="streak_note_reminder">Write a note to complete today\'s streak</string>
+    <string name="settings">Settings</string>
+    <string name="meditate">Meditate</string>
+
+    <!-- DayCellView accessibility, matching the iOS labels: "Mo: completed" etc. -->
+    <string name="day_cell_description">%1$s: %2$s</string>
+    <string name="day_cell_completed">completed</string>
+    <string name="day_cell_meditation_only">meditation done, note missing</string>
+    <string name="day_cell_note_only">note done, meditation missing</string>
+    <string name="day_cell_empty">no activity</string>
+
+    <!-- NoteMenu -->
+    <string name="search_notes_hint">Search notes...</string>
+    <string name="clear_search">Clear search</string>
+    <string name="add_note">Add Note</string>
+    <string name="read">Read</string>
+    <string name="notes">Notes</string>
+    <string name="home">Home</string>
+
+    <!-- NoteEditor -->
+    <string name="note_title_hint">Title</string>
+    <string name="note_body_hint">Start writing...</string>
+    <string name="back">Back</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
+    <string name="delete_note_title">Delete note?</string>
+    <string name="delete_note_body">This action cannot be undone.</string>
+</resources>

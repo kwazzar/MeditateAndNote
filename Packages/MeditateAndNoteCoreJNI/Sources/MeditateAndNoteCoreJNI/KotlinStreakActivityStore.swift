@@ -192,3 +192,116 @@ extension KotlinStreakActivityStore {
         Self.logger.warning("streak probe failed: \(error)")
     }
 }
+
+// MARK: - Streak header (home screen)
+
+/// Fills one flag per day for the 7 day-start millis Kotlin sent, and returns
+/// the current streak.
+///
+/// Same out-param rule as the probes: Kotlin allocates the flag arrays, Swift
+/// only fills them. `StreakSnapshot` is decoded here and on the Kotlin side
+/// stays an opaque JSON document, so there is still no Kotlin mirror of the
+/// snapshot shape to drift.
+///
+/// Kotlin side: StreakHeaderSource.kt
+@_cdecl("Java_com_mn_android_data_StreakHeaderSource_read")
+public func Java_com_mn_android_data_StreakHeaderSource_read(
+    environment: UnsafeMutablePointer<JNIEnv?>!,
+    thisClass: jclass,
+    dayStartMillis: jlongArray,
+    medFlags: jlongArray,
+    noteFlags: jlongArray
+) -> jlong {
+    let days = [Int64](fromJNI: dayStartMillis, in: environment)
+    let snapshot = KotlinStreakActivityStore().load()
+
+    var med = [Int64](repeating: 0, count: days.count)
+    var note = [Int64](repeating: 0, count: days.count)
+    for (i, millis) in days.enumerated() {
+        let day = Date(timeIntervalSince1970: Double(millis) / 1000.0)
+        let activity = snapshot?.activities.first {
+            Calendar.current.isDate($0.date, inSameDayAs: day)
+        }
+        med[i] = activity?.hasMeditation == true ? 1 : 0
+        note[i] = activity?.hasNote == true ? 1 : 0
+    }
+    writeValues(med, to: medFlags, in: environment)
+    writeValues(note, to: noteFlags, in: environment)
+    return Int64(snapshot?.currentStreak ?? 0)
+}
+
+// MARK: - Streak header probe
+
+/// Writes a known snapshot, then fills the header flags for the same 7 days
+/// the Kotlin screen would ask for. Proves the newest JNI entry point on
+/// device: symbol, signature, and that Swift and Kotlin agree on what
+/// "yesterday" means.
+///
+/// Results: [0] currentStreak == 7, [1] yesterday meditation,
+/// [2] yesterday note, [3] two-days-ago meditation, [4] two-days-ago note
+/// cleared, [5] today clean, [6] 1 if a step threw.
+///
+/// Kotlin side: StreakHeaderProbe.kt
+@_cdecl("Java_com_mn_android_NativeProbe_streakHeaderProbe")
+public func Java_com_mn_android_NativeProbe_streakHeaderProbe(
+    environment: UnsafeMutablePointer<JNIEnv?>!,
+    thisClass: jclass,
+    out: jlongArray
+) {
+    let store = KotlinStreakActivityStore()
+    var results = [Int64](repeating: 0, count: 7)
+    let calendar = Calendar.current
+    let today = calendar.startOfDay(for: Date())
+
+    func day(_ offset: Int) -> Date {
+        calendar.date(byAdding: .day, value: -offset, to: today)!
+    }
+
+    do {
+        try store.saveSync(StreakSnapshot(
+            activities: [
+                DailyActivity(
+                    date: day(1),
+                    hasMeditation: true,
+                    hasNote: true,
+                    meditationTime: day(1),
+                    noteTime: day(1)
+                ),
+                DailyActivity(date: day(2), hasMeditation: true, hasNote: false),
+                DailyActivity(date: day(3), hasMeditation: false, hasNote: true),
+            ],
+            currentStreak: 7,
+            longestStreak: 7,
+            lastCountedDay: day(1)
+        ))
+
+        // Same lookup the header thunk does, over the same last-7-days window.
+        for offset in (0..<7) {
+            let dayDate = day(6 - offset)
+            let activity = store.load()?.activities.first {
+                calendar.isDate($0.date, inSameDayAs: dayDate)
+            }
+            let med = activity?.hasMeditation == true ? 1 : 0
+            let note = activity?.hasNote == true ? 1 : 0
+
+            switch (6 - offset) {
+            case 1: // yesterday
+                results[1] = Int64(med)
+                results[2] = Int64(note)
+            case 2: // two days ago — meditation only
+                results[3] = Int64(med)
+                results[4] = Int64(note)
+            case 6: // today — no activity stored
+                results[5] = Int64(med | note)
+            case _:
+                break
+            }
+        }
+        results[0] = Int64(store.load()?.currentStreak == 7 ? 1 : 0)
+    } catch {
+        KotlinStreakActivityStore.logProbeFailure(error)
+        results[6] = 1
+    }
+
+    writeValues(results, to: out, in: environment)
+}

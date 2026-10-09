@@ -52,4 +52,22 @@ object MnTheme {
      * `Color.blue` on iOS is UIColor.blue = #0000FF, so alpha 0.85 → #D9.
      */
     val streakActiveNote = Color(0xD90000FF)
+
+    /**
+     * `MainTheme.streakActiveMeditation` darkZen: `.purple.opacity(0.85)`.
+     * UIColor.purple = #800080, so alpha 0.85 → #D9.
+     */
+    val streakActiveMeditation = Color(0xD9800080)
+
+    /** `MainTheme.streakMuted` darkZen: `.white.opacity(0.2)`. */
+    val streakMuted = Color(0x33FFFFFF)
+
+    /**
+     * `MainTheme.streakIndicator` darkZen: `.orange.opacity(0.75)`.
+     * UIColor.orange = #FF9500, so alpha 0.75 → #BF.
+     */
+    val streakIndicator = Color(0xBFFF9500)
+
+    /** iOS systemRed dark tint, used for destructive actions (delete). */
+    val deleteRed = Color(0xFFFF453A)
 }

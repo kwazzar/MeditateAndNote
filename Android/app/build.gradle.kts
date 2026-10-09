@@ -53,6 +53,9 @@ android {
  * ordinary Kotlin/Compose edit does not pay for a Swift rebuild.
  */
 val swiftCoreDir = file("$rootDir/../Packages/MeditateAndNoteCore/Sources/MeditateAndNoteCore")
+// The .so is built from the CoreJNI target; without this input, edits to
+// KotlinStreakActivityStore.swift / SessionRecorder.swift left a stale .so.
+val swiftCoreJniDir = file("$rootDir/../Packages/MeditateAndNoteCoreJNI/Sources/MeditateAndNoteCoreJNI")
 val buildScript = rootProject.file("../Scripts/build-android.sh")
 val swiftJavaHomeFile = swiftJavaHome()
 
@@ -64,8 +67,17 @@ val swiftCore by tasks.registering(Exec::class) {
     commandLine(buildScript.absolutePath)
 
     environment("SWIFT_JAVA_HOME", swiftJavaHomeFile.absolutePath)
+    // swift-build's android SwiftSDK locates the NDK via ANDROID_NDK_HOME
+    // (its own ANDROID_NDK-style standard-location search finds nothing when
+    // the SDK is under ~/Library/Android/sdk/ndk/<version>).
+    environment(
+        "ANDROID_NDK_HOME",
+        System.getenv("ANDROID_NDK_HOME")
+            ?: "${System.getProperty("user.home")}/Library/Android/sdk/ndk/30.0.16248370"
+    )
 
     inputs.dir(swiftCoreDir).withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.dir(swiftCoreJniDir).withPathSensitivity(PathSensitivity.RELATIVE)
     inputs.file(buildScript)
     inputs.property("swiftJavaHome", swiftJavaHomeFile.absolutePath)
     outputs.dir(file("src/main/jniLibs"))
@@ -91,6 +103,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
     implementation("androidx.compose.ui:ui:1.7.6")
+    implementation("androidx.compose.ui:ui-tooling-preview:1.7.6")
     implementation("androidx.compose.material3:material3:1.3.1")
     implementation("androidx.navigation:navigation-compose:2.8.4")
     // Onboarding slides mirror the SF Symbols placeholders in OnboardingPage
@@ -101,6 +114,15 @@ dependencies {
     implementation("androidx.room:room-runtime:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
     ksp("androidx.room:room-compiler:2.6.1")
+    // Testing dependencies
+    androidTestImplementation("junit:junit:4.13.2")
+    androidTestImplementation("androidx.test:core:1.5.0")
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.room:room-testing:2.6.1")
+    androidTestImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("androidx.test:core:1.5.0")
+    testImplementation("androidx.test.ext:junit:1.1.5")
 }
 
 /**

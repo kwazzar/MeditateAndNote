@@ -107,9 +107,11 @@ private fun MetricsScreen() {
             .getOrElse { "note probe failed: ${it.javaClass.simpleName}: ${it.message}" }
         val streak = runCatching { StreakProbe.roundTrip(context) }
             .getOrElse { "streak probe failed: ${it.javaClass.simpleName}: ${it.message}" }
+        val streakHeader = runCatching { StreakHeaderProbe.roundTrip(context) }
+            .getOrElse { "streak header probe failed: ${it.javaClass.simpleName}: ${it.message}" }
         val sessions = runCatching { SessionProbe.roundTrip(context) }
             .getOrElse { "session probe failed: ${it.javaClass.simpleName}: ${it.message}" }
-        reverseStatus = "reverse jni: $reverse\n$store\n$notes\n$streak\n$sessions"
+        reverseStatus = "reverse jni: $reverse\n$store\n$notes\n$streak\n$streakHeader\n$sessions"
     }
 
     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
