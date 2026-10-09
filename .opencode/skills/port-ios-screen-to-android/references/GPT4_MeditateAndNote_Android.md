@@ -1,0 +1,64 @@
+# LotusNote/MeditateAndNote — iOS → Android port session summary
+
+> GPT-4o-based summary of work completed during this session (caveman + ponytail modes active, Ukrainian user, committed per feature).
+
+## Objective
+Port iOS screens of MeditateAndNote to Android (Compose + M3) in the order defined by `.opencode/skills/port-ios-screen-to-android/references/screens-and-order.md`. Done: home/streak header + NoteMenu (#3) + NoteEditor (#4), all verified on-device and committed. Now working: **#5 TimeMeditationSheet + MeditationCompletionView** (both already functionally present in `BreathingScreen.kt`; completion view needs the iOS info card + "Write a Note"/"Skip for Now" actions).
+
+## Important Details
+- Caveman + ponytail modes active; user messages Ukrainian; user directive to commit per feature (`зафіксуй зміни комітами`).
+- JNI proven ops: buffer fill `writeValues(_:to:in:)`, buffer read `[Int64](fromJNI:in:)`, jstring arg `String(fromJNI:in:)`, Swift→JVM string via `String.getJNILocalRefValue(in:)`; Swift `@_cdecl` thunks now the established pattern.
+- Wire-contract rule: Swift thunks own bytes; Kotlin parses only Swift-authored display DTOs (NoteMenu record JSON `{"id","title","content"}` + epoch millis via LongArray; editor load `{"title","content","dateMillis"}`), never Core blob schema. Search = Kotlin display-layer mirror of `NoteFilter` (case-insensitive contains) — accepted, documented in code.
+- Note payload shape (seed/DB knowledge): `{"id":"<uuid>","title":"...","content":"...","date":<Double secs since 2001-01-01>}`; `NoteBlobStore` SQLite `notes(id,date,payload)`, `ORDER BY date DESC`; `date` column = epoch millis, may mismatch payload until resave (observed order flip — expected).
+- `NoteTitle` normalization (trim, blank→"Untitled") lives only in Swift VO; save returns normalized title to Kotlin; existing-note `date` preserved on save, new note = `Date()`.
+- NoteEditor autosave = `snapshotFlow { title to body }.debounce(800)`, blank-new guard, UUID generated Kotlin-side up front.
+- NoteMenu uses `LifecycleResumeEffect(Unit)` reload-on-resume (stale list after editor pop); replaced `LaunchedEffect(Unit)`.
+- Tab shell: Scaffold + NavigationBar, tab routes `home`/`notes`/`meditate`; pushed screens (settings, breathing, editor) hide bar. Nav stack: home (start) → meditate tab → breathing (pushed).
+- Device quirks: `adb shell input text` broken on this emulator for Compose fields; keyevents work in editor (KEYCODE_X=52); `%20` typed literally via adb; no sqlite3 on device — pull via `adb exec-out run-as com.mn.android cat databases/notes.db`, edit host-side, push `/data/local/tmp` + `run-as cp`; NoteProbe ends with `deleteAll` (wipes seed notes).
+- Open pre-existing item: `StreakSnapshotStore.save` uses `apply()` — `commit()` fix still awaiting user decision.
+- DomainEventBus absent on Kotlin → manual reload fallback until bus lands. Android has no NoteManager/`NoteProvidable`-style layers (deferred, not blocking). AI draft bar + FloatingToolbar skipped on iOS too (unwired/stub; no Android AI backend).
+
+## Android breathing flow (context for #5, verified this session)
+- `BreathingScreen.kt` already implements: `DurationSheet` (ModalBottomSheet + RadioButtons over `MeditationDuration.oneMin/threeMin/fiveMin`, "Duration" title, "Start" accent button, invoked from Idle state via `sheetOpen` rememberSaveable), countdown overlay, breathing rings (Canvas + infinite pulse tween), pause/resume, and a thin `FinishedView` (CheckCircle 64dp streakSuccess + "Well Done!" + "You completed your meditation session" + mm:ss + single "Done" button → onDone).
+- `BreathingSessionViewModel.kt`: `meditationId` from SavedStateHandle, `meditationTitle` (catalog lookup), `pattern()` via `MeditationSelection.lastSelectedId` → catalog `breathingStyleRawValue` → `BreathingStyle.init` → `getPattern` (note: uses last selected meditation, not the route id — works because screen opened from MeditateSelect). Engine: `MeditationSessionEngine.init(pattern, arena)`, `start(SessionDuration.init(dur, arena), 3, Date.fromInstant(...))`, 100ms HandlerTicker ticking countdown/clock, `done()` = cancel ticker + `forceComplete` + `SessionRecorder.record(meditationId, seconds)` + snapshot → `UiState.Finished(durationSeconds)`.
+- Session persistence already works via `SessionRecorder.record()` (used by VM.done(), not bus-driven).
+
+## iOS `MeditationCompletionView.swift` (what completion needs to match)
+- Header: `checkmark.circle.fill` 64pt `streakSuccess`, "Well Done!" 32 bold rounded, "You completed your meditation session" .body textSecondary.
+- `infoSection`: card (RoundedRectangle 16, ultraThinMaterial, H20/V16) with 3 rows — `leaf.fill` + `meditation.title.rawValue`, `wind` + `meditation.breathingStyle.rawValue`, `clock` + `formatDuration(duration.rawValue)`; row = 16pt medium icon 24pt frame textSecondary + label .body textPrimary.
+- `formatDuration`: `mins = s/60; secs = s%60; secs == 0 ? "\(mins) min" : "\(mins) min \(secs) sec"`.
+- Actions: primary Button "Write a Note" (square.and.pencil + headline, buttonText on accentButton, corner 14) → `router.navigate(.push(.newNote))`; secondary "Skip for Now" (subheadline textSecondary) → `router.navigate(.tab(.home))`.
+- Preview: Meditation(id "preview", MeditationTitle("Calm Breath"), .fourSevenEight), duration .fiveMin.
+
+## What #5 actually requires on Android
+- `DurationSheet` already covers `TimeMeditationSheet` (wheel → radio list = M3 adaptation, accepted; "Start Meditation" label vs "Start" cosmetic — leave).
+- Missing in `FinishedView`: info card (3 rows w/ icons), "Write a Note", "Skip for Now". Needed data: meditation title (vm.meditationTitle exists), breathing style (VM needs a dedicated val by route `meditationId`, not `MeditationSelection.lastSelectedId`), duration (already `UiState.Finished.durationSeconds`), icons (add `Icons.Outlined.Spa`/`Eco` ≈ leaf, `Air` ≈ wind, `Schedule` ≈ clock, `Edit`/`AutoMirrored.EditNote` ≈ square.and.pencil — material-icons-extended 1.7.6 present in build.gradle.kts:112).
+- Nav: completion "Write a Note" → `navController.navigate("newNote")` (pushed over completion; editor back returns to completion, matches iOS push); "Skip for Now" → `navController.popBackStack("home", inclusive = false)` (pops breathing + meditate tab, lands home start destination).
+
+## Work State
+### Completed
+- **NoteMenu (#3)**: Swift `Java_com_mn_android_data_NoteMenuSource_read` in `KotlinNoteDataSource.swift` (fetchAllSync → `out[0]=count`, `out[1+i]=dateMillis`, capacity check → `out[0]=-1`, JSONSerialization record array); `NoteMenuSource.kt` (`NoteRecord`, `readMenu()` w/ 1024-slot LongArray + `require(count >= 0)`); `ui/notes/NoteMenuScreen.kt` (search w/ clear icon, NoteCard content-preview/date "d MMMM"/title/Read+chevron, Add Note capsule, `LifecycleResumeEffect` reload, @Preview); strings; MainActivity Scaffold+NavigationBar + `NoteBlobStore.configure` + `noteDetails/{noteId}` route. Verified: build green, `llvm-nm` symbol, emulator showed seeded notes ("Morning pages"/"Recurring events", "1 May"). Search filter untestable via ADB (IME quirk), accepted.
+- **NoteEditor (#4)**: Swift thunks `Java_com_mn_android_data_NoteEditorSource_{load,save,delete}` (load returns `{"title","content","dateMillis"}` or `""`; save returns normalized title / `""`; delete void); `NoteEditorSource.kt` (`EditorNote`, `newId()` UUID, `loadNote`); `ui/notes/NoteEditorScreen.kt` (top bar back-save + overflow Delete for existing only, centered 28sp bold title, body field, debounce(800) autosave, blank-new guard, AlertDialog confirm, `normalizedTitle` mirror); `MnTheme.deleteRed = Color(0xFFFF453A)`; new strings (title/body hints, back, cancel, delete, delete_note_title/body); routes `newNote`/`noteDetails/{noteId}` real. Device-verified: load, autosave w/ date preserved, new-note UUID + "9 October" in list, blank guard (no row), delete (menu→confirm→DB row gone→pop→list refreshed), probes PASS. One Swift syntax fix (`guard ... != nil else`).
+- **Commits** (branch `main`, ahead of `origin/main`): `e6ecb97` "Android: port NoteMenu and NoteEditor screens" (28 files, 3248 insertions — screens, sources, thunks, StreakHeaderProbe/Source, tabs, strings, NoteBlobStoreContractTest, `.opencode/skills/` files); `9f20372` ANDROID_PORT_ANALYSIS.md + `.idea/` gitignore; `ba157c7` AGENTS.md/ANDROID_PORT_PLAN.md + missing androidTest files; `6a5bd71` ignore `build.gradle.kts.bak` + `tombstones/`. `git status` clean; `ANDROID_PORT_ANALYSIS.md` tracked (user-requested).
+- Probe regression post-features: NoteProbe/StreakProbe/StreakHeaderProbe PASS; `graphify update .` run.
+
+### Active (in progress, this session)
+- **#5 TimeMeditationSheet + MeditationCompletionView**: iOS completion read in full; Android breathing flow + VM read in full; gap analysis done (above). Next: edit `BreathingSessionViewModel.kt` (breathing style val by `meditationId`), rewrite `FinishedView` in `BreathingScreen.kt` (info card + 2 actions + `formatDuration`), add `onWriteNote`/`onSkip` params, wire in `MainActivity.kt`, add strings (write_a_note, skip_for_now; keep existing hardcoded "Well Done!" etc. — lazy), then build + device-verify + probes + commit + graphify.
+
+### Blocked
+- None hard. Known limitations: adb text input unreliable on emulator; noteProbe wipes seed notes; `apply()`→`commit()` fix pending user decision.
+
+## Next Move
+1. `BreathingSessionViewModel.kt`: add `val breathingStyle: String = MeditationCatalog.load().firstOrNull { it.id == meditationId }?.breathingStyleRawValue ?: "box"` (stable per route id).
+2. `BreathingScreen.kt`: change signature `BreathingScreen(meditationId, onDone, onBack, onWriteNote)`; in Finished branch pass `vm.meditationTitle`, `vm.breathingStyle`, `s.durationSeconds`; rewrite `FinishedView` to match iOS (range of icons; keep structure: header, info card w/ 3 rows, "Write a Note" accent button w/ pencil icon, "Skip for Now" text button); add `formatDuration(seconds)` util; drop old single-Done variant.
+3. `MainActivity.kt`: wire `onWriteNote = { navController.navigate("newNote") }`, keep `onDone` as skip → `{ navController.popBackStack("home", inclusive = false) }` (verify "home" is a destination + tab route name).
+4. `strings.xml`: add `write_a_note` + `skip_for_now` (check existing "Done"/"Well Done!" usage — BreathingScreen strings currently hardcoded, leave unless trivial).
+5. Build `./gradlew assembleDebug` in `Android/`, `adb install -r`, launch, open meditations → breathing → start → finish via "Done"; screenshot/verify info rows + buttons, tap Write a Note (editor opens), back, Skip (home); rerun probes; commit (style: "Android: port MeditationCompletionView …"); `git status`, `git log`; `graphify update .`.
+
+## Relevant Files
+- iOS: `MeditateAndNote/Views/Meditation/MeditationCompletionView.swift` (read this session), `TimeMeditationSheet.swift` (previously), `MeditateSelectView.swift` (not needed — Android already triggers sheet from breathing Idle state).
+- Android: `ui/meditate/BreathingScreen.kt` + `BreathingSessionViewModel.kt` (read in full this session — both are the port targets), `data/SessionRecorder.kt` (session persist — already wired), `data/MeditationCatalog.kt` (breathingStyleRawValue at line 22/47), `MainActivity.kt` (routes/tabs), `ui/theme/MnTheme.kt` (deleteRed, streakSuccess, accentButton tokens), `res/values/strings.xml`, `app/build.gradle.kts` (icons-extended line 112).
+- Swift JNI: `Packages/MeditateAndNoteCoreJNI/Sources/MeditateAndNoteCoreJNI/KotlinNoteDataSource.swift` (NoteMenu/NoteEditor thunks appended).
+- Plan/order: `.opencode/skills/port-ios-screen-to-android/references/screens-and-order.md` (rows 13-14: MeditationCompletionView ✗ / TimeMeditationSheet ✓-sheet-column — verify status; row 52 lists #5 as Core-only).
+- Generated Java (for MeditationDuration etc.): `Packages/MeditateAndNoteCore/.generated/java/com/mn/core/`.
+- Prior feature artifacts: `ui/notes/NoteMenuScreen.kt`, `ui/notes/NoteEditorScreen.kt`, `data/NoteMenuSource.kt`, `data/NoteEditorSource.kt`, `data/StreakHeaderSource.kt`, `StreakHeaderProbe.kt`.
