@@ -10,14 +10,14 @@ the Android build. "Ported" = a Compose screen exists under
 | MainView (tab home) | MainViewModel | MeditationService, MeditationSelectionStore, StreakTracker→StreakActivityStore | ✓ `SampleMeditationService`+`MeditationSelection`; ✓ `StreakSnapshotStore` | partial — `HomeScreen` placeholder, no streak header |
 | MeditateSelectView (tab meditations) | MeditateSelectViewModel | MeditationService, MeditationSelectionStore | ✓ | ✓ `MeditateSelectScreen` (minus sound sheet) |
 | MeditationView (session) | MeditationViewModel | MeditationSessionEngine, SoundPlayer, DomainEventBus, MeditationSessionStore | Engine ✓, Session ✓; SoundPlayer ✗; Bus ✗ | partial `BreathingScreen` |
-| MeditationCompletionView | (same VM flow) | DomainEventBus, MeditationSessionStore | Bus ✗ | ✗ |
-| TimeMeditationSheet | MeditationViewModel | MeditationDuration | ✓ | ✗ |
+| MeditationCompletionView | (same VM flow) | DomainEventBus, MeditationSessionStore | Bus ✗ | ✓ (FinishedView) |
+| TimeMeditationSheet | MeditationViewModel | MeditationDuration | ✓ | ✓ (DurationSheet) |
 | SoundSettingsSheet | SoundSettings | SoundPlaying | ✗ | ✗ |
-| NoteMenu (tab notes) | NoteMenuViewModel | NoteManager→NoteDataSource, DomainEventBus, SemanticSearchManager/NoteEmbeddingStore | DataSource ✓; Bus ✗; embedding ✗ | ✗ |
-| NoteEditorView | NoteEditorViewModel | NoteManager ✓, AIDraftManager (AIDraftSession/AIDraftSettings stores), eventBus ✗ | `AIDraft*` java gen ✓; Kotlin impls ✗ (only metric Room) | ✗ |
+| NoteMenu (tab notes) | NoteMenuViewModel | NoteManager→NoteDataSource, DomainEventBus, SemanticSearchManager/NoteEmbeddingStore | DataSource ✓; Bus ✗; embedding ✗ | ✓ (manual resume-reload fallback) |
+| NoteEditorView | NoteEditorViewModel | NoteManager ✓, AIDraftManager (AIDraftSession/AIDraftSettings stores), eventBus ✗ | `AIDraft*` java gen ✓; Kotlin impls ✗ (only metric Room) | ✓ (AI draft bar deferred) |
 | NoteInsightsSection | NoteInsightsViewModel | NoteInsightManager/NoteInsightStore, eventBus | store gen ✓; Kotlin impl ✗ | ✗ |
-| StreakDetailView | InsightsViewModel | StreakInsightManager/StreakActivityStore | Store ✓; `StreakInsightEngine` gen but blocked (plan Фаза 5) | ✗ |
-| SettingsView | none (View + `@Bindable` managers) | ReminderManager/ReminderSettingsStore ✓; SoundSettings ✗; AnimationSettings ✗; ThemeManager | only Reminder ✓ | ✗ |
+| StreakDetailView | InsightsViewModel | StreakInsightManager/StreakActivityStore | Store ✓; `StreakInsightEngine` gen but blocked (plan Фаза 5) | ✓ stats/calendar/sheet (Insights deferred) |
+| SettingsView | none (View + `@Bindable` managers) | ReminderManager/ReminderSettingsStore ✓; SoundSettings ✗; AnimationSettings ✗; ThemeManager | only Reminder ✓ | ✓ (reminders + onboarding replay; theme/sound/AI deferred) |
 | AIDraftSettingsView | AIDraftSettingsStoreObservable | AIDraftSettingsStore | ✗ | ✗ |
 | ReadingView | none (placeholder) | — | — | ✗ |
 | LoadingScreenView / RootContainer / CustomTabBar | none | Router | nav graph exists; tab shell ✗ | ✗ |
@@ -47,10 +47,10 @@ the Android build. "Ported" = a Compose screen exists under
 
 1. Tab shell — `RootContainer`/`CustomTabBar` → `NavigationBar` + nested `NavHost` (no JNI)
 2. `MainView` streak header (StreakActivityStore ✓)
-3. `NoteMenu` (NoteDataSource ✓) — needs DomainEventBus wiring, else manual reload fallback
-4. `NoteEditor` (NoteManager ✓; AI degrades to `AIDraftManagerStub`)
-5. `TimeMeditationSheet` + `MeditationCompletion` (Core-only)
-6. `Settings` (ReminderSettings ✓; theme picker + sound/animation prefs)
-7. `StreakDetail` / Insights (StreakActivityStore ✓; engine blocked)
+3. ~~`NoteMenu`~~ (done ✓, resume-reload fallback)
+4. ~~`NoteEditor`~~ (done ✓)
+5. ~~`TimeMeditationSheet` + `MeditationCompletion`~~ (done ✓)
+6. ~~`Settings`~~ (done ✓ reminders + onboarding replay; theme/sound/AI deferred)
+7. ~~`StreakDetail`~~ (done ✓ stats/grid/sheet; **Insights sections pending** — engine blocked)
 8. AI-dependent last — `AIDraftSettingsView`, `NoteInsights`, `SoundSettingsSheet`
    (SoundPlayer/ExoPlayer, AICore — plan Фаза 3)
