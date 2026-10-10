@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.sp
 import com.mn.android.R
 import com.mn.android.data.StreakHeaderSource
 import com.mn.android.data.StreakHeaderSource.DayFlags
+import com.mn.android.ui.streak.DayCellView
 import com.mn.android.ui.theme.MnTheme
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -141,10 +142,14 @@ private fun StreakHeaderCard(
                 Row(Modifier.padding(start = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                     val today = LocalDate.now()
                     header.dayFlags.forEachIndexed { index, flags ->
-                        DayCell(
-                            flags = flags,
+                        DayCellView(
                             date = today.minusDays(6L - index),
+                            hasMeditation = flags.hasMeditation,
+                            hasNote = flags.hasNote,
                             isToday = index == header.dayFlags.lastIndex,
+                            // Every day this header shows is inside the 7-day
+                            // window, so any partial day gets its dot.
+                            showPartialIndicatorForRecentDays = true,
                             modifier = Modifier.weight(1f),
                         )
                     }
@@ -184,107 +189,6 @@ private fun StreakNumberSection(currentStreak: Int, isTodayComplete: Boolean) {
         Text(
             pluralStringResource(R.plurals.streak_days, currentStreak),
             fontSize = 11.sp,
-            fontWeight = FontWeight.Medium,
-            color = MnTheme.textSecondary,
-        )
-    }
-}
-
-// MARK: - Day cells (DayCellView)
-
-/** Cell states, mirroring the (hasMeditation, hasNote) switches in DayCellView. */
-private enum class DayCellState {
-    COMPLETE, MEDITATION_ONLY, NOTE_ONLY, EMPTY;
-
-    companion object {
-        fun of(flags: DayFlags): DayCellState = when {
-            flags.hasMeditation && flags.hasNote -> COMPLETE
-            flags.hasMeditation -> MEDITATION_ONLY
-            flags.hasNote -> NOTE_ONLY
-            else -> EMPTY
-        }
-    }
-}
-
-@Composable
-private fun DayCell(flags: DayFlags, date: LocalDate, isToday: Boolean, modifier: Modifier = Modifier) {
-    val state = DayCellState.of(flags)
-    val cellSize = 32.dp
-    val weekdayLabel = remember(date) {
-        DateTimeFormatter.ofPattern("EEE", Locale.US).format(date).take(2)
-    }
-
-    val background =
-        if (state == DayCellState.COMPLETE) MnTheme.streakSuccess.copy(alpha = 0.15f)
-        else MnTheme.cardBackground
-    val borderColor =
-        if (isToday) {
-            if (state == DayCellState.COMPLETE) MnTheme.streakSuccess else MnTheme.streakActiveMeditation
-        } else {
-            if (state == DayCellState.COMPLETE) MnTheme.streakSuccess.copy(alpha = 0.5f) else MnTheme.divider
-        }
-    // With showPartialIndicatorForRecentDays=true every shown day is within the
-    // 7-day window, so any partial day gets the dot — including today.
-    val showPartialIndicator = state == DayCellState.MEDITATION_ONLY || state == DayCellState.NOTE_ONLY
-
-    val description = stringResource(
-        R.string.day_cell_description,
-        weekdayLabel,
-        stringResource(
-            when (state) {
-                DayCellState.COMPLETE -> R.string.day_cell_completed
-                DayCellState.MEDITATION_ONLY -> R.string.day_cell_meditation_only
-                DayCellState.NOTE_ONLY -> R.string.day_cell_note_only
-                DayCellState.EMPTY -> R.string.day_cell_empty
-            }
-        ),
-    )
-
-    Column(
-        modifier.semantics { contentDescription = description },
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        Box(
-            Modifier
-                .size(cellSize)
-                .background(background, RoundedCornerShape(10.dp))
-                .border(0.5.dp, borderColor, RoundedCornerShape(10.dp))
-        ) {
-            Row(
-                Modifier.align(Alignment.Center),
-                horizontalArrangement = Arrangement.spacedBy(3.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    "M",
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = if (flags.hasMeditation) MnTheme.streakActiveMeditation else MnTheme.streakMuted,
-                )
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.Notes,
-                    contentDescription = null,
-                    tint = if (flags.hasNote) MnTheme.streakActiveNote else MnTheme.streakMuted,
-                    modifier = Modifier.size(12.dp),
-                )
-            }
-            if (showPartialIndicator) {
-                Box(
-                    Modifier
-                        .align(Alignment.TopEnd)
-                        .size(6.dp)
-                        .background(
-                            if (state == DayCellState.MEDITATION_ONLY) MnTheme.streakIndicator
-                            else MnTheme.streakActiveNote,
-                            CircleShape,
-                        )
-                )
-            }
-        }
-        Text(
-            weekdayLabel,
-            fontSize = 9.sp,
             fontWeight = FontWeight.Medium,
             color = MnTheme.textSecondary,
         )

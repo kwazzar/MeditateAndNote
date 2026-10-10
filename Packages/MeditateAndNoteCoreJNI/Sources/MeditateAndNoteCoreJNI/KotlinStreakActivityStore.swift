@@ -305,3 +305,125 @@ public func Java_com_mn_android_NativeProbe_streakHeaderProbe(
 
     writeValues(results, to: out, in: environment)
 }
+
+// MARK: - Streak detail (streak detail screen)
+
+/// Shared body of the detail read, so the probe and the JNI entry point cannot
+/// drift: per-day meditation/note timestamps (-1 when that half is missing) plus
+/// the three headline stats.
+func streakDetailFill(
+    days: [Int64],
+    snapshot: StreakSnapshot?
+) -> (med: [Int64], note: [Int64], stats: [Int64]) {
+    var med = [Int64](repeating: -1, count: days.count)
+    var note = [Int64](repeating: -1, count: days.count)
+
+    for (i, millis) in days.enumerated() {
+        let day = Date(timeIntervalSince1970: Double(millis) / 1000.0)
+        guard let activity = snapshot?.activities.first(where: {
+            Calendar.current.isDate($0.date, inSameDayAs: day)
+        }) else { continue }
+        if activity.hasMeditation, let time = activity.meditationTime {
+            med[i] = Int64(time.timeIntervalSince1970 * 1000.0)
+        }
+        if activity.hasNote, let time = activity.noteTime {
+            note[i] = Int64(time.timeIntervalSince1970 * 1000.0)
+        }
+    }
+
+    let stats: [Int64] = [
+        Int64(snapshot?.currentStreak ?? 0),
+        Int64(snapshot?.longestStreak ?? 0),
+        Int64(snapshot?.activities.filter { $0.hasMeditation && $0.hasNote }.count ?? 0),
+    ]
+    return (med, note, stats)
+}
+
+/// Fills the per-day timestamps Kotlin asked for plus `[current, longest, total]`.
+/// Kotlin allocates every buffer; Swift only fills them.
+///
+/// Kotlin side: StreakDetailSource.kt
+@_cdecl("Java_com_mn_android_data_StreakDetailSource_read")
+public func Java_com_mn_android_data_StreakDetailSource_read(
+    environment: UnsafeMutablePointer<JNIEnv?>!,
+    thisClass: jclass,
+    dayStartMillis: jlongArray,
+    medTimeMillis: jlongArray,
+    noteTimeMillis: jlongArray,
+    statsOut: jlongArray
+) {
+    let days = [Int64](fromJNI: dayStartMillis, in: environment)
+    let fill = streakDetailFill(days: days, snapshot: KotlinStreakActivityStore().load())
+    writeValues(fill.med, to: medTimeMillis, in: environment)
+    writeValues(fill.note, to: noteTimeMillis, in: environment)
+    writeValues(fill.stats, to: statsOut, in: environment)
+}
+
+// MARK: - Streak detail probe
+
+/// Writes a known snapshot (yesterday complete with times, two days ago
+/// meditation-only, today clean) and reads it back through the same body the
+/// detail thunk uses.
+///
+/// Results: [0] yesterday meditation time, [1] yesterday note time,
+/// [2] two-days-ago note cleared, [3] today clean, [4] currentStreak,
+/// [5] longestStreak, [6] totalCompleteDays, [7] 1 if a step threw.
+///
+/// Kotlin side: StreakDetailProbe.kt
+@_cdecl("Java_com_mn_android_NativeProbe_streakDetailProbe")
+public func Java_com_mn_android_NativeProbe_streakDetailProbe(
+    environment: UnsafeMutablePointer<JNIEnv?>!,
+    thisClass: jclass,
+    out: jlongArray
+) {
+    let store = KotlinStreakActivityStore()
+    var results = [Int64](repeating: 0, count: 8)
+    let calendar = Calendar.current
+    let today = calendar.startOfDay(for: Date())
+
+    func day(_ offset: Int) -> Date {
+        calendar.date(byAdding: .day, value: -offset, to: today)!
+    }
+
+    do {
+        let medTime = day(1).addingTimeInterval(9 * 3600)
+        let noteTime = day(1).addingTimeInterval(21 * 3600)
+        try store.saveSync(StreakSnapshot(
+            activities: [
+                DailyActivity(
+                    date: day(1),
+                    hasMeditation: true,
+                    hasNote: true,
+                    meditationTime: medTime,
+                    noteTime: noteTime
+                ),
+                DailyActivity(
+                    date: day(2),
+                    hasMeditation: true,
+                    hasNote: false,
+                    meditationTime: day(2)
+                )
+            ],
+            currentStreak: 5,
+            longestStreak: 11
+        ))
+
+        let days = [day(2), day(1), today].map {
+            Int64($0.timeIntervalSince1970 * 1000.0)
+        }
+        let fill = streakDetailFill(days: days, snapshot: store.load())
+
+        results[0] = abs(Double(fill.med[1]) - medTime.timeIntervalSince1970 * 1000.0) < 1000 ? 1 : 0
+        results[1] = abs(Double(fill.note[1]) - noteTime.timeIntervalSince1970 * 1000.0) < 1000 ? 1 : 0
+        results[2] = fill.note[0] == -1 ? 1 : 0
+        results[3] = fill.med[2] == -1 && fill.note[2] == -1 ? 1 : 0
+        results[4] = fill.stats[0] == 5 ? 1 : 0
+        results[5] = fill.stats[1] == 11 ? 1 : 0
+        results[6] = fill.stats[2] == 1 ? 1 : 0
+    } catch {
+        KotlinStreakActivityStore.logProbeFailure(error)
+        results[7] = 1
+    }
+
+    writeValues(results, to: out, in: environment)
+}

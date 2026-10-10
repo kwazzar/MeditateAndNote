@@ -42,4 +42,30 @@
     <string name="allow_notifications_message">Allow notifications to receive reminders</string>
     <string name="show_onboarding_again">Show onboarding again</string>
     <string name="ok">OK</string>
+    <string name="streak">Streak</string>
+    <string name="current">Current</string>
+    <string name="best">Best</string>
+    <string name="total">Total</string>
+    <string name="today">Today</string>
+    <string name="meditation">Meditation</string>
+    <string name="note">Note</string>
+    <string name="done">Done</string>
+    <string name="when_section">When</string>
+    <string name="start_meditation">Start meditation</string>
+    <string name="write_note">Write note</string>
+    <string name="complete_day_meditation">Complete the day with meditation</string>
+    <string name="complete_day_note">Complete the day with a note</string>
+    <string name="missing_meditation_half">A meditation is the missing half of this core day.</string>
+    <string name="missing_note_half">A note is the missing half of this core day.</string>
+    <string name="hint_meditation_only">Tap the Note pill to write today\'s note and complete the day.</string>
+    <string name="hint_note_only">Tap the Meditation pill to meditate and complete the day.</string>
+    <string name="core_day_complete">Core Day complete</string>
+    <string name="meditation_only_title">Meditation done, note missing</string>
+    <string name="note_only_title">Note written, meditation missing</string>
+    <string name="no_activity">No activity</string>
+    <string name="core_day_complete_sub">Both meditation and note are done — this day counts toward your streak.</string>
+    <string name="meditation_only_sub">Write a note today to complete the streak day.</string>
+    <string name="note_only_sub">Meditate today to complete the streak day.</string>
+    <string name="no_activity_sub">Neither a meditation nor a note was logged.</string>
+
 </resources>

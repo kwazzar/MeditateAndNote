@@ -67,6 +67,15 @@ object NativeProbe {
     external fun streakHeaderProbe(out: LongArray)
 
     /**
+     * Exercises the streak-detail read (`StreakDetailSource_read`): Swift writes
+     * a known snapshot (with per-day times), then fills the timestamps and stats
+     * the detail screen asks for. Same out-param rule.
+     *
+     * Swift side: KotlinStreakActivityStore.swift
+     */
+    external fun streakDetailProbe(out: LongArray)
+
+    /**
      * Runs the meditation session round trip through Swift and fills [out] with
      * one flag per check. Same out-param rule as the probes above: the buffer is
      * allocated by Kotlin because Kotlin cannot see Swift replace a reference.

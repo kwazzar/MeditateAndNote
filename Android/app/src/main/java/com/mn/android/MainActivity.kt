@@ -46,6 +46,7 @@ import com.mn.android.ui.meditate.MeditateSelectScreen
 import com.mn.android.ui.notes.NoteEditorScreen
 import com.mn.android.ui.notes.NoteMenuScreen
 import com.mn.android.ui.onboarding.OnboardingScreen
+import com.mn.android.ui.streak.StreakDetailScreen
 import com.mn.android.ui.theme.MnTheme
 
 /**
@@ -168,11 +169,12 @@ private fun MnNav() {
                     onAddNote = { navController.navigate("newNote") },
                 )
             }
-            // Stub destinations: screens exist on iOS but are not ported yet. The
-            // routes keep the tab entries wired end to end; the placeholder body
-            // is replaced when each screen lands.
             composable("streakDetail") {
-                PlaceholderScreen("Streak Detail")
+                StreakDetailScreen(
+                    onBack = { navController.popBackStack() },
+                    onStartMeditation = { navController.navigate("meditate") },
+                    onWriteNote = { navController.navigate("newNote") },
+                )
             }
             composable("settings") {
                 SettingsScreen(
@@ -227,19 +229,3 @@ private val TabBarItems = listOf(
 /** Tab roots only: pushed screens (settings, breathing, editor) go full-screen. */
 private val TabBarRoutes = TabBarItems.map { it.route }.toSet()
 
-/** Placeholder body for not-yet-ported destinations. Replaced per screen. */
-@Composable
-private fun PlaceholderScreen(title: String) {
-    Box(
-        Modifier
-            .fillMaxSize()
-            .background(MnTheme.background),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            title,
-            color = MnTheme.textPrimary,
-            style = MaterialTheme.typography.titleLarge,
-        )
-    }
-}
