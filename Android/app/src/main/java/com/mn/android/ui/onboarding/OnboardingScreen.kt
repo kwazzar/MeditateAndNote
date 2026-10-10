@@ -1,6 +1,5 @@
 package com.mn.android.ui.onboarding
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,14 +34,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.mn.android.ui.theme.MnBackground
 import com.mn.android.ui.theme.MnTheme
 import kotlinx.coroutines.launch
-import kotlin.random.Random
 
 /**
  * The onboarding flow, ported from `OnboardingView` + `OnboardingPageView`.
@@ -64,12 +62,8 @@ fun OnboardingScreen(onCompleted: () -> Unit) {
     val scope = rememberCoroutineScope()
     val isOnLastPage = pagerState.currentPage >= pages.lastIndex
 
-    Box(
-        Modifier
-            .fillMaxSize()
-            .background(MnTheme.background)
-    ) {
-        Starfield(Modifier.fillMaxSize())
+    Box(Modifier.fillMaxSize()) {
+        MnBackground()
 
         Column(
             Modifier
@@ -194,29 +188,8 @@ private fun SlideContent(page: Slide) {
 }
 
 /**
- * `DarkZenStarfield`: 40 fixed-size dots at white 0.08.
- *
- * Positions are generated once per composition, the same way the SwiftUI
- * version generates them in `onAppear` and not on every `body` call — otherwise
- * the stars would jump on each recomposition.
+ * A single onboarding slide: content only, no layout.
  */
-@Composable
-private fun Starfield(modifier: Modifier = Modifier) {
-    val stars = remember {
-        List(40) { Random.nextFloat() to Random.nextFloat() }
-    }
-    Canvas(modifier) {
-        stars.forEach { (x, y) ->
-            drawCircle(
-                color = MnTheme.star,
-                radius = 1.dp.toPx(),
-                center = Offset(x * size.width, y * size.height),
-            )
-        }
-    }
-}
-
-/// A single onboarding slide: content only, no layout.
 private data class Slide(
     val title: String,
     val subtitle: String,

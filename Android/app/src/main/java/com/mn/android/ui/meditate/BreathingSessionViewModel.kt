@@ -9,6 +9,8 @@ import androidx.lifecycle.ViewModel
 import com.mn.android.data.MeditationCatalog
 import com.mn.android.data.MeditationSelection
 import com.mn.android.data.SessionRecorder
+import com.mn.android.sound.MeditationSound
+import com.mn.android.sound.SoundPlayer
 import com.mn.core.BreathingPattern
 import com.mn.core.BreathingStyle
 import com.mn.core.MeditationSessionEngine
@@ -24,8 +26,20 @@ class BreathingSessionViewModel(private val savedStateHandle: SavedStateHandle) 
   val meditationTitle: String = MeditationCatalog.load().firstOrNull { it.id == meditationId }?.title ?: "Meditation"
   val breathingStyle: String = MeditationCatalog.load().firstOrNull { it.id == meditationId }?.breathingStyleRawValue ?: "box"
 
+  /** Flat copy of Core `BreathingPattern.phases` — type discriminator + seconds. */
+  data class Phase(val type: String, val durationSeconds: Double)
+
+  val breathingPhases: List<Phase> = run {
+    val pattern = BreathingStyle.init(breathingStyle, arena)
+      .map { it.getPattern(arena) }
+      .orElseThrow { IllegalArgumentException("Unknown style: $breathingStyle") }
+    pattern.getPhases(arena).map { Phase(it.getType(arena).getDiscriminator().name.lowercase(), it.getDuration()) }
+  }
+
   private val engine = MeditationSessionEngine.init(pattern(), arena)
   private var ticker: HandlerTicker? = null
+  /** Session length, captured at start — the phase index derives from elapsed time. */
+  private var totalSeconds = 0.0
 
   var uiState by androidx.compose.runtime.mutableStateOf<UiState>(UiState.Idle)
     private set
@@ -39,17 +53,13 @@ class BreathingSessionViewModel(private val savedStateHandle: SavedStateHandle) 
       val progress: Float,
       val remainingSeconds: Double,
       val paused: Boolean,
-    ) : UiState()
-    data class Paused(
-      val discriminator: String,
-      val phaseProgress: Double,
-      val progress: Float,
-      val remainingSeconds: Double,
+      val phaseIndex: Int,
     ) : UiState()
     data class Finished(val durationSeconds: Double) : UiState()
   }
 
   fun start(duration: SessionDuration) {
+    totalSeconds = duration.getSeconds()
     engine.start(duration, 3L, Date.fromInstant(Instant.now(), arena), arena)
     ticker = HandlerTicker(intervalMs = 100) { tick() }
     ticker?.start()
@@ -72,7 +82,13 @@ class BreathingSessionViewModel(private val savedStateHandle: SavedStateHandle) 
     snapshot()
   }
 
-  private fun snapshot() { uiState = buildState() }
+  private fun snapshot() {
+    val next = buildState()
+    playCues(lastState, next)
+    lastState = next
+    uiState = next
+  }
+  private var lastState: UiState? = null
   private var tickSecond = 0
 
   private fun tick() {
@@ -99,6 +115,33 @@ class BreathingSessionViewModel(private val savedStateHandle: SavedStateHandle) 
     }
   }
 
+  /**
+   * Sound cues derived from UiState diffs — iOS gets the same cues straight
+   * from `MeditationSessionEngine.Event` in `MeditationViewModel.apply(_:)`;
+   * the jextract port does not surface the event list, so transitions are
+   * diffed at snapshot time instead (≤100 ms late, imperceptible for cues).
+   * Mirrors `apply` exactly: countdown ticks, phase changes, pause/resume,
+   * completion. `stop()` → Idle plays nothing, same as iOS.
+   */
+  private fun playCues(old: UiState?, new: UiState) {
+    if (old is UiState.Countdown && new is UiState.Countdown && new.remaining < old.remaining) {
+      SoundPlayer.play(MeditationSound.COUNTDOWN_TICK)
+    }
+    if (old !is UiState.Active && new is UiState.Active && !new.paused) {
+      SoundPlayer.play(MeditationSound.fromPhase(new.discriminator))
+    }
+    if (old is UiState.Active && new is UiState.Active) {
+      if (new.discriminator != old.discriminator) {
+        SoundPlayer.play(MeditationSound.fromPhase(new.discriminator))
+      }
+      if (!old.paused && new.paused) SoundPlayer.play(MeditationSound.PAUSED)
+      if (old.paused && !new.paused) SoundPlayer.play(MeditationSound.RESUMED)
+    }
+    if (new is UiState.Finished && old !is UiState.Finished) {
+      SoundPlayer.play(MeditationSound.FINISHED)
+    }
+  }
+
   private fun buildState(): UiState {
     val s = engine.getState(arena)
     return when (val c = s.getCase(arena)) {
@@ -117,12 +160,26 @@ class BreathingSessionViewModel(private val savedStateHandle: SavedStateHandle) 
           progress = engine.progress,
           remainingSeconds = c.remaining,
           paused = clock.isPaused(),
+          // iOS reads engine.currentPhaseIndex; jextract does not expose it, so
+          // the index is derived from elapsed time against the phase table —
+          // the same value, because the engine also derives phases from the clock.
+          phaseIndex = phaseIndexFor(elapsed = totalSeconds - c.remaining),
         )
       }
       is MeditationSessionEngine.SessionState.Case.Finished -> UiState.Finished(
         engine.getActiveDuration(arena).map { it.getSeconds() }.orElse(0.0)
       )
     }
+  }
+
+  /** First phase whose cumulative end is past [elapsed] — clamped to the table. */
+  private fun phaseIndexFor(elapsed: Double): Int {
+    var cumulative = 0.0
+    breathingPhases.forEachIndexed { index, phase ->
+      cumulative += phase.durationSeconds
+      if (elapsed < cumulative) return index
+    }
+    return (breathingPhases.size - 1).coerceAtLeast(0)
   }
 
   private fun pattern(): BreathingPattern {

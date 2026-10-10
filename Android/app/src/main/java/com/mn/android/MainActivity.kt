@@ -5,7 +5,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.background
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -20,11 +23,15 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -34,12 +41,19 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import kotlinx.coroutines.delay
 import com.mn.android.R
+import com.mn.android.data.AnimationSettings
+import com.mn.android.data.MeditationSelection
 import com.mn.android.data.NoteBlobStore
 import com.mn.android.data.OnboardingStore
 import com.mn.android.data.SharedPrefsReminderSettingsStore
+import com.mn.android.data.SoundSettings
 import com.mn.android.data.StreakSnapshotStore
+import com.mn.android.notifications.ReminderScheduler
+import com.mn.android.sound.SoundPlayer
 import com.mn.android.ui.home.HomeScreen
+import com.mn.android.ui.launch.LoadingScreen
 import com.mn.android.ui.settings.SettingsScreen
 import com.mn.android.ui.meditate.BreathingScreen
 import com.mn.android.ui.meditate.MeditateSelectScreen
@@ -47,7 +61,9 @@ import com.mn.android.ui.notes.NoteEditorScreen
 import com.mn.android.ui.notes.NoteMenuScreen
 import com.mn.android.ui.onboarding.OnboardingScreen
 import com.mn.android.ui.streak.StreakDetailScreen
+import com.mn.android.ui.theme.MnThemeProvider
 import com.mn.android.ui.theme.MnTheme
+import com.mn.android.ui.theme.rememberMnThemeManager
 
 /**
  * Application shell: the navigation graph, and the start destination switch
@@ -68,20 +84,32 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // darkZen background behind the system bars, so their icons stay
-        // legible instead of inheriting the activity theme's light-mode values.
-        enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.dark(MnTheme.background.toArgb()),
-            navigationBarStyle = SystemBarStyle.dark(MnTheme.background.toArgb()),
-        )
-
         setContent {
-            MaterialTheme {
-                MnNav()
+            val themeManager = rememberMnThemeManager()
+            MaterialTheme(
+                colorScheme = if (themeManager.theme.isDark) darkColorScheme() else lightColorScheme(),
+            ) {
+                MnThemeProvider(themeManager) {
+                    // System-bar icon appearance follows the theme: light icons on
+                    // dark themes, dark icons on light ones. Re-applied per theme
+                    // switch; scrim is transparent so the root background shows.
+                    val colors = MnTheme.colors
+                    LaunchedEffect(colors.isDark) {
+                        enableEdgeToEdge(
+                            statusBarStyle = systemBarStyle(colors.isDark),
+                            navigationBarStyle = systemBarStyle(colors.isDark),
+                        )
+                    }
+                    MnNav()
+                }
             }
         }
     }
 }
+
+private fun systemBarStyle(isDark: Boolean): SystemBarStyle =
+    if (isDark) SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
+    else SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT)
 
 @Composable
 private fun MnNav() {
@@ -94,15 +122,31 @@ private fun MnNav() {
     StreakSnapshotStore.configure(LocalContext.current)
     NoteBlobStore.configure(LocalContext.current)
     SharedPrefsReminderSettingsStore.configure(LocalContext.current)
+    MeditationSelection.configure(LocalContext.current)
+    SoundSettings.configure(LocalContext.current)
+    SoundPlayer.configure(LocalContext.current)
+    AnimationSettings.configure(LocalContext.current)
+    // Re-assert the pending reminder alarms on every launch: idempotent, and
+    // covers anything the boot receiver missed (e.g. updated app process).
+    ReminderScheduler.reschedule(LocalContext.current)
 
     val navController = rememberNavController()
     val startDestination =
         if (OnboardingStore.hasCompletedOnboarding) "home" else "onboarding"
 
+    // Launch loader: shown over onboarding/tabs for 1800 ms, then fades out —
+    // mirrors `RootContainer.scheduleLaunchDismissal` on iOS.
+    var showsLaunch by remember { mutableStateOf(true) }
+    LaunchedEffect(Unit) {
+        delay(1800)
+        showsLaunch = false
+    }
+
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
 
-    Scaffold(
+    Box(Modifier.fillMaxSize()) {
+        Scaffold(
         containerColor = MnTheme.background,
         bottomBar = {
             if (currentRoute in TabBarRoutes) {
@@ -128,11 +172,11 @@ private fun MnNav() {
                             },
                             label = { Text(tab.labelResourceId.let { stringResource(it) }) },
                             colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = MnTheme.textPrimary,
-                                selectedTextColor = MnTheme.textPrimary,
+                                selectedIconColor = MnTheme.accentColor,
+                                selectedTextColor = MnTheme.accentColor,
                                 unselectedIconColor = MnTheme.textSecondary,
                                 unselectedTextColor = MnTheme.textSecondary,
-                                indicatorColor = MnTheme.cardBackground,
+                                indicatorColor = MnTheme.accentColor.copy(alpha = 0.12f),
                             ),
                         )
                     }
@@ -157,7 +201,13 @@ private fun MnNav() {
             }
             composable("home") {
                 HomeScreen(
-                    onMeditate = { navController.navigate("meditate") },
+                    onMeditate = {
+                        // iOS MainView starts the last-picked meditation directly;
+                        // the Meditations tab is where you change it.
+                        val last = MeditationSelection.lastSelectedId
+                        if (last != null) navController.navigate("breathing/$last")
+                        else navController.navigate("meditate")
+                    },
                     onStreakDetail = { navController.navigate("streakDetail") },
                     onSettings = { navController.navigate("settings") },
                     onNewNote = { navController.navigate("newNote") },
@@ -215,15 +265,24 @@ private fun MnNav() {
             }
         }
     }
+
+        AnimatedVisibility(
+            visible = showsLaunch,
+            enter = fadeIn(),
+            exit = fadeOut(tween(450)),
+        ) {
+            LoadingScreen()
+        }
+    }
 }
 
-/** Bottom-bar tabs, mirroring the iOS TabDestination set (home, notes, meditations). */
+/** Bottom-bar tabs, mirroring the iOS `CustomTabBar` order: Notes, Home, Meditations. */
 private data class TabItem(val route: String, val labelResourceId: Int, val icon: ImageVector)
 
 private val TabBarItems = listOf(
-    TabItem("home", R.string.home, Icons.Filled.Home),
     TabItem("notes", R.string.notes, Icons.AutoMirrored.Filled.Notes),
-    TabItem("meditate", R.string.meditate, Icons.Filled.SelfImprovement),
+    TabItem("home", R.string.home, Icons.Filled.Home),
+    TabItem("meditate", R.string.meditations, Icons.Filled.SelfImprovement),
 )
 
 /** Tab roots only: pushed screens (settings, breathing, editor) go full-screen. */

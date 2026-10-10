@@ -30,6 +30,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -39,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mn.android.R
 import com.mn.android.data.NoteEditorSource
+import com.mn.android.ui.theme.MnBackground
 import com.mn.android.ui.theme.MnTheme
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.collectLatest
@@ -120,43 +123,44 @@ fun NoteEditorScreen(
             }
     }
 
-    Column(
-        Modifier
-            .fillMaxSize()
-            .background(MnTheme.background)
-    ) {
-        EditorTopBar(
-            showDelete = !isNewNote,
-            onBack = {
-                performSave()
-                onBack()
-            },
-            onDelete = { showDeleteConfirmation = true },
-        )
-        TitleField(
-            title = title,
-            onTitleChange = { title = it },
-        )
-        HorizontalDivider(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(1.dp),
-            color = MnTheme.divider,
-        )
-        BodyField(
-            body = body,
-            onBodyChange = { body = it },
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
-        )
+    Box(Modifier.fillMaxSize()) {
+        MnBackground()
+        Column(Modifier.fillMaxSize()) {
+            EditorTopBar(
+                showDelete = !isNewNote,
+                onBack = {
+                    performSave()
+                    onBack()
+                },
+                onDelete = { showDeleteConfirmation = true },
+            )
+            TitleField(
+                title = title,
+                onTitleChange = { title = it },
+            )
+            HorizontalDivider(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(1.dp),
+                color = MnTheme.divider,
+            )
+            BodyField(
+                body = body,
+                onBodyChange = { body = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                autoFocus = true, // iOS: isEditorFocused = true on appear
+            )
+        }
     }
 
     if (showDeleteConfirmation) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirmation = false },
-            title = { Text(stringResource(R.string.delete_note_title)) },
-            text = { Text(stringResource(R.string.delete_note_body)) },
+            title = { Text(stringResource(R.string.delete_note_title), color = MnTheme.textPrimary) },
+            text = { Text(stringResource(R.string.delete_note_body), color = MnTheme.textSecondary) },
+            containerColor = MnTheme.background,
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -203,7 +207,7 @@ private fun EditorTopBar(
             Icon(
                 Icons.AutoMirrored.Filled.KeyboardArrowLeft,
                 contentDescription = stringResource(R.string.back),
-                tint = MnTheme.textPrimary,
+                tint = MnTheme.iconPrimary,
             )
         }
         if (showDelete) {
@@ -216,7 +220,7 @@ private fun EditorTopBar(
                 Icon(
                     Icons.Filled.MoreVert,
                     contentDescription = null,
-                    tint = MnTheme.textPrimary,
+                    tint = MnTheme.iconPrimary,
                 )
                 DropdownMenu(
                     expanded = menuExpanded,
@@ -276,7 +280,21 @@ private fun TitleField(title: String, onTitleChange: (String) -> Unit) {
 }
 
 @Composable
-private fun BodyField(body: String, onBodyChange: (String) -> Unit, modifier: Modifier = Modifier) {
+private fun BodyField(
+    body: String,
+    onBodyChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    autoFocus: Boolean = false,
+) {
+    val focusRequester = remember { FocusRequester() }
+    if (autoFocus) {
+        LaunchedEffect(Unit) {
+            // Let the navigation transition settle before stealing focus —
+            // requesting during it drops the request on some API levels.
+            kotlinx.coroutines.delay(250)
+            runCatching { focusRequester.requestFocus() }
+        }
+    }
     TextField(
         value = body,
         onValueChange = onBodyChange,
@@ -296,7 +314,9 @@ private fun BodyField(body: String, onBodyChange: (String) -> Unit, modifier: Mo
             focusedIndicatorColor = Color.Transparent,
             unfocusedIndicatorColor = Color.Transparent,
         ),
-        modifier = modifier.padding(horizontal = 8.dp),
+        modifier = modifier
+            .padding(horizontal = 8.dp)
+            .then(if (autoFocus) Modifier.focusRequester(focusRequester) else Modifier),
     )
 }
 
