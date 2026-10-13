@@ -27,6 +27,7 @@ struct SettingsView: View {
 
             ScrollView {
                 VStack(spacing: 20) {
+                    SubscriptionSection(container: container)
                     ReminderSettingsSection(manager: reminderManager)
                     animationSection
                     themeSection

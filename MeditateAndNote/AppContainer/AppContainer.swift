@@ -28,6 +28,7 @@ final class AppContainer: @unchecked Sendable {
     private lazy var meditation = MeditationScope()
     private lazy var search = SearchScope()
     private lazy var settings = SettingsScope()
+    @MainActor private lazy var subscription = SubscriptionScope(eventBus: eventBus)
 
     // MARK: - Core
 
@@ -43,6 +44,10 @@ final class AppContainer: @unchecked Sendable {
     @MainActor private lazy var noteMenuViewModel = NoteMenuViewModel(notes: notes.manager)
     @MainActor private lazy var noteInsightsViewModel = NoteInsightsViewModel(provider: notes.insightManager, eventBus: eventBus)
     @MainActor private lazy var aiSettingsStore = AIDraftSettingsStoreObservable()
+    @MainActor private lazy var subscriptionViewModel = SubscriptionViewModel(
+        providable: subscription.manager,
+        manageable: subscription.manager
+    )
 
     /// Cached for the same reason as `noteMenuViewModel`: these are created
     /// inside `RootContainer.mainTabBar`, which SwiftUI re-evaluates on every
@@ -145,12 +150,23 @@ final class AppContainer: @unchecked Sendable {
         InsightsViewModel(manager: streak.insightManager)
     }
 
+    @MainActor
+    func makeSubscriptionViewModel() -> SubscriptionViewModel {
+        subscriptionViewModel
+    }
+
+    @MainActor
+    func makePaywallViewModel() -> PaywallViewModel {
+        PaywallViewModel(providable: subscription.manager, manageable: subscription.manager)
+    }
+
     // MARK: - Forwarding (kept so existing call sites don't change)
 
     var streakTracker: StreakTracker { streak.streakTracker }
     var insightManager: StreakInsightManager { streak.insightManager }
     var meditationSessionStore: CoreDataSessionStore { meditation.store }
     var reminderManager: ReminderManager { settings.reminderManager }
+    @MainActor var subscriptionManager: SubscriptionManager { subscription.manager }
     @MainActor var soundSettings: SoundSettings { settings.soundSettings }
     @MainActor var animationSettings: AnimationSettings { settings.animationSettings }
     var onboardingStore: any OnboardingStore { settings.onboardingStore }

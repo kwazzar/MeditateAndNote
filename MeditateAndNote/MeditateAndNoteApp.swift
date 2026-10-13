@@ -22,6 +22,7 @@ struct MeditateAndNoteApp: App {
                 .environment(container.streakTracker)
                 .environment(container.meditationSessionStore)
                 .environment(container.reminderManager)
+                .environment(container.subscriptionManager)
         }
     }
 }

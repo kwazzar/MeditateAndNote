@@ -19,7 +19,7 @@ struct StreakScope: DomainEventRouting {
         switch event {
         case .noteCreated, .noteUpdated, .noteDeleted, .meditationCompleted:
             return true
-        case .aiDraftGenerated, .aiDraftMetric, .noteInsightsUpdated:
+        case .aiDraftGenerated, .aiDraftMetric, .noteInsightsUpdated, .subscriptionChanged:
             return false
         }
     }

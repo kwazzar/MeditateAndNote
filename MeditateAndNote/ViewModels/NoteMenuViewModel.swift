@@ -89,7 +89,7 @@ private extension NoteMenuViewModel {
                 switch event {
                 case .noteCreated, .noteUpdated, .noteDeleted:
                     await self.loadNotes()
-                case .meditationCompleted, .aiDraftGenerated, .aiDraftMetric, .noteInsightsUpdated:
+                case .meditationCompleted, .aiDraftGenerated, .aiDraftMetric, .noteInsightsUpdated, .subscriptionChanged:
                     break
                 }
             }

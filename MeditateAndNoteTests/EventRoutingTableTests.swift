@@ -35,6 +35,9 @@ final class EventRoutingTableTests: XCTestCase {
             // Published BY NoteInsightManager, consumed only by
             // NoteInsightsViewModel's own bus subscription. No scope mutates.
             (.noteInsightsUpdated([note.id]), []),
+            // Published by SubscriptionManager; observed via the injected
+            // manager, not via a container scope. No scope reacts.
+            (.subscriptionChanged(.none), []),
         ]
     }
 
