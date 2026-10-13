@@ -28,6 +28,7 @@ final class AppContainer: @unchecked Sendable {
     private lazy var meditation = MeditationScope()
     private lazy var search = SearchScope()
     private lazy var settings = SettingsScope()
+    @MainActor private lazy var subscription = SubscriptionScope(eventBus: eventBus)
 
     // MARK: - Core
 
@@ -151,6 +152,7 @@ final class AppContainer: @unchecked Sendable {
     var insightManager: StreakInsightManager { streak.insightManager }
     var meditationSessionStore: CoreDataSessionStore { meditation.store }
     var reminderManager: ReminderManager { settings.reminderManager }
+    @MainActor var subscriptionManager: SubscriptionManager { subscription.manager }
     @MainActor var soundSettings: SoundSettings { settings.soundSettings }
     @MainActor var animationSettings: AnimationSettings { settings.animationSettings }
     var onboardingStore: any OnboardingStore { settings.onboardingStore }

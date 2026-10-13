@@ -69,10 +69,14 @@ struct RootContainer: View {
         // Системні матеріали (.ultraThinMaterial), пікери та шити йдуть за MainTheme, а не за системною темою.
         .preferredColorScheme(themeManager.current.colorScheme)
         .onAppear(perform: scheduleLaunchDismissal)
+        .task(priority: .background) {
+            await container.subscriptionManager.refresh()
+        }
         .onChange(of: scenePhase) { _, phase in
             guard phase == .active else { return }
             Task { @MainActor in
                 await streakTracker.refreshStreakState()
+                await container.subscriptionManager.refresh()
             }
         }
     }

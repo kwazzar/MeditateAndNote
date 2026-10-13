@@ -66,6 +66,7 @@
 		8E5CBDD277B7DA1853A68928 /* AIDraftServiceFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACED283CF7A40C96B22C4762 /* AIDraftServiceFactory.swift */; };
 		9414F43A02C8DE85C7C63141 /* SubscriptionTrustBoundaryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB278CA85A8A08AA8D4832BF /* SubscriptionTrustBoundaryTests.swift */; };
 		992C2F67A6302B0D79342F66 /* MeditationCompletionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 648FE2FCBB1DD6E50BB5E61E /* MeditationCompletionView.swift */; };
+		9FE3E54A6BC4A9FBE3A9370A /* SubscriptionScope.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52CE05838801262E64D016E6 /* SubscriptionScope.swift */; };
 		A0A8F180B9F04563AF2BC042 /* NoteInsightsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 752F419E4E3F4F8E97054D73 /* NoteInsightsViewModel.swift */; };
 		A0A8F180B9F04563AF2BC043 /* NoteInsightsViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D4FAD89241840CD80A66785EC23C74E /* NoteInsightsViewModelTests.swift */; };
 		A1B2C3D4E5F6000000000001 /* LoadingScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000000000002 /* LoadingScreenView.swift */; };
@@ -215,6 +216,7 @@
 		441E68DB04904AA091E7274B /* NoteInsightTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteInsightTests.swift; sourceTree = "<group>"; };
 		44A99826A1EEEB59657443E1 /* ReminderSettingsSection.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReminderSettingsSection.swift; sourceTree = "<group>"; };
 		4B42F20B28984B1B9C38B36E /* EventLoopCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventLoopCoordinator.swift; sourceTree = "<group>"; };
+		52CE05838801262E64D016E6 /* SubscriptionScope.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SubscriptionScope.swift; path = MeditateAndNote/AppContainer/SubscriptionScope.swift; sourceTree = SOURCE_ROOT; };
 		5580C4CB0C0B4EAEA4EEBF2D /* AIDraftScope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIDraftScope.swift; sourceTree = "<group>"; };
 		5A72FA331773BF74CB36DE28 /* RevenueCatPurchasesService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = RevenueCatPurchasesService.swift; path = MeditateAndNote/Services/Subscriptions/RevenueCatPurchasesService.swift; sourceTree = SOURCE_ROOT; };
 		5AF6A1460BA24AA596E512D2 /* MeditateSelectViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MeditateSelectViewModelTests.swift; sourceTree = "<group>"; };
@@ -407,6 +409,14 @@
 			);
 			path = AI;
 			sourceTree = "<group>";
+		};
+		5BA624651C6565834910DA0F /* AppContainer */ = {
+			isa = PBXGroup;
+			children = (
+				52CE05838801262E64D016E6 /* SubscriptionScope.swift */,
+			);
+			name = AppContainer;
+			sourceTree = SOURCE_ROOT;
 		};
 		770BD5CF7108D30ECBDDDECE /* Support */ = {
 			isa = PBXGroup;
@@ -691,6 +701,7 @@
 				AA0000112026090400000001 /* MeditateAndNoteUITests */,
 				0EEA7F0B964B44473B85820A /* Subscriptions */,
 				770BD5CF7108D30ECBDDDECE /* Support */,
+				5BA624651C6565834910DA0F /* AppContainer */,
 			);
 			sourceTree = "<group>";
 		};
@@ -1120,6 +1131,7 @@
 				56E4DD50F699B80FD4FC0261 /* UserDefaultsSubscriptionCache.swift in Sources */,
 				EB1A5636420FDC4D24E9F8F0 /* SubscriptionManager.swift in Sources */,
 				4E8FC16521B9F753037C63D1 /* RevenueCatPurchasesService.swift in Sources */,
+				9FE3E54A6BC4A9FBE3A9370A /* SubscriptionScope.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
