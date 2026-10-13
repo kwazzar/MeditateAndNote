@@ -21,7 +21,7 @@ struct MeditationScope: DomainEventRouting {
         switch event {
         case .meditationCompleted:
             return true
-        case .noteCreated, .noteUpdated, .noteDeleted, .aiDraftGenerated, .aiDraftMetric, .noteInsightsUpdated:
+        case .noteCreated, .noteUpdated, .noteDeleted, .aiDraftGenerated, .aiDraftMetric, .noteInsightsUpdated, .subscriptionChanged:
             return false
         }
     }

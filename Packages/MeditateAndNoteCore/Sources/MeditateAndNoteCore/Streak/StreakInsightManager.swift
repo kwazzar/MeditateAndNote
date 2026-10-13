@@ -127,7 +127,7 @@ public final class StreakInsightManager: StreakInsightProvidable {
         switch event {
         case .noteCreated, .meditationCompleted:
             invalidateCache()
-        case .noteUpdated, .noteDeleted, .aiDraftGenerated, .aiDraftMetric, .noteInsightsUpdated:
+        case .noteUpdated, .noteDeleted, .aiDraftGenerated, .aiDraftMetric, .noteInsightsUpdated, .subscriptionChanged:
             break
         }
     }

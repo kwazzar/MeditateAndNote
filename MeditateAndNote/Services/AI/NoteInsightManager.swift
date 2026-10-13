@@ -146,7 +146,7 @@ final actor NoteInsightManager: NoteInsightProvidable, NoteInsightManageable {
             pendingTask?.cancel()
             pendingTask = nil
             await deleteInsights(for: noteID)
-        case .meditationCompleted, .aiDraftGenerated, .aiDraftMetric, .noteInsightsUpdated:
+        case .meditationCompleted, .aiDraftGenerated, .aiDraftMetric, .noteInsightsUpdated, .subscriptionChanged:
             break
         }
     }
