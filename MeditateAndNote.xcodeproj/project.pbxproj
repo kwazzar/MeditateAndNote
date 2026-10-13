@@ -155,6 +155,7 @@
 		OB0100050000000000000005 /* OnboardingCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0000050000000000000005 /* OnboardingCoordinator.swift */; };
 		OB0100070000000000000007 /* OnboardingViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0000070000000000000007 /* OnboardingViewModelTests.swift */; };
 		AA0000102026091000000003 /* MeditateAndNoteCore in Frameworks */ = {isa = PBXBuildFile; productRef = AA0000102026091000000002 /* MeditateAndNoteCore */; };
+		RC0000102026101300000001 /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = RC0000102026101300000002 /* RevenueCat */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -347,6 +348,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				AA0000102026091000000003 /* MeditateAndNoteCore in Frameworks */,
+				RC0000102026101300000001 /* RevenueCat in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -823,6 +825,7 @@
 			isa = PBXNativeTarget;
 			packageProductDependencies = (
 				AA0000102026091000000002 /* MeditateAndNoteCore */,
+				RC0000102026101300000002 /* RevenueCat */,
 			);
 			buildConfigurationList = E36187792D68B223000E326D /* Build configuration list for PBXNativeTarget "MeditateAndNote" */;
 			buildPhases = (
@@ -873,6 +876,7 @@
 			mainGroup = E36187622D68B221000E326D;
 			packageReferences = (
 				AA0000102026091000000001 /* XCLocalSwiftPackageReference "Packages/MeditateAndNoteCore" */,
+				RC0000102026101300000003 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */,
 			);
 			productRefGroup = E361876C2D68B221000E326D /* Products */;
 			projectDirPath = "";
@@ -886,6 +890,14 @@
 		AA0000102026091000000001 /* XCLocalSwiftPackageReference "Packages/MeditateAndNoteCore" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/MeditateAndNoteCore;
+		};
+		RC0000102026101300000003 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/RevenueCat/purchases-ios-spm.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.0.0;
+			};
 		};
 /* End PBXProject section */
 
@@ -1388,6 +1400,11 @@
 		AA0000102026091000000002 /* MeditateAndNoteCore */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = MeditateAndNoteCore;
+		};
+		RC0000102026101300000002 /* RevenueCat */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = RC0000102026101300000003 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;
+			productName = RevenueCat;
 		};
 /* End XCBuildConfiguration section */
 
