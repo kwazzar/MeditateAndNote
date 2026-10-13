@@ -3,12 +3,15 @@ import MeditateAndNoteCore
 
 /// Shared subscription test doubles used by SubscriptionManagerTests,
 /// SubscriptionTrustBoundaryTests, SubscriptionViewModelTests, PaywallViewModelTests.
-final class MockSubscriptionService: SubscriptionManaging, @unchecked Sendable {
+@MainActor
+final class MockSubscriptionService: SubscriptionManaging {
     var isConfigured = true
     var nextStatus: SubscriptionStatus = .none
     var offeringsToReturn: [SubscriptionOffering] = []
     var purchaseResult: Result<SubscriptionStatus, Error> = .success(.none)
     var restoreError: Error?
+    /// When true, `refresh()` reports "could not determine" (nil) — simulates offline.
+    var refreshFails = false
 
     func offerings() async throws -> [SubscriptionOffering] { offeringsToReturn }
 
@@ -24,7 +27,7 @@ final class MockSubscriptionService: SubscriptionManaging, @unchecked Sendable {
         return nextStatus
     }
 
-    func refresh() async -> SubscriptionStatus { nextStatus }
+    func refresh() async -> SubscriptionStatus? { refreshFails ? nil : nextStatus }
 }
 
 struct MemorySubscriptionCache: SubscriptionCache {

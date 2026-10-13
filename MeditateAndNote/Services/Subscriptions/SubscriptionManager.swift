@@ -15,7 +15,8 @@ import Observation
 /// overwrites it. An unconfigured service never grants an entitlement, even if
 /// the cache claims one.
 @Observable
-final class SubscriptionManager: SubscriptionProvidable, SubscriptionManageable, @unchecked Sendable {
+@MainActor
+final class SubscriptionManager: SubscriptionProvidable, SubscriptionManageable {
     private let service: any SubscriptionManaging
     private let cache: any SubscriptionCache
     private let eventBus: any DomainEventPublisher
@@ -43,14 +44,18 @@ final class SubscriptionManager: SubscriptionProvidable, SubscriptionManageable,
     }
 
     @discardableResult
-    func refresh() async -> SubscriptionStatus {
-        let fresh = await service.refresh()
-        apply(fresh)
+    func refresh() async -> SubscriptionStatus? {
+        // `nil` = provider could not report (offline, no cache): keep last-known
+        // status rather than optimistically downgrading a paying user.
+        if let fresh = await service.refresh() {
+            apply(fresh)
+        }
         return status
     }
 
     @discardableResult
     func purchase(_ package: SubscriptionPackage) async throws -> SubscriptionStatus {
+        guard service.isConfigured else { throw SubscriptionOperationError.notConfigured }
         let purchased = try await service.purchase(package)
         apply(purchased)
         return purchased
@@ -58,6 +63,7 @@ final class SubscriptionManager: SubscriptionProvidable, SubscriptionManageable,
 
     @discardableResult
     func restore() async throws -> SubscriptionStatus {
+        guard service.isConfigured else { throw SubscriptionOperationError.notConfigured }
         let restored = try await service.restore()
         apply(restored)
         return restored

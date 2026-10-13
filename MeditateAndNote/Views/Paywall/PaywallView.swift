@@ -12,7 +12,12 @@ struct PaywallView: View {
     @Environment(ThemeManager.self) private var themeManager
     @Environment(\.dismiss) private var dismiss
 
-    @State private var viewModel: PaywallViewModel?
+    @State private var viewModel: PaywallViewModel
+
+    init(container: AppContainer) {
+        self.container = container
+        _viewModel = State(initialValue: container.makePaywallViewModel())
+    }
 
     private struct Benefit: Identifiable {
         let id = UUID()
@@ -31,22 +36,13 @@ struct PaywallView: View {
         ZStack {
             themeManager.current.mainBackground.ignoresSafeArea()
 
-            Group {
-                if let viewModel {
-                    content(viewModel)
-                }
-            }
+            content(viewModel)
         }
-        .onAppear {
-            if viewModel == nil {
-                viewModel = container.makePaywallViewModel()
-            }
-        }
-        .onChange(of: viewModel?.isPremium) { _, isPremium in
-            if isPremium == true { dismiss() }
+        .onChange(of: viewModel.isPremium) { _, isPremium in
+            if isPremium { dismiss() }
         }
         .task {
-            await viewModel?.load()
+            await viewModel.load()
         }
     }
 

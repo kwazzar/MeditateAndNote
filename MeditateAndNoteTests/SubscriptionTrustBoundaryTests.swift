@@ -31,19 +31,34 @@ final class SubscriptionTrustBoundaryTests: XCTestCase {
         XCTAssertFalse(manager.isPremium)
     }
 
-    func test_refreshFailureKeepsLastKnownStatus() async {
-        // Network failure on refresh → keep last-known state, no crash, no false grant.
+    func test_refreshFailureKeepsLastKnownPremium() async {
+        // A paying user goes offline: the provider can't report (nil), so the
+        // manager must keep the last-known status, never downgrade to free.
         let service = MockSubscriptionService()
-        service.nextStatus = .none
+        service.nextStatus = pro()
 
-        let manager = SubscriptionManager(service: service, cache: MemorySubscriptionCache(pro()), eventBus: DomainEventBus())
-        let original = manager.status
+        let manager = SubscriptionManager(service: service, cache: MemorySubscriptionCache(.none), eventBus: DomainEventBus())
 
-        // Simulate an RC outage: a service that can't refresh would return .none
-        // only after a server-verified result; here we assert the fallback path
-        // keeps the last status rather than assuming premium on error.
+        _ = await manager.refresh() // provider reports pro
+        XCTAssertTrue(manager.isPremium)
+
+        service.refreshFails = true // offline / cannot determine
         _ = await manager.refresh()
-        XCTAssertNotEqual(manager.isPremium, true, "refresh must never optimistically grant")
-        _ = original
+        XCTAssertTrue(manager.isPremium, "offline refresh must not drop premium")
+    }
+
+    func test_purchaseWhenUnconfiguredThrowsNotConfigured() async {
+        let service = MockSubscriptionService()
+        service.isConfigured = false
+        let manager = SubscriptionManager(service: service, cache: MemorySubscriptionCache(.none), eventBus: DomainEventBus())
+
+        do {
+            _ = try await manager.purchase(SubscriptionPackage(id: "p", title: "t", priceString: "$1"))
+            XCTFail("purchase should throw when unconfigured")
+        } catch let error as SubscriptionOperationError {
+            XCTAssertEqual(error, .notConfigured)
+        } catch {
+            XCTFail("unexpected error: \(error)")
+        }
     }
 }

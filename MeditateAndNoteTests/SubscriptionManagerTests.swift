@@ -18,7 +18,7 @@ final class SubscriptionManagerTests: XCTestCase {
         XCTAssertTrue(manager.isPremium) // cache-first
 
         let changed = await manager.refresh()
-        XCTAssertTrue(changed.isActive(.pro))
+        XCTAssertEqual(changed?.isActive(.pro), true)
         XCTAssertEqual(cache.load(), pro()) // cache overwritten by RC result
     }
 

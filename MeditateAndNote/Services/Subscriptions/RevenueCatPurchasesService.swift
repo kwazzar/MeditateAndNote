@@ -13,6 +13,7 @@ import RevenueCat
 /// Trust model: this is the sole grant authority. Every answer comes from
 /// `CustomerInfo` as reported by RevenueCat; the app never decides it is
 /// entitled on its own.
+@MainActor
 struct RevenueCatPurchasesService: SubscriptionManaging {
     let isConfigured: Bool
     private let proEntitlementID: String
@@ -23,8 +24,10 @@ struct RevenueCatPurchasesService: SubscriptionManaging {
     }
 
     /// Configures the RevenueCat SDK (once) and returns a service bound to it.
+    /// An empty key leaves the SDK unconfigured so every call degrades to
+    /// `notConfigured` instead of hitting RevenueCat's `Purchases.shared` fatal.
     static func configure(apiKey: String, proEntitlementID: String) -> RevenueCatPurchasesService {
-        if !Purchases.isConfigured {
+        if !apiKey.isEmpty, !Purchases.isConfigured {
             Purchases.configure(withAPIKey: apiKey)
         }
         return RevenueCatPurchasesService(isConfigured: Purchases.isConfigured, proEntitlementID: proEntitlementID)
@@ -66,10 +69,13 @@ struct RevenueCatPurchasesService: SubscriptionManaging {
         }
     }
 
-    func refresh() async -> SubscriptionStatus {
-        guard isConfigured else { return .none }
-        let info = try? await Purchases.shared.customerInfo(fetchPolicy: .fetchCurrent)
-        guard let info else { return .none }
+    func refresh() async -> SubscriptionStatus? {
+        guard isConfigured else { return nil }
+        // `.cachedOrFetched` returns cached data when offline, so a paying user
+        // keeps their status; only a true unknown (no cache, no network) is nil.
+        guard let info = try? await Purchases.shared.customerInfo(fetchPolicy: .cachedOrFetched) else {
+            return nil
+        }
         return Self.map(info, proEntitlementID: proEntitlementID)
     }
 
