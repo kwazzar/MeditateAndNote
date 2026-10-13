@@ -1,5 +1,7 @@
 package com.mn.android.ui.streak
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -32,9 +34,16 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -58,8 +67,16 @@ import java.util.Locale
  */
 @Composable
 internal fun WeekdayHeatmapView(data: Heatmap) {
+    // iOS appear animation: columns scale up from the bottom, staggered.
+    var appeared by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { appeared = true }
     Row {
-        data.days.forEach { day ->
+        data.days.forEachIndexed { index, day ->
+            val appear by animateFloatAsState(
+                targetValue = if (appeared) 1f else 0f,
+                animationSpec = tween(300, delayMillis = index * 50),
+                label = "appear$index",
+            )
             Column(
                 Modifier.weight(1f),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -70,6 +87,11 @@ internal fun WeekdayHeatmapView(data: Heatmap) {
                         .fillMaxWidth()
                         .padding(horizontal = 2.dp)
                         .height(32.dp)
+                        .graphicsLayer(
+                            scaleY = appear,
+                            alpha = appear,
+                            transformOrigin = TransformOrigin(0.5f, 1f),
+                        )
                         .background(rateColor(day.completionRate), RoundedCornerShape(4.dp)),
                     contentAlignment = Alignment.Center,
                 ) {

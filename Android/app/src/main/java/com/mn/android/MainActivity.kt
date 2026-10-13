@@ -11,7 +11,9 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.Home
@@ -32,7 +34,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -150,35 +154,48 @@ private fun MnNav() {
         containerColor = MnTheme.background,
         bottomBar = {
             if (currentRoute in TabBarRoutes) {
-                NavigationBar(
-                    containerColor = MnTheme.background,
-                    tonalElevation = 0.dp,
+                // iOS CustomTabBar container: maxWidth 480 in landscape,
+                // centered (RootContainer.mainTabBar).
+                val landscape = LocalConfiguration.current.orientation ==
+                    android.content.res.Configuration.ORIENTATION_LANDSCAPE
+                Box(
+                    if (landscape) Modifier.fillMaxWidth() else Modifier
                 ) {
-                    TabBarItems.forEach { tab ->
-                        val selected = currentRoute == tab.route
-                        NavigationBarItem(
-                            selected = selected,
-                            onClick = {
-                                navController.navigate(tab.route) {
-                                    popUpTo(navController.graph.findStartDestination().id) {
-                                        saveState = true
+                    NavigationBar(
+                        containerColor = MnTheme.background,
+                        tonalElevation = 0.dp,
+                        modifier = if (landscape) {
+                            Modifier
+                                .align(Alignment.Center)
+                                .width(480.dp)
+                        } else Modifier,
+                    ) {
+                        TabBarItems.forEach { tab ->
+                            val selected = currentRoute == tab.route
+                            NavigationBarItem(
+                                selected = selected,
+                                onClick = {
+                                    navController.navigate(tab.route) {
+                                        popUpTo(navController.graph.findStartDestination().id) {
+                                            saveState = true
+                                        }
+                                        launchSingleTop = true
+                                        restoreState = true
                                     }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            },
-                            icon = {
-                                Icon(tab.icon, contentDescription = null)
-                            },
-                            label = { Text(tab.labelResourceId.let { stringResource(it) }) },
-                            colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = MnTheme.accentColor,
-                                selectedTextColor = MnTheme.accentColor,
-                                unselectedIconColor = MnTheme.textSecondary,
-                                unselectedTextColor = MnTheme.textSecondary,
-                                indicatorColor = MnTheme.accentColor.copy(alpha = 0.12f),
-                            ),
-                        )
+                                },
+                                icon = {
+                                    Icon(tab.icon, contentDescription = null)
+                                },
+                                label = { Text(tab.labelResourceId.let { stringResource(it) }) },
+                                colors = NavigationBarItemDefaults.colors(
+                                    selectedIconColor = MnTheme.accentColor,
+                                    selectedTextColor = MnTheme.accentColor,
+                                    unselectedIconColor = MnTheme.textSecondary,
+                                    unselectedTextColor = MnTheme.textSecondary,
+                                    indicatorColor = MnTheme.accentColor.copy(alpha = 0.12f),
+                                ),
+                            )
+                        }
                     }
                 }
             }

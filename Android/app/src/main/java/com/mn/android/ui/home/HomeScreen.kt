@@ -31,6 +31,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -83,6 +84,9 @@ fun HomeScreen(
         }
 
         MeditateHero(
+            // iOS MainView: .scaleEffect(isLandscape ? 0.7 : 1)
+            scale = if (LocalConfiguration.current.orientation ==
+                android.content.res.Configuration.ORIENTATION_LANDSCAPE) 0.7f else 1f,
             modifier = Modifier
                 .align(Alignment.Center)
                 .clickable(onClick = onMeditate),

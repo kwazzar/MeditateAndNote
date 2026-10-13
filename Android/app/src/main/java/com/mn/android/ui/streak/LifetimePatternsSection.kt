@@ -1,5 +1,7 @@
 package com.mn.android.ui.streak
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,8 +21,14 @@ import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -65,6 +73,10 @@ private fun StreakDistributionCard(bundle: Bundle) {
     val distribution = bundle.distribution
     val maxCount = (distribution.buckets.maxOfOrNull { it.count } ?: 1).coerceAtLeast(1)
 
+    // iOS appear animation: rows fade in, bars grow, staggered by 0.05s.
+    var appeared by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { appeared = true }
+
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(
@@ -82,8 +94,17 @@ private fun StreakDistributionCard(bundle: Bundle) {
         }
 
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            distribution.buckets.forEach { bucket ->
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            distribution.buckets.forEachIndexed { index, bucket ->
+                val appear by animateFloatAsState(
+                    targetValue = if (appeared) 1f else 0f,
+                    animationSpec = tween(300, delayMillis = index * 50),
+                    label = "dist$index",
+                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.graphicsLayer(alpha = appear),
+                ) {
                     Text(
                         bucket.label,
                         fontSize = 11.sp,
@@ -99,7 +120,7 @@ private fun StreakDistributionCard(bundle: Bundle) {
                     ) {
                         Box(
                             Modifier
-                                .fillMaxWidth(bucket.count.toFloat() / maxCount)
+                                .fillMaxWidth(bucket.count.toFloat() / maxCount * appear)
                                 .height(8.dp)
                                 .background(MnTheme.accentButton, RoundedCornerShape(50)),
                         )
@@ -204,6 +225,9 @@ private fun StatTile(label: String, value: String, unit: String?, modifier: Modi
 
 @Composable
 private fun BreakPatternCard(heatmap: com.mn.android.data.StreakInsightsSource.Heatmap) {
+    var appeared by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { appeared = true }
+
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(
@@ -221,8 +245,17 @@ private fun BreakPatternCard(heatmap: com.mn.android.data.StreakInsightsSource.H
         }
 
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            heatmap.days.forEach { day ->
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            heatmap.days.forEachIndexed { index, day ->
+                val appear by animateFloatAsState(
+                    targetValue = if (appeared) 1f else 0f,
+                    animationSpec = tween(300, delayMillis = index * 50),
+                    label = "break$index",
+                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.graphicsLayer(alpha = appear),
+                ) {
                     Text(
                         day.name,
                         fontSize = 11.sp,
@@ -238,7 +271,7 @@ private fun BreakPatternCard(heatmap: com.mn.android.data.StreakInsightsSource.H
                     ) {
                         Box(
                             Modifier
-                                .fillMaxWidth(day.breakRate.toFloat().coerceIn(0f, 1f))
+                                .fillMaxWidth(day.breakRate.toFloat().coerceIn(0f, 1f) * appear)
                                 .height(8.dp)
                                 .background(MnTheme.danger, RoundedCornerShape(50)),
                         )

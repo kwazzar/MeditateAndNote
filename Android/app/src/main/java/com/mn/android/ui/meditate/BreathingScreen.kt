@@ -49,6 +49,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -254,14 +255,35 @@ private fun BreathContent(
             color = MnTheme.textSecondary,
         )
         Spacer(Modifier.height(8.dp))
-        // iOS `MeditationView.breathingAnimation(size:)` switch, same two styles.
-        if (AnimationSettings.style == AnimationSettings.RINGS) {
-            BreathingRings(discriminator, phaseProgress)
+        // iOS MeditationView.landscapeLayout: animation + progress in one
+        // HStack (spaced 32), centered; portrait keeps the column.
+        val landscape = LocalConfiguration.current.orientation ==
+            android.content.res.Configuration.ORIENTATION_LANDSCAPE
+        if (landscape) {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+            ) {
+                if (AnimationSettings.style == AnimationSettings.RINGS) {
+                    BreathingRings(discriminator, phaseProgress)
+                } else {
+                    BreathingPathView(phases = phases, phaseIndex = phaseIndex, phaseProgress = phaseProgress)
+                }
+                Spacer(Modifier.width(32.dp))
+                ProgressBar(progress = progress, modifier = Modifier.width(160.dp))
+            }
         } else {
-            BreathingPathView(phases = phases, phaseIndex = phaseIndex, phaseProgress = phaseProgress)
+            if (AnimationSettings.style == AnimationSettings.RINGS) {
+                BreathingRings(discriminator, phaseProgress)
+            } else {
+                BreathingPathView(phases = phases, phaseIndex = phaseIndex, phaseProgress = phaseProgress)
+            }
+            Spacer(Modifier.height(16.dp))
+            ProgressBar(progress = progress)
         }
-        Spacer(Modifier.height(16.dp))
-        ProgressBar(progress = progress)
         Spacer(Modifier.height(16.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             Button(
@@ -320,8 +342,8 @@ private fun BreathingRings(discriminator: String, phaseProgress: Double) {
 }
 
 @Composable
-private fun ProgressBar(progress: Float) {
-    Box(Modifier.fillMaxWidth().height(12.dp).background(MnTheme.cardBackground)) {
+private fun ProgressBar(progress: Float, modifier: Modifier = Modifier) {
+    Box(modifier.fillMaxWidth().height(12.dp).background(MnTheme.cardBackground)) {
         Box(
             Modifier.fillMaxWidth(progress.coerceIn(0f, 1f)).height(12.dp)
                 .background(MnTheme.streakActiveNote),
