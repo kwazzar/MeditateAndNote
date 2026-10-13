@@ -131,8 +131,11 @@ Hard rules preserved:
 
 - Add `purchases-ios` (RevenueCat, v5) as an SPM dependency to the **app target
   only** in `MeditateAndNote.xcodeproj`. `MeditateAndNoteCore` stays SDK-free.
-- `Config.revenueCatAPIKey` reads `REVENUECAT_API_KEY` from `Info.plist`,
-  defaulted from a gitignored `.xcconfig` so no secret is committed.
+- `Config.revenueCatAPIKey` (public RevenueCat SDK key — safe to ship, not a
+  secret) and `Config.proEntitlementID` are constants in `Config.swift`. The
+  app uses `GENERATE_INFOPLIST_FILE`, so no Info.plist/xcconfig plumbing is
+  needed; a committed example key is replaced with the real one at integration
+  time.
 - Entitlement/product identifiers are constants in one place (config), not
   scattered.
 
