@@ -10,6 +10,7 @@
 		01028B003F0E4B6097568B82 /* RemoteLLMDraftServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A78650882AD04E53917624CF /* RemoteLLMDraftServiceTests.swift */; };
 		096B78E3E88B87EA5E3E59B7 /* UserDefaultsReminderSettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1C20BEA552DE5FA2D6680E4 /* UserDefaultsReminderSettingsStore.swift */; };
 		1319DD5B5051A8A4C9C10470 /* ReminderManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA2A9BB90A0B40656AE57601 /* ReminderManager.swift */; };
+		1A7AFC26A1BAB5C9AA2CCD86 /* SubscriptionStatusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1489C105D1E21FC347D63B81 /* SubscriptionStatusTests.swift */; };
 		1C94BF41D8074EC99AAD8F36 /* MeditationScope.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6031996A773F475FABDBA7E1 /* MeditationScope.swift */; };
 		28A91B1F7276A0017B93246A /* AIDraftManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07F5E247FA129DC74064AF00 /* AIDraftManagerTests.swift */; };
 		2FB6ECE237A74E428A0DFD7E /* FoundationModelsNoteAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C2BB67EADD34167B544CAAE /* FoundationModelsNoteAnalyzer.swift */; };
@@ -19,7 +20,6 @@
 		3AEDBF51D2294DC6B04A3516 /* CoreDataNoteInsightStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BC160799DFD41468C12B455 /* CoreDataNoteInsightStore.swift */; };
 		3BCCAAAA0000000000000002 /* AIDraftSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BCCAAAA0000000000000004 /* AIDraftSettingsView.swift */; };
 		3BCCAAAA0000000000000005 /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BCCAAAA0000000000000006 /* KeychainService.swift */; };
-		C4A976B81F1A4B1483080B70 /* AIDraftSettingsObservable.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE55C23FE1A24E7EA0A2A2A4 /* AIDraftSettingsObservable.swift */; };
 		3BCCAAAA0000000000000010 /* CoreDataAIDraftMetricStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BCCAAAA0000000000000009 /* CoreDataAIDraftMetricStore.swift */; };
 		3BCCAAAA0000000000000012 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 3BCCAAAA0000000000000011 /* PrivacyInfo.xcprivacy */; };
 		3BCCAAAA000000000000001C /* NLEmbeddingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BCCAAAA000000000000001D /* NLEmbeddingService.swift */; };
@@ -35,7 +35,6 @@
 		560F687501104A498D567742 /* EventLoopCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B42F20B28984B1B9C38B36E /* EventLoopCoordinator.swift */; };
 		656EFB51DAA945729EF107CA /* NoteInsightTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 441E68DB04904AA091E7274B /* NoteInsightTests.swift */; };
 		65B28676E72FE36885DAFAE9 /* EventRoutingTableTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BD2FF7B2DABB2EBDB972D84 /* EventRoutingTableTests.swift */; };
-		DEADBEEF00000000000000A1 /* DomainEventBusOrderingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEADBEEF00000000000000A2 /* DomainEventBusOrderingTests.swift */; };
 		6A3A783F164CE76CEAB4DBEE /* AIDraftManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FB281AE971D4DB672406825 /* AIDraftManager.swift */; };
 		6A8A939804634FC7B8D8A527 /* OnboardingCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C1F31185E4F418DA3FCAF90 /* OnboardingCoordinatorTests.swift */; };
 		6C6DAC3DF745456FB5B81446 /* AIDraftScope.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5580C4CB0C0B4EAEA4EEBF2D /* AIDraftScope.swift */; };
@@ -72,6 +71,7 @@
 		AA0000072026082000000004 /* StreakTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000082026082000000004 /* StreakTracker.swift */; };
 		AA0000092026082000000005 /* StreakHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000A2026082000000005 /* StreakHeaderView.swift */; };
 		AA00000B2026082000000006 /* StreakDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00000C2026082000000006 /* StreakDetailView.swift */; };
+		AA0000102026091000000003 /* MeditateAndNoteCore in Frameworks */ = {isa = PBXBuildFile; productRef = AA0000102026091000000002 /* MeditateAndNoteCore */; };
 		AA000011202608200000000C /* DayCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000012202608200000000C /* DayCellView.swift */; };
 		AA0000202026082100000001 /* StreakTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000102026082000000008 /* StreakTrackerTests.swift */; };
 		AA0000202026082100000021 /* NoteMenuSemanticSearchUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000102026082200000001 /* NoteMenuSemanticSearchUITests.swift */; };
@@ -88,6 +88,7 @@
 		BB00D11120260905000001 /* StreakDayDetailSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB00D11220260905000002 /* StreakDayDetailSheet.swift */; };
 		BD60022C477DD0A0FF778849 /* AIDraftSessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7648CA347C57421E7F2B662 /* AIDraftSessionTests.swift */; };
 		C14230B1AABCB77064DE1389 /* ReminderSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 965AB13C80C9D60F37F232D7 /* ReminderSettingsTests.swift */; };
+		C4A976B81F1A4B1483080B70 /* AIDraftSettingsObservable.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE55C23FE1A24E7EA0A2A2A4 /* AIDraftSettingsObservable.swift */; };
 		C51D477CB42F9FCB911391AD /* CoreDataAIDraftSessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FF5CC1CC273909C3EF0192B /* CoreDataAIDraftSessionStore.swift */; };
 		CA7048E92B45AB3E93B50AC0 /* NoteEditorAIDraftTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC61CA12660E463FBF99E093 /* NoteEditorAIDraftTests.swift */; };
 		CBD7ED78394EBA2ECBDB72A6 /* StreakInsightEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70119D3AECE1D5E2F27AEAF9 /* StreakInsightEngineTests.swift */; };
@@ -104,6 +105,7 @@
 		DD0000042026082800000008 /* CoreDataStreakStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000042026082800000004 /* CoreDataStreakStoreTests.swift */; };
 		DD27AF01DB20457CB5DF09C9 /* NoteInsightManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36795F95436641CF9362FD4A /* NoteInsightManagerTests.swift */; };
 		DD2A01627A7343278DE8A05B /* MainViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 103E1801162647CA91378FED /* MainViewModelTests.swift */; };
+		DEADBEEF00000000000000A1 /* DomainEventBusOrderingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEADBEEF00000000000000A2 /* DomainEventBusOrderingTests.swift */; };
 		E2972A3FC4C853E0382811E2 /* ReminderSettingsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A99826A1EEEB59657443E1 /* ReminderSettingsSection.swift */; };
 		E320C3ED2E2D1AC9009452DD /* Destination.swift in Sources */ = {isa = PBXBuildFile; fileRef = E320C3EC2E2D1AC9009452DD /* Destination.swift */; };
 		E320C3F12E2D1CD6009452DD /* Router.swift in Sources */ = {isa = PBXBuildFile; fileRef = E320C3F02E2D1CD6009452DD /* Router.swift */; };
@@ -154,7 +156,6 @@
 		OB0100040000000000000004 /* OnboardingPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0000040000000000000004 /* OnboardingPage.swift */; };
 		OB0100050000000000000005 /* OnboardingCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0000050000000000000005 /* OnboardingCoordinator.swift */; };
 		OB0100070000000000000007 /* OnboardingViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0000070000000000000007 /* OnboardingViewModelTests.swift */; };
-		AA0000102026091000000003 /* MeditateAndNoteCore in Frameworks */ = {isa = PBXBuildFile; productRef = AA0000102026091000000002 /* MeditateAndNoteCore */; };
 		RC0000102026101300000001 /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = RC0000102026101300000002 /* RevenueCat */; };
 /* End PBXBuildFile section */
 
@@ -183,6 +184,7 @@
 		09E4AAB15B1383604B747363 /* InsightsViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InsightsViewModel.swift; sourceTree = "<group>"; };
 		0FB281AE971D4DB672406825 /* AIDraftManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIDraftManager.swift; sourceTree = "<group>"; };
 		103E1801162647CA91378FED /* MainViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MainViewModelTests.swift; sourceTree = "<group>"; };
+		1489C105D1E21FC347D63B81 /* SubscriptionStatusTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SubscriptionStatusTests.swift; path = MeditateAndNoteTests/SubscriptionStatusTests.swift; sourceTree = SOURCE_ROOT; };
 		1F8CE807D76747CE94F30DA5 /* SoundPlayerTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SoundPlayerTests.swift; sourceTree = "<group>"; };
 		2191349DA8C57C98F66164B8 /* MeditationViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MeditationViewModelTests.swift; sourceTree = "<group>"; };
 		238C55EFB53F4112BB500657 /* StreakScope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakScope.swift; sourceTree = "<group>"; };
@@ -190,7 +192,6 @@
 		36795F95436641CF9362FD4A /* NoteInsightManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteInsightManagerTests.swift; sourceTree = "<group>"; };
 		38F6895E04174D1A9BFEA320 /* InsightsViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InsightsViewModelTests.swift; sourceTree = "<group>"; };
 		3BCCAAAA0000000000000004 /* AIDraftSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIDraftSettingsView.swift; sourceTree = "<group>"; };
-		DE55C23FE1A24E7EA0A2A2A4 /* AIDraftSettingsObservable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIDraftSettingsObservable.swift; sourceTree = "<group>"; };
 		3BCCAAAA0000000000000006 /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
 		3BCCAAAA0000000000000009 /* CoreDataAIDraftMetricStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataAIDraftMetricStore.swift; sourceTree = "<group>"; };
 		3BCCAAAA0000000000000011 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
@@ -199,7 +200,6 @@
 		3BCCAAAA0000000000000021 /* CoreDataNoteEmbeddingStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataNoteEmbeddingStore.swift; sourceTree = "<group>"; };
 		3BCCAAAA0000000000000023 /* SemanticSearchManagerTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SemanticSearchManagerTests.swift; sourceTree = "<group>"; };
 		3BD2FF7B2DABB2EBDB972D84 /* EventRoutingTableTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EventRoutingTableTests.swift; sourceTree = "<group>"; };
-		DEADBEEF00000000000000A2 /* DomainEventBusOrderingTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DomainEventBusOrderingTests.swift; sourceTree = "<group>"; };
 		3C2BB67EADD34167B544CAAE /* FoundationModelsNoteAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoundationModelsNoteAnalyzer.swift; sourceTree = "<group>"; };
 		3FC0FF6183D64D88B5E241EC /* ReminderManagerTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReminderManagerTests.swift; sourceTree = "<group>"; };
 		400F08B4FFA041E4828570D8 /* SettingsScope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsScope.swift; sourceTree = "<group>"; };
@@ -277,6 +277,8 @@
 		DD0000022026082800000002 /* CoreDataNoteDataSourceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataNoteDataSourceTests.swift; sourceTree = "<group>"; };
 		DD0000032026082800000003 /* CoreDataSessionStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataSessionStoreTests.swift; sourceTree = "<group>"; };
 		DD0000042026082800000004 /* CoreDataStreakStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataStreakStoreTests.swift; sourceTree = "<group>"; };
+		DE55C23FE1A24E7EA0A2A2A4 /* AIDraftSettingsObservable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIDraftSettingsObservable.swift; sourceTree = "<group>"; };
+		DEADBEEF00000000000000A2 /* DomainEventBusOrderingTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DomainEventBusOrderingTests.swift; sourceTree = "<group>"; };
 		DF01E6683058484B8508AA5B /* FoundationModelsDraftServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoundationModelsDraftServiceTests.swift; sourceTree = "<group>"; };
 		E320C3EC2E2D1AC9009452DD /* Destination.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Destination.swift; sourceTree = "<group>"; };
 		E320C3F02E2D1CD6009452DD /* Router.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Router.swift; sourceTree = "<group>"; };
@@ -355,6 +357,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		0EEA7F0B964B44473B85820A /* Subscriptions */ = {
+			isa = PBXGroup;
+			children = (
+				1489C105D1E21FC347D63B81 /* SubscriptionStatusTests.swift */,
+			);
+			name = Subscriptions;
+			sourceTree = SOURCE_ROOT;
+		};
 		0FCDC88D328F1E47AD434D12 /* AIDraft */ = {
 			isa = PBXGroup;
 			children = (
@@ -651,6 +661,7 @@
 				E361876C2D68B221000E326D /* Products */,
 				AA000014202608200000000A /* MeditateAndNoteTests */,
 				AA0000112026090400000001 /* MeditateAndNoteUITests */,
+				0EEA7F0B964B44473B85820A /* Subscriptions */,
 			);
 			sourceTree = "<group>";
 		};
@@ -823,10 +834,6 @@
 		};
 		E361876A2D68B221000E326D /* MeditateAndNote */ = {
 			isa = PBXNativeTarget;
-			packageProductDependencies = (
-				AA0000102026091000000002 /* MeditateAndNoteCore */,
-				RC0000102026101300000002 /* RevenueCat */,
-			);
 			buildConfigurationList = E36187792D68B223000E326D /* Build configuration list for PBXNativeTarget "MeditateAndNote" */;
 			buildPhases = (
 				E36187672D68B221000E326D /* Sources */,
@@ -838,6 +845,10 @@
 			dependencies = (
 			);
 			name = MeditateAndNote;
+			packageProductDependencies = (
+				AA0000102026091000000002 /* MeditateAndNoteCore */,
+				RC0000102026101300000002 /* RevenueCat */,
+			);
 			productName = MeditateAndNote;
 			productReference = E361876B2D68B221000E326D /* MeditateAndNote.app */;
 			productType = "com.apple.product-type.application";
@@ -875,7 +886,7 @@
 			);
 			mainGroup = E36187622D68B221000E326D;
 			packageReferences = (
-				AA0000102026091000000001 /* XCLocalSwiftPackageReference "Packages/MeditateAndNoteCore" */,
+				AA0000102026091000000001 /* XCLocalSwiftPackageReference "MeditateAndNoteCore" */,
 				RC0000102026101300000003 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */,
 			);
 			productRefGroup = E361876C2D68B221000E326D /* Products */;
@@ -886,18 +897,6 @@
 				AA0000202026082100000005 /* MeditateAndNoteTests */,
 				AA0000122026090400000001 /* MeditateAndNoteUITests */,
 			);
-		};
-		AA0000102026091000000001 /* XCLocalSwiftPackageReference "Packages/MeditateAndNoteCore" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = Packages/MeditateAndNoteCore;
-		};
-		RC0000102026101300000003 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/RevenueCat/purchases-ios-spm.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 5.0.0;
-			};
 		};
 /* End PBXProject section */
 
@@ -981,6 +980,7 @@
 				CA7048E92B45AB3E93B50AC0 /* NoteEditorAIDraftTests.swift in Sources */,
 				65B28676E72FE36885DAFAE9 /* EventRoutingTableTests.swift in Sources */,
 				DEADBEEF00000000000000A1 /* DomainEventBusOrderingTests.swift in Sources */,
+				1A7AFC26A1BAB5C9AA2CCD86 /* SubscriptionStatusTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1121,9 +1121,9 @@
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 6.0;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				TARGETED_DEVICE_FAMILY = 1;
 				TEST_TARGET_NAME = MeditateAndNote;
 			};
@@ -1147,9 +1147,9 @@
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 6.0;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				TARGETED_DEVICE_FAMILY = 1;
 				TEST_TARGET_NAME = MeditateAndNote;
 			};
@@ -1174,9 +1174,9 @@
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 6.0;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				TARGETED_DEVICE_FAMILY = 1;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MeditateAndNote.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/MeditateAndNote";
 			};
@@ -1201,9 +1201,9 @@
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 6.0;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				TARGETED_DEVICE_FAMILY = 1;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MeditateAndNote.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/MeditateAndNote";
 			};
@@ -1356,9 +1356,9 @@
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 6.0;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
@@ -1390,21 +1390,12 @@
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 6.0;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
-		};
-		AA0000102026091000000002 /* MeditateAndNoteCore */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = MeditateAndNoteCore;
-		};
-		RC0000102026101300000002 /* RevenueCat */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = RC0000102026101300000003 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;
-			productName = RevenueCat;
 		};
 /* End XCBuildConfiguration section */
 
@@ -1446,6 +1437,36 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		AA0000102026091000000001 /* XCLocalSwiftPackageReference "MeditateAndNoteCore" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/MeditateAndNoteCore;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		RC0000102026101300000003 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/RevenueCat/purchases-ios-spm.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		AA0000102026091000000002 /* MeditateAndNoteCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = MeditateAndNoteCore;
+		};
+		RC0000102026101300000002 /* RevenueCat */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = RC0000102026101300000003 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;
+			productName = RevenueCat;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = E36187632D68B221000E326D /* Project object */;
 }
