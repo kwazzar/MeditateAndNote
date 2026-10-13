@@ -136,11 +136,64 @@ Hard rules preserved:
 - Entitlement/product identifiers are constants in one place (config), not
   scattered.
 
+## Trust model (why the tests below matter)
+
+The client is never authoritative for entitlement:
+
+- RevenueCat verifies the receipt **server-side**. The SDK's `CustomerInfo` is
+  the only source that may grant `pro`.
+- `UserDefaultsSubscriptionCache` is a **UX fast-path only** (instant/offline
+  display). It is user-writable and must never be able to grant or extend `pro`
+  on its own — a corrupted or forged cache must degrade to "unknown/free", not
+  premium.
+- Expiry must be judged from RevenueCat's server-verified entitlement flags, not
+  from local date math, so device clock changes cannot extend access.
+- On any disagreement, RevenueCat wins: refresh that drops the entitlement must
+  downgrade local state and publish `.subscriptionChanged`.
+
 ## Testing
 
-- `MeditateAndNoteTests/SubscriptionViewModelTests.swift` — mock
-  `EntitlementProviding` / `SubscriptionManaging`; assert buy → premium, restore,
-  error mapping. No RevenueCat in the test target.
+Two groups. No RevenueCat in the test target — everything drives the mock
+`EntitlementProviding` / `SubscriptionManaging` and a fake `SubscriptionCache`.
+
+### Functional correctness
+
+- `SubscriptionManagerTests.swift`
+  - cache-first: cached `pro` is exposed immediately, then async refresh reconciles.
+  - refresh granting `pro` sets `isPremium == true` and publishes exactly one
+    `.subscriptionChanged`.
+  - refresh with no change does **not** publish an event.
+  - purchase success → premium; cancelled → `SubscriptionOperationError.cancelled`,
+    status unchanged, no event.
+  - restore with no purchases → `.none`.
+  - `SubscriptionStatus.isActive` honors `activeEntitlements`, not mere presence.
+- `SubscriptionViewModelTests.swift` / `PaywallViewModelTests.swift` — buy →
+  premium UI, restore, loading, and error mapping to user-facing messages.
+
+### Tamper / resilience (subscription "breakability")
+
+- **Forged cache cannot grant premium**: cache seeded with `pro` while the
+  service returns `.none`; after refresh `isPremium == false`, state downgraded,
+  `.subscriptionChanged` published.
+- **Corrupted cache data** (garbage bytes / wrong schema) → decode fails
+  gracefully to "unknown/free"; no crash; no premium; no thrown error to UI.
+- **Clock tampering**: `expirationDate` in the past while RC reports the
+  entitlement active/inactive — assert the RC-reported flag decides, so moving
+  the device clock neither extends nor revokes access.
+- **Cache cannot extend expiry**: cache with future date but RC says inactive →
+  free after refresh.
+- **Network failure on refresh** → keep last-known status, no crash, never
+  hang; no false grant when previous status was free.
+- **Missing / empty API key** (`Purchases.configure` not run) → service is a
+  no-op: `isPremium == false`, no crash, paywall shows an unavailable state.
+- **Purchase purchase fails server-side / offline** → surfaced as error, status
+  unchanged, no optimistic premium.
+- **Downgrade / refund / cancellation webhook** (RC reports revoked) → next
+  refresh flips to free and event fires.
+- **Persistence path is not privilege**: assert `SubscriptionManager` never
+  trusts `SubscriptionCache` for a *grant* — only RC paths may transition
+  free → premium (regression test guarding the trust boundary).
+
 - Existing routing tests updated for the new `DomainEvent` case.
 
 ## Android follow-up (documented only)
