@@ -44,6 +44,10 @@ final class AppContainer: @unchecked Sendable {
     @MainActor private lazy var noteMenuViewModel = NoteMenuViewModel(notes: notes.manager)
     @MainActor private lazy var noteInsightsViewModel = NoteInsightsViewModel(provider: notes.insightManager, eventBus: eventBus)
     @MainActor private lazy var aiSettingsStore = AIDraftSettingsStoreObservable()
+    @MainActor private lazy var subscriptionViewModel = SubscriptionViewModel(
+        providable: subscription.manager,
+        manageable: subscription.manager
+    )
 
     /// Cached for the same reason as `noteMenuViewModel`: these are created
     /// inside `RootContainer.mainTabBar`, which SwiftUI re-evaluates on every
@@ -148,7 +152,7 @@ final class AppContainer: @unchecked Sendable {
 
     @MainActor
     func makeSubscriptionViewModel() -> SubscriptionViewModel {
-        SubscriptionViewModel(providable: subscription.manager, manageable: subscription.manager)
+        subscriptionViewModel
     }
 
     @MainActor

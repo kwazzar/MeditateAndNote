@@ -62,6 +62,7 @@
 		78DF54293040D0A300B1F2C3 /* breath_hold.wav in Resources */ = {isa = PBXBuildFile; fileRef = 78DF54283040D0A300B1F2C3 /* breath_hold.wav */; };
 		78DF542B3040D34000B1F2C3 /* meditation_countdown.wav in Resources */ = {isa = PBXBuildFile; fileRef = 78DF542A3040D34000B1F2C3 /* meditation_countdown.wav */; };
 		84D6D88CFB01484D911D3335 /* NoteMenuViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 649B89478F0844FB834076E9 /* NoteMenuViewModelTests.swift */; };
+		84E707661FFF7F9CD1602916 /* SubscriptionSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = E48C9910625D259CDBD1445E /* SubscriptionSection.swift */; };
 		8BF4C46227BAE479017286E0 /* WeekdayHeatmapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DF1D116F571072F70488A4F /* WeekdayHeatmapView.swift */; };
 		8C4C86662A3043118922A201 /* NoteScope.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE5FCE0C25D54614B8909DFA /* NoteScope.swift */; };
 		8E5CBDD277B7DA1853A68928 /* AIDraftServiceFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACED283CF7A40C96B22C4762 /* AIDraftServiceFactory.swift */; };
@@ -152,6 +153,7 @@
 		E3F0F1A82E5B00000000AB23 /* MeditationEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3F0F1A92E5B00000000AB24 /* MeditationEngineTests.swift */; };
 		E3FDF77C2ED0CE0F00ACD847 /* MeditationInfoScroll.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3FDF77B2ED0CE0F00ACD847 /* MeditationInfoScroll.swift */; };
 		E918FB33F6CC56F39066F7DA /* ReminderManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FC0FF6183D64D88B5E241EC /* ReminderManagerTests.swift */; };
+		E9BE57845031831D0170637D /* PaywallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7AB306111901A1F8F4FCDE5 /* PaywallView.swift */; };
 		EB1A5636420FDC4D24E9F8F0 /* SubscriptionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33BD79D3D121DA1D01866FBF /* SubscriptionManager.swift */; };
 		ED94EC7AAB0A4DEA9699E0DE /* NoteInsightsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07122C96FB9D45AD927BAB76 /* NoteInsightsSection.swift */; };
 		EE0000012026090500000008 /* UserDefaultsStreakStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE0000012026090500000004 /* UserDefaultsStreakStore.swift */; };
@@ -291,6 +293,7 @@
 		C1C20BEA552DE5FA2D6680E4 /* UserDefaultsReminderSettingsStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UserDefaultsReminderSettingsStore.swift; sourceTree = "<group>"; };
 		C41C9EA24F3766528DEEC350 /* NoteAIDraftViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteAIDraftViewModel.swift; sourceTree = "<group>"; };
 		C7648CA347C57421E7F2B662 /* AIDraftSessionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIDraftSessionTests.swift; sourceTree = "<group>"; };
+		C7AB306111901A1F8F4FCDE5 /* PaywallView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PaywallView.swift; path = MeditateAndNote/Views/Paywall/PaywallView.swift; sourceTree = SOURCE_ROOT; };
 		CC0000012026082800000001 /* CoreDataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataManager.swift; sourceTree = "<group>"; };
 		CC0000022026082800000002 /* CoreDataNoteDataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataNoteDataSource.swift; sourceTree = "<group>"; };
 		CC0000032026082800000003 /* CoreDataSessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataSessionStore.swift; sourceTree = "<group>"; };
@@ -340,6 +343,7 @@
 		E3F0F1A22E4600000000AB12 /* NoteManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteManagerTests.swift; sourceTree = "<group>"; };
 		E3F0F1A92E5B00000000AB24 /* MeditationEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationEngineTests.swift; sourceTree = "<group>"; };
 		E3FDF77B2ED0CE0F00ACD847 /* MeditationInfoScroll.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationInfoScroll.swift; sourceTree = "<group>"; };
+		E48C9910625D259CDBD1445E /* SubscriptionSection.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SubscriptionSection.swift; path = MeditateAndNote/Views/Settings/SubscriptionSection.swift; sourceTree = SOURCE_ROOT; };
 		EC61CA12660E463FBF99E093 /* NoteEditorAIDraftTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NoteEditorAIDraftTests.swift; sourceTree = "<group>"; };
 		EE0000012026090500000004 /* UserDefaultsStreakStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDefaultsStreakStore.swift; sourceTree = "<group>"; };
 		EE0000012026090500000009 /* UserDefaultsAIDraftSettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDefaultsAIDraftSettingsStore.swift; sourceTree = "<group>"; };
@@ -381,6 +385,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		074DB3331BB291FA433EEEF9 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				E48C9910625D259CDBD1445E /* SubscriptionSection.swift */,
+			);
+			name = Settings;
+			sourceTree = SOURCE_ROOT;
+		};
 		0EEA7F0B964B44473B85820A /* Subscriptions */ = {
 			isa = PBXGroup;
 			children = (
@@ -646,6 +658,14 @@
 			path = Theme;
 			sourceTree = "<group>";
 		};
+		C3CC9EC2381B55F8F5CF982C /* Paywall */ = {
+			isa = PBXGroup;
+			children = (
+				C7AB306111901A1F8F4FCDE5 /* PaywallView.swift */,
+			);
+			name = Paywall;
+			sourceTree = SOURCE_ROOT;
+		};
 		CC0000052026082800000009 /* Persistence */ = {
 			isa = PBXGroup;
 			children = (
@@ -714,6 +734,8 @@
 				0EEA7F0B964B44473B85820A /* Subscriptions */,
 				770BD5CF7108D30ECBDDDECE /* Support */,
 				5BA624651C6565834910DA0F /* AppContainer */,
+				C3CC9EC2381B55F8F5CF982C /* Paywall */,
+				074DB3331BB291FA433EEEF9 /* Settings */,
 			);
 			sourceTree = "<group>";
 		};
@@ -1148,6 +1170,8 @@
 				9FE3E54A6BC4A9FBE3A9370A /* SubscriptionScope.swift in Sources */,
 				FF0130532566ACD9ED001100 /* SubscriptionViewModel.swift in Sources */,
 				C5D012AEFC7F9036BAEE4FC4 /* PaywallViewModel.swift in Sources */,
+				E9BE57845031831D0170637D /* PaywallView.swift in Sources */,
+				84E707661FFF7F9CD1602916 /* SubscriptionSection.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
