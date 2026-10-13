@@ -146,6 +146,11 @@ final class AppContainer: @unchecked Sendable {
         InsightsViewModel(manager: streak.insightManager)
     }
 
+    @MainActor
+    func makeSubscriptionViewModel() -> SubscriptionViewModel {
+        SubscriptionViewModel(providable: subscription.manager, manageable: subscription.manager)
+    }
+
     // MARK: - Forwarding (kept so existing call sites don't change)
 
     var streakTracker: StreakTracker { streak.streakTracker }

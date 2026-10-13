@@ -12,6 +12,7 @@
 		1319DD5B5051A8A4C9C10470 /* ReminderManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA2A9BB90A0B40656AE57601 /* ReminderManager.swift */; };
 		1A7AFC26A1BAB5C9AA2CCD86 /* SubscriptionStatusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1489C105D1E21FC347D63B81 /* SubscriptionStatusTests.swift */; };
 		1C94BF41D8074EC99AAD8F36 /* MeditationScope.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6031996A773F475FABDBA7E1 /* MeditationScope.swift */; };
+		1E45318BAFC29880B29712CC /* SubscriptionViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A98B509BBA41C31F67941AF /* SubscriptionViewModelTests.swift */; };
 		28A91B1F7276A0017B93246A /* AIDraftManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07F5E247FA129DC74064AF00 /* AIDraftManagerTests.swift */; };
 		2FB6ECE237A74E428A0DFD7E /* FoundationModelsNoteAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C2BB67EADD34167B544CAAE /* FoundationModelsNoteAnalyzer.swift */; };
 		2FC28D69C78D5561F2B28F30 /* NotificationScheduling.swift in Sources */ = {isa = PBXBuildFile; fileRef = D35E3DCB24F352F1C7D834E8 /* NotificationScheduling.swift */; };
@@ -156,6 +157,7 @@
 		F05695A5D9AD47FAB496372B /* StreakInsightManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0283B1D3266C4E2A884A4011 /* StreakInsightManagerTests.swift */; };
 		F3D3C6379B3241BC96485A7E /* InsightsViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38F6895E04174D1A9BFEA320 /* InsightsViewModelTests.swift */; };
 		F7A7C178C65B4C49BD6A6CEF /* SearchQueryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D2DD655AB554E2C8701BD6D /* SearchQueryTests.swift */; };
+		FF0130532566ACD9ED001100 /* SubscriptionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 388F5A319534FA87F57EFE1A /* SubscriptionViewModel.swift */; };
 		FF072460A70F1E728A00C5E0 /* SubscriptionMocks.swift in Sources */ = {isa = PBXBuildFile; fileRef = A26AF60B2C86F8EF6B2A2474 /* SubscriptionMocks.swift */; };
 		LPS000012026090500000001 /* LifetimePatternsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = LPS000012026090500000002 /* LifetimePatternsSection.swift */; };
 		OB0100010000000000000001 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0000010000000000000001 /* OnboardingView.swift */; };
@@ -200,7 +202,9 @@
 		3147A02786099837DBC12384 /* SubscriptionManagerTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SubscriptionManagerTests.swift; path = MeditateAndNoteTests/SubscriptionManagerTests.swift; sourceTree = SOURCE_ROOT; };
 		33BD79D3D121DA1D01866FBF /* SubscriptionManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SubscriptionManager.swift; path = MeditateAndNote/Services/Subscriptions/SubscriptionManager.swift; sourceTree = SOURCE_ROOT; };
 		36795F95436641CF9362FD4A /* NoteInsightManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteInsightManagerTests.swift; sourceTree = "<group>"; };
+		388F5A319534FA87F57EFE1A /* SubscriptionViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SubscriptionViewModel.swift; path = MeditateAndNote/ViewModels/SubscriptionViewModel.swift; sourceTree = SOURCE_ROOT; };
 		38F6895E04174D1A9BFEA320 /* InsightsViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InsightsViewModelTests.swift; sourceTree = "<group>"; };
+		3A98B509BBA41C31F67941AF /* SubscriptionViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SubscriptionViewModelTests.swift; path = MeditateAndNoteTests/SubscriptionViewModelTests.swift; sourceTree = SOURCE_ROOT; };
 		3BCCAAAA0000000000000004 /* AIDraftSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIDraftSettingsView.swift; sourceTree = "<group>"; };
 		3BCCAAAA0000000000000006 /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
 		3BCCAAAA0000000000000009 /* CoreDataAIDraftMetricStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataAIDraftMetricStore.swift; sourceTree = "<group>"; };
@@ -383,6 +387,8 @@
 				BB278CA85A8A08AA8D4832BF /* SubscriptionTrustBoundaryTests.swift */,
 				33BD79D3D121DA1D01866FBF /* SubscriptionManager.swift */,
 				5A72FA331773BF74CB36DE28 /* RevenueCatPurchasesService.swift */,
+				3A98B509BBA41C31F67941AF /* SubscriptionViewModelTests.swift */,
+				388F5A319534FA87F57EFE1A /* SubscriptionViewModel.swift */,
 			);
 			name = Subscriptions;
 			sourceTree = SOURCE_ROOT;
@@ -1025,6 +1031,7 @@
 				FF072460A70F1E728A00C5E0 /* SubscriptionMocks.swift in Sources */,
 				CFAB97159444AD78522556D6 /* SubscriptionManagerTests.swift in Sources */,
 				9414F43A02C8DE85C7C63141 /* SubscriptionTrustBoundaryTests.swift in Sources */,
+				1E45318BAFC29880B29712CC /* SubscriptionViewModelTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1132,6 +1139,7 @@
 				EB1A5636420FDC4D24E9F8F0 /* SubscriptionManager.swift in Sources */,
 				4E8FC16521B9F753037C63D1 /* RevenueCatPurchasesService.swift in Sources */,
 				9FE3E54A6BC4A9FBE3A9370A /* SubscriptionScope.swift in Sources */,
+				FF0130532566ACD9ED001100 /* SubscriptionViewModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
