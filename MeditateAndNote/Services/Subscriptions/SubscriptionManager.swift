@@ -38,7 +38,8 @@ final class SubscriptionManager: SubscriptionProvidable, SubscriptionManageable,
     var isConfigured: Bool { service.isConfigured }
 
     func offerings() async throws -> [SubscriptionOffering] {
-        try await service.offerings()
+        guard service.isConfigured else { throw SubscriptionOperationError.notConfigured }
+        return try await service.offerings()
     }
 
     @discardableResult

@@ -151,6 +151,11 @@ final class AppContainer: @unchecked Sendable {
         SubscriptionViewModel(providable: subscription.manager, manageable: subscription.manager)
     }
 
+    @MainActor
+    func makePaywallViewModel() -> PaywallViewModel {
+        PaywallViewModel(providable: subscription.manager, manageable: subscription.manager)
+    }
+
     // MARK: - Forwarding (kept so existing call sites don't change)
 
     var streakTracker: StreakTracker { streak.streakTracker }
