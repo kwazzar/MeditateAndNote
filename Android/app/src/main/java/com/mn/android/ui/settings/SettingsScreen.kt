@@ -9,6 +9,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
@@ -24,8 +25,18 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.filled.Air
 import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.VolumeDown
+import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material.icons.filled.WaterDrop
+import androidx.compose.material.icons.filled.Waves
+import androidx.compose.material.icons.filled.WbTwilight
 import androidx.compose.material.icons.filled.WavingHand
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -34,6 +45,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -42,19 +55,28 @@ import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.compose.foundation.shape.CircleShape
 import com.mn.android.R
+import com.mn.android.data.AnimationSettings
 import com.mn.android.data.SharedPrefsReminderSettingsStore
+import com.mn.android.data.SoundSettings
+import com.mn.android.notifications.ReminderScheduler
+import com.mn.android.ui.theme.LocalMnThemeManager
+import com.mn.android.ui.theme.MainTheme
+import com.mn.android.ui.theme.MnBackground
 import com.mn.android.ui.theme.MnTheme
 import android.Manifest
 import android.content.pm.PackageManager
@@ -93,10 +115,15 @@ fun SettingsScreen(
             minute,
             weekdays.sorted().map { it.toLong() }.toLongArray(),
         )
+        // ReminderManager.reschedule() equivalent: cancel + re-arm the
+        // next 7 Core-computed fire dates.
+        ReminderScheduler.reschedule(context)
     }
 
-    Column(Modifier.fillMaxSize().background(MnTheme.background).padding(16.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+    Box(Modifier.fillMaxSize()) {
+        MnBackground()
+        Column(Modifier.fillMaxSize().padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onBack) {
                 Icon(Icons.AutoMirrored.Outlined.ArrowBack, stringResource(R.string.back), tint = MnTheme.textPrimary)
             }
@@ -113,8 +140,9 @@ fun SettingsScreen(
             Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
-            // Reminders — mirror of ReminderSettingsSection. Scheduling
-            // (AlarmManager) is not wired yet; this persists the settings only.
+            // Reminders — mirror of ReminderSettingsSection. Saves go through
+            // SharedPrefsReminderSettingsStore + ReminderScheduler (AlarmManager),
+            // the Android counterpart of ReminderManager.reschedule().
             SectionCard {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     SectionHeader(stringResource(R.string.reminders), Icons.Filled.Notifications, Modifier.weight(1f))
@@ -192,6 +220,128 @@ fun SettingsScreen(
                 }
             }
 
+            // Meditation Animation — iOS animationSection: segmented Rings/Path.
+            SectionCard {
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    SectionHeader(stringResource(R.string.meditation_animation), Icons.Filled.Waves)
+                    var animationStyle by remember { mutableStateOf(AnimationSettings.style) }
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .background(MnTheme.toolbarBackground, RoundedCornerShape(8.dp))
+                            .padding(2.dp),
+                    ) {
+                        listOf(AnimationSettings.RINGS to R.string.animation_rings,
+                               AnimationSettings.PATH to R.string.animation_path).forEach { (option, label) ->
+                            val selected = option == animationStyle
+                            Text(
+                                stringResource(label),
+                                color = if (selected) MnTheme.buttonText else MnTheme.textSecondary,
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.SemiBold,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .background(
+                                        if (selected) MnTheme.streakActiveMeditation else Color.Transparent,
+                                        RoundedCornerShape(6.dp),
+                                    )
+                                    .clickable {
+                                        animationStyle = option
+                                        AnimationSettings.style = option
+                                    }
+                                    .padding(vertical = 6.dp),
+                            )
+                        }
+                    }
+                }
+            }
+
+            // App Theme — iOS themeSection: one row per MainTheme.
+            SectionCard {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    SectionHeader(stringResource(R.string.app_theme), Icons.Filled.Palette)
+                    val themeManager = LocalMnThemeManager.current
+                    MainTheme.entries.forEach { theme ->
+                        val selected = theme == themeManager.theme
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .clickable { themeManager.select(theme) }
+                                .padding(vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            Icon(
+                                themeIcon(theme),
+                                contentDescription = null,
+                                tint = if (selected) MnTheme.streakActiveMeditation else MnTheme.textSecondary,
+                                modifier = Modifier
+                                    .size(28.dp)
+                                    .background(themeSwatch(theme), CircleShape)
+                                    .padding(6.dp),
+                            )
+                            Text(
+                                theme.displayName,
+                                color = MnTheme.textPrimary,
+                                style = MaterialTheme.typography.bodyLarge,
+                                modifier = Modifier.weight(1f),
+                            )
+                            if (selected) {
+                                Icon(
+                                    Icons.Filled.Check,
+                                    contentDescription = null,
+                                    tint = MnTheme.streakActiveMeditation,
+                                    modifier = Modifier.size(14.dp),
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Meditation Sound Volume — iOS volumeSection.
+            SectionCard {
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    SectionHeader(stringResource(R.string.meditation_sound_volume), Icons.Filled.VolumeUp)
+                    var volume by remember { mutableFloatStateOf(SoundSettings.volume) }
+                    Text(
+                        "${(volume * 100).toInt()}%",
+                        color = MnTheme.textSecondary,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.End,
+                    )
+                    Slider(
+                        value = volume,
+                        onValueChange = {
+                            volume = it
+                            SoundSettings.volume = it
+                        },
+                        valueRange = 0f..1f,
+                        colors = SliderDefaults.colors(
+                            thumbColor = MnTheme.streakActiveMeditation,
+                            activeTrackColor = MnTheme.streakActiveMeditation,
+                        ),
+                    )
+                    Row {
+                        Icon(
+                            Icons.Filled.VolumeDown,
+                            contentDescription = null,
+                            tint = MnTheme.textSecondary,
+                            modifier = Modifier.size(16.dp),
+                        )
+                        Spacer(Modifier.weight(1f))
+                        Icon(
+                            Icons.Filled.VolumeUp,
+                            contentDescription = null,
+                            tint = MnTheme.textSecondary,
+                            modifier = Modifier.size(16.dp),
+                        )
+                    }
+                }
+            }
+
             if (isDebuggable(context)) {
                 SectionCard {
                     Row(
@@ -219,6 +369,7 @@ fun SettingsScreen(
                     }
                 }
             }
+        }
         }
     }
 
@@ -305,6 +456,24 @@ private fun PermissionBanner(onAllow: () -> Unit) {
             Text(stringResource(R.string.allow), color = MnTheme.buttonText)
         }
     }
+}
+
+/** Bottom-bar tabs, mirroring the iOS `CustomTabBar` order: Notes, Home, Meditations. */
+private fun themeIcon(theme: MainTheme): ImageVector = when (theme) {
+    MainTheme.LIQUID_GLASS -> Icons.Filled.WaterDrop
+    MainTheme.BREATHING -> Icons.Filled.Air
+    MainTheme.SOFT_DAWN -> Icons.Filled.WbTwilight
+    MainTheme.DARK_ZEN -> Icons.Filled.DarkMode
+    MainTheme.OBSIDIAN -> Icons.Filled.LocalFireDepartment
+}
+
+/** iOS `MainTheme.swatch` — the circle behind each picker icon. */
+private fun themeSwatch(theme: MainTheme): Color = when (theme) {
+    MainTheme.LIQUID_GLASS -> Color(0xFFEBF5FF)
+    MainTheme.BREATHING -> Color(0xFFEBF5FF)
+    MainTheme.SOFT_DAWN -> Color(0xFFFFF0E0)
+    MainTheme.DARK_ZEN -> Color(0xFF0F1424)
+    MainTheme.OBSIDIAN -> Color(0xFF0A0D12)
 }
 
 private fun isDebuggable(context: android.content.Context): Boolean =

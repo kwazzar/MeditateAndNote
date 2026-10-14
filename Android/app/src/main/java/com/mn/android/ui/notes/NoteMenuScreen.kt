@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.mn.android.R
 import com.mn.android.data.NoteMenuSource
+import com.mn.android.ui.theme.MnBackground
 import com.mn.android.ui.theme.MnTheme
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -83,11 +84,8 @@ fun NoteMenuScreen(
         }
     }
 
-    Box(
-        Modifier
-            .fillMaxSize()
-            .background(MnTheme.background)
-    ) {
+    Box(Modifier.fillMaxSize()) {
+        MnBackground()
         Column(Modifier.fillMaxSize()) {
             NotesSearchBar(
                 query = query,

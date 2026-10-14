@@ -35,6 +35,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,6 +51,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.mn.android.R
 import com.mn.android.data.StreakDetailSource
+import com.mn.android.data.StreakInsightsSource
+import com.mn.android.ui.theme.MnBackground
 import com.mn.android.ui.theme.MnTheme
 import java.time.Instant
 import java.time.LocalDate
@@ -58,13 +61,10 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 /**
- * Port of iOS `StreakDetailView`: stats header, today progress, and the
- * current-month calendar with its day-detail sheet.
- *
- * The iOS screen's `InsightsSection` and `LifetimePatternsSection` are NOT
- * ported — they read `StreakInsightManager`, which has no Android/JNI
- * implementation yet (ANDROID_PORT_PLAN.md section 2.x). Nothing stands in
- * for them here.
+ * Port of iOS `StreakDetailView`: stats header, today progress, insights +
+ * lifetime patterns (from `StreakInsightsSource`, the JNI read over
+ * `StreakInsightManager`), and the current-month calendar with its day-detail
+ * sheet.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -74,17 +74,27 @@ fun StreakDetailScreen(
     onWriteNote: () -> Unit,
 ) {
     var detail by remember { mutableStateOf(StreakDetailSource.readDetail()) }
+    // Insights range + bundle: one JNI read shared by InsightsSection and
+    // LifetimePatternsSection (the lifetime cards are range-independent).
+    var range by remember { mutableStateOf("last7") }
+    var insights by remember { mutableStateOf(StreakInsightsSource.load(range)) }
+    LaunchedEffect(range) {
+        insights = StreakInsightsSource.load(range)
+    }
     // The sheet's CTA navigates away, and today's flags change when the user
     // comes back from that flow — reload on resume until DomainEventBus lands
     // (same fallback as NoteMenuScreen).
     LifecycleResumeEffect(Unit) {
         detail = StreakDetailSource.readDetail()
+        insights = StreakInsightsSource.load(range)
         onPauseOrDispose { }
     }
     var selected by remember { mutableStateOf<StreakDetailSource.Day?>(null) }
 
-    Scaffold(
-        topBar = {
+    Box(Modifier.fillMaxSize()) {
+        MnBackground()
+        Scaffold(
+            topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.streak)) },
                 navigationIcon = {
@@ -102,7 +112,7 @@ fun StreakDetailScreen(
                 ),
             )
         },
-        containerColor = MnTheme.background,
+        containerColor = Color.Transparent,
     ) { padding ->
         Column(
             Modifier
@@ -122,12 +132,21 @@ fun StreakDetailScreen(
                 onStartMeditation = onStartMeditation,
                 onWriteNote = onWriteNote,
             )
+            InsightsSection(
+                bundle = insights,
+                range = range,
+                onRangeChange = { range = it },
+                onNavigateToMeditation = onStartMeditation,
+                onNavigateToNote = onWriteNote,
+            )
+            LifetimePatternsSection(insights)
             MonthGrid(
                 title = StreakDetailSource.monthTitle(),
                 weeks = detail.weeks,
                 onSelect = { day -> selected = day },
             )
             Spacer(Modifier.height(24.dp))
+        }
         }
     }
 
@@ -151,8 +170,9 @@ fun StreakDetailScreen(
     }
 }
 
+/** Shared card surface — `.ultraThinMaterial` on iOS, `cardBackground` here. */
 @Composable
-private fun MnCard(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+internal fun MnCard(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     Box(
         Modifier
             .fillMaxWidth()

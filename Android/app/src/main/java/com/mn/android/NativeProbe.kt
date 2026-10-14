@@ -83,4 +83,21 @@ object NativeProbe {
      * Swift side: KotlinMeditationSessionStore.swift
      */
     external fun sessionProbe(out: LongArray)
+
+    /**
+     * Exercises the streak-insights read: Swift writes a known snapshot, then
+     * runs every `StreakInsightManager` metric the detail screen uses. Same
+     * out-param rule.
+     *
+     * Swift side: StreakInsightsBridge.swift
+     */
+    external fun streakInsightsProbe(out: LongArray)
+
+    /**
+     * Exercises the reminder schedule bridge: Swift fills the next fire dates
+     * for a daily 20:00 reminder. Same out-param rule.
+     *
+     * Swift side: StreakInsightsBridge.swift
+     */
+    external fun reminderScheduleProbe(out: LongArray)
 }

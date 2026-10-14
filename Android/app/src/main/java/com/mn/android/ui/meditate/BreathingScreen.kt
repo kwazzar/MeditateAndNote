@@ -49,6 +49,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -56,6 +57,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.mn.android.R
+import com.mn.android.data.AnimationSettings
+import com.mn.android.ui.theme.MnBackground
 import com.mn.android.ui.theme.MnBreathing
 import com.mn.android.ui.theme.MnTheme
 import com.mn.core.MeditationDuration
@@ -103,8 +106,9 @@ fun BreathingScreen(
     var sheetOpen by rememberSaveable { mutableStateOf(true) }
     var selectedDuration by remember { mutableStateOf(meditationDurations[1]) }
 
-    Box(Modifier.fillMaxSize().background(MnTheme.background).padding(16.dp)) {
-        Column(Modifier.fillMaxSize()) {
+    Box(Modifier.fillMaxSize()) {
+        MnBackground()
+        Column(Modifier.fillMaxSize().padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onBack) {
                     Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Back", tint = MnTheme.textPrimary)
@@ -139,23 +143,14 @@ fun BreathingScreen(
                 }
                 is BreathingSessionViewModel.UiState.Active -> {
                     BreathContent(
+                        phases = vm.breathingPhases,
+                        phaseIndex = s.phaseIndex,
                         discriminator = s.discriminator,
                         phaseProgress = s.phaseProgress,
                         progress = s.progress,
                         remaining = s.remainingSeconds,
                         paused = s.paused,
                         onPauseResume = { if (s.paused) vm.resume() else vm.pause() },
-                        onFinished = { vm.done() },
-                    )
-                }
-                is BreathingSessionViewModel.UiState.Paused -> {
-                    BreathContent(
-                        discriminator = s.discriminator,
-                        phaseProgress = s.phaseProgress,
-                        progress = s.progress,
-                        remaining = s.remainingSeconds,
-                        paused = true,
-                        onPauseResume = { vm.resume() },
                         onFinished = { vm.done() },
                     )
                 }
@@ -237,6 +232,8 @@ private fun CountdownOverlay(remaining: Int, totalSeconds: Double) {
 
 @Composable
 private fun BreathContent(
+    phases: List<BreathingSessionViewModel.Phase>,
+    phaseIndex: Int,
     discriminator: String,
     phaseProgress: Double,
     progress: Float,
@@ -258,9 +255,35 @@ private fun BreathContent(
             color = MnTheme.textSecondary,
         )
         Spacer(Modifier.height(8.dp))
-        BreathingRings(discriminator, phaseProgress)
-        Spacer(Modifier.height(16.dp))
-        ProgressBar(progress = progress)
+        // iOS MeditationView.landscapeLayout: animation + progress in one
+        // HStack (spaced 32), centered; portrait keeps the column.
+        val landscape = LocalConfiguration.current.orientation ==
+            android.content.res.Configuration.ORIENTATION_LANDSCAPE
+        if (landscape) {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+            ) {
+                if (AnimationSettings.style == AnimationSettings.RINGS) {
+                    BreathingRings(discriminator, phaseProgress)
+                } else {
+                    BreathingPathView(phases = phases, phaseIndex = phaseIndex, phaseProgress = phaseProgress)
+                }
+                Spacer(Modifier.width(32.dp))
+                ProgressBar(progress = progress, modifier = Modifier.width(160.dp))
+            }
+        } else {
+            if (AnimationSettings.style == AnimationSettings.RINGS) {
+                BreathingRings(discriminator, phaseProgress)
+            } else {
+                BreathingPathView(phases = phases, phaseIndex = phaseIndex, phaseProgress = phaseProgress)
+            }
+            Spacer(Modifier.height(16.dp))
+            ProgressBar(progress = progress)
+        }
         Spacer(Modifier.height(16.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             Button(
@@ -277,7 +300,7 @@ private fun BreathContent(
                 onClick = onFinished,
                 colors = ButtonDefaults.buttonColors(containerColor = MnTheme.streakSuccess),
             ) {
-                Text("Done", color = MnTheme.background, fontWeight = FontWeight.SemiBold)
+                Text("Done", color = MnTheme.buttonText, fontWeight = FontWeight.SemiBold)
             }
         }
     }
@@ -319,8 +342,8 @@ private fun BreathingRings(discriminator: String, phaseProgress: Double) {
 }
 
 @Composable
-private fun ProgressBar(progress: Float) {
-    Box(Modifier.fillMaxWidth().height(12.dp).background(MnTheme.cardBackground)) {
+private fun ProgressBar(progress: Float, modifier: Modifier = Modifier) {
+    Box(modifier.fillMaxWidth().height(12.dp).background(MnTheme.cardBackground)) {
         Box(
             Modifier.fillMaxWidth(progress.coerceIn(0f, 1f)).height(12.dp)
                 .background(MnTheme.streakActiveNote),

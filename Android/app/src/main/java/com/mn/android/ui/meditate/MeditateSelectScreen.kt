@@ -3,8 +3,10 @@ package com.mn.android.ui.meditate
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,6 +19,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AllInclusive
@@ -27,6 +30,7 @@ import androidx.compose.material.icons.outlined.Eco
 import androidx.compose.material.icons.outlined.Nightlight
 import androidx.compose.material.icons.outlined.Psychology
 import androidx.compose.material.icons.outlined.TrackChanges
+import androidx.compose.material.icons.rounded.VolumeUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -42,6 +46,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -52,6 +57,7 @@ import androidx.compose.ui.unit.dp
 import com.mn.android.data.MeditationCatalog
 import com.mn.android.data.MeditationSelection
 import com.mn.android.data.MeditationUi
+import com.mn.android.ui.theme.MnBackground
 import com.mn.android.ui.theme.MnTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -64,10 +70,8 @@ import kotlinx.coroutines.withContext
  * state-model choice (Kotlin mirrors state, Core does not stream) is recorded
  * in ANDROID_PORT_PLAN.
  *
- * Deliberately missing vs iOS: the Start button (its target — the breathing
- * screen — does not exist yet), the sound settings sheet (no `SoundPlayer` on
- * Android), and the 500 ms artificial load delay (a real JNI call does not need
- * help feeling slow).
+ * Deliberately missing vs iOS: the 500 ms artificial load delay (a real JNI
+ * call does not need help feeling slow) and haptic feedback on long-press.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -80,6 +84,7 @@ fun MeditateSelectScreen(
     var error by remember { mutableStateOf<String?>(null) }
     var selectedId by remember { mutableStateOf<String?>(null) }
     var infoItem by remember { mutableStateOf<MeditationUi?>(null) }
+    var showSoundSettings by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         MeditationSelection.configure(context)
@@ -102,13 +107,14 @@ fun MeditateSelectScreen(
 
     val selected = items.firstOrNull { it.id == selectedId }
 
-    Column(
-        Modifier
-            .fillMaxSize()
-            .background(MnTheme.background)
-            .padding(16.dp),
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+    Box(Modifier.fillMaxSize()) {
+        MnBackground()
+        Column(
+            Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onBack) {
                 Icon(
                     Icons.AutoMirrored.Outlined.ArrowBack,
@@ -155,7 +161,7 @@ fun MeditateSelectScreen(
                     Modifier
                         .fillMaxWidth()
                         .padding(top = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
                         "Available Meditations",
@@ -163,12 +169,30 @@ fun MeditateSelectScreen(
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
                     )
+                    Spacer(Modifier.weight(1f))
                     Text(
                         "Long press for details",
                         color = MnTheme.textSecondary,
                         style = MaterialTheme.typography.bodySmall,
                         fontStyle = FontStyle.Italic,
                     )
+                    Spacer(Modifier.width(8.dp))
+                    // iOS: speaker.wave.2.fill in a toolbarBackground circle.
+                    Box(
+                        Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(MnTheme.toolbarBackground)
+                            .clickable { showSoundSettings = true },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            Icons.Rounded.VolumeUp,
+                            contentDescription = "Sound settings",
+                            tint = MnTheme.textPrimary,
+                            modifier = Modifier.size(16.dp),
+                        )
+                    }
                 }
 
                 Spacer(Modifier.height(12.dp))
@@ -214,6 +238,7 @@ fun MeditateSelectScreen(
                 }
             }
         }
+        }
     }
 
     infoItem?.let { meditation ->
@@ -247,6 +272,10 @@ fun MeditateSelectScreen(
             },
             containerColor = MnTheme.background,
         )
+    }
+
+    if (showSoundSettings) {
+        SoundSettingsSheet(onDismiss = { showSoundSettings = false })
     }
 }
 

@@ -22,8 +22,6 @@ import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Whatshot
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -33,6 +31,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -45,7 +44,9 @@ import com.mn.android.R
 import com.mn.android.data.StreakHeaderSource
 import com.mn.android.data.StreakHeaderSource.DayFlags
 import com.mn.android.ui.streak.DayCellView
+import com.mn.android.ui.theme.MnBackground
 import com.mn.android.ui.theme.MnTheme
+import com.mn.android.ui.theme.MeditateHero
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -65,11 +66,8 @@ fun HomeScreen(
     onSettings: () -> Unit,
     onNewNote: () -> Unit,
 ) {
-    Box(
-        Modifier
-            .fillMaxSize()
-            .background(MnTheme.background)
-    ) {
+    Box(Modifier.fillMaxSize()) {
+        MnBackground()
         val header = remember { StreakHeaderSource.readHeader() }
         Column(
             Modifier
@@ -85,20 +83,14 @@ fun HomeScreen(
             Spacer(Modifier.weight(1f))
         }
 
-        Button(
-            onClick = onMeditate,
+        MeditateHero(
+            // iOS MainView: .scaleEffect(isLandscape ? 0.7 : 1)
+            scale = if (LocalConfiguration.current.orientation ==
+                android.content.res.Configuration.ORIENTATION_LANDSCAPE) 0.7f else 1f,
             modifier = Modifier
                 .align(Alignment.Center)
-                .fillMaxWidth()
-                .padding(horizontal = 48.dp, vertical = 24.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = MnTheme.accentButton),
-        ) {
-            Text(
-                stringResource(R.string.meditate),
-                color = MnTheme.buttonText,
-                fontWeight = FontWeight.SemiBold,
-            )
-        }
+                .clickable(onClick = onMeditate),
+        )
 
         SettingsButton(
             onClick = onSettings,
