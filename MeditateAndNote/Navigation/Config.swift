@@ -11,6 +11,8 @@ import MeditateAndNoteCore
 public enum Config {
     public static let bundleID = LogSubsystem.main
     public static let deepLinkScheme: String = "meditateandnote"
-    public static let revenueCatAPIKey: String = "appl_REPLACE_ME"
-    public static let proEntitlementID: String = "pro"
+    public static var revenueCatAPIKey: String {
+        (Bundle.main.object(forInfoDictionaryKey: "RevenueCatAPIKey") as? String) ?? ""
+    }
+    public static let proEntitlementID: String = "premium"
 }
