@@ -23,10 +23,10 @@
             </intent-filter>
         </activity>
         <!-- Kept exported but without a LAUNCHER filter: the device probes start
-             it explicitly with `adb shell am start -n com.mn.android/.MetricsActivity`,
+             it explicitly with `adb shell am start -n com.mn.android/.debug.MetricsActivity`,
              and the app itself now opens on MainActivity. -->
         <activity
-            android:name=".MetricsActivity"
+            android:name=".debug.MetricsActivity"
             android:exported="true"
             android:label="Metrics" />
 
@@ -34,7 +34,7 @@
              horizon; reschedules everything after reboot (alarms do not
              survive it, unlike iOS UNCalendarNotificationTrigger). -->
         <receiver
-            android:name=".notifications.ReminderReceiver"
+            android:name=".infrastructure.platform.notifications.ReminderReceiver"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
