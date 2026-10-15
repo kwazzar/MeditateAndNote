@@ -1,0 +1,5 @@
+// RevenueCat API key — Debug (Test Store).
+// The real key is NOT committed: put it in Debug.local.xcconfig (gitignored),
+// which is optionally included below and overrides the placeholder.
+REVENUECAT_API_KEY = test_REPLACE_ME
+#include? "Debug.local.xcconfig"

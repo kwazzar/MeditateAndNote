@@ -144,3 +144,4 @@ Android/app/build.gradle.kts.bak
 
 # Tombstones (crash logs)
 tombstones/
+MeditateAndNote/Config/*.local.xcconfig

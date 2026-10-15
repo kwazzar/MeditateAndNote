@@ -1,0 +1,5 @@
+// RevenueCat API key — Release (App Store).
+// The real key is NOT committed: put it in Release.local.xcconfig (gitignored),
+// which is optionally included below and overrides the placeholder.
+REVENUECAT_API_KEY = appl_REPLACE_ME
+#include? "Release.local.xcconfig"
