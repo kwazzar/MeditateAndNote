@@ -47,27 +47,27 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.delay
 import com.mn.android.R
-import com.mn.android.data.AnimationSettings
-import com.mn.android.data.MeditationSelection
+import com.mn.android.infrastructure.persistence.local.settings.AnimationSettings
+import com.mn.android.infrastructure.persistence.local.meditation.MeditationSelection
 import com.mn.android.data.NoteBlobStore
-import com.mn.android.data.OnboardingStore
+import com.mn.android.infrastructure.persistence.local.settings.OnboardingStore
 import com.mn.android.data.SharedPrefsReminderSettingsStore
-import com.mn.android.data.SoundSettings
+import com.mn.android.infrastructure.persistence.local.settings.SoundSettings
 import com.mn.android.data.StreakSnapshotStore
-import com.mn.android.notifications.ReminderScheduler
-import com.mn.android.sound.SoundPlayer
-import com.mn.android.ui.home.HomeScreen
-import com.mn.android.ui.launch.LoadingScreen
-import com.mn.android.ui.settings.SettingsScreen
-import com.mn.android.ui.meditate.BreathingScreen
-import com.mn.android.ui.meditate.MeditateSelectScreen
-import com.mn.android.ui.notes.NoteEditorScreen
-import com.mn.android.ui.notes.NoteMenuScreen
-import com.mn.android.ui.onboarding.OnboardingScreen
-import com.mn.android.ui.streak.StreakDetailScreen
-import com.mn.android.ui.theme.MnThemeProvider
-import com.mn.android.ui.theme.MnTheme
-import com.mn.android.ui.theme.rememberMnThemeManager
+import com.mn.android.infrastructure.platform.notifications.ReminderScheduler
+import com.mn.android.infrastructure.platform.sound.SoundPlayer
+import com.mn.android.presentation.home.ui.HomeScreen
+import com.mn.android.presentation.launch.ui.LoadingScreen
+import com.mn.android.presentation.settings.ui.SettingsScreen
+import com.mn.android.presentation.meditate.ui.BreathingScreen
+import com.mn.android.presentation.meditate.ui.MeditateSelectScreen
+import com.mn.android.presentation.notes.ui.NoteEditorScreen
+import com.mn.android.presentation.notes.ui.NoteMenuScreen
+import com.mn.android.presentation.onboarding.ui.OnboardingScreen
+import com.mn.android.presentation.streak.ui.StreakDetailScreen
+import com.mn.android.presentation.theme.ui.MnThemeProvider
+import com.mn.android.presentation.theme.ui.MnTheme
+import com.mn.android.presentation.theme.ui.rememberMnThemeManager
 
 /**
  * Application shell: the navigation graph, and the start destination switch

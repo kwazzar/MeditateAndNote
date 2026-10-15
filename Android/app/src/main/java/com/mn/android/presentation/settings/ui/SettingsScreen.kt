@@ -1,0 +1,495 @@
+package com.mn.android.presentation.settings.ui
+
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
+import android.text.format.DateFormat
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.filled.Air
+import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.VolumeDown
+import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material.icons.filled.WaterDrop
+import androidx.compose.material.icons.filled.Waves
+import androidx.compose.material.icons.filled.WbTwilight
+import androidx.compose.material.icons.filled.WavingHand
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.rememberTimePickerState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
+import androidx.compose.foundation.shape.CircleShape
+import com.mn.android.R
+import com.mn.android.infrastructure.persistence.local.settings.AnimationSettings
+import com.mn.android.data.SharedPrefsReminderSettingsStore
+import com.mn.android.infrastructure.persistence.local.settings.SoundSettings
+import com.mn.android.infrastructure.platform.notifications.ReminderScheduler
+import com.mn.android.presentation.theme.ui.LocalMnThemeManager
+import com.mn.android.domain.theme.model.MainTheme
+import com.mn.android.presentation.theme.ui.MnBackground
+import com.mn.android.presentation.theme.ui.MnTheme
+import android.Manifest
+import android.content.pm.PackageManager
+
+/** Mirrors the iOS weekdaySymbols order: index = weekday - 1, Sunday = 1. */
+private val weekdaySymbols = listOf("Su", "Mo", "Tu", "We", "Th", "Fr", "Sa")
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SettingsScreen(
+    onBack: () -> Unit,
+    onShowOnboarding: () -> Unit,
+) {
+    val context = LocalContext.current
+
+    val initial = remember { SharedPrefsReminderSettingsStore.load() }
+    var enabled by remember { mutableStateOf(initial[0] == 1L) }
+    var hour by remember { mutableStateOf(initial.getOrElse(1) { 20L }.toInt()) }
+    var minute by remember { mutableStateOf(initial.getOrElse(2) { 0L }.toInt()) }
+    var weekdays by remember { mutableStateOf(initial.drop(3).map { it.toInt() }.toSet()) }
+    var showTimePicker by remember { mutableStateOf(false) }
+
+    val hasPermission =
+        ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) ==
+            PackageManager.PERMISSION_GRANTED
+    var permissionRequested by remember { mutableStateOf(false) }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { }
+
+    fun save() {
+        SharedPrefsReminderSettingsStore.save(
+            enabled,
+            hour,
+            minute,
+            weekdays.sorted().map { it.toLong() }.toLongArray(),
+        )
+        // ReminderManager.reschedule() equivalent: cancel + re-arm the
+        // next 7 Core-computed fire dates.
+        ReminderScheduler.reschedule(context)
+    }
+
+    Box(Modifier.fillMaxSize()) {
+        MnBackground()
+        Column(Modifier.fillMaxSize().padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+            IconButton(onClick = onBack) {
+                Icon(Icons.AutoMirrored.Outlined.ArrowBack, stringResource(R.string.back), tint = MnTheme.textPrimary)
+            }
+            Text(
+                stringResource(R.string.settings),
+                color = MnTheme.textPrimary,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f),
+            )
+        }
+
+        Column(
+            Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(20.dp),
+        ) {
+            // Reminders — mirror of ReminderSettingsSection. Saves go through
+            // SharedPrefsReminderSettingsStore + ReminderScheduler (AlarmManager),
+            // the Android counterpart of ReminderManager.reschedule().
+            SectionCard {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    SectionHeader(stringResource(R.string.reminders), Icons.Filled.Notifications, Modifier.weight(1f))
+                    Switch(
+                        checked = enabled,
+                        onCheckedChange = { newValue ->
+                            if (newValue && !hasPermission) {
+                                permissionRequested = true
+                                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                            }
+                            enabled = newValue
+                            save()
+                        },
+                        colors = SwitchDefaults.colors(
+                            checkedTrackColor = MnTheme.streakActiveMeditation,
+                            checkedThumbColor = MnTheme.buttonText,
+                        ),
+                    )
+                }
+
+                if (enabled) {
+                    Spacer(Modifier.height(12.dp))
+                    Row(
+                        Modifier.fillMaxWidth().clickable { showTimePicker = true },
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            stringResource(R.string.reminder_time),
+                            color = MnTheme.textSecondary,
+                            style = MaterialTheme.typography.labelLarge,
+                            modifier = Modifier.weight(1f),
+                        )
+                        Text(
+                            String.format("%02d:%02d", hour, minute),
+                            color = MnTheme.textPrimary,
+                            style = MaterialTheme.typography.titleMedium,
+                        )
+                    }
+                    Spacer(Modifier.height(12.dp))
+                    Text(
+                        stringResource(R.string.repeat_on),
+                        color = MnTheme.textSecondary,
+                        style = MaterialTheme.typography.labelLarge,
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        (1..7).forEach { weekday ->
+                            WeekdayChip(
+                                label = weekdaySymbols[weekday - 1],
+                                selected = weekday in weekdays,
+                                onClick = {
+                                    if (weekday in weekdays) {
+                                        if (weekdays.size > 1) weekdays = weekdays - weekday
+                                    } else {
+                                        weekdays = weekdays + weekday
+                                    }
+                                    save()
+                                },
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                    }
+                    if (!hasPermission && permissionRequested) {
+                        Spacer(Modifier.height(12.dp))
+                        PermissionBanner(
+                            onAllow = {
+                                if (shouldShowDenied(context)) {
+                                    permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                } else {
+                                    openAppSettings(context)
+                                }
+                            },
+                        )
+                    }
+                }
+            }
+
+            // Meditation Animation — iOS animationSection: segmented Rings/Path.
+            SectionCard {
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    SectionHeader(stringResource(R.string.meditation_animation), Icons.Filled.Waves)
+                    var animationStyle by remember { mutableStateOf(AnimationSettings.style) }
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .background(MnTheme.toolbarBackground, RoundedCornerShape(8.dp))
+                            .padding(2.dp),
+                    ) {
+                        listOf(AnimationSettings.RINGS to R.string.animation_rings,
+                               AnimationSettings.PATH to R.string.animation_path).forEach { (option, label) ->
+                            val selected = option == animationStyle
+                            Text(
+                                stringResource(label),
+                                color = if (selected) MnTheme.buttonText else MnTheme.textSecondary,
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.SemiBold,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .background(
+                                        if (selected) MnTheme.streakActiveMeditation else Color.Transparent,
+                                        RoundedCornerShape(6.dp),
+                                    )
+                                    .clickable {
+                                        animationStyle = option
+                                        AnimationSettings.style = option
+                                    }
+                                    .padding(vertical = 6.dp),
+                            )
+                        }
+                    }
+                }
+            }
+
+            // App Theme — iOS themeSection: one row per MainTheme.
+            SectionCard {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    SectionHeader(stringResource(R.string.app_theme), Icons.Filled.Palette)
+                    val themeManager = LocalMnThemeManager.current
+                    MainTheme.entries.forEach { theme ->
+                        val selected = theme == themeManager.theme
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .clickable { themeManager.select(theme) }
+                                .padding(vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            Icon(
+                                themeIcon(theme),
+                                contentDescription = null,
+                                tint = if (selected) MnTheme.streakActiveMeditation else MnTheme.textSecondary,
+                                modifier = Modifier
+                                    .size(28.dp)
+                                    .background(themeSwatch(theme), CircleShape)
+                                    .padding(6.dp),
+                            )
+                            Text(
+                                theme.displayName,
+                                color = MnTheme.textPrimary,
+                                style = MaterialTheme.typography.bodyLarge,
+                                modifier = Modifier.weight(1f),
+                            )
+                            if (selected) {
+                                Icon(
+                                    Icons.Filled.Check,
+                                    contentDescription = null,
+                                    tint = MnTheme.streakActiveMeditation,
+                                    modifier = Modifier.size(14.dp),
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Meditation Sound Volume — iOS volumeSection.
+            SectionCard {
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    SectionHeader(stringResource(R.string.meditation_sound_volume), Icons.Filled.VolumeUp)
+                    var volume by remember { mutableFloatStateOf(SoundSettings.volume) }
+                    Text(
+                        "${(volume * 100).toInt()}%",
+                        color = MnTheme.textSecondary,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.End,
+                    )
+                    Slider(
+                        value = volume,
+                        onValueChange = {
+                            volume = it
+                            SoundSettings.volume = it
+                        },
+                        valueRange = 0f..1f,
+                        colors = SliderDefaults.colors(
+                            thumbColor = MnTheme.streakActiveMeditation,
+                            activeTrackColor = MnTheme.streakActiveMeditation,
+                        ),
+                    )
+                    Row {
+                        Icon(
+                            Icons.Filled.VolumeDown,
+                            contentDescription = null,
+                            tint = MnTheme.textSecondary,
+                            modifier = Modifier.size(16.dp),
+                        )
+                        Spacer(Modifier.weight(1f))
+                        Icon(
+                            Icons.Filled.VolumeUp,
+                            contentDescription = null,
+                            tint = MnTheme.textSecondary,
+                            modifier = Modifier.size(16.dp),
+                        )
+                    }
+                }
+            }
+
+            if (isDebuggable(context)) {
+                SectionCard {
+                    Row(
+                        Modifier.fillMaxWidth().clickable(onClick = onShowOnboarding),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            Icons.Filled.WavingHand,
+                            contentDescription = null,
+                            tint = MnTheme.streakActiveMeditation,
+                        )
+                        Spacer(Modifier.width(12.dp))
+                        Text(
+                            stringResource(R.string.show_onboarding_again),
+                            color = MnTheme.textPrimary,
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.weight(1f),
+                        )
+                        Icon(
+                            Icons.Filled.Build,
+                            contentDescription = null,
+                            tint = MnTheme.textSecondary,
+                            modifier = Modifier.size(16.dp),
+                        )
+                    }
+                }
+            }
+        }
+        }
+    }
+
+    if (showTimePicker) {
+        val timeState = rememberTimePickerState(initialHour = hour, initialMinute = minute, is24Hour = DateFormat.is24HourFormat(context))
+        AlertDialog(
+            onDismissRequest = { showTimePicker = false },
+            containerColor = MnTheme.background,
+            title = { Text(stringResource(R.string.reminder_time), color = MnTheme.textPrimary) },
+            text = { TimePicker(state = timeState) },
+            confirmButton = {
+                TextButton(onClick = {
+                    hour = timeState.hour
+                    minute = timeState.minute
+                    showTimePicker = false
+                    save()
+                }) {
+                    Text(stringResource(R.string.ok), color = MnTheme.streakActiveMeditation)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showTimePicker = false }) {
+                    Text(stringResource(R.string.cancel), color = MnTheme.textSecondary)
+                }
+            },
+        )
+    }
+}
+
+@Composable
+private fun SectionCard(content: @Composable ColumnScope.() -> Unit) {
+    Column(
+        Modifier.fillMaxWidth()
+            .background(MnTheme.cardBackground, RoundedCornerShape(16.dp))
+            .padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        content = content,
+    )
+}
+
+@Composable
+private fun SectionHeader(title: String, icon: ImageVector, modifier: Modifier = Modifier) {
+    Row(modifier, verticalAlignment = Alignment.CenterVertically) {
+        Icon(icon, contentDescription = null, tint = MnTheme.streakActiveMeditation, modifier = Modifier.size(15.dp))
+        Spacer(Modifier.width(8.dp))
+        Text(title, color = MnTheme.textPrimary, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+    }
+}
+
+@Composable
+private fun WeekdayChip(label: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Text(
+        label,
+        color = if (selected) MnTheme.buttonText else MnTheme.textSecondary,
+        style = MaterialTheme.typography.labelSmall,
+        fontWeight = FontWeight.SemiBold,
+        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+        modifier = modifier
+            .background(
+                if (selected) MnTheme.streakActiveMeditation else MnTheme.divider,
+                RoundedCornerShape(8.dp),
+            )
+            .clickable(onClick = onClick)
+            .padding(vertical = 8.dp),
+    )
+}
+
+@Composable
+private fun PermissionBanner(onAllow: () -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(Icons.Filled.Notifications, contentDescription = null, tint = MnTheme.streakIndicator, modifier = Modifier.size(16.dp))
+        Spacer(Modifier.width(8.dp))
+        Text(
+            stringResource(R.string.allow_notifications_message),
+            color = MnTheme.textSecondary,
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.weight(1f),
+        )
+        Spacer(Modifier.width(8.dp))
+        Button(
+            onClick = onAllow,
+            colors = ButtonDefaults.buttonColors(containerColor = MnTheme.streakActiveMeditation),
+        ) {
+            Text(stringResource(R.string.allow), color = MnTheme.buttonText)
+        }
+    }
+}
+
+/** Bottom-bar tabs, mirroring the iOS `CustomTabBar` order: Notes, Home, Meditations. */
+private fun themeIcon(theme: MainTheme): ImageVector = when (theme) {
+    MainTheme.LIQUID_GLASS -> Icons.Filled.WaterDrop
+    MainTheme.BREATHING -> Icons.Filled.Air
+    MainTheme.SOFT_DAWN -> Icons.Filled.WbTwilight
+    MainTheme.DARK_ZEN -> Icons.Filled.DarkMode
+    MainTheme.OBSIDIAN -> Icons.Filled.LocalFireDepartment
+}
+
+/** iOS `MainTheme.swatch` — the circle behind each picker icon. */
+private fun themeSwatch(theme: MainTheme): Color = when (theme) {
+    MainTheme.LIQUID_GLASS -> Color(0xFFEBF5FF)
+    MainTheme.BREATHING -> Color(0xFFEBF5FF)
+    MainTheme.SOFT_DAWN -> Color(0xFFFFF0E0)
+    MainTheme.DARK_ZEN -> Color(0xFF0F1424)
+    MainTheme.OBSIDIAN -> Color(0xFF0A0D12)
+}
+
+private fun isDebuggable(context: android.content.Context): Boolean =
+    (context.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0
+
+private fun shouldShowDenied(context: android.content.Context): Boolean {
+    val activity = context as? android.app.Activity ?: return true
+    return android.os.Build.VERSION.SDK_INT < 23 ||
+        activity.shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)
+}
+
+private fun openAppSettings(context: android.content.Context) {
+    context.startActivity(
+        Intent(
+            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+            Uri.fromParts("package", context.packageName, null),
+        )
+    )
+}
