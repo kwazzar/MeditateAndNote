@@ -191,6 +191,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		0C0F1F1900000000000000A0 /* Config */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Config; sourceTree = "<group>"; };
 		0C0F1F1900000000000000A1 /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = MeditateAndNote/Config/Debug.xcconfig; sourceTree = SOURCE_ROOT; };
 		0C0F1F1900000000000000A2 /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = MeditateAndNote/Config/Release.xcconfig; sourceTree = SOURCE_ROOT; };
 		0283B1D3266C4E2A884A4011 /* StreakInsightManagerTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StreakInsightManagerTests.swift; sourceTree = "<group>"; };
@@ -765,6 +766,7 @@
 				E361876E2D68B221000E326D /* MeditateAndNoteApp.swift */,
 				E36187722D68B223000E326D /* Assets.xcassets */,
 				E36187742D68B223000E326D /* Preview Content */,
+				0C0F1F1900000000000000A0 /* Config */,
 				3BCCAAAA0000000000000011 /* PrivacyInfo.xcprivacy */,
 			);
 			path = MeditateAndNote;
