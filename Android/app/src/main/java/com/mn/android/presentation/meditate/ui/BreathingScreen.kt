@@ -67,28 +67,28 @@ import com.mn.core.SessionDuration
 import org.swift.swiftkit.core.SwiftMemoryManagement
 import com.mn.android.presentation.meditate.viewmodel.BreathingSessionViewModel
 
-private val phaseLabel = mapOf(
+internal val phaseLabel = mapOf(
     "inhale" to "Inhale",
     "holdAfterInhale" to "Hold",
     "exhale" to "Exhale",
     "holdAfterExhale" to "Hold",
 )
 
-private fun phaseColor(d: String): Color = when (d) {
+internal fun phaseColor(d: String): Color = when (d) {
     "inhale" -> MnBreathing.inhale
     "holdAfterInhale" -> MnBreathing.holdAfterInhale
     "exhale" -> MnBreathing.exhale
     else -> MnBreathing.holdAfterExhale
 }
 
-private fun durationLabel(d: MeditationDuration): String = when (d) {
+internal fun durationLabel(d: MeditationDuration): String = when (d) {
     MeditationDuration.oneMin(SwiftMemoryManagement.DEFAULT_SWIFT_JAVA_AUTO_ARENA) -> "1 min"
     MeditationDuration.threeMin(SwiftMemoryManagement.DEFAULT_SWIFT_JAVA_AUTO_ARENA) -> "3 min"
     MeditationDuration.fiveMin(SwiftMemoryManagement.DEFAULT_SWIFT_JAVA_AUTO_ARENA) -> "5 min"
     else -> ""
 }
 
-private val meditationDurations: List<MeditationDuration>
+internal val meditationDurations: List<MeditationDuration>
     get() = listOf(
         MeditationDuration.oneMin(SwiftMemoryManagement.DEFAULT_SWIFT_JAVA_AUTO_ARENA),
         MeditationDuration.threeMin(SwiftMemoryManagement.DEFAULT_SWIFT_JAVA_AUTO_ARENA),
@@ -167,266 +167,4 @@ fun BreathingScreen(
             }
         }
     }
-}
-
-@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
-@Composable
-private fun DurationSheet(
-    selected: MeditationDuration,
-    onSelected: (MeditationDuration) -> Unit,
-    onStart: () -> Unit,
-) {
-    ModalBottomSheet(onDismissRequest = {}, containerColor = MnTheme.background) {
-        Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                "Duration",
-                color = MnTheme.textPrimary,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-            )
-            Spacer(Modifier.height(16.dp))
-            meditationDurations.forEach { d ->
-                Row(
-                    Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    RadioButton(
-                        selected = d == selected,
-                        onClick = { onSelected(d) },
-                        colors = RadioButtonDefaults.colors(selectedColor = MnTheme.accentButton),
-                    )
-                    Text(durationLabel(d), color = MnTheme.textPrimary, modifier = Modifier.weight(1f))
-                }
-            }
-            Spacer(Modifier.height(16.dp))
-            Button(
-                onClick = onStart,
-                colors = ButtonDefaults.buttonColors(containerColor = MnTheme.accentButton),
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text("Start", color = MnTheme.buttonText, fontWeight = FontWeight.SemiBold)
-            }
-            Spacer(Modifier.height(32.dp))
-        }
-    }
-}
-
-@Composable
-private fun CountdownOverlay(remaining: Int, totalSeconds: Double) {
-    Column(
-        Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Text(
-            remaining.toString(),
-            color = MnTheme.textPrimary.copy(alpha = 0.35f),
-            style = MaterialTheme.typography.displayLarge,
-            fontWeight = FontWeight.Light,
-        )
-        Text(
-            String.format("%d:%02d", totalSeconds.toInt() / 60, totalSeconds.toInt() % 60),
-            color = MnTheme.textSecondary,
-        )
-    }
-}
-
-@Composable
-private fun BreathContent(
-    phases: List<BreathingSessionViewModel.Phase>,
-    phaseIndex: Int,
-    discriminator: String,
-    phaseProgress: Double,
-    progress: Float,
-    remaining: Double,
-    paused: Boolean,
-    onPauseResume: () -> Unit,
-    onFinished: () -> Unit,
-) {
-    Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(
-            phaseLabel[discriminator] ?: discriminator,
-            color = phaseColor(discriminator),
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.SemiBold,
-        )
-        Spacer(Modifier.height(8.dp))
-        Text(
-            String.format("%d:%02d", remaining.toInt() / 60, remaining.toInt() % 60),
-            color = MnTheme.textSecondary,
-        )
-        Spacer(Modifier.height(8.dp))
-        // iOS MeditationView.landscapeLayout: animation + progress in one
-        // HStack (spaced 32), centered; portrait keeps the column.
-        val landscape = LocalConfiguration.current.orientation ==
-            android.content.res.Configuration.ORIENTATION_LANDSCAPE
-        if (landscape) {
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-            ) {
-                if (AnimationSettings.style == AnimationSettings.RINGS) {
-                    BreathingRings(discriminator, phaseProgress)
-                } else {
-                    BreathingPathView(phases = phases, phaseIndex = phaseIndex, phaseProgress = phaseProgress)
-                }
-                Spacer(Modifier.width(32.dp))
-                ProgressBar(progress = progress, modifier = Modifier.width(160.dp))
-            }
-        } else {
-            if (AnimationSettings.style == AnimationSettings.RINGS) {
-                BreathingRings(discriminator, phaseProgress)
-            } else {
-                BreathingPathView(phases = phases, phaseIndex = phaseIndex, phaseProgress = phaseProgress)
-            }
-            Spacer(Modifier.height(16.dp))
-            ProgressBar(progress = progress)
-        }
-        Spacer(Modifier.height(16.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            Button(
-                onClick = onPauseResume,
-                colors = ButtonDefaults.buttonColors(containerColor = MnTheme.accentButton),
-            ) {
-                Text(
-                    if (paused) "Resume" else "Pause",
-                    color = MnTheme.buttonText,
-                    fontWeight = FontWeight.SemiBold,
-                )
-            }
-            Button(
-                onClick = onFinished,
-                colors = ButtonDefaults.buttonColors(containerColor = MnTheme.streakSuccess),
-            ) {
-                Text("Done", color = MnTheme.buttonText, fontWeight = FontWeight.SemiBold)
-            }
-        }
-    }
-}
-
-@Composable
-private fun BreathingRings(discriminator: String, phaseProgress: Double) {
-    val inf = rememberInfiniteTransition(label = "breath")
-    val pulse = inf.animateFloat(
-        initialValue = 0.95f,
-        targetValue = 1.05f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(4000),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "pulse"
-    )
-    val targetScale = when (discriminator) {
-        "inhale" -> 1.0 + 0.35 * phaseProgress
-        "exhale" -> 1.35 - 0.35 * phaseProgress
-        else -> if (discriminator == "inhale") 1.35 else 0.65
-    }
-    val density = LocalDensity.current
-    val sizePx = with(density) { 250.dp.toPx() }
-    val base = (targetScale * pulse.value)
-    Canvas(Modifier.size(250.dp)) {
-        repeat(5) { i ->
-            val lag = i * 0.08
-            val scale = ((base - 1) * (1 - lag).coerceIn(0.4, 1.0) + 1).toFloat()
-            val opacity = (0.25 + i * 0.12).toFloat().coerceIn(0.2f, 0.9f)
-            drawCircle(
-                color = phaseColor(discriminator).copy(alpha = opacity),
-                radius = (sizePx * 0.4f * scale) / 2f,
-                center = Offset(sizePx / 2, sizePx / 2),
-                style = Stroke(width = with(density) { 3.dp.toPx() }),
-            )
-        }
-    }
-}
-
-@Composable
-private fun ProgressBar(progress: Float, modifier: Modifier = Modifier) {
-    Box(modifier.fillMaxWidth().height(12.dp).background(MnTheme.cardBackground)) {
-        Box(
-            Modifier.fillMaxWidth(progress.coerceIn(0f, 1f)).height(12.dp)
-                .background(MnTheme.streakActiveNote),
-        )
-    }
-}
-
-@Composable
-private fun FinishedView(
-    title: String,
-    breathingStyle: String,
-    durationSeconds: Double,
-    onWriteNote: () -> Unit,
-    onSkip: () -> Unit,
-) {
-    Column(
-        Modifier.fillMaxSize().padding(horizontal = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Icon(
-            Icons.Outlined.CheckCircle,
-            contentDescription = null,
-            tint = MnTheme.streakSuccess,
-            modifier = Modifier.size(64.dp),
-        )
-        Spacer(Modifier.height(16.dp))
-        Text(
-            "Well Done!",
-            color = MnTheme.textPrimary,
-            style = MaterialTheme.typography.displaySmall,
-            fontWeight = FontWeight.Bold,
-        )
-        Spacer(Modifier.height(8.dp))
-        Text(
-            "You completed your meditation session",
-            color = MnTheme.textSecondary,
-            textAlign = TextAlign.Center,
-        )
-        Spacer(Modifier.height(24.dp))
-        Column(
-            Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
-                .background(MnTheme.cardBackground)
-                .padding(horizontal = 20.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            InfoRow(Icons.Outlined.Spa, title)
-            InfoRow(Icons.Outlined.Air, breathingStyle)
-            InfoRow(Icons.Outlined.Schedule, formatDuration(durationSeconds))
-        }
-        Spacer(Modifier.height(24.dp))
-        Button(
-            onClick = onWriteNote,
-            colors = ButtonDefaults.buttonColors(containerColor = MnTheme.accentButton),
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Icon(
-                Icons.Outlined.Create,
-                contentDescription = null,
-                tint = MnTheme.buttonText,
-            )
-            Spacer(Modifier.width(8.dp))
-            Text(stringResource(R.string.write_a_note), color = MnTheme.buttonText, fontWeight = FontWeight.SemiBold)
-        }
-        TextButton(onClick = onSkip) {
-            Text(stringResource(R.string.skip_for_now), color = MnTheme.textSecondary)
-        }
-    }
-}
-
-@Composable
-private fun InfoRow(icon: ImageVector, label: String) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Icon(icon, contentDescription = null, tint = MnTheme.textSecondary, modifier = Modifier.size(16.dp))
-        Spacer(Modifier.width(12.dp))
-        Text(label, color = MnTheme.textPrimary, style = MaterialTheme.typography.bodyLarge)
-    }
-}
-
-private fun formatDuration(seconds: Double): String {
-    val mins = seconds.toInt() / 60
-    val secs = seconds.toInt() % 60
-    return if (secs == 0) "$mins min" else "$mins min $secs sec"
 }
