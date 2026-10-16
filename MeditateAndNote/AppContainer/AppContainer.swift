@@ -23,12 +23,24 @@ final class AppContainer: @unchecked Sendable {
     /// (`NLEmbeddingService`, `AIDraftServiceFactory`). The event loop resolves
     /// them through a closure, so nothing is built until something needs it.
     private lazy var streak = StreakScope()
-    private lazy var notes = NoteScope(localDataSource: localDataSource, eventBus: eventBus)
-    private lazy var aiDraft = AIDraftScope(eventBus: eventBus)
+    private lazy var notes = NoteScope(
+        localDataSource: localDataSource,
+        eventBus: eventBus,
+        isEntitled: premiumReader()
+    )
+    private lazy var aiDraft = AIDraftScope(
+        eventBus: eventBus,
+        isEntitled: premiumReader(),
+        quotaStore: UserDefaultsAIDraftQuotaStore()
+    )
     private lazy var meditation = MeditationScope()
     private lazy var search = SearchScope()
     private lazy var settings = SettingsScope()
     @MainActor private lazy var subscription = SubscriptionScope(eventBus: eventBus)
+
+    /// Shared paywall presentation flag. Gated surfaces call `present()`;
+    /// `RootContainer` hosts the single full-screen cover.
+    @MainActor lazy var paywallPresenter = PaywallPresenter()
 
     // MARK: - Core
 
@@ -68,6 +80,15 @@ final class AppContainer: @unchecked Sendable {
     init() {
         eventLoop.start(eventBus: eventBus) { [self] event in
             handlers(for: event)
+        }
+    }
+
+    /// Sendable premium read for actor-isolated managers (drafts, insights).
+    /// Hops to MainActor, where `SubscriptionManager` lives.
+    private func premiumReader() -> @Sendable () async -> Bool {
+        { [weak self] in
+            guard let self else { return false }
+            return await MainActor.run { self.subscription.manager.isPremium }
         }
     }
 

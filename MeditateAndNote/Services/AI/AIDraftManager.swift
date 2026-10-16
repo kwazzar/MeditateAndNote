@@ -44,6 +44,11 @@ final actor AIDraftManager: AIDraftProvidable, AIDraftManageable {
     private let service: any AIDraftService
     private let store: any AIDraftSessionStore
     private let eventBus: DomainEventPublisher
+    /// Premium read for the free-quota rule. Closure (not the protocol) so
+    /// this actor never depends on a @MainActor type — same seam as
+    /// `notesProvider` in `NoteInsightManager`.
+    private let isEntitled: @Sendable () async -> Bool
+    private let quota: any AIDraftQuotaStore
     /// Notes with a generation currently claimed. Checked synchronously (no
     /// await between check and claim) so two concurrent requests for the same
     /// note can't both observe an empty store and start a duplicate draft.
@@ -55,11 +60,15 @@ final actor AIDraftManager: AIDraftProvidable, AIDraftManageable {
     init(
         service: any AIDraftService,
         store: any AIDraftSessionStore,
-        eventBus: DomainEventPublisher = DomainEventBus.shared
+        eventBus: DomainEventPublisher = DomainEventBus.shared,
+        isEntitled: @escaping @Sendable () async -> Bool = { true },
+        quota: any AIDraftQuotaStore = InMemoryAIDraftQuotaStore()
     ) {
         self.service = service
         self.store = store
         self.eventBus = eventBus
+        self.isEntitled = isEntitled
+        self.quota = quota
     }
 
     // MARK: - AIDraftProvidable
@@ -90,30 +99,18 @@ final actor AIDraftManager: AIDraftProvidable, AIDraftManageable {
             throw AIDraftError.noContext
         }
 
-        let prompt = AIPrompt(
-            instructions: instructions,
+        let entitled = try await checkQuota()
+        var session = AIDraftSession(
             noteID: noteID,
-            context: context,
-            maxSuggestions: AIPrompt.defaultMaxSuggestions
+            prompt: AIPrompt(
+                instructions: instructions,
+                noteID: noteID,
+                context: context,
+                maxSuggestions: AIPrompt.defaultMaxSuggestions
+            )
         )
-        var session = AIDraftSession(noteID: noteID, prompt: prompt)
-        session.beginGeneration()
-        try await store.save(session)
-
-        let start = generationStart()
-        do {
-            let suggestions = try await service.suggest(prompt)
-            session.fulfil(with: suggestions)
-            try await store.save(session)
-            publishGenerated(session)
-            publishCompleted(suggestionCount: suggestions.count, start: start)
-            return session
-        } catch {
-            session.fail(error as? AIDraftError ?? .emptyResponse)
-            try await store.save(session)
-            publishFailed(error: error)
-            throw error
-        }
+        try await runGeneration(&session, countAgainstQuota: !entitled)
+        return session
     }
 
     func regenerate(sessionID: UUID) async throws -> AIDraftSession {
@@ -131,23 +128,9 @@ final actor AIDraftManager: AIDraftProvidable, AIDraftManageable {
         }
         defer { inFlight.remove(session.noteID) }
 
-        session.beginGeneration()
-        try await store.save(session)
-
-        let start = generationStart()
-        do {
-            let suggestions = try await service.suggest(session.prompt)
-            session.fulfil(with: suggestions)
-            try await store.save(session)
-            publishGenerated(session)
-            publishCompleted(suggestionCount: suggestions.count, start: start)
-            return session
-        } catch {
-            session.fail(error as? AIDraftError ?? .emptyResponse)
-            try await store.save(session)
-            publishFailed(error: error)
-            throw error
-        }
+        let entitled = try await checkQuota()
+        try await runGeneration(&session, countAgainstQuota: !entitled)
+        return session
     }
 
     func cancel(sessionID: UUID) async throws {
@@ -197,6 +180,43 @@ final actor AIDraftManager: AIDraftProvidable, AIDraftManageable {
 
     // MARK: - Private
 
+    /// Free-tier gate. Returns whether the caller is premium (so a successful
+    /// generation can skip burning quota). Premium passes unconditionally.
+    private func checkQuota() async throws -> Bool {
+        let entitled = await isEntitled()
+        guard AIDraftQuota.allowsDraft(isPremium: entitled, used: quota.used()) else {
+            logger.info("Free draft quota exhausted (limit \(AIDraftQuota.freeLimit))")
+            throw AIDraftError.freeQuotaExhausted
+        }
+        return entitled
+    }
+
+    /// Shared generation pipeline for start/regenerate: mark, call provider,
+    /// persist, publish. Free users burn one quota unit per *successful*
+    /// generation — failed attempts don't count against the allowance.
+    /// ponytail: quota check and `record()` span an await, so two concurrent
+    /// free drafts on different notes can overshoot `freeLimit` by one —
+    /// acceptable for a client-side allowance; serialize if it ever matters.
+    private func runGeneration(_ session: inout AIDraftSession, countAgainstQuota: Bool) async throws {
+        session.beginGeneration()
+        try await store.save(session)
+
+        let start = generationStart()
+        do {
+            let suggestions = try await service.suggest(session.prompt)
+            session.fulfil(with: suggestions)
+            try await store.save(session)
+            if countAgainstQuota { quota.record() }
+            publishGenerated(session)
+            publishCompleted(suggestionCount: suggestions.count, start: start)
+        } catch {
+            session.fail(error as? AIDraftError ?? .emptyResponse)
+            try await store.save(session)
+            publishFailed(error: error)
+            throw error
+        }
+    }
+
     private func publishGenerated(_ session: AIDraftSession) {
         eventBus.publish(.aiDraftGenerated(noteID: session.noteID, sessionID: session.id))
     }
@@ -233,6 +253,7 @@ final actor AIDraftManager: AIDraftProvidable, AIDraftManageable {
         case .emptyResponse: return .emptyResponse
         case .cancelled: return .unknown
         case .noAcceptedProposals: return .unknown
+        case .freeQuotaExhausted: return .rateLimited
         }
     }
 }

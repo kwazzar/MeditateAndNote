@@ -14,3 +14,8 @@ public enum BreathingAnimationStyle: String, CaseIterable {
     case rings
     case path
 }
+
+public extension BreathingAnimationStyle {
+    /// `path` is the free default; `rings` requires the premium entitlement.
+    var isPremium: Bool { self == .rings }
+}

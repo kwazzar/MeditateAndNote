@@ -43,6 +43,12 @@ final class NoteEditorViewModel {
         aiDraftViewModel != nil && (aiDraftViewModel?.uiState == .ready || aiDraftViewModel?.uiState == .loading)
     }
 
+    /// True when the last generation hit the free-quota wall: the bar stays
+    /// up to show the upgrade call-to-action instead of vanishing silently.
+    var showAIDraftUpgrade: Bool {
+        aiDraftViewModel?.uiState == .failed(.freeQuotaExhausted)
+    }
+
     /// True when AI is still generating suggestions.
     var isAIDraftLoading: Bool {
         aiDraftViewModel?.uiState == .loading

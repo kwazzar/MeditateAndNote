@@ -10,13 +10,18 @@ struct NoteScope: DomainEventRouting {
     let manager: NoteManager
     let insightManager: NoteInsightManager
 
-    init(localDataSource: any NoteDataSource, eventBus: DomainEventPublisher = DomainEventBus.shared) {
+    init(
+        localDataSource: any NoteDataSource,
+        eventBus: DomainEventPublisher = DomainEventBus.shared,
+        isEntitled: @escaping @Sendable () async -> Bool = { true }
+    ) {
         manager = NoteManager(local: localDataSource, eventBus: eventBus)
         insightManager = NoteInsightManager(
             analyzer: FoundationModelsNoteAnalyzer(),
             store: CoreDataNoteInsightStore(),
             notesProvider: { [manager] in await manager.currentNotes },
-            eventBus: eventBus
+            eventBus: eventBus,
+            isEntitled: isEntitled
         )
     }
 

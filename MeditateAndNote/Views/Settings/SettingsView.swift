@@ -70,9 +70,20 @@ private extension SettingsView {
         VStack(alignment: .leading, spacing: 16) {
             sectionHeader("Meditation Animation", icon: "waveform.path.ecg")
 
-            Picker("Animation", selection: $animationSettings.style) {
+            Picker("Animation", selection: Binding(
+                get: { animationSettings.style },
+                set: { newValue in
+                    if animationSettings.isLocked(newValue) {
+                        container.paywallPresenter.present()
+                    } else {
+                        animationSettings.select(newValue)
+                    }
+                }
+            )) {
                 ForEach(BreathingAnimationStyle.allCases, id: \.self) { style in
-                    Text(style.displayName).tag(style)
+                    Text(animationSettings.isLocked(style)
+                         ? "\(style.displayName) 🔒"
+                         : style.displayName).tag(style)
                 }
             }
             .pickerStyle(.segmented)
@@ -89,7 +100,11 @@ private extension SettingsView {
 
             ForEach(MainTheme.allCases, id: \.self) { theme in
                 Button {
-                    themeManager.current = theme
+                    if themeManager.isLocked(theme) {
+                        container.paywallPresenter.present()
+                    } else {
+                        themeManager.select(theme)
+                    }
                 } label: {
                     HStack(spacing: 12) {
                         Image(systemName: theme.iconName)
@@ -113,6 +128,10 @@ private extension SettingsView {
                             Image(systemName: "checkmark")
                                 .font(.system(size: 14, weight: .semibold))
                                 .foregroundColor(themeManager.current.streakActiveMeditation)
+                        } else if themeManager.isLocked(theme) {
+                            Image(systemName: "lock.fill")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundColor(themeManager.current.textSecondary)
                         }
                     }
                     .padding(.vertical, 8)

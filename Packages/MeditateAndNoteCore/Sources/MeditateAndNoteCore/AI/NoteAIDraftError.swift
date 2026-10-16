@@ -25,4 +25,6 @@ public enum AIDraftError: String, Error, Equatable, Codable, Sendable {
     case cancelled
     /// No accepted proposals to transfer to the note.
     case noAcceptedProposals
+    /// The free-tier generation allowance is used up; premium unlocks more.
+    case freeQuotaExhausted
 }

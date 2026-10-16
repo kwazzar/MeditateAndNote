@@ -10,6 +10,7 @@ struct NoteEditorView: View {
     @State var viewModel: NoteEditorViewModel
     @Environment(\.dismiss) private var dismiss
     @Environment(ThemeManager.self) private var themeManager
+    @Environment(\.appContainer) private var container
 
     @FocusState private var isEditorFocused: Bool
     @State private var isKeyboardVisible = false
@@ -26,7 +27,7 @@ struct NoteEditorView: View {
             VStack(spacing: 0) {
                 topBar
                 editorBody
-                if viewModel.showAIDraftBar {
+                if viewModel.showAIDraftBar || viewModel.showAIDraftUpgrade {
                     aiDraftBar
                 }
                 // ponytail: FloatingToolbar (bold/italic/list) has no
@@ -78,7 +79,9 @@ private extension NoteEditorView {
     @ViewBuilder
     func aiDraftBarContent(_ vm: NoteAIDraftViewModel) -> some View {
         VStack(spacing: 8) {
-            if vm.uiState == .loading {
+            if vm.uiState == .failed(.freeQuotaExhausted) {
+                freeQuotaUpgradeRow
+            } else if vm.uiState == .loading {
                 HStack(spacing: 8) {
                     ProgressView()
                         .scaleEffect(0.8)
@@ -142,6 +145,33 @@ private extension NoteEditorView {
         .background(themeManager.current.editorBackground, in: RoundedRectangle(cornerRadius: 16))
         .padding(.horizontal, 16)
         .padding(.bottom, isKeyboardVisible ? 0 : 8)
+    }
+
+    /// Shown when the free AI-draft allowance is spent: routes to the paywall.
+    private var freeQuotaUpgradeRow: some View {
+        HStack(spacing: 8) {
+            Label {
+                Text("Free drafts used up")
+                    .font(.caption.weight(.semibold))
+            } icon: {
+                Image(systemName: "lock.fill")
+            }
+            .foregroundStyle(themeManager.current.textSecondary)
+
+            Spacer()
+
+            Button {
+                container.paywallPresenter.present()
+            } label: {
+                Text("Upgrade")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(themeManager.current.streakActiveMeditation, in: Capsule())
+            }
+        }
+        .padding(.horizontal, 4)
     }
 
     func inlineSuggestionRow(_ suggestion: AISuggestion, vm: NoteAIDraftViewModel, state: SuggestionState) -> some View {

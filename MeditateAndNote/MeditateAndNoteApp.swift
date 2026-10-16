@@ -11,7 +11,13 @@ import SwiftUI
 struct MeditateAndNoteApp: App {
     @State private var router = Router(level: 0, identifierTab: nil)
     @State private var container = AppContainer.shared
-    @State private var themeManager = ThemeManager()
+    @State private var themeManager = ThemeManager(entitlements: AppContainer.shared.subscriptionManager)
+
+    init() {
+        // The `.shared` settings singletons can't take the provider in init,
+        // so the app root attaches the premium read once at launch.
+        AnimationSettings.shared.attachEntitlements(AppContainer.shared.subscriptionManager)
+    }
 
     var body: some Scene {
         WindowGroup {

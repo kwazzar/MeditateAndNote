@@ -13,6 +13,14 @@ enum MainTheme: String, CaseIterable {
 }
 
 extension MainTheme {
+    /// `darkZen` (default) and `breathing` are free; the rest need premium.
+    var isPremium: Bool {
+        switch self {
+        case .liquidGlass, .softDawn, .obsidian: true
+        case .breathing, .darkZen: false
+        }
+    }
+
     var displayName: String {
         switch self {
         case .liquidGlass: "Liquid Glass"

@@ -47,6 +47,9 @@ final actor NoteInsightManager: NoteInsightProvidable, NoteInsightManageable {
 
     private let debounceInterval: TimeInterval
     private let minInterval: TimeInterval
+    /// Premium read: insights analysis is a paid surface. Closure seam so this
+    /// actor never depends on a @MainActor protocol.
+    private let isEntitled: @Sendable () async -> Bool
     private var pendingTask: Task<Void, Never>?
     private var lastRunAt: Date?
 
@@ -56,7 +59,8 @@ final actor NoteInsightManager: NoteInsightProvidable, NoteInsightManageable {
         notesProvider: @escaping @Sendable () async -> [Note],
         eventBus: DomainEventPublisher = DomainEventBus.shared,
         debounceInterval: TimeInterval = 30,
-        minInterval: TimeInterval = 60
+        minInterval: TimeInterval = 60,
+        isEntitled: @escaping @Sendable () async -> Bool = { true }
     ) {
         self.analyzer = analyzer
         self.store = store
@@ -64,6 +68,7 @@ final actor NoteInsightManager: NoteInsightProvidable, NoteInsightManageable {
         self.eventBus = eventBus
         self.debounceInterval = debounceInterval
         self.minInterval = minInterval
+        self.isEntitled = isEntitled
     }
 
     // MARK: - NoteInsightProvidable
@@ -81,6 +86,10 @@ final actor NoteInsightManager: NoteInsightProvidable, NoteInsightManageable {
     func refresh(notes: [Note]) async {
         guard analyzer.isAvailable else {
             logger.info("Note analyzer unavailable — skipping pass")
+            return
+        }
+        guard await isEntitled() else {
+            logger.info("Insights are a premium surface — skipping analysis pass")
             return
         }
         do {

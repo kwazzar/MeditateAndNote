@@ -12,11 +12,21 @@ struct AIDraftScope: DomainEventRouting {
     let metricStore: any AIDraftMetricStore
     let manager: AIDraftManager
 
-    init(eventBus: DomainEventPublisher = DomainEventBus.shared) {
+    init(
+        eventBus: DomainEventPublisher = DomainEventBus.shared,
+        isEntitled: @escaping @Sendable () async -> Bool = { true },
+        quotaStore: any AIDraftQuotaStore = InMemoryAIDraftQuotaStore()
+    ) {
         service = AIDraftServiceFactory.make()
         sessionStore = CoreDataAIDraftSessionStore()
         metricStore = CoreDataAIDraftMetricStore()
-        manager = AIDraftManager(service: service, store: sessionStore, eventBus: eventBus)
+        manager = AIDraftManager(
+            service: service,
+            store: sessionStore,
+            eventBus: eventBus,
+            isEntitled: isEntitled,
+            quota: quotaStore
+        )
     }
 
     static func handles(_ event: DomainEvent) -> Bool {

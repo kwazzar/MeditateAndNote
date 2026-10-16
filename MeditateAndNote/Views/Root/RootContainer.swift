@@ -68,6 +68,13 @@ struct RootContainer: View {
         }
         // Системні матеріали (.ultraThinMaterial), пікери та шити йдуть за MainTheme, а не за системною темою.
         .preferredColorScheme(themeManager.current.colorScheme)
+        .fullScreenCover(isPresented: Binding(
+            get: { container.paywallPresenter.isPresented },
+            set: { container.paywallPresenter.isPresented = $0 }
+        )) {
+            PaywallView(container: container)
+                .environment(themeManager)
+        }
         .onAppear(perform: scheduleLaunchDismissal)
         .task(priority: .background) {
             await container.subscriptionManager.refresh()
