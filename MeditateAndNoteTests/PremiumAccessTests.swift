@@ -270,6 +270,84 @@ final class PremiumAccessTests: XCTestCase {
         XCTAssertTrue(saved.isEmpty)
     }
 
+    // MARK: - Runtime .subscriptionChanged reactions
+
+    func testThemeManager_revokeAtRuntimeRevertsPremiumTheme() {
+        let entitlements = MockEntitlements()
+        entitlements.premium = true
+        let bus = DomainEventBus()
+        let manager = ThemeManager(entitlements: entitlements, defaults: defaults, eventBus: bus)
+        manager.select(.obsidian)
+        XCTAssertEqual(manager.current, .obsidian)
+
+        entitlements.premium = false
+        bus.publish(.subscriptionChanged(.none))
+        // Handler hops to MainActor via Task — yield first.
+        let expectation = expectation(description: "clamped")
+        Task { @MainActor in
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: 1)
+
+        XCTAssertEqual(manager.current, .darkZen)
+    }
+
+    func testThemeManager_grantAtRuntimeKeepsCurrentTheme() {
+        let entitlements = MockEntitlements()
+        let bus = DomainEventBus()
+        let manager = ThemeManager(entitlements: entitlements, defaults: defaults, eventBus: bus)
+        manager.select(.breathing)
+
+        entitlements.premium = true
+        bus.publish(.subscriptionChanged(
+            SubscriptionStatus(activeEntitlements: [.pro], expirationDate: nil, willRenew: true, productIdentifier: "p")
+        ))
+        let expectation = expectation(description: "settled")
+        Task { @MainActor in
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: 1)
+
+        XCTAssertEqual(manager.current, .breathing)
+    }
+
+    func testAnimationSettings_revokeAtRuntimeRevertsPremiumStyle() {
+        let entitlements = MockEntitlements()
+        entitlements.premium = true
+        let bus = DomainEventBus()
+        let settings = AnimationSettings(entitlements: entitlements, defaults: defaults, eventBus: bus)
+        settings.select(.rings)
+        XCTAssertEqual(settings.style, .rings)
+
+        entitlements.premium = false
+        bus.publish(.subscriptionChanged(.none))
+        let expectation = expectation(description: "clamped")
+        Task { @MainActor in
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: 1)
+
+        XCTAssertEqual(settings.style, .path)
+    }
+
+    func testEditorUpgradeRow_hidesLiveOnUpgrade() async throws {
+        let entitlements = MockEntitlements()
+        let drafts = ExhaustedDrafts()
+        let notes = NoteServiceSpy()
+        let editor = NoteEditorViewModel(
+            notes: notes,
+            drafts: drafts,
+            entitlements: entitlements
+        )
+        editor.body = "content"
+
+        await editor.startAIDraft()
+        XCTAssertTrue(editor.showAIDraftUpgrade)
+
+        entitlements.premium = true
+        XCTAssertFalse(editor.showAIDraftUpgrade, "Upgrade row must disappear live, without a restart")
+    }
+
     func testInsightManager_entitledRunsAnalysis() async throws {
         let store = InMemoryNoteInsightStore()
         let bus = DomainEventBus()
@@ -293,6 +371,20 @@ final class PremiumAccessTests: XCTestCase {
 }
 
 // MARK: - Local stubs
+
+/// Drafts double that always answers with the quota wall.
+private struct ExhaustedDrafts: AIDraftProvidable, AIDraftManageable {
+    func session(for noteID: NoteID) async throws -> AIDraftSession? { nil }
+    func startDraft(noteID: NoteID, instructions: String, context: NoteContent) async throws -> AIDraftSession {
+        throw AIDraftError.freeQuotaExhausted
+    }
+    func regenerate(sessionID: UUID) async throws -> AIDraftSession { throw AIDraftError.noContext }
+    func cancel(sessionID: UUID) async throws {}
+    func discardSessions(for noteID: NoteID) async throws {}
+    func acceptSuggestion(sessionID: UUID, suggestionID: UUID) async throws -> AIDraftSession { throw AIDraftError.noContext }
+    func acceptAllSuggestions(sessionID: UUID) async throws -> AIDraftSession { throw AIDraftError.noContext }
+    func rejectSuggestion(sessionID: UUID, suggestionID: UUID) async throws -> AIDraftSession { throw AIDraftError.noContext }
+}
 
 private final class AtomicFlag: @unchecked Sendable {
     private let lock = NSLock()

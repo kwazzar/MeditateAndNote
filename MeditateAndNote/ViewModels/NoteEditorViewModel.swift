@@ -31,6 +31,9 @@ final class NoteEditorViewModel {
     private let notes: any NoteProvidable & NoteManageable
     private let drafts: any AIDraftProvidable & AIDraftManageable
     private let eventBus: DomainEventPublisher
+    /// Premium read so the quota-upgrade row hides live when the user buys
+    /// from the paywall without restarting the editor.
+    private let entitlements: (any EntitlementProviding)?
     private var target: EditTarget
     private var autosaveTask: Task<Void, Never>?
     private var loadTask: Task<Void, Never>?
@@ -45,8 +48,13 @@ final class NoteEditorViewModel {
 
     /// True when the last generation hit the free-quota wall: the bar stays
     /// up to show the upgrade call-to-action instead of vanishing silently.
+    /// Reads the entitlement live, so buying from the paywall hides it at
+    /// once (`@Observable` dependency — the editor re-renders on status
+    /// change). `nil` provider → quota never blocks (previews/tests).
     var showAIDraftUpgrade: Bool {
-        aiDraftViewModel?.uiState == .failed(.freeQuotaExhausted)
+        guard let entitlements else { return false }
+        guard aiDraftViewModel?.uiState == .failed(.freeQuotaExhausted) else { return false }
+        return !entitlements.isActive(.pro)
     }
 
     /// True when AI is still generating suggestions.
@@ -102,11 +110,13 @@ final class NoteEditorViewModel {
     init(noteId: NoteID? = nil,
          notes: any NoteProvidable & NoteManageable,
          drafts: any AIDraftProvidable & AIDraftManageable = AIDraftManagerStub(),
-         eventBus: DomainEventPublisher = DomainEventBus.shared) {
+         eventBus: DomainEventPublisher = DomainEventBus.shared,
+         entitlements: (any EntitlementProviding)? = nil) {
         self.target = noteId.map(EditTarget.loading) ?? .new
         self.notes = notes
         self.drafts = drafts
         self.eventBus = eventBus
+        self.entitlements = entitlements
 
         if let noteId {
             loadTask = Task { [weak self] in

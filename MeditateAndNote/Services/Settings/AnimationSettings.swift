@@ -23,9 +23,14 @@ final class AnimationSettings {
 
     private let defaults: UserDefaults
     private let logger = Logger(subsystem: "MeditateAndNote", category: "AnimationSettings")
+    private let eventBus: any DomainEventPublisher
     /// Premium read for animation gating. `nil` (previews/tests) leaves every
     /// style selectable; production attaches the subscription manager once.
     private var entitlements: (any EntitlementProviding)?
+    /// `.subscriptionChanged` listener: a mid-session revoke must revert a
+    /// rendered premium style, not wait for the next launch. Unsafe: only
+    /// MainActor mutates it; deinit (nonisolated) reads it to unsubscribe.
+    private nonisolated(unsafe) var subscriptionToken: UUID?
 
     var style: BreathingAnimationStyle {
         get { storedStyle }
@@ -38,9 +43,14 @@ final class AnimationSettings {
         }
     }
 
-    init(entitlements: (any EntitlementProviding)? = nil, defaults: UserDefaults = .standard) {
+    init(
+        entitlements: (any EntitlementProviding)? = nil,
+        defaults: UserDefaults = .standard,
+        eventBus: any DomainEventPublisher = DomainEventBus.shared
+    ) {
         self.entitlements = entitlements
         self.defaults = defaults
+        self.eventBus = eventBus
         let savedRawValue = defaults.string(forKey: Self.storageKey)
         if let savedRawValue, BreathingAnimationStyle(rawValue: savedRawValue) == nil {
             logger.warning("Unknown stored animation style '\(savedRawValue)' — falling back to default")
@@ -49,6 +59,20 @@ final class AnimationSettings {
         // default so a lapsed user never renders a locked animation.
         let resolved = BreathingAnimationStyle(rawValue: savedRawValue ?? "") ?? .path
         self.storedStyle = Self.clampIfLocked(resolved, entitlements: entitlements)
+        // Subscribe only after every stored property is initialized — the
+        // escaping handler captures `self`.
+        subscriptionToken = eventBus.subscribe { [weak self] event in
+            guard case .subscriptionChanged = event else { return }
+            Task { @MainActor [weak self] in
+                self?.clampCurrentIfLocked()
+            }
+        }
+    }
+
+    deinit {
+        if let subscriptionToken {
+            eventBus.unsubscribe(subscriptionToken)
+        }
     }
 
     /// Production wiring: the `.shared` singleton can't take the provider in
@@ -59,6 +83,14 @@ final class AnimationSettings {
         if isLocked(storedStyle) {
             storedStyle = .path
         }
+    }
+
+    /// Runtime counterpart of the init-time clamp: the publisher fires after
+    /// `SubscriptionManager.status` is updated, so this reads fresh state.
+    private func clampCurrentIfLocked() {
+        guard isLocked(storedStyle) else { return }
+        logger.info("Entitlement revoked while '\(storedStyle.rawValue)' active — reverting to free animation")
+        storedStyle = .path
     }
 
     /// True when the style needs premium and the entitlement isn't active.

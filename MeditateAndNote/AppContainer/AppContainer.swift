@@ -116,7 +116,13 @@ final class AppContainer: @unchecked Sendable {
 
     @MainActor
     func makeNoteEditorViewModel(noteId: NoteID? = nil) -> NoteEditorViewModel {
-        NoteEditorViewModel(noteId: noteId, notes: notes.manager, drafts: aiDraft.manager, eventBus: eventBus)
+        NoteEditorViewModel(
+            noteId: noteId,
+            notes: notes.manager,
+            drafts: aiDraft.manager,
+            eventBus: eventBus,
+            entitlements: subscription.manager
+        )
     }
 
     @MainActor

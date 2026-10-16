@@ -16,9 +16,14 @@ final class ThemeManager {
 
     private let logger = Logger(subsystem: "MeditateAndNote", category: "ThemeManager")
     private let defaults: UserDefaults
+    private let eventBus: any DomainEventPublisher
     /// Premium read for theme gating. `nil` (previews/tests) leaves every
     /// theme selectable — gating is enforced only when wired in production.
     private let entitlements: (any EntitlementProviding)?
+    /// `.subscriptionChanged` listener: a mid-session revoke must revert a
+    /// rendered premium theme, not wait for the next launch. Unsafe: only
+    /// MainActor mutates it; deinit (nonisolated) reads it to unsubscribe.
+    private nonisolated(unsafe) var subscriptionToken: UUID?
 
     var current: MainTheme {
         didSet {
@@ -26,9 +31,14 @@ final class ThemeManager {
         }
     }
 
-    init(entitlements: (any EntitlementProviding)? = nil, defaults: UserDefaults = .standard) {
+    init(
+        entitlements: (any EntitlementProviding)? = nil,
+        defaults: UserDefaults = .standard,
+        eventBus: any DomainEventPublisher = DomainEventBus.shared
+    ) {
         self.entitlements = entitlements
         self.defaults = defaults
+        self.eventBus = eventBus
         let savedRawValue = defaults.string(forKey: Self.storageKey)
         if let savedRawValue, MainTheme(rawValue: savedRawValue) == nil {
             logger.warning("Unknown stored theme '\(savedRawValue)' — falling back to default")
@@ -37,6 +47,20 @@ final class ThemeManager {
         // default so a lapsed user never renders a locked theme.
         let resolved = MainTheme(rawValue: savedRawValue ?? "") ?? .darkZen
         self.current = Self.clampIfLocked(resolved, entitlements: entitlements)
+        // Subscribe only after every stored property is initialized — the
+        // escaping handler captures `self`.
+        subscriptionToken = eventBus.subscribe { [weak self] event in
+            guard case .subscriptionChanged = event else { return }
+            Task { @MainActor [weak self] in
+                self?.clampCurrentIfLocked()
+            }
+        }
+    }
+
+    deinit {
+        if let subscriptionToken {
+            eventBus.unsubscribe(subscriptionToken)
+        }
     }
 
     /// True when the theme needs premium and the entitlement isn't active.
@@ -54,6 +78,14 @@ final class ThemeManager {
             return
         }
         current = theme
+    }
+
+    /// Runtime counterpart of the init-time clamp: the publisher fires after
+    /// `SubscriptionManager.status` is updated, so this reads fresh state.
+    private func clampCurrentIfLocked() {
+        guard isLocked(current) else { return }
+        logger.info("Entitlement revoked while '\(current.rawValue)' active — reverting to free theme")
+        current = .darkZen
     }
 
     private static func clampIfLocked(
