@@ -1180,6 +1180,25 @@ iOS: build зелений, **478 тестів** зелені (без нових 
 
 **Перевірено:** `assembleDebug` ✅; `connectedDebugAndroidTest` — 38/38 ✅ (7 нових у `AIDraftContractTest`); iOS — `RemoteLLMDraftServiceTests` + `AIDraftManagerTests` + `AIDraftSessionTests` = 50/50 ✅; ручний QA на `emulator-5554` з mock-провайдером: підказки прийшли, Accept пересуває їх у «Accepted», Transfer вставляє текст у нотатку (порожній рядок-роздільник, як в iOS), лічильник квоти зріс на 1.
 
+**v3 — персистентність сесії + метрики. Зроблено 2026-10-20.**
+
+Чернетка тепер переживає закриття редактора: сесія зберігається (один документ на нотатку, Kotlin тримає його як непрозорий рядок), і коли нотатку відкривають знову — підказки на місці, **без нової генерації** (важливо: безкоштовна квота = 5, повторна генерація щоразу її їла б). Видалення нотатки викидає її сесію.
+
+| Шар | Файл | Роль |
+|---|---|---|
+| Bridge | `KotlinAIDraftSessionStore.swift` | адаптер над сховищем Kotlin: `fetchSync`/`saveSync`/`deleteSync` |
+| Bridge | `AIDraftBridge.swift` | нові команди `session(noteId)` і `discardSession(noteId)`; сесія пишеться після кожної транзиції |
+| Data | `AIDraftSessionStorage.kt` | сховище сесій (SharedPreferences, документ непрозорий) |
+| Data | `AIDraftMetrics.kt` | запис телеметрії в Room (`ai_draft_metrics`) |
+| Core | `AIDraftError.metricKind` | санітизований вид помилки для телеметрії — правило тепер спільне з iOS |
+| UI | `NoteEditorScreen.kt` | відновлення сесії при відкритті, метрики генерації/вставки/відхилення |
+
+Метрики, як в iOS: `generationStarted(warmCold)`, `generationCompleted(latencyMs, suggestionCount)`, `generationFailed(errorKind)`, `suggestionInserted(index)`, `suggestionRejected(index)` — у рядку лише лічильники, затримка й тип помилки, ніколи текст підказки.
+
+**Гейт провайдера змінено:** тепер перевіряється endpoint, а не API-ключ (endpoint без авторизації — локальна модель чи проксі — тепер працює; ключ лишається необов'язковим і додається в запит, коли є).
+
+**Ловишка інструментальника:** `KotlinAIDraftSessionStore` **не** реалізує протокол Core `AIDraftSessionStore` — SIL-оптимізатор Swift 6.4 падає (crash у `cgscc(devirt)`) на будь-якій новій відповідності цьому async-протоколу в модулі JNI (і як struct, і як actor). Міст користується синхронними формами; виправлення — коли полагодиться тулчейн.
+
 **Застарілий контракт у 3.1.** Запропонований тут `AIWritingService`/`AICapabilityLevel` не застосовується: у Core вже є `AIDraftService`, `AIDraftSession`, `AIPrompt`, `AISuggestion`, `AIDraftQuota`, `AIDraftSettings`, `AIDraftError`, `AIDraftState` (згенеровані Java-біндінги — 114 файлів у `com/mn/core/`). Паралельний контракт заводити не треба: розширюємо наявний.
 
 ### 3.1 Базовий контракт (рівень 1, спільний)

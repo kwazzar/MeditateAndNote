@@ -42,3 +42,18 @@ public extension AIDraftMetric {
         }
     }
 }
+
+public extension AIDraftError {
+    /// The sanitized telemetry kind for this error.
+    ///
+    /// A metric row must never carry provider text, so the error is bucketed
+    /// into a closed set of kinds instead of its message.
+    var metricKind: ErrorKind {
+        switch self {
+        case .noContext, .contextTooLong, .providerUnavailable: return .unavailable
+        case .rateLimited, .freeQuotaExhausted: return .rateLimited
+        case .emptyResponse: return .emptyResponse
+        case .cancelled, .noAcceptedProposals: return .unknown
+        }
+    }
+}

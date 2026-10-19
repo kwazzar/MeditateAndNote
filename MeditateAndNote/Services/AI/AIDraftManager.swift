@@ -244,17 +244,11 @@ final actor AIDraftManager: AIDraftProvidable, AIDraftManageable {
 
     /// Maps a caught error to the sandboxed typed ErrorKind — never the raw
     /// error message — so telemetry rows can't leak note content or URLs.
+    /// The mapping itself lives in Core, so the Android side buckets the same
+    /// way.
     private static func errorKind(for error: Error) -> ErrorKind {
         guard let draftError = error as? AIDraftError else { return .unknown }
-        switch draftError {
-        case .noContext, .contextTooLong: return .unavailable
-        case .rateLimited: return .rateLimited
-        case .providerUnavailable: return .unavailable
-        case .emptyResponse: return .emptyResponse
-        case .cancelled: return .unknown
-        case .noAcceptedProposals: return .unknown
-        case .freeQuotaExhausted: return .rateLimited
-        }
+        return draftError.metricKind
     }
 }
 

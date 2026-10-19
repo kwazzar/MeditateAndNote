@@ -59,6 +59,7 @@ import com.mn.android.R
 import com.mn.android.infrastructure.persistence.local.settings.AnimationSettings
 import com.mn.android.infrastructure.persistence.local.meditation.MeditationSelection
 import com.mn.android.data.AIDraftQuotaCounter
+import com.mn.android.data.AIDraftSessionStorage
 import com.mn.android.data.AIDraftSettingsStore
 import com.mn.android.data.NoteBlobStore
 import com.mn.android.data.SessionBlobStore
@@ -139,6 +140,7 @@ private fun MnNav() {
     NoteBlobStore.configure(LocalContext.current)
     AIDraftSettingsStore.configure(LocalContext.current)
     AIDraftQuotaCounter.configure(LocalContext.current)
+    AIDraftSessionStorage.configure(LocalContext.current)
     SessionBlobStore.configure(LocalContext.current)
     SharedPrefsReminderSettingsStore.configure(LocalContext.current)
     MeditationSelection.configure(LocalContext.current)

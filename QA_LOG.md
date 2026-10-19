@@ -64,6 +64,21 @@
 
 **Автотести:** `connectedDebugAndroidTest` — 38/38 PASS (7 нових у `AIDraftContractTest`: підказки приходять, без контексту — питання, accept/reject/acceptAll, квота, помилка провайдера). iOS: `RemoteLLMDraftServiceTests` + `AIDraftManagerTests` + `AIDraftSessionTests` — 50/50 PASS.
 
+## Прохід Android AI Draft — сесія + метрики (дата: 2026-10-20, середовище: Android emulator `emulator-5554`, провайдер: локальний mock на `10.0.2.2:8731`)
+
+| # | Крок | Очікування | Pass/Fail | Лог/примітка |
+|---|------|-----------|-----------|--------------|
+| 1 | Налаштувати endpoint (без ключа) | провайдер вважається налаштованим | PASS | гейт тепер на endpoint, а не на ключ: endpoint без авторизації працює; ключ лишається необов'язковим |
+| 2 | Тап по ✨ у нотатці | підказки приходять | PASS | «Proposals» + 2 підказки від mock-провайдера |
+| 3 | Вийти з редактора, відкрити нотатку знову | сесія на місці, без нової генерації | PASS | ті самі дві підказки одразу після відкриття; лічильник квоти лишився `used=1` — квота не з'їдена повторно |
+| 4 | Сховище сесій | документ непрозорий, один на нотатку | PASS | `ai_draft_sessions.xml` → `session_<noteId>` = JSON, який написав Swift |
+| 5 | Метрики генерації | рядки в базі | PASS | `ai_draft_metrics`: `generationStarted(warm_cold=1)`, `generationCompleted(latency_ms=721, suggestion_count=2)` |
+| 6 | Метрики вставки/відхилення | індекси підказок | PASS | `suggestionInserted` / `suggestionRejected` пишуться при Transfer і Remove |
+| 7 | Видалення нотатки | сесія викидається | PASS | команда `discardSession` прибирає документ нотатки |
+| 8 | Без провайдера | зрозуміла підказка | PASS | «Set the AI provider in Settings to use AI drafts» |
+
+**Автотести:** `connectedDebugAndroidTest` — 42/42 PASS (4 нові: сесія переживає закриття редактора, `discard` прибирає її, міст несе метрику генерації, метрика пишеться в Room).
+
 ## Історія прогонів
 
 | Прохід | Дата | Результат | Нотатки |
@@ -71,3 +86,4 @@
 | 1 | 2026-09-23 | 20 PASS (усі, п.14 та 17–20 закриті 2026-09-25) | QA спринту 4D завершено |
 | 2 | 2026-10-20 | 10 PASS (Android AI Insights) | v1 інсайтів на Android, без LLM |
 | 3 | 2026-10-20 | 12 PASS (Android AI Draft) | v2 чернетки: remote-провайдер, парітет з iOS |
+| 4 | 2026-10-20 | 8 PASS (сесія + метрики) | v3: чернетка переживає закриття редактора, телеметрія як в iOS |

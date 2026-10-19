@@ -21,6 +21,8 @@ object AIDraftSource {
     }
 
     external fun startDraft(instruction: String, context: String, noteId: String): String
+    external fun session(noteId: String): String
+    external fun discardSession(noteId: String)
     external fun acceptSuggestion(session: String, suggestionId: String): String
     external fun acceptAll(session: String): String
     external fun rejectSuggestion(session: String, suggestionId: String): String
@@ -49,16 +51,35 @@ object AIDraftSource {
             get() = suggestions.filter { suggestion -> accepted.none { it.id == suggestion.id } }
     }
 
+    /** One telemetry event: counts, latency and a typed kind - never content. */
+    data class Metric(
+        val kind: String,
+        val warmCold: Boolean? = null,
+        val latencyMs: Long? = null,
+        val suggestionCount: Long? = null,
+        val errorKind: String? = null,
+        val suggestionIndex: Long? = null,
+    )
+
     data class Result(
         val ok: Boolean,
         /** The session document, handed back unchanged for the next command. */
         val document: String?,
         val session: Session?,
         val error: String?,
+        val metric: Metric? = null,
     )
 
     fun start(noteId: String, instruction: String, context: String): Result =
         parse(startDraft(instruction, context, noteId))
+
+    /** The session left behind on this note, if any. */
+    fun stored(noteId: String): Result = parse(session(noteId))
+
+    /** Drops the stored session - the note is gone, so is its draft. */
+    fun discard(noteId: String) {
+        discardSession(noteId)
+    }
 
     fun accept(session: String, suggestionId: String): Result =
         parse(acceptSuggestion(session, suggestionId))
@@ -76,20 +97,39 @@ object AIDraftSource {
         return try {
             val root = JSONObject(json)
             val sessionObject = root.optJSONObject("session")
+            val metric = root.optJSONObject("metric")?.let { metric(it) }
             if (root.optBoolean("ok")) {
                 Result(
                     ok = true,
                     document = sessionObject?.toString(),
                     session = sessionObject?.let { session(it) },
                     error = null,
+                    metric = metric,
                 )
             } else {
-                Result(ok = false, document = null, session = null, error = root.optString("error"))
+                Result(
+                    ok = false,
+                    document = null,
+                    session = null,
+                    error = root.optString("error"),
+                    metric = metric,
+                )
             }
         } catch (error: Exception) {
             Result(ok = false, document = null, session = null, error = "providerUnavailable")
         }
     }
+
+    private fun metric(json: JSONObject) = Metric(
+        kind = json.optString("kind"),
+        latencyMs = json.optLongOrNull("latencyMs"),
+        suggestionCount = json.optLongOrNull("suggestionCount"),
+        errorKind = json.optString("errorKind").takeIf { it.isNotEmpty() },
+        suggestionIndex = json.optLongOrNull("suggestionIndex"),
+    )
+
+    private fun JSONObject.optLongOrNull(key: String): Long? =
+        if (isNull(key) || !has(key)) null else getLong(key)
 
     private fun session(json: JSONObject): Session {
         val prompt = json.optJSONObject("prompt")

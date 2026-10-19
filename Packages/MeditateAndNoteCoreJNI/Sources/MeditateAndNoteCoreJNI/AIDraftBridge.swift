@@ -124,6 +124,31 @@ public func Java_com_mn_android_data_AIDraftSource_cancel(
     return envelope.getJNILocalRefValue(in: environment)
 }
 
+/// The stored session for a note, so the editor can restore the draft the
+/// user left behind instead of burning another generation.
+@_cdecl("Java_com_mn_android_data_AIDraftSource_session")
+public func Java_com_mn_android_data_AIDraftSource_session(
+    environment: UnsafeMutablePointer<JNIEnv?>!,
+    thisClass: jclass,
+    jNoteId: jstring?
+) -> jstring? {
+    let noteId = String(fromJNI: jNoteId, in: environment)
+    let envelope = storedSession(noteId: noteId)
+    return envelope.getJNILocalRefValue(in: environment)
+}
+
+/// Drops the stored session of a note - the note is gone, so is its draft.
+@_cdecl("Java_com_mn_android_data_AIDraftSource_discardSession")
+public func Java_com_mn_android_data_AIDraftSource_discardSession(
+    environment: UnsafeMutablePointer<JNIEnv?>!,
+    thisClass: jclass,
+    jNoteId: jstring?
+) {
+    let noteId = String(fromJNI: jNoteId, in: environment)
+    guard let uuid = UUID(uuidString: noteId) else { return }
+    try? sessions.deleteSync(noteID: NoteID(rawValue: uuid))
+}
+
 // MARK: - Domain flow
 
 /// The generation pipeline: prompt, quota gate, provider call, parse, fulfil.
@@ -157,6 +182,7 @@ private func startDraft(instruction: String, context: String, noteId: String) ->
 
     var session = AIDraftSession(noteID: resolved.noteID, prompt: resolved)
     session.beginGeneration()
+    let startedAt = Date()
 
     do {
         let settings = try providerSettings()
@@ -183,15 +209,59 @@ private func startDraft(instruction: String, context: String, noteId: String) ->
         // A generation that produced suggestions is the only one that burns
         // the free allowance — a failed attempt does not count.
         quota.record()
-        return success(session)
+        let metric = metric(
+            kind: "generationCompleted",
+            latencyMs: elapsedMs(since: startedAt),
+            suggestionCount: session.suggestions.count
+        )
+        save(session)
+        return success(session, metric: metric)
     } catch let error as AIDraftError {
         session.fail(error)
-        return failure(error)
+        return failure(error, metric: metric(kind: "generationFailed", errorKind: error.metricKind.rawValue))
     } catch {
         draftLogger.warning("draft generation failed: \(error)")
         session.fail(.providerUnavailable)
-        return failure(.providerUnavailable)
+        return failure(
+            .providerUnavailable,
+            metric: metric(kind: "generationFailed", errorKind: ErrorKind.unavailable.rawValue)
+        )
     }
+}
+
+/// The stored session for a note, if there is one.
+private func storedSession(noteId: String) -> String {
+    guard let uuid = UUID(uuidString: noteId),
+          let session = try? sessions.fetchSync(noteID: NoteID(rawValue: uuid)) else {
+        return encode(["ok": true])
+    }
+    return success(session)
+}
+
+/// Keeps the session where the next editor visit finds it.
+private func save(_ session: AIDraftSession) {
+    try? sessions.saveSync(session)
+}
+
+/// The sanitized telemetry row for one event. Only counts, latency and a
+/// typed kind — never prompt text or the model's answer.
+private func metric(
+    kind: String,
+    latencyMs: Int? = nil,
+    suggestionCount: Int? = nil,
+    errorKind: String? = nil,
+    suggestionIndex: Int? = nil
+) -> [String: Any] {
+    var record: [String: Any] = ["kind": kind]
+    if let latencyMs { record["latencyMs"] = latencyMs }
+    if let suggestionCount { record["suggestionCount"] = suggestionCount }
+    if let errorKind { record["errorKind"] = errorKind }
+    if let suggestionIndex { record["suggestionIndex"] = suggestionIndex }
+    return record
+}
+
+private func elapsedMs(since start: Date) -> Int {
+    Int(Date().timeIntervalSince(start) * 1000)
 }
 
 /// Applies a domain transition to a session Kotlin handed back.
@@ -206,6 +276,7 @@ private func mutateSession(
 
     switch transition(&session) {
     case .success(let updated):
+        save(updated)
         return success(updated)
     case .failure(let error):
         return failure(error)
@@ -271,17 +342,25 @@ private func providerPost(endpoint: String, body: String) throws -> String {
 /// rule are Core's - see `KotlinAIDraftQuotaStore`.
 private let quota = KotlinAIDraftQuotaStore()
 
+/// The stored draft sessions. Kotlin keeps the bytes, Core owns the
+/// aggregate - see `KotlinAIDraftSessionStore`.
+private let sessions = KotlinAIDraftSessionStore()
+
 // MARK: - Envelopes
 
-private func success(_ session: AIDraftSession) -> String {
+private func success(_ session: AIDraftSession, metric: [String: Any]? = nil) -> String {
     let sessionObject = (try? JSONSerialization.jsonObject(
         with: JSONEncoder().encode(session)
     )) ?? [String: Any]()
-    return encode(["ok": true, "session": sessionObject])
+    var payload: [String: Any] = ["ok": true, "session": sessionObject]
+    if let metric { payload["metric"] = metric }
+    return encode(payload)
 }
 
-private func failure(_ error: AIDraftError) -> String {
-    encode(["ok": false, "error": error.rawValue])
+private func failure(_ error: AIDraftError, metric: [String: Any]? = nil) -> String {
+    var payload: [String: Any] = ["ok": false, "error": error.rawValue]
+    if let metric { payload["metric"] = metric }
+    return encode(payload)
 }
 
 private func encode(_ payload: [String: Any]) -> String {

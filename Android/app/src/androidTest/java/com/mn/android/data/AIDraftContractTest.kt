@@ -2,6 +2,8 @@ package com.mn.android.data
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import com.mn.android.infrastructure.persistence.local.ai.AIDraftMetrics
+import com.mn.android.infrastructure.persistence.local.ai.MeditateDatabase
 import java.util.UUID
 import org.json.JSONArray
 import org.json.JSONObject
@@ -9,10 +11,12 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import kotlinx.coroutines.runBlocking
 
 /**
  * Contract for the AI draft commands.
@@ -36,8 +40,11 @@ class AIDraftContractTest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         AIDraftSettingsStore.configure(context)
         AIDraftQuotaCounter.configure(context)
+        AIDraftSessionStorage.configure(context)
         AIDraftQuotaCounter.reset()
-        AIDraftSettingsStore.save("", "", "test-key")
+        // The endpoint the manual QA run uses (the emulator reaches the host
+        // machine as 10.0.2.2); the tests fake the transport anyway.
+        AIDraftSettingsStore.save("http://10.0.2.2:8731/v1/chat/completions", "mock-model", "test-key")
         AIDraftProvider.transport = { _, _ -> providerResponse() }
     }
 
@@ -139,6 +146,57 @@ class AIDraftContractTest {
 
         assertFalse(result.ok)
         assertEquals("providerUnavailable", result.error)
+    }
+
+    @Test
+    fun start_storesTheSession_soTheEditorCanRestoreIt() {
+        val noteId = UUID.randomUUID().toString()
+        val started = AIDraftSource.start(noteId, "", "a calm morning")
+
+        val stored = AIDraftSource.stored(noteId)
+
+        assertTrue(stored.error ?: "", stored.ok)
+        assertNotNull(stored.session)
+        assertEquals(started.session!!.id, stored.session!!.id)
+        assertEquals(1, stored.session!!.suggestions.size)
+    }
+
+    @Test
+    fun discard_dropsTheStoredSession() {
+        val noteId = UUID.randomUUID().toString()
+        AIDraftSource.start(noteId, "", "a calm morning")
+
+        AIDraftSource.discard(noteId)
+
+        assertNull(AIDraftSource.stored(noteId).session)
+    }
+
+    @Test
+    fun start_reportsTheGenerationMetric() {
+        val result = AIDraftSource.start(UUID.randomUUID().toString(), "", "a calm morning")
+
+        val metric = result.metric
+        assertNotNull(metric)
+        assertEquals("generationCompleted", metric!!.kind)
+        assertEquals(1L, metric.suggestionCount)
+        assertNotNull(metric.latencyMs)
+    }
+
+    @Test
+    fun metrics_areWrittenToTheDatabase() = runBlocking {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val dao = MeditateDatabase.get(context).aiDraftMetricDao()
+        dao.deleteAll()
+
+        AIDraftMetrics.record(
+            context,
+            AIDraftSource.Metric(kind = "generationCompleted", latencyMs = 12, suggestionCount = 2),
+        )
+
+        val rows = dao.fetchAll()
+        assertEquals(1, rows.size)
+        assertEquals("generationCompleted", rows.first().kind)
+        assertEquals(12L, rows.first().latencyMs)
     }
 
     /** A chat-completions answer with one suggestion. */

@@ -41,6 +41,13 @@ object AIDraftSettingsStore {
 
     fun hasApiKey(): Boolean = !apiKey().isNullOrBlank()
 
+    /**
+     * Whether the user pointed the app at a provider. The API key is
+     * optional - an endpoint without auth (a local model, a proxy) works
+     * without one.
+     */
+    fun isConfigured(): Boolean = endpoint().isNotEmpty()
+
     /** Empty [apiKey] clears the stored key; null leaves it as it is. */
     fun save(endpoint: String, model: String, apiKey: String?) {
         val prefs = prefs() ?: return

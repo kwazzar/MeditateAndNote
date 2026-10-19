@@ -28,6 +28,7 @@ while fixing them. The deltas that mattered are listed below.
 | 13 | Sound sheet | `13-sound-sheet.png` | `13-sound-sheet.png` | visual only, see gaps |
 | 14 | Notes list — AI insights | — | `14-notes-insights.png` | Android-only section (v1 insights, no LLM); iOS reference: `NoteInsightsSection` in the notes list |
 | 15 | Note editor — AI draft bar | — | `15-note-editor-ai-draft.png` | Android-only shot (remote provider, mock answer); iOS reference: `aiDraftBar` in `NoteEditorView` |
+| 16 | Note editor — restored draft | — | `16-note-editor-draft-restored.png` | the same draft after leaving and reopening the note: the session is stored, no new generation |
 
 ## What was fixed
 

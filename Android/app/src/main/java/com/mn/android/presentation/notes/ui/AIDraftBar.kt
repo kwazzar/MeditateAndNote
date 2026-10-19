@@ -59,7 +59,7 @@ internal fun AIDraftBar(
     ) {
         when {
             error == "freeQuotaExhausted" -> QuotaRow()
-            error == "noApiKey" -> NoKeyRow()
+            error == "noProvider" -> NoProviderRow()
             isGenerating -> GeneratingRow()
             session != null -> SessionContent(
                 session = session,
@@ -121,9 +121,9 @@ private fun ErrorRow() {
 }
 
 @Composable
-private fun NoKeyRow() {
+private fun NoProviderRow() {
     Text(
-        stringResource(R.string.ai_draft_no_key),
+        stringResource(R.string.ai_draft_no_provider),
         fontSize = 12.sp,
         color = MnTheme.textSecondary,
     )

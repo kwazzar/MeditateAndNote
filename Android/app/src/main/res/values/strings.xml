@@ -56,7 +56,7 @@
     <string name="ai_draft_transfer">Transfer (%1$d)</string>
     <string name="ai_draft_quota_exhausted">Free drafts used up</string>
     <string name="ai_draft_failed">Could not generate suggestions</string>
-    <string name="ai_draft_no_key">Add an API key in Settings to use AI drafts</string>
+    <string name="ai_draft_no_provider">Set the AI provider in Settings to use AI drafts</string>
 
     <!-- Settings: AI draft provider -->
     <string name="ai_settings_title">AI drafts</string>
