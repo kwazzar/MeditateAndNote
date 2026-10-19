@@ -301,7 +301,8 @@ private fun MnTabBar(currentRoute: String?, onSelect: (TabItem) -> Unit) {
     Box(
         Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            // iOS CustomTabBar: `.padding(.horizontal)` + `.padding(.vertical, 6)`.
+            .padding(horizontal = 16.dp, vertical = 6.dp),
     ) {
         Row(
             Modifier

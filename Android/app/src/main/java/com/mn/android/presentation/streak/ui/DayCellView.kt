@@ -129,7 +129,8 @@ fun DayCellView(
                     imageVector = Icons.AutoMirrored.Filled.Notes,
                     contentDescription = null,
                     tint = if (hasNote) MnTheme.streakActiveNote else MnTheme.streakMuted,
-                    modifier = Modifier.size(12.dp),
+                    // iOS `Image(systemName: "note.text").font(.system(size: 9))`.
+                    modifier = Modifier.size(9.dp),
                 )
             }
             if (showPartialIndicator) {

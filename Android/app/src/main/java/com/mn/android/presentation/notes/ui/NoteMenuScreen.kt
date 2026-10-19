@@ -45,6 +45,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.mn.android.R
@@ -245,18 +246,23 @@ private fun NoteCard(note: NoteMenuSource.NoteRecord, onClick: () -> Unit, modif
 
 @Composable
 private fun AddNoteButton(onClick: () -> Unit, enabled: Boolean = true, modifier: Modifier = Modifier) {
+    // iOS NoteMenu.addNoteButton: `.font(.headline)` in a 40pt frame plus 5pt
+    // padding (50pt tall), a capsule with a gray-0.3 shadow and a 1pt
+    // `dividerColor` hairline.
     Row(
         modifier
-            .height(44.dp)
+            .height(50.dp)
             .shadow(8.dp, CircleShape)
             .background(MnTheme.cardBackground, CircleShape)
+            .border(1.dp, MnTheme.divider, CircleShape)
             .clickable(enabled = enabled, onClick = onClick)
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = 15.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             stringResource(R.string.add_note),
-            style = MaterialTheme.typography.titleMedium,
+            fontSize = 17.sp,
+            fontWeight = FontWeight.SemiBold,
             color = MnTheme.textPrimary,
         )
     }

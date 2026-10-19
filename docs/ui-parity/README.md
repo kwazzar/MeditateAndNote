@@ -18,7 +18,7 @@ while fixing them. The deltas that mattered are listed below.
 | 03 | Meditate select | `03-meditate-select.png` | `03-meditate-select.png`, `03-meditate-selected.png` | |
 | 04 | Duration wheel | `04-duration-sheet.png` | `04-duration-sheet.png` | |
 | 05 | Breathing session | `05-breathing.png` | `05-breathing.png`, `05b-breathing-rings.png` | Android also captures the Rings style, which has no iOS reference shot |
-| 06 | Completion | `06-completion.png` | `06-completion.png` | |
+| 06 | Completion | `06-completion.png` | `06-completion.png` | recaptured — the old Android shot showed Home |
 | 07 | Note editor | `07-note-editor.png` | `07-note-editor.png` | |
 | 08 | Notes list | `08-notes.png` | `08-notes.png` | |
 | 09 | Streak detail | `09-streak-detail.png` … `09d-streak-detail-bottom.png` | `09-streak-detail.png`, `09b`…`09d` | |
@@ -69,6 +69,23 @@ while fixing them. The deltas that mattered are listed below.
   lifetime-patterns stagger (matches), and the countdown digit — iOS declares a
   `.scale.combined(with: .opacity)` transition, but the reference video shows the
   digits swapping instantly (flat size, flat brightness), so Android already matches.
+
+**Small offsets (sweep of the reference pairs)**
+- The "Settings" and "Add Note" capsules are 50 pt tall on iOS (a 40 pt text
+  frame plus 5 pt padding) with a 1 pt `dividerColor` hairline and a 17 pt
+  semibold (`.headline`) label; Android had 44 dp, no hairline and
+  `titleMedium` (16 sp medium). Both now 50 dp + 1 dp hairline + 17 sp semibold.
+- Streak day cell: iOS draws `note.text` at 9 pt, Android drew the mapped
+  Material glyph at 12 dp.
+- Sound sheet: iOS uses the filled `speaker.wave.2.fill` / `speaker.fill` /
+  `speaker.wave.3.fill`; Android used the outlined Material glyphs. The volume
+  slider is SwiftUI's 4 pt line with a round white knob, not Material 3's 16 dp
+  bar with a stop dot — the `track` slot now draws the thin line.
+- Sound sheet label: "Sound Volume" is `.headline` (17 pt semibold) on iOS,
+  `headlineSmall` (24 sp) on Android.
+- Completion: the "Write a Note" button uses SF `square.and.pencil` (Material
+  `EditNote`, not a bare pencil) and a 17 pt semibold label.
+- Tab bar: iOS insets the capsule 6 pt vertically, Android 8 dp.
 
 **Components**
 - Tab bar: floating capsule with a selection pill; icons `Article` / `Home` / `Eco`.

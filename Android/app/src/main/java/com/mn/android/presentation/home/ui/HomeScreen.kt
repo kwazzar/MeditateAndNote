@@ -2,6 +2,7 @@ package com.mn.android.presentation.home.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -247,20 +248,24 @@ private fun NoteReminderBanner(onNewNote: () -> Unit) {
 
 @Composable
 internal fun SettingsButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
-    // Same capsule as NoteMenu's Add Note: 44dp, lifted by shadow, no hairline.
+    // iOS MainView's Settings button: `.font(.headline)` in a 40pt frame plus
+    // 5pt padding (50pt tall), a capsule with `.shadow(gray 0.3, radius: 5)` and
+    // a 1pt `dividerColor` hairline. Same capsule as NoteMenu's Add Note.
     Row(
         modifier
-            .height(44.dp)
+            .height(50.dp)
             .shadow(8.dp, CircleShape)
             .background(MnTheme.cardBackground, CircleShape)
+            .border(1.dp, MnTheme.divider, CircleShape)
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = 15.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             stringResource(R.string.settings),
             color = MnTheme.textPrimary,
-            style = MaterialTheme.typography.titleMedium,
+            fontSize = 17.sp,
+            fontWeight = FontWeight.SemiBold,
         )
     }
 }

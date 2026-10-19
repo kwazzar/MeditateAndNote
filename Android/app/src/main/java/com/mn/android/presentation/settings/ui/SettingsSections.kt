@@ -51,6 +51,7 @@ import com.mn.android.infrastructure.persistence.local.settings.AnimationSetting
 import com.mn.android.infrastructure.persistence.local.settings.SoundSettings
 import com.mn.android.presentation.theme.ui.LocalMnThemeManager
 import com.mn.android.presentation.theme.ui.MnTheme
+import com.mn.android.presentation.theme.ui.MnVolumeSlider
 
 // MARK: - Meditation Animation — iOS animationSection: segmented Rings/Path.
 
@@ -156,26 +157,13 @@ internal fun VolumeSection() {
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.End,
             )
-            Slider(
+            // iOS UISlider: a 4pt line with a round white knob.
+            MnVolumeSlider(
                 value = volume,
                 onValueChange = {
                     volume = it
                     SoundSettings.volume = it
                 },
-                valueRange = 0f..1f,
-                // iOS UISlider: round white knob, not the M3 vertical-bar thumb.
-                thumb = {
-                    Box(
-                        Modifier
-                            .size(20.dp)
-                            .clip(CircleShape)
-                            .background(MnTheme.buttonText),
-                    )
-                },
-                colors = SliderDefaults.colors(
-                    thumbColor = Color.Transparent,
-                    activeTrackColor = MnTheme.streakActiveMeditation,
-                ),
             )
             Row {
                 Icon(

@@ -1,6 +1,7 @@
 package com.mn.android.presentation.meditate.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,7 +19,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.VolumeDown
+import androidx.compose.material.icons.filled.VolumeDown
 import androidx.compose.material.icons.rounded.VolumeUp
+import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -37,6 +40,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -44,6 +49,7 @@ import com.mn.android.infrastructure.persistence.local.settings.SoundSettings
 import com.mn.android.infrastructure.platform.sound.MeditationSound
 import com.mn.android.infrastructure.platform.sound.SoundPlayer
 import com.mn.android.presentation.theme.ui.MnTheme
+import com.mn.android.presentation.theme.ui.MnVolumeSlider
 
 /**
  * Port of iOS `SoundSettingsSheet`: ~360 pt sheet with a volume slider
@@ -91,7 +97,8 @@ fun SoundSettingsSheet(onDismiss: () -> Unit) {
             Spacer(Modifier.weight(1f))
 
             Icon(
-                Icons.Rounded.VolumeUp,
+                // iOS `speaker.wave.2.fill` — filled, not the outlined glyph.
+                Icons.Filled.VolumeUp,
                 contentDescription = null,
                 tint = MnTheme.streakActiveMeditation,
                 modifier = Modifier
@@ -112,50 +119,42 @@ fun SoundSettingsSheet(onDismiss: () -> Unit) {
                     Text(
                         "Sound Volume",
                         color = MnTheme.textPrimary,
-                        style = MaterialTheme.typography.headlineSmall,
+                        // iOS `.font(.headline)` = 17pt semibold.
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.SemiBold,
                     )
                     Spacer(Modifier.weight(1f))
                     Text(
                         "${(volume * 100).toInt()}%",
                         color = MnTheme.textSecondary,
-                        style = MaterialTheme.typography.bodyMedium,
+                        // iOS `.font(.subheadline)` = 15pt.
+                        fontSize = 15.sp,
                         // Monospace digits — `monospacedDigit()` on iOS.
                         fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
                     )
                 }
 
-                Slider(
+                // iOS UISlider: a 4pt line with a round white knob.
+                MnVolumeSlider(
                     value = volume,
                     onValueChange = {
                         volume = it
                         SoundSettings.volume = it
                     },
-                    valueRange = 0f..1f,
-                    // iOS UISlider: round white knob, not the M3 vertical bar.
-                    thumb = {
-                        Box(
-                            Modifier
-                                .size(22.dp)
-                                .clip(CircleShape)
-                                .background(MnTheme.buttonText),
-                        )
-                    },
-                    colors = SliderDefaults.colors(
-                        thumbColor = Color.Transparent,
-                        activeTrackColor = MnTheme.streakActiveMeditation,
-                    ),
+                    knobSize = 22.dp,
                 )
 
                 Row {
+                    // iOS `speaker.fill` / `speaker.wave.3.fill` — both filled.
                     Icon(
-                        Icons.Rounded.VolumeDown,
+                        Icons.Filled.VolumeDown,
                         contentDescription = null,
                         tint = MnTheme.textSecondary,
                         modifier = Modifier.size(16.dp),
                     )
                     Spacer(Modifier.weight(1f))
                     Icon(
-                        Icons.Rounded.VolumeUp,
+                        Icons.Filled.VolumeUp,
                         contentDescription = null,
                         tint = MnTheme.textSecondary,
                         modifier = Modifier.size(16.dp),

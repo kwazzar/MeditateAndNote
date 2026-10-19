@@ -34,6 +34,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Eco
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.outlined.Create
+import androidx.compose.material.icons.outlined.EditNote
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -459,19 +460,25 @@ internal fun FinishedView(
             colors = ButtonDefaults.buttonColors(containerColor = MnTheme.accentButton),
             shape = RoundedCornerShape(14.dp),
             contentPadding = PaddingValues(vertical = 16.dp),
-            modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
+            // iOS: 16pt vertical padding around a 17pt label = 49pt tall.
+            modifier = Modifier.fillMaxWidth().heightIn(min = 50.dp),
         ) {
             Icon(
-                Icons.Outlined.Create,
+                // iOS `square.and.pencil` — a note sheet with a pencil, not a
+                // bare pencil. The iOS label applies `.font(.headline)` to the
+                // whole HStack, so the glyph is 17pt too.
+                Icons.Outlined.EditNote,
                 contentDescription = null,
                 tint = MnTheme.buttonText,
+                modifier = Modifier.size(17.dp),
             )
             Spacer(Modifier.width(8.dp))
             Text(
                 stringResource(R.string.write_a_note),
                 color = MnTheme.buttonText,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
+                // iOS `.font(.headline)` = 17pt semibold.
+                fontSize = 17.sp,
+                fontWeight = FontWeight.SemiBold,
             )
         }
         Box(
