@@ -17,7 +17,7 @@ while fixing them. The deltas that mattered are listed below.
 | 02 | Settings | `02-settings.png`, `02-settings-scrolled.png` | `02-settings.png`, `02-settings-scrolled{,2,3}.png` | Android split across 4 scroll positions |
 | 03 | Meditate select | `03-meditate-select.png` | `03-meditate-select.png`, `03-meditate-selected.png` | |
 | 04 | Duration wheel | `04-duration-sheet.png` | `04-duration-sheet.png` | |
-| 05 | Breathing session | `05-breathing.png` | `05-breathing.png` | |
+| 05 | Breathing session | `05-breathing.png` | `05-breathing.png`, `05b-breathing-rings.png` | Android also captures the Rings style, which has no iOS reference shot |
 | 06 | Completion | `06-completion.png` | `06-completion.png` | |
 | 07 | Note editor | `07-note-editor.png` | `07-note-editor.png` | |
 | 08 | Notes list | `08-notes.png` | `08-notes.png` | |
@@ -57,16 +57,18 @@ while fixing them. The deltas that mattered are listed below.
 - Streak detail: `CenterAlignedTopAppBar` with a bordered "Done" pill, recommendations
   collected into one card, grey range-picker selection.
 - Onboarding / editor icons matched to the SF Symbols used on iOS.
+- Sound: `SoundPlayer` is a native `SoundPool` over the seven bundled `res/raw` cues
+  (no JNI needed), volume from `SoundSettings`. Verified on device: the sample button
+  drives `CCodec` with `audio/raw`.
 
 ## Known gaps
 
 - **Paywall / Pro locks** — no in-app purchase on Android; the entry points and lock
   badges are absent rather than dead.
-- **Sound playback** — `SoundPlayer` has no JNI implementation yet; the sheet renders but
-  playing does nothing.
-- **AI draft bar** — no JNI bridge for the draft endpoint; the sparkle affordance is hidden.
+- **AI draft bar** — iOS suggestions come from Foundation Models; the only provider
+  Android could use is `DisabledAIDraftService`, so the sparkle entry point is hidden.
 - **Note insights** — the premium insights panel (`NoteInsightsViewModel`) has no Android
   counterpart.
-- **Rings animation mode** — `BreathingRings` mirrors iOS `ConcentricRing` (5 rings,
-  `120 + i*30` base, ×`1 + 0.3(i+1)` expansion), but only the pulse mode was captured;
-  the rings path has not been compared frame-by-frame.
+- **Rings animation mode** — ported (5 rings, `120 + i*30` base, ×`1 + 0.3(i+1)`
+  expansion) and captured in `05b-breathing-rings.png`; there is no iOS reference
+  screenshot to diff against, so the match rests on reading `ConcentricRing.swift`.
