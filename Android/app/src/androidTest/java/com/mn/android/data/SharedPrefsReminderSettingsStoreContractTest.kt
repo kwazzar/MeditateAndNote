@@ -1,5 +1,6 @@
 package com.mn.android.data
 
+import android.content.Context
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.After
@@ -15,6 +16,10 @@ class SharedPrefsReminderSettingsStoreContractTest {
     fun setup() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         SharedPrefsReminderSettingsStore.configure(context)
+        // Isolation: a sibling test writes the store, and JUnit's method order
+        // is not guaranteed — "nothing stored" has to be arranged, not hoped for.
+        context.getSharedPreferences("reminder_settings", Context.MODE_PRIVATE)
+            .edit().clear().apply()
     }
 
     @Test
@@ -23,7 +28,8 @@ class SharedPrefsReminderSettingsStoreContractTest {
         assertEquals(0L, loaded[0])
         assertEquals(20L, loaded[1])
         assertEquals(0L, loaded[2])
-        assertEquals(7, loaded.size)
+        // [enabled, hour, minute] + one entry per weekday (iOS: Set(1...7)).
+        assertEquals(10, loaded.size)
     }
 
     @Test

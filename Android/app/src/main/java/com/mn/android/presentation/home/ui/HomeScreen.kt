@@ -3,6 +3,8 @@ package com.mn.android.presentation.home.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,6 +29,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -90,13 +93,23 @@ fun HomeScreen(
             Spacer(Modifier.weight(1f))
         }
 
+        // iOS gives the hero a press state (scale + dim, `.easeInOut(0.15)`)
+        // through `MeditateThemeButtonStyle`; Android needs the pressed flag
+        // wired in, because `clickable` alone draws no state.
+        val heroInteraction = remember { MutableInteractionSource() }
+        val heroPressed by heroInteraction.collectIsPressedAsState()
         MeditateHero(
             // iOS MainView: .scaleEffect(isLandscape ? 0.7 : 1)
             scale = if (LocalConfiguration.current.orientation ==
                 android.content.res.Configuration.ORIENTATION_LANDSCAPE) 0.7f else 1f,
+            pressed = heroPressed,
             modifier = Modifier
                 .align(Alignment.Center)
-                .clickable(onClick = onMeditate),
+                .clickable(
+                    interactionSource = heroInteraction,
+                    indication = null,
+                    onClick = onMeditate,
+                ),
         )
 
         SettingsButton(

@@ -15,6 +15,9 @@ class StreakSnapshotStoreContractTest {
     fun setup() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         StreakSnapshotStore.configure(context)
+        // Isolation: a sibling test saves a snapshot, and JUnit's method order
+        // is not guaranteed — the "nothing stored" case has to be arranged.
+        StreakSnapshotStore.save("")
     }
 
     @Test

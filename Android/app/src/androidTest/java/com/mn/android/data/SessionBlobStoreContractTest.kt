@@ -15,6 +15,8 @@ class SessionBlobStoreContractTest {
     fun setup() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         SessionBlobStore.configure(context)
+        // Isolation: the rows live in a Room database that outlives the test.
+        SessionBlobStore.deleteAll()
     }
 
     @Test
@@ -37,7 +39,15 @@ class SessionBlobStoreContractTest {
 
     @Test
     fun deleteAll_removesAllSessions() {
+        SessionBlobStore.save(
+            id = "test-session-delete",
+            completedAt = 1700000000L,
+            payload = """{"data": "delete-me"}""",
+        )
+        assertFalse(SessionBlobStore.fetch(start = 0L, end = Long.MAX_VALUE).isEmpty())
+
         SessionBlobStore.deleteAll()
-        assertTrue(SessionBlobStore.fetch(start = 0L, end = Long.MAX_VALUE).isEmpty())
+        // `fetch` returns the JSON array as text, so "empty" is "[]".
+        assertEquals("[]", SessionBlobStore.fetch(start = 0L, end = Long.MAX_VALUE))
     }
 }

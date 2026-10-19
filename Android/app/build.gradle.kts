@@ -19,6 +19,10 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "0.1.0"
+        // Without this AGP emits the legacy `android.test.InstrumentationTestRunner`,
+        // which knows nothing about JUnit4 — the whole instrumented suite was
+        // discovered as "0 tests" and reported green.
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     compileOptions {
@@ -117,6 +121,7 @@ dependencies {
     // Testing dependencies
     androidTestImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test:core:1.5.0")
+    androidTestImplementation("androidx.test:runner:1.5.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.room:room-testing:2.6.1")
     androidTestImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")

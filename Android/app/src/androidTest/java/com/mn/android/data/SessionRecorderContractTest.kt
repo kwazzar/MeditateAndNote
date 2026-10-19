@@ -10,7 +10,7 @@ class SessionRecorderContractTest {
 
     @Test
     fun record_returnsNonNegativeLong() {
-        val result = SessionRecorder.record("test-meditation-id", 120.0)
+        val result = SessionRecorder.record("test-meditation-id", 120.0, 0)
         assertTrue("Result should be non-negative, was: $result", result >= 0)
     }
 }

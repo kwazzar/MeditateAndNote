@@ -7,6 +7,7 @@ import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import com.mn.android.infrastructure.persistence.local.settings.OnboardingStore
 
 @RunWith(AndroidJUnit4::class)
 class OnboardingStoreContractTest {

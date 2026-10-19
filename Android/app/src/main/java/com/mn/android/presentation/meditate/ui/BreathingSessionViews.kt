@@ -21,6 +21,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.EaseInOut
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -367,6 +369,14 @@ private fun ProgressCapsule(
     // iOS MeditationProgressView: a 44pt capsule (streakCellBackground), phase
     // tint filled from the leading edge, 24pt bold label on top. Tapping the
     // whole capsule pauses — it is not a Material button.
+    // iOS animates the fill with `.animation(.linear(duration: 0.3), value: progress)`;
+    // the engine publishes progress at 10 Hz, so without the tween the fill
+    // edge creeps in visible steps.
+    val fill by animateFloatAsState(
+        targetValue = progress.coerceIn(0f, 1f),
+        animationSpec = tween(durationMillis = 300, easing = LinearEasing),
+        label = "progressFill",
+    )
     Box(
         modifier
             .height(44.dp)
@@ -383,7 +393,7 @@ private fun ProgressCapsule(
         Box(
             Modifier
                 .align(Alignment.CenterStart)
-                .fillMaxWidth(progress.coerceIn(0f, 1f))
+                .fillMaxWidth(fill)
                 .height(44.dp)
                 .background(color),
         )

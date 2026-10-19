@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -36,9 +37,26 @@ import com.mn.android.domain.theme.model.MainTheme
 fun MeditateHero(
     modifier: Modifier = Modifier,
     scale: Float = 1f,
+    pressed: Boolean = false,
 ) {
     val colors = MnTheme.colors
     val theme = LocalMnThemeManager.current.theme
+    // iOS `MeditateThemeButtonStyle`: the pressed state scales the hero down
+    // (and dims it, or glows it for darkZen) with `.easeInOut(duration: 0.15)`.
+    // liquidGlass is the one theme iOS leaves untouched.
+    val pressScale = when (theme) {
+        MainTheme.BREATHING -> if (pressed) 0.92f else 1f
+        MainTheme.SOFT_DAWN -> if (pressed) 0.95f else 1f
+        MainTheme.DARK_ZEN -> if (pressed) 0.94f else 1f
+        MainTheme.OBSIDIAN -> if (pressed) 0.94f else 1f
+        MainTheme.LIQUID_GLASS -> 1f
+    }
+    val pressAlpha = when (theme) {
+        MainTheme.BREATHING -> if (pressed) 0.85f else 1f
+        MainTheme.SOFT_DAWN -> if (pressed) 0.9f else 1f
+        MainTheme.OBSIDIAN -> if (pressed) 0.9f else 1f
+        else -> 1f
+    }
     // iOS per-theme shadow: darkZen/obsidian/liquidGlass use `dividerColor`
     // (a barely-visible white glow), breathing uses accent 0.35, softDawn
     // streakIndicator 0.2. The default black shadow would flatten the dark
@@ -57,7 +75,16 @@ fun MeditateHero(
         else -> 0.dp
     }
 
-    Box(modifier.scale(scale), contentAlignment = Alignment.Center) {
+    Box(
+        modifier
+            .scale(scale)
+            .graphicsLayer {
+                scaleX = pressScale
+                scaleY = pressScale
+                alpha = pressAlpha
+            },
+        contentAlignment = Alignment.Center,
+    ) {
         for (i in 0..2) {
             val ringColor =
                 if (theme == MainTheme.OBSIDIAN) Color.White.copy(alpha = 0.10f - i * 0.02f)

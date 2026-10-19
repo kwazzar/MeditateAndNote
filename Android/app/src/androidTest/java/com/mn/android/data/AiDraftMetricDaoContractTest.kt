@@ -9,6 +9,9 @@ import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import com.mn.android.infrastructure.persistence.local.ai.AiDraftMetricDao
+import com.mn.android.infrastructure.persistence.local.ai.AiDraftMetricEntity
+import com.mn.android.infrastructure.persistence.local.ai.MeditateDatabase
 
 @RunWith(AndroidJUnit4::class)
 class AiDraftMetricDaoContractTest {
