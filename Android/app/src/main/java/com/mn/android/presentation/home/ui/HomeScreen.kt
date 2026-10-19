@@ -234,22 +234,20 @@ private fun NoteReminderBanner(onNewNote: () -> Unit) {
 
 @Composable
 internal fun SettingsButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    // Same capsule as NoteMenu's Add Note: 44dp, lifted by shadow, no hairline.
     Row(
         modifier
-            .height(40.dp)
-            .shadow(5.dp, CircleShape, ambientColor = Color.Gray.copy(alpha = 0.3f), spotColor = Color.Gray.copy(alpha = 0.3f))
+            .height(44.dp)
+            .shadow(8.dp, CircleShape)
             .background(MnTheme.cardBackground, CircleShape)
-            .border(1.dp, MnTheme.divider, CircleShape)
             .clickable(onClick = onClick)
-            .padding(horizontal = 15.dp)
-            .alpha(0.9f),
+            .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             stringResource(R.string.settings),
             color = MnTheme.textPrimary,
             style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(horizontal = 2.dp),
         )
     }
 }
