@@ -69,6 +69,7 @@ Packages/
 ├── MeditateAndNoteCore/       Shared Swift package: domain, engines, events
 ├── MeditateAndNoteCoreJNI/    swift-java wrappers for the Android build
 Android/                        Kotlin/Compose UI over the shared Core (see ANDROID_PORT_PLAN.md)
+server/                         Vercel function: the hosted AI provider (Groq behind an OpenAI-compatible proxy)
 MeditateAndNoteTests/          Unit tests
 MeditateAndNoteUITests/        UI tests
 ```
@@ -76,6 +77,10 @@ MeditateAndNoteUITests/        UI tests
 ## Android
 
 Port runs Swift Core + Kotlin/Compose UI (Swift SDK for Android + `swift-java` JNI). Progress, phases and measured JNI constraints: [ANDROID_PORT_PLAN.md](ANDROID_PORT_PLAN.md), status analysis: [ANDROID_PORT_ANALYSIS.md](ANDROID_PORT_ANALYSIS.md). Android-side knowledge graph lives in `Android/graphify-out/`.
+
+## AI provider
+
+The apps speak the OpenAI chat-completions dialect (the wire protocol lives in the core package). On iOS the on-device model answers; on Android the provider is remote. `server/` is a Vercel function that proxies to Groq and keeps the provider key server-side — the apps need no key of their own. Details: [server/README.md](server/README.md).
 
 ## Tests
 

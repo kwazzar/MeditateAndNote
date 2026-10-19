@@ -216,20 +216,26 @@ final class RemoteLLMDraftServiceTests: XCTestCase {
         XCTAssertTrue(StubURLProtocol.requestLog.isEmpty, "Disabled service must not hit network")
     }
 
-    func testSuggest_missingKey_throwsUnavailable() async {
+    /// The key is optional: our hosted proxy carries the provider key, so a
+    /// missing key must not stop the request - only the header is left out.
+    func testSuggest_missingKey_sendsRequestWithoutAuthorization() async throws {
         let service = makeService(apiKey: nil)
-        await XCTAssertThrowsErrorType(
-            try await service.suggest(makePrompt()),
-            AIDraftError.providerUnavailable
-        )
+        StubURLProtocol.next = .success(.init(status: 200, body: chatJSON(texts: [("a", "")])))
+
+        let suggestions = try await service.suggest(makePrompt())
+
+        XCTAssertEqual(suggestions.count, 1)
+        XCTAssertNil(StubURLProtocol.requestLog.last?.value(forHTTPHeaderField: "Authorization"))
     }
 
-    func testSuggest_blankKey_throwsUnavailable() async {
+    func testSuggest_blankKey_sendsRequestWithoutAuthorization() async throws {
         let service = makeService(apiKey: "   ")
-        await XCTAssertThrowsErrorType(
-            try await service.suggest(makePrompt()),
-            AIDraftError.providerUnavailable
-        )
+        StubURLProtocol.next = .success(.init(status: 200, body: chatJSON(texts: [("a", "")])))
+
+        let suggestions = try await service.suggest(makePrompt())
+
+        XCTAssertEqual(suggestions.count, 1)
+        XCTAssertNil(StubURLProtocol.requestLog.last?.value(forHTTPHeaderField: "Authorization"))
     }
 
     // MARK: - Daily cap

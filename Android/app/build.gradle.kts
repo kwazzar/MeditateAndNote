@@ -7,6 +7,11 @@ plugins {
     id("com.google.devtools.ksp")
 }
 
+// The hosted AI provider: the app talks to our own OpenAI-compatible proxy,
+// which holds the provider key. Empty by default - set it in
+// gradle.properties (or -PaiDraftEndpoint=...) after the proxy is deployed.
+val aiDraftEndpoint = (project.findProperty("aiDraftEndpoint") as String?)?.trim().orEmpty()
+
 android {
     namespace = "com.mn.android"
     compileSdk = 36
@@ -23,6 +28,8 @@ android {
         // which knows nothing about JUnit4 — the whole instrumented suite was
         // discovered as "0 tests" and reported green.
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "AI_DRAFT_ENDPOINT", "\"$aiDraftEndpoint\"")
     }
 
     compileOptions {
@@ -36,6 +43,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     // jextract output from Scripts/build-android.sh --jextract. Not under

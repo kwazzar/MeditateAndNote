@@ -38,9 +38,10 @@ struct RemoteLLMDraftService: AIDraftService, @unchecked Sendable {
         get async {
             let settings = settingsStore.loadSettings()
             guard settings.useRemoteFallback else { return false }
-            guard let apiKey = settingsStore.getAPIKey(), !apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-                return false
-            }
+            // The key is optional: our own hosted proxy carries the provider
+            // key, and an endpoint that wants one says so by failing. A
+            // provider that needs auth answers 401, which lands as
+            // "unavailable" - the same answer as a missing key.
             guard checkAndIncrementDailyUsage(readOnly: true, limit: settings.dailyGenerationLimit) else {
                 return false
             }
@@ -54,9 +55,7 @@ struct RemoteLLMDraftService: AIDraftService, @unchecked Sendable {
             throw AIDraftError.providerUnavailable
         }
 
-        guard let apiKey = settingsStore.getAPIKey(), !apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            throw AIDraftError.providerUnavailable
-        }
+        let apiKey = settingsStore.getAPIKey()?.trimmingCharacters(in: .whitespacesAndNewlines)
 
         guard checkAndIncrementDailyUsage(readOnly: false, limit: settings.dailyGenerationLimit) else {
             throw AIDraftError.rateLimited
@@ -75,7 +74,9 @@ struct RemoteLLMDraftService: AIDraftService, @unchecked Sendable {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("Application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        if let apiKey, !apiKey.isEmpty {
+            request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        }
         request.httpBody = requestBody.data(using: .utf8)
 
         let (data, response) = try await executeWithRetry(request: request, maxRetries: 3)

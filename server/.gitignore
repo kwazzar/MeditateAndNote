@@ -1,0 +1,4 @@
+# The provider key lives here and never in the repository.
+.env
+.env.local
+node_modules/

@@ -1,0 +1,11 @@
+{
+  "name": "meditate-and-note-ai",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Vercel function: an OpenAI-compatible chat-completions proxy for Groq, used by the Meditate & Note apps.",
+  "scripts": {
+    "dev": "node dev-server.ts",
+    "test": "node --test test/"
+  }
+}

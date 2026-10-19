@@ -35,7 +35,13 @@ object AIDraftSettingsStore {
         this.context = context.applicationContext
     }
 
+    /**
+     * The endpoint the app talks to: what the user set, or the hosted proxy
+     * the build points at (`-PaiDraftEndpoint=...`). The proxy carries the
+     * provider key, so the app needs none of its own.
+     */
     fun endpoint(): String = prefs()?.getString(KEY_ENDPOINT, "").orEmpty()
+        .ifEmpty { com.mn.android.BuildConfig.AI_DRAFT_ENDPOINT }
 
     fun model(): String = prefs()?.getString(KEY_MODEL, "").orEmpty()
 
