@@ -46,8 +46,9 @@ while fixing them. The deltas that mattered are listed below.
 - Progress capsule was a Material `Button` that centred its fill — this produced a vertical
   stripe instead of a growing bar. Now a plain `Box` + `clickable` with the fill anchored
   `CenterStart`, colored by the current phase.
-- Duration sheet: full-width 56dp pill, uniform `titleLarge` rows, pluralized labels
-  ("1 minute" / "3 minutes"), transparent container and scrim so the wheel floats.
+- Duration sheet: the iOS `CustomTopRoundedShape` dome (quad curve, `toolbarBackground`)
+  is drawn behind the sheet; rows are 38dp with the centre row enlarged (24sp vs 18sp)
+  to read as a drum, plus pluralized labels, a transparent container and scrim.
 - Completion: no top bar and no close button, `CheckCircle`, 32sp "Well Done!",
   bottom-pinned actions.
 - Notes: search field lost its magnifier and hairline borders; Add Note is a shadowed pill.
@@ -68,5 +69,4 @@ while fixing them. The deltas that mattered are listed below.
   counterpart.
 - **Rings animation mode** — `BreathingRings` mirrors iOS `ConcentricRing` (5 rings,
   `120 + i*30` base, ×`1 + 0.3(i+1)` expansion), but only the pulse mode was captured;
-  the rings path has not been compared frame-by-frame.- **Duration wheel curvature** — the iOS wheel is a drum; Compose shows a flat list. Rows
-  and selection pill match, the perspective curvature does not.
+  the rings path has not been compared frame-by-frame.

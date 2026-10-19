@@ -42,8 +42,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
@@ -84,33 +86,49 @@ internal fun DurationSheet(
         scrimColor = Color.Transparent,
         dragHandle = null,
     ) {
+        val domeColor = MnTheme.toolbarBackground
         Column(
-            Modifier.padding(horizontal = 24.dp),
+            Modifier
+                .drawBehind {
+                    // iOS `CustomTopRoundedShape`: a quad-curved dome behind the
+                    // sheet, apex ~65pt, shoulders at 140pt, filled with
+                    // `toolbarBackground`.
+                    val shoulder = 140.dp.toPx()
+                    val apex = -10.dp.toPx()
+                    val path = Path().apply {
+                        moveTo(0f, size.height)
+                        lineTo(0f, shoulder)
+                        quadraticBezierTo(size.width / 2f, apex, size.width, shoulder)
+                        lineTo(size.width, size.height)
+                        close()
+                    }
+                    drawPath(path, domeColor)
+                }
+                .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Spacer(Modifier.height(64.dp))
             meditationDurations.forEach { d ->
                 val mins = durationMinutes(d)
                 val isSelected = d == selected
-                // iOS wheel picker: selection is a wide, edge-to-edge rounded
-                // pill behind the chosen row; all rows share one text size and
-                // only colour/weight marks the selection.
+                // iOS wheel picker: the centre row is larger and brighter, the
+                // selection pill sits behind it.
                 Box(
                     Modifier
                         .fillMaxWidth()
-                        .height(56.dp)
+                        .height(38.dp)
                         .clickable { onSelected(d) }
                         .background(
                             if (isSelected) MnTheme.divider else Color.Transparent,
-                            RoundedCornerShape(28.dp),
+                            RoundedCornerShape(19.dp),
                         ),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
                         if (mins == 1) "1 minute" else "$mins minutes",
                         color = if (isSelected) MnTheme.textPrimary else MnTheme.textSecondary,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                        fontSize = if (isSelected) 24.sp else 18.sp,
+                        fontWeight = FontWeight.Normal,
                         textAlign = TextAlign.Center,
                     )
                 }
