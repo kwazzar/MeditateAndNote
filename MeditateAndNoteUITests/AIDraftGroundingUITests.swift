@@ -21,6 +21,9 @@ final class AIDraftGroundingUITests: XCTestCase {
         await MainActor.run {
             continueAfterFailure = false
             app = XCUIApplication()
+            // The free-draft allowance is lifetime-scoped, so a shared
+            // simulator install would exhaust it mid-suite.
+            app.launchArguments = ["-resetAIDraftQuota"]
             app.launch()
         }
         try await super.setUp()

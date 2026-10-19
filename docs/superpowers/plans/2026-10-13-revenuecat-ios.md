@@ -1,5 +1,8 @@
 # RevenueCat iOS Integration Implementation Plan
 
+> **Status: DONE 2026-10-19** — verified by test run in worktree `rc-plan-sync`, commits `4e3a01e..458bf61`.
+> Full suite green: 521 unit tests + 8 UI tests, 0 failures (iPhone 17 / iOS 26.5).
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Add RevenueCat-backed subscriptions to the iOS app: one `pro` entitlement, a custom paywall, and a single injected `isPremium` gate — built in the project's DDD layering so Android can mirror it later.
@@ -42,7 +45,7 @@ Inputs/conditions the spec implies but no single happy-path test covers (each ge
 - Consumes: nothing.
 - Produces: `import RevenueCat` compiles in the app target.
 
-- [ ] **Step 1: Add the SPM dependency to the project file**
+- [x] **Step 1: Add the SPM dependency to the project file**
 
 Add these objects (use the exact 24-hex ids shown so the edits are unambiguous).
 
@@ -84,12 +87,12 @@ Near the existing `XCSwiftPackageProductDependency` object (line ~1388), add:
 
 Alternative if the edit is awkward: open the project in Xcode and use File → Add Package Dependencies with the same URL, product `RevenueCat`.
 
-- [ ] **Step 2: Resolve packages and confirm it builds**
+- [x] **Step 2: Resolve packages and confirm it builds**
 
 Run: `xcodebuild -project MeditateAndNote.xcodeproj -scheme MeditateAndNote -destination 'generic/platform=iOS Simulator' build`
 Expected: BUILD SUCCEEDED (package resolves; no `import RevenueCat` code yet).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add MeditateAndNote.xcodeproj/project.pbxproj
@@ -113,7 +116,7 @@ git commit -m "build: add RevenueCat SPM dependency (app target only)"
 - Consumes: nothing.
 - Produces: `Entitlement`, `SubscriptionStatus` (with `.none`, `isActive(_:)`), `SubscriptionOffering`, `SubscriptionPackage`, `EntitlementProviding`, `SubscriptionManaging`, `SubscriptionProvidable`, `SubscriptionManageable`, `SubscriptionOperationError`, `SubscriptionCache`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```swift
 import XCTest
@@ -138,12 +141,12 @@ final class SubscriptionStatusTests: XCTestCase {
 }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `xcodebuild test -project MeditateAndNote.xcodeproj -scheme MeditateAndNote -destination 'platform=iOS Simulator,name=iPhone 16' -only-testing:MeditateAndNoteTests/SubscriptionStatusTests`
 Expected: FAIL — `SubscriptionStatus` not defined.
 
-- [ ] **Step 3: Implement the types**
+- [x] **Step 3: Implement the types**
 
 `Entitlement.swift`:
 ```swift
@@ -233,17 +236,17 @@ public protocol SubscriptionCache: Sendable {
 ```
 Fill in the `init` bodies for the two offering types.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `xcodebuild test -project MeditateAndNote.xcodeproj -scheme MeditateAndNote -destination 'platform=iOS Simulator,name=iPhone 16' -only-testing:MeditateAndNoteTests/SubscriptionStatusTests`
 Expected: PASS.
 
-- [ ] **Step 5: Verify the Domain layer stays clean**
+- [x] **Step 5: Verify the Domain layer stays clean**
 
 Run: `grep -rn "import RevenueCat\|import SwiftUI\|import CoreData\|import UIKit" Packages/MeditateAndNoteCore/Sources/MeditateAndNoteCore/Subscriptions/`
 Expected: no output.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add Packages/MeditateAndNoteCore/Sources/MeditateAndNoteCore/Subscriptions MeditateAndNoteTests/SubscriptionStatusTests.swift
@@ -275,7 +278,7 @@ git commit -m "feat(domain): add subscription entitlement types"
 - Consumes: `SubscriptionStatus` (Task 2).
 - Produces: `DomainEvent.subscriptionChanged(SubscriptionStatus)`, consumed by Task 5.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Add to `EventRoutingTableTests.swift` (a test asserting the new event is recognized by the routing table without crashing and is not claimed by any scope):
 ```swift
@@ -290,12 +293,12 @@ func test_subscriptionChanged_isUnhandledByAllScopes() {
 ```
 (`@testable import MeditateAndNote` if the file does not already.)
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `xcodebuild test -project MeditateAndNote.xcodeproj -scheme MeditateAndNote -destination 'platform=iOS Simulator,name=iPhone 16' -only-testing:MeditateAndNoteTests/EventRoutingTableTests`
 Expected: FAIL — no case `subscriptionChanged`.
 
-- [ ] **Step 3: Add the case and update every switch**
+- [x] **Step 3: Add the case and update every switch**
 
 In `DomainEvents.swift` add to the enum:
 ```swift
@@ -303,12 +306,12 @@ case subscriptionChanged(SubscriptionStatus)
 ```
 Then, in each switch listed under Files, add `.subscriptionChanged` to the branch that ignores the event (the existing `default`-style / "no-op" case, e.g. alongside `.noteInsightsUpdated`). In `handles(_:)`, add `.subscriptionChanged` to the branch returning `false`. The switch is exhaustive, so the compiler will flag any file you miss — fix all of them.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `xcodebuild test -project MeditateAndNote.xcodeproj -scheme MeditateAndNote -destination 'platform=iOS Simulator,name=iPhone 16' -only-testing:MeditateAndNoteTests/EventRoutingTableTests`
 Expected: PASS, and the whole target compiles.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -327,7 +330,7 @@ git commit -m "feat(domain): add DomainEvent.subscriptionChanged and update rout
 - Consumes: `SubscriptionCache`, `SubscriptionStatus` (Task 2).
 - Produces: `UserDefaultsSubscriptionCache: SubscriptionCache`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```swift
 import XCTest
@@ -360,20 +363,20 @@ final class UserDefaultsSubscriptionCacheTests: XCTestCase {
 }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `xcodebuild test -project MeditateAndNote.xcodeproj -scheme MeditateAndNote -destination 'platform=iOS Simulator,name=iPhone 16' -only-testing:MeditateAndNoteTests/UserDefaultsSubscriptionCacheTests`
 Expected: FAIL — type not defined.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `UserDefaultsSubscriptionCache` stores `SubscriptionStatus` as JSON under key `"subscription.status.v1"`. Make `SubscriptionStatus` `Codable` (add `Codable` conformance in Task 2's file). `load()` decodes and returns `nil` on any decode failure (never throws, never crashes). `save()` encodes and writes; ignores encode failure.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run the command from Step 2. Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add MeditateAndNote/Persistence/UserDefaultsSubscriptionCache.swift MeditateAndNoteTests/UserDefaultsSubscriptionCacheTests.swift
@@ -393,7 +396,7 @@ git commit -m "feat(infra): add UserDefaults subscription cache"
 - Consumes: `SubscriptionProvidable`, `SubscriptionManageable`, `SubscriptionManaging`, `SubscriptionCache`, `DomainEvent` (Tasks 2–4).
 - Produces: `@MainActor @Observable final class SubscriptionManager` with `status`, `isPremium`, `refresh()`, `offerings()`, `purchase(_:)`, `restore()`; publishes `.subscriptionChanged` on `DomainEventBus`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `SubscriptionManagerTests.swift` (mock service inline):
 ```swift
@@ -503,12 +506,12 @@ final class SubscriptionTrustBoundaryTests: XCTestCase {
 ```
 (Reuse `MockService`/`MemoryCache` by moving them to one shared file, e.g. `MeditateAndNoteTests/Support/SubscriptionMocks.swift`, if the second file cannot see the private ones.)
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `xcodebuild test -project MeditateAndNote.xcodeproj -scheme MeditateAndNote -destination 'platform=iOS Simulator,name=iPhone 16' -only-testing:MeditateAndNoteTests/SubscriptionManagerTests -only-testing:MeditateAndNoteTests/SubscriptionTrustBoundaryTests`
 Expected: FAIL — `SubscriptionManager` not defined.
 
-- [ ] **Step 3: Implement `SubscriptionManager`**
+- [x] **Step 3: Implement `SubscriptionManager`**
 
 ```swift
 @MainActor @Observable
@@ -574,11 +577,11 @@ final class SubscriptionManager: SubscriptionProvidable, SubscriptionManageable 
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run the command from Step 2. Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add MeditateAndNote/Services/Subscriptions/SubscriptionManager.swift MeditateAndNoteTests/SubscriptionManagerTests.swift MeditateAndNoteTests/SubscriptionTrustBoundaryTests.swift
@@ -596,7 +599,7 @@ git commit -m "feat(app): add SubscriptionManager with trust-boundary guards"
 - Consumes: `SubscriptionManaging`, `SubscriptionStatus`, `SubscriptionOffering`, `SubscriptionPackage`, `SubscriptionOperationError` (Task 2).
 - Produces: `actor RevenueCatPurchasesService: SubscriptionManaging`; static `configure(apiKey:)` that calls `Purchases.configure` once.
 
-- [ ] **Step 1: Implement the adapter**
+- [x] **Step 1: Implement the adapter**
 
 ```swift
 import Foundation
@@ -688,12 +691,12 @@ actor RevenueCatPurchasesService: SubscriptionManaging {
 }
 ```
 
-- [ ] **Step 2: Build to verify it compiles**
+- [x] **Step 2: Build to verify it compiles**
 
 Run: `xcodebuild -project MeditateAndNote.xcodeproj -scheme MeditateAndNote -destination 'generic/platform=iOS Simulator' build`
 Expected: BUILD SUCCEEDED. If `Purchases.isConfigured` / `ErrorCode` names differ in v5, adjust to the v5 API surface (`Purchases.shared` static accessor, `ErrorCode.purchaseCancelledError`).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add MeditateAndNote/Services/Subscriptions/RevenueCatPurchasesService.swift
@@ -714,7 +717,7 @@ git commit -m "feat(infra): add RevenueCatPurchasesService adapter"
 - Consumes: `SubscriptionManager` (Task 5), `RevenueCatPurchasesService` (Task 6), `UserDefaultsSubscriptionCache` (Task 4).
 - Produces: `AppContainer.makeSubscriptionViewModel()`, `AppContainer.makePaywallViewModel()`, `Config.revenueCatAPIKey`, `Config.proEntitlementID`; `SubscriptionManager` injected into the environment.
 
-- [ ] **Step 1: Add config constants**
+- [x] **Step 1: Add config constants**
 
 In `Config.swift`:
 ```swift
@@ -723,7 +726,7 @@ public static let proEntitlementID: String = "pro"
 ```
 (RC public SDK key is safe to embed; swap `appl_REPLACE_ME` for the real test-store key.)
 
-- [ ] **Step 2: Add the scope**
+- [x] **Step 2: Add the scope**
 
 `SubscriptionScope.swift`:
 ```swift
@@ -742,12 +745,12 @@ final class SubscriptionScope {
 }
 ```
 
-- [ ] **Step 3: Wire `AppContainer`**
+- [x] **Step 3: Wire `AppContainer`**
 
 Add `@MainActor private lazy var subscription = SubscriptionScope(eventBus: eventBus)` and the accessor `var subscriptionManager: SubscriptionManager { subscription.manager }`.
 Do **not** add the VM factories here — they depend on `SubscriptionViewModel`/`PaywallViewModel` from Tasks 8–9 and are added in those tasks (so each task compiles on its own).
 
-- [ ] **Step 4: Configure RevenueCat at launch and inject**
+- [x] **Step 4: Configure RevenueCat at launch and inject**
 
 In `MeditateAndNoteApp.swift`, before `RootContainer()` is built:
 ```swift
@@ -757,16 +760,16 @@ init() {
 ```
 Add `.environment(container.subscriptionManager)` to the `RootContainer()` modifier chain, and expose `var subscriptionManager: SubscriptionManager { subscription.manager }` on `AppContainer`.
 
-- [ ] **Step 5: Refresh on launch and foreground**
+- [x] **Step 5: Refresh on launch and foreground**
 
 In `RootContainer` (or the app's `.task`), call `await container.subscriptionManager.refresh()` once on appear, and again on `ScenePhase` becoming `.active`.
 
-- [ ] **Step 6: Build**
+- [x] **Step 6: Build**
 
 Run: `xcodebuild -project MeditateAndNote.xcodeproj -scheme MeditateAndNote -destination 'generic/platform=iOS Simulator' build`
 Expected: BUILD SUCCEEDED.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add -A
@@ -785,7 +788,7 @@ git commit -m "feat(app): wire SubscriptionScope, AppContainer factories, launch
 - Consumes: `SubscriptionProvidable`, `SubscriptionManageable`.
 - Produces: `@MainActor @Observable final class SubscriptionViewModel` with `isPremium`, `priceText`, `errorMessage`, `isBusy`, `restore()`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```swift
 @MainActor
@@ -809,16 +812,16 @@ final class SubscriptionViewModelTests: XCTestCase {
 }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `xcodebuild test -project MeditateAndNote.xcodeproj -scheme MeditateAndNote -destination 'platform=iOS Simulator,name=iPhone 16' -only-testing:MeditateAndNoteTests/SubscriptionViewModelTests`
 Expected: FAIL — type not defined.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `SubscriptionViewModel` holds `any SubscriptionProvidable` + `any SubscriptionManageable`; `isPremium` mirrors `providable.isActive(.pro)`; `restore()` sets `isBusy`, calls `manageable.restore()`, maps `SubscriptionOperationError` to `errorMessage` (`.cancelled` → no message), clears `isBusy`. Expose `refreshStatus()` to reload after external changes.
 
-- [ ] **Step 4: Add the `AppContainer` factory**
+- [x] **Step 4: Add the `AppContainer` factory**
 
 Add to `AppContainer.swift`:
 ```swift
@@ -827,11 +830,11 @@ Add to `AppContainer.swift`:
 }
 ```
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run the command from Step 2. Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add MeditateAndNote/ViewModels/SubscriptionViewModel.swift MeditateAndNoteTests/SubscriptionViewModelTests.swift MeditateAndNote/AppContainer/AppContainer.swift
@@ -850,7 +853,7 @@ git commit -m "feat(presentation): add SubscriptionViewModel"
 - Consumes: `SubscriptionProvidable`, `SubscriptionManageable`, `SubscriptionOffering`, `SubscriptionPackage`.
 - Produces: `@MainActor @Observable final class PaywallViewModel` with `packages`, `selectedPackage`, `isPremium`, `isLoading`, `errorMessage`, `load()`, `purchaseSelected()`, `restore()`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 ```swift
 @MainActor
@@ -889,16 +892,16 @@ final class PaywallViewModelTests: XCTestCase {
 }
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `xcodebuild test -project MeditateAndNote.xcodeproj -scheme MeditateAndNote -destination 'platform=iOS Simulator,name=iPhone 16' -only-testing:MeditateAndNoteTests/PaywallViewModelTests`
 Expected: FAIL — type not defined.
 
-- [ ] **Step 3: Implement `PaywallViewModel`**
+- [x] **Step 3: Implement `PaywallViewModel`**
 
 `load()` → `isLoading = true`; `try await manageable.offerings()` → flatten to `packages`, select first; on `SubscriptionOperationError.notConfigured` set a user-facing "subscriptions unavailable" message; on other errors "couldn't load". `purchaseSelected()` guards a selected package, `isLoading` around `manageable.purchase`, updates `isPremium` from `providable`, `.cancelled` → silent. `restore()` maps errors like Task 8.
 
-- [ ] **Step 4: Add the `AppContainer` factory**
+- [x] **Step 4: Add the `AppContainer` factory**
 
 Add to `AppContainer.swift`:
 ```swift
@@ -907,11 +910,11 @@ Add to `AppContainer.swift`:
 }
 ```
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run the command from Step 2. Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add MeditateAndNote/ViewModels/PaywallViewModel.swift MeditateAndNoteTests/PaywallViewModelTests.swift MeditateAndNote/AppContainer/AppContainer.swift
@@ -931,24 +934,24 @@ git commit -m "feat(presentation): add PaywallViewModel"
 - Consumes: `PaywallViewModel` (Task 9), `SubscriptionViewModel` (Task 8), `AppContainer` factories (Task 7).
 - Produces: user-visible paywall + "Upgrade / Pro" Settings row.
 
-- [ ] **Step 1: Build `PaywallView`**
+- [x] **Step 1: Build `PaywallView`**
 
 Custom SwiftUI, `ThemeManager`-styled. Shows `viewModel.packages` with `priceString`, a Subscribe button (calls `purchaseSelected()`), Restore button, loading spinner, error text, and legal links (Terms/Privacy static URLs). Load via `.task { await viewModel.load() }`. Dismiss on `isPremium`.
 
-- [ ] **Step 2: Add the Settings entry**
+- [x] **Step 2: Add the Settings entry**
 
 `SubscriptionSection.swift`: a row showing "Upgrade to Pro" when `!viewModel.isPremium` (tap → present `PaywallView` via `@State showPaywall`) or "Pro active" when premium. `SettingsView` adds `SubscriptionSection(...)` to the `VStack` and passes `container: container`.
 
-- [ ] **Step 3: Build and run**
+- [x] **Step 3: Build and run**
 
 Run: `xcodebuild -project MeditateAndNote.xcodeproj -scheme MeditateAndNote -destination 'platform=iOS Simulator,name=iPhone 16' build`
 Expected: BUILD SUCCEEDED.
 
-- [ ] **Step 4: Manual smoke on simulator**
+- [x] **Step 4: Manual smoke on simulator**
 
 Launch via the MCP `build_run_sim`, open Settings → confirm the Upgrade row and that the paywall presents, shows packages (or the "unavailable" state with `appl_REPLACE_ME`), and Restore runs without crashing.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add MeditateAndNote/Views/Paywall MeditateAndNote/Views/Settings
@@ -959,8 +962,8 @@ git commit -m "feat(presentation): add paywall view and Settings upgrade entry"
 
 ## Final verification (after all tasks)
 
-- [ ] Full test suite green: `xcodebuild test -project MeditateAndNote.xcodeproj -scheme MeditateAndNote -destination 'platform=iOS Simulator,name=iPhone 16'`
-- [ ] `grep -rn "import RevenueCat" Packages/MeditateAndNoteCore/Sources` → no output (Domain stays clean).
-- [ ] `grep -rn "import RevenueCat" MeditateAndNote` → only `RevenueCatPurchasesService.swift`.
-- [ ] ViewModels reference `SubscriptionProvidable`/`SubscriptionManageable`, never `SubscriptionManager` or `Purchases` directly.
+- [x] Full test suite green: `xcodebuild test -project MeditateAndNote.xcodeproj -scheme MeditateAndNote -destination 'platform=iOS Simulator,name=iPhone 16'`
+- [x] `grep -rn "import RevenueCat" Packages/MeditateAndNoteCore/Sources` → no output (Domain stays clean).
+- [x] `grep -rn "import RevenueCat" MeditateAndNote` → only `RevenueCatPurchasesService.swift`.
+- [x] ViewModels reference `SubscriptionProvidable`/`SubscriptionManageable`, never `SubscriptionManager` or `Purchases` directly.
 - [ ] Android follow-up noted in the spec is untouched.
