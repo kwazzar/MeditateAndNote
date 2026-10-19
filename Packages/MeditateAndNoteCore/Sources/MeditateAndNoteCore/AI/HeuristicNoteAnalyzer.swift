@@ -36,7 +36,14 @@ public struct HeuristicNoteAnalyzer: NoteAnalyzer {
     private static func insight(for note: Note) -> NoteInsight {
         let text = combinedText(of: note)
         let frequencies = tokenFrequencies(in: text)
-        let top = Array(frequencies.sorted { $0.value > $1.value }.prefix(NoteInsight.maxThemes))
+        // Ties are broken by the label: Swift's dictionary order is not
+        // stable, so without this the same note would produce a different
+        // set of themes from one run to the next.
+        let top = Array(
+            frequencies
+                .sorted { $0.value == $1.value ? $0.key < $1.key : $0.value > $1.value }
+                .prefix(NoteInsight.maxThemes)
+        )
         let peak = top.first?.value ?? 1
         let themes = top.map { NoteTheme(label: $0.key, relevance: Double($0.value) / Double(max(peak, 1))) }
         return NoteInsight(

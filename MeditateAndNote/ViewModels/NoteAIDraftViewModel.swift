@@ -114,9 +114,7 @@ final class NoteAIDraftViewModel {
     /// one.
     func start(instructions: String? = nil) async {
         let grounded = hasContext
-        let request = instructions ?? (grounded
-            ? "Give me ideas to continue this note"
-            : "I have not written anything yet — ask me questions to start")
+        let request = instructions ?? AIDraftRemoteProtocol.defaultRequest(isGrounded: grounded)
         do {
             if let existing = try await drafts.session(for: noteID), !existing.isInFlight {
                 logger.info("Discarding previous session \(existing.id.uuidString) state=\(String(describing: existing.state)) grounded=\(existing.isGrounded) hasContext=\(grounded)")

@@ -58,6 +58,8 @@ import kotlinx.coroutines.delay
 import com.mn.android.R
 import com.mn.android.infrastructure.persistence.local.settings.AnimationSettings
 import com.mn.android.infrastructure.persistence.local.meditation.MeditationSelection
+import com.mn.android.data.AIDraftQuotaCounter
+import com.mn.android.data.AIDraftSettingsStore
 import com.mn.android.data.NoteBlobStore
 import com.mn.android.data.SessionBlobStore
 import com.mn.android.infrastructure.persistence.local.settings.OnboardingStore
@@ -135,6 +137,8 @@ private fun MnNav() {
     OnboardingStore.configure(LocalContext.current)
     StreakSnapshotStore.configure(LocalContext.current)
     NoteBlobStore.configure(LocalContext.current)
+    AIDraftSettingsStore.configure(LocalContext.current)
+    AIDraftQuotaCounter.configure(LocalContext.current)
     SessionBlobStore.configure(LocalContext.current)
     SharedPrefsReminderSettingsStore.configure(LocalContext.current)
     MeditationSelection.configure(LocalContext.current)

@@ -234,6 +234,7 @@ fun SettingsScreen(
             AnimationSection()
             ThemeSection()
             VolumeSection()
+            AIDraftSettingsSection()
 
             if (isDebuggable(context)) {
                 SectionCard {

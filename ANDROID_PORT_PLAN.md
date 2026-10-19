@@ -1143,13 +1143,42 @@ iOS: build зелений, **478 тестів** зелені (без нових 
 
 **Зауваження до поведінки**: порядок тем при рівних частотах нестабільний — `HeuristicNoteAnalyzer` сортує словник Swift (`Dictionary`), а порядок ключів при однаковій частоті випадковий. Це поведінка ядра, спільна з iOS, не баг порту.
 
-**v2 — AI draft (ще не зроблено).** Відкриті рішення:
+**v2 — AI draft. Зроблено 2026-10-20 (провайдер: remote OpenAI-сумісний).**
 
-- **D1** — де живе `AIDraftManager`: у Core (разом з `AIDraftService`/`AIDraftSession`) чи Kotlin-менеджер поверх доменних типів.
-- **D2** — провайдер: ML Kit GenAI Prompt API (on-device) / remote OpenAI-сумісний / гібрид. Емулятор **не має** AICore/GenAI — on-device шлях перевіряється лише на реальному пристрої; remote — перевіряється скрізь.
-- **D3** — де живуть prompt і парсинг відповіді: спільно в Core, щоб iOS і Android ділили одне правило.
-- **D4** — `AIDraftSessionStore` / `AIDraftQuotaStore` / `AIDraftMetricStore` на Android: Kotlin-реалізації (SharedPreferences/SQLite) за протоколами з Core.
-- **D5** — перевірка: on-device шлях потребує реального пристрою з Gemini Intelligence (12 GB+ RAM, флагманський SoC); remote-флоу перевіряється на емуляторі.
+Рішення по п'яти пунктах, які лишалися відкритими:
+
+- **D1** — менеджера в Core не заводили. Домен (`AIDraftSession`, `AIDraftQuota`) лишається в Core, а оркестрація живе в JNI-мості `AIDraftBridge.swift`: вона будує prompt, перевіряє квоту, звертається до провайдера й парсить відповідь. Kotlin викликає п'ять команд і малює результат.
+- **D2** — провайдер: **remote OpenAI-сумісний endpoint**, який користувач налаштовує в Settings (endpoint + model + API key). Чому не ML Kit: емулятор не має AICore, тобто on-device шлях не перевіряється локально; remote перевіряється скрізь і не тягне нових залежностей. Провайдер — один об'єкт `AIDraftProvider` у Kotlin: заміна на on-device буде заміною його внутрішньої, а не переписуванням UI.
+- **D3** — wire-протокол тепер у Core: `AIDraftRemoteProtocol` (system-інструкції, user-повідомлення, тіло запиту, конверт відповіді, парсинг підказок). iOS `RemoteLLMDraftService` переведено на нього — правило одне на дві платформи.
+- **D4** — персистентність сесій не заводили: сесія живе в стані редактора (JSON-документ, який Kotlin передає назад без зміни). Лічильник безкоштовної квоти — `AIDraftQuotaCounter` (SharedPreferences); ліміт і правило — у Core.
+- **D5** — перевірка: інструментальні тести (7 нових) + ручний QA на `emulator-5554` з локальним mock-провайдером (хост доступний з емулятора як `10.0.2.2`).
+
+Що зроблено:
+
+| Шар | Файл | Роль |
+|---|---|---|
+| Domain | `AIDraftRemoteProtocol.swift` (Core) | інструкції, тіло запиту, конверт, парсинг підказок — одне правило на дві платформи |
+| Domain | `HeuristicNoteAnalyzer` | тіги тепер детерміновані: рівні частоти розбиваються за літерою (було випадково — `Dictionary`) |
+| Bridge | `AIDraftBridge.swift` (CoreJNI) | 5 `@_cdecl`: `startDraft`, `acceptSuggestion`, `acceptAll`, `rejectSuggestion`, `cancel`; квота, сесія, парсинг — у Core |
+| Data | `AIDraftProvider.kt` | HTTP-транспорт (`HttpURLConnection`, без нових залежностей), endpoint+model з налаштувань |
+| Data | `AIDraftSettingsStore.kt` | endpoint/model у SharedPreferences, **API key — AES-GCM у Android Keystore** (не перетинає JNI) |
+| Data | `AIDraftQuotaCounter.kt` | лічильник безкоштовних генерацій |
+| Data | `AIDraftSource.kt` | JNI-поверхня + розбір конверта/сесії |
+| UI | `AIDraftBar.kt` | «Proposals»/«Questions», Accept/Remove, Accept All, Transfer (n) |
+| UI | `AIDraftSettingsSection.kt` | секція «AI drafts» у Settings |
+
+**Свідомі відхилення від iOS:**
+
+| Аспект | iOS | Android v2 | Чому |
+|---|---|---|---|
+| Провайдер | on-device FoundationModels + remote fallback | лише remote | on-device на Android = ML Kit/AICore, недоступний на емуляторі й без реального пристрою |
+| Ключ | Keychain | Android Keystore (AES-GCM) | платформний аналог Keychain |
+| Premium | `.pro` → необмежено | усі на free-рівні (5 генерацій) | на Android ще немає billing — гейт технічно неможливий |
+| Сесія | персиститься | живе в редакторі | сесія не переживає закриття екрана; персистентність — окрема задача |
+| Денний ліміт | `dailyGenerationLimit` (5/день) | відсутній | ключ належить користувачеві, витрачає він сам; денний ліміт — це захист бюджету застосунку, а не користувача |
+| Метрики | `DomainEvent` → `AIDraftMetricStore` | лише лічильник квоти | `DomainEvent` на Android ще не портований |
+
+**Перевірено:** `assembleDebug` ✅; `connectedDebugAndroidTest` — 38/38 ✅ (7 нових у `AIDraftContractTest`); iOS — `RemoteLLMDraftServiceTests` + `AIDraftManagerTests` + `AIDraftSessionTests` = 50/50 ✅; ручний QA на `emulator-5554` з mock-провайдером: підказки прийшли, Accept пересуває їх у «Accepted», Transfer вставляє текст у нотатку (порожній рядок-роздільник, як в iOS), лічильник квоти зріс на 1.
 
 **Застарілий контракт у 3.1.** Запропонований тут `AIWritingService`/`AICapabilityLevel` не застосовується: у Core вже є `AIDraftService`, `AIDraftSession`, `AIPrompt`, `AISuggestion`, `AIDraftQuota`, `AIDraftSettings`, `AIDraftError`, `AIDraftState` (згенеровані Java-біндінги — 114 файлів у `com/mn/core/`). Паралельний контракт заводити не треба: розширюємо наявний.
 

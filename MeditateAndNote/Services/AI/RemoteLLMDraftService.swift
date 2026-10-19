@@ -66,27 +66,24 @@ struct RemoteLLMDraftService: AIDraftService, @unchecked Sendable {
             throw AIDraftError.providerUnavailable
         }
 
-        let requestDTO = ChatCompletionRequest(
+        let requestBody = AIDraftRemoteProtocol.requestBody(
             model: settings.selectedModel,
-            messages: [
-                .init(role: "system", content: systemInstructions(for: prompt)),
-                .init(role: "user", content: composeUserMessage(for: prompt))
-            ],
-            temperature: 0.7
+            system: AIDraftRemoteProtocol.systemInstructions(for: prompt),
+            user: AIDraftRemoteProtocol.userMessage(for: prompt)
         )
 
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("Application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-        request.httpBody = try JSONEncoder().encode(requestDTO)
+        request.httpBody = requestBody.data(using: .utf8)
 
         let (data, response) = try await executeWithRetry(request: request, maxRetries: 3)
 
         #if DEBUG
         debug("[AIDraftRemote] === grounded=\(prompt.isGrounded) contextChars=\(prompt.context.rawValue.count) ===")
-        debug("[AIDraftRemote] --- system ---\n\(systemInstructions(for: prompt))")
-        debug("[AIDraftRemote] --- user ---\n\(composeUserMessage(for: prompt))")
+        debug("[AIDraftRemote] --- system ---\n\(AIDraftRemoteProtocol.systemInstructions(for: prompt))")
+        debug("[AIDraftRemote] --- user ---\n\(AIDraftRemoteProtocol.userMessage(for: prompt))")
         #endif
 
         guard let httpResponse = response as? HTTPURLResponse else {
@@ -102,12 +99,12 @@ struct RemoteLLMDraftService: AIDraftService, @unchecked Sendable {
             throw AIDraftError.providerUnavailable
         }
 
-        let responseDTO = try JSONDecoder().decode(ChatCompletionResponse.self, from: data)
-        guard let content = responseDTO.choices.first?.message.content else {
+        guard let responseText = String(data: data, encoding: .utf8),
+              let content = AIDraftRemoteProtocol.content(fromResponse: responseText) else {
             throw AIDraftError.emptyResponse
         }
 
-        let suggestions = parseSuggestions(from: content, max: prompt.maxSuggestions)
+        let suggestions = AIDraftRemoteProtocol.suggestions(from: content, max: prompt.maxSuggestions)
         #if DEBUG
         debug("[AIDraftRemote] --- raw response ---\n\(content)")
         debug("[AIDraftRemote] --- parsed \(suggestions.count)/\(prompt.maxSuggestions) ---")
@@ -188,80 +185,4 @@ struct RemoteLLMDraftService: AIDraftService, @unchecked Sendable {
         return true
     }
 
-    // MARK: - Helpers
-
-    private func systemInstructions(for prompt: AIPrompt) -> String {
-        if prompt.isGrounded {
-            return """
-            You are a reflective journaling assistant in an app called MeditateAndNote. \
-            Read the user's note and their request, then offer concise, thoughtful \
-            suggestions to help them continue. Every suggestion must name a specific \
-            moment, detail or feeling from the note above — generic advice is not \
-            acceptable. Never invent personal facts. Keep each suggestion under 140 \
-            characters. Return suggestions as a JSON object in this format: \
-            {"suggestions": [{"text": "suggestion text", "rationale": "short reason"}]}
-            """
-        }
-
-        return """
-        You are a reflective journaling assistant in an app called MeditateAndNote. \
-        The user has not written anything yet, so there is no note to continue. \
-        Ask reflective questions that help them start — never write the note for \
-        them, never invent personal facts. Keep each question under 140 characters. \
-        Return the questions as a JSON object in this format: \
-        {"suggestions": [{"text": "the question", "rationale": "short reason"}]}
-        """
-    }
-
-    private func composeUserMessage(for prompt: AIPrompt) -> String {
-        let context = prompt.context.rawValue.isEmpty ? "(no note content yet)" : prompt.context.rawValue
-        return """
-        Request: \(prompt.instructions)
-
-        Current note content:
-        \(context)
-        """
-    }
-
-    private func parseSuggestions(from text: String, max: Int) -> [AISuggestion] {
-        if let data = text.data(using: .utf8),
-           let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-           let items = json["suggestions"] as? [[String: Any]] {
-            return items.compactMap { item -> AISuggestion? in
-                guard let text = item["text"] as? String, !text.isEmpty else { return nil }
-                return AISuggestion(text: text, rationale: item["rationale"] as? String ?? "")
-            }.prefix(max).map { $0 }
-        }
-
-        let lines = text
-            .split(whereSeparator: \.isNewline)
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
-            .prefix(max)
-
-        return lines.map { AISuggestion(text: String($0)) }
-    }
-}
-
-// MARK: - DTOs
-
-private struct ChatCompletionRequest: Encodable {
-    let model: String
-    let messages: [ChatMessage]
-    let temperature: Double
-}
-
-private struct ChatMessage: Encodable {
-    let role: String
-    let content: String
-}
-
-private struct ChatCompletionResponse: Decodable {
-    struct Choice: Decodable {
-        struct Message: Decodable {
-            let content: String?
-        }
-        let message: Message
-    }
-    let choices: [Choice]
 }

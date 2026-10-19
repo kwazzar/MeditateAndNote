@@ -3,6 +3,7 @@ package com.mn.android.presentation.notes.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -10,8 +11,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
@@ -27,6 +30,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -41,17 +45,25 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mn.android.R
+import com.mn.android.data.AIDraftSettingsStore
+import com.mn.android.data.AIDraftSource
 import com.mn.android.data.NoteEditorSource
 import com.mn.android.presentation.theme.ui.MnBackground
 import com.mn.android.presentation.theme.ui.MnTheme
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
- * Port of the iOS NoteEditor without the AI draft bar (iOS itself ships it
- * over `AIDraftManagerStub`; there is no AI backend on Android yet — the
- * sparkles entry is omitted rather than rendered dead).
+ * Port of the iOS NoteEditor, AI draft bar included.
+ *
+ * The draft itself is not implemented here: Swift owns the domain (the
+ * session, the free-quota rule, the parsing of the model's answer) and
+ * Kotlin drives the commands and renders the answer. The provider is a
+ * remote OpenAI-compatible endpoint the user configures in Settings.
  *
  * Mirrors the ViewModel's rules exactly as presentation-local state:
  * - new note: never persisted while entirely blank (`hasContent`)
@@ -78,6 +90,15 @@ fun NoteEditorScreen(
     var body by rememberSaveable { mutableStateOf("") }
     var persisted by remember { mutableStateOf<NoteEditorSource.EditorNote?>(null) }
     var showDeleteConfirmation by rememberSaveable { mutableStateOf(false) }
+
+    // AI draft state. Swift owns the domain (the session, the quota rule, the
+    // parsing of the model's answer); Kotlin calls the commands and renders
+    // what comes back.
+    var draftDocument by remember { mutableStateOf("") }
+    var draftSession by remember { mutableStateOf<AIDraftSource.Session?>(null) }
+    var draftError by remember { mutableStateOf<String?>(null) }
+    var isDrafting by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(noteId) {
         if (noteId != null) {
@@ -124,11 +145,77 @@ fun NoteEditorScreen(
             }
     }
 
+    // MARK: - AI draft
+
+    fun applyDraftResult(result: AIDraftSource.Result) {
+        if (result.ok && result.session != null) {
+            draftDocument = result.document.orEmpty()
+            draftSession = result.session
+            draftError = null
+        } else {
+            draftError = result.error
+        }
+    }
+
+    fun startDraft() {
+        if (isDrafting) return
+        if (!AIDraftSettingsStore.hasApiKey()) {
+            draftError = "noApiKey"
+            return
+        }
+        scope.launch {
+            isDrafting = true
+            draftError = null
+            val result = withContext(Dispatchers.IO) {
+                AIDraftSource.start(noteId = editingId, instruction = "", context = body)
+            }
+            isDrafting = false
+            applyDraftResult(result)
+        }
+    }
+
+    fun acceptSuggestion(suggestion: AIDraftSource.Suggestion) {
+        val document = draftDocument
+        scope.launch {
+            applyDraftResult(
+                withContext(Dispatchers.IO) { AIDraftSource.accept(document, suggestion.id) },
+            )
+        }
+    }
+
+    fun removeSuggestion(suggestion: AIDraftSource.Suggestion) {
+        val document = draftDocument
+        scope.launch {
+            applyDraftResult(
+                withContext(Dispatchers.IO) { AIDraftSource.reject(document, suggestion.id) },
+            )
+        }
+    }
+
+    fun acceptAllSuggestions() {
+        val document = draftDocument
+        scope.launch {
+            applyDraftResult(
+                withContext(Dispatchers.IO) { AIDraftSource.acceptAllPending(document) },
+            )
+        }
+    }
+
+    /** iOS `applyAcceptedProposals`: the accepted texts, blank line separated. */
+    fun transferAccepted() {
+        val accepted = draftSession?.accepted.orEmpty()
+        if (accepted.isEmpty()) return
+        val addition = accepted.joinToString("\n\n") { it.text.trim('\n', '\r') }
+        body = if (body.isBlank()) addition else "$body\n\n$addition"
+    }
+
     Box(Modifier.fillMaxSize()) {
         MnBackground()
         Column(Modifier.fillMaxSize()) {
             EditorTopBar(
                 showDelete = !isNewNote,
+                isDrafting = isDrafting,
+                onAiDraft = { startDraft() },
                 onBack = {
                     performSave()
                     onBack()
@@ -152,6 +239,15 @@ fun NoteEditorScreen(
                     .fillMaxWidth()
                     .weight(1f),
                 autoFocus = true, // iOS: isEditorFocused = true on appear
+            )
+            AIDraftBar(
+                isGenerating = isDrafting,
+                session = draftSession,
+                error = draftError,
+                onAccept = { acceptSuggestion(it) },
+                onRemove = { removeSuggestion(it) },
+                onAcceptAll = { acceptAllSuggestions() },
+                onTransfer = { transferAccepted() },
             )
         }
     }
@@ -190,6 +286,8 @@ fun NoteEditorScreen(
 @Composable
 private fun EditorTopBar(
     showDelete: Boolean,
+    isDrafting: Boolean,
+    onAiDraft: () -> Unit,
     onBack: () -> Unit,
     onDelete: () -> Unit,
 ) {
@@ -212,31 +310,50 @@ private fun EditorTopBar(
                 modifier = Modifier.size(26.dp),
             )
         }
-        if (showDelete) {
-            IconButton(
-                onClick = { menuExpanded = true },
-                modifier = Modifier
-                    .height(36.dp)
-                    .align(androidx.compose.ui.Alignment.CenterEnd),
-            ) {
-                Icon(
-                    Icons.Filled.MoreVert,
-                    contentDescription = null,
-                    tint = MnTheme.iconPrimary,
-                )
-                DropdownMenu(
-                    expanded = menuExpanded,
-                    onDismissRequest = { menuExpanded = false },
-                ) {
-                    DropdownMenuItem(
-                        text = {
-                            Text(stringResource(R.string.delete), color = MnTheme.deleteRed)
-                        },
-                        onClick = {
-                            menuExpanded = false
-                            onDelete()
-                        },
+        Row(
+            Modifier
+                .height(36.dp)
+                .align(androidx.compose.ui.Alignment.CenterEnd),
+            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+        ) {
+            // iOS: the sparkles in the top bar, a spinner while generating.
+            IconButton(onClick = onAiDraft, enabled = !isDrafting) {
+                if (isDrafting) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        strokeWidth = 2.dp,
+                        color = MnTheme.iconPrimary,
                     )
+                } else {
+                    Icon(
+                        Icons.Filled.AutoAwesome,
+                        contentDescription = stringResource(R.string.ai_draft_button),
+                        tint = MnTheme.iconPrimary,
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
+            }
+            if (showDelete) {
+                IconButton(onClick = { menuExpanded = true }) {
+                    Icon(
+                        Icons.Filled.MoreVert,
+                        contentDescription = null,
+                        tint = MnTheme.iconPrimary,
+                    )
+                    DropdownMenu(
+                        expanded = menuExpanded,
+                        onDismissRequest = { menuExpanded = false },
+                    ) {
+                        DropdownMenuItem(
+                            text = {
+                                Text(stringResource(R.string.delete), color = MnTheme.deleteRed)
+                            },
+                            onClick = {
+                                menuExpanded = false
+                                onDelete()
+                            },
+                        )
+                    }
                 }
             }
         }
@@ -338,7 +455,7 @@ private fun normalizedTitle(raw: String): String =
 @Composable
 private fun NoteEditorPreview() {
     Column(Modifier.background(MnTheme.background)) {
-        EditorTopBar(showDelete = true, onBack = {}, onDelete = {})
+        EditorTopBar(showDelete = true, isDrafting = false, onAiDraft = {}, onBack = {}, onDelete = {})
         TitleField(title = "Morning pages", onTitleChange = {})
         HorizontalDivider(color = MnTheme.divider)
         BodyField(body = "Breathe in, breathe out.", onBodyChange = {})

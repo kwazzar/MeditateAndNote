@@ -44,6 +44,29 @@
     <string name="note_insights_refresh">Refresh insights</string>
     <string name="note_insights_loading">Loading insights…</string>
 
+    <!-- NoteEditor AI draft bar -->
+    <string name="ai_draft_button">AI draft</string>
+    <string name="ai_draft_generating">Generating suggestions…</string>
+    <string name="ai_draft_proposals">Proposals</string>
+    <string name="ai_draft_questions">Questions</string>
+    <string name="ai_draft_accepted">Accepted</string>
+    <string name="ai_draft_accept">Accept</string>
+    <string name="ai_draft_remove">Remove</string>
+    <string name="ai_draft_accept_all">Accept All</string>
+    <string name="ai_draft_transfer">Transfer (%1$d)</string>
+    <string name="ai_draft_quota_exhausted">Free drafts used up</string>
+    <string name="ai_draft_failed">Could not generate suggestions</string>
+    <string name="ai_draft_no_key">Add an API key in Settings to use AI drafts</string>
+
+    <!-- Settings: AI draft provider -->
+    <string name="ai_settings_title">AI drafts</string>
+    <string name="ai_settings_summary">Provider for the AI draft suggestions</string>
+    <string name="ai_settings_endpoint">Endpoint</string>
+    <string name="ai_settings_model">Model</string>
+    <string name="ai_settings_api_key">API key</string>
+    <string name="ai_settings_save">Save</string>
+    <string name="ai_settings_saved">Saved</string>
+
     <!-- NoteEditor -->
     <string name="note_title_hint">Title</string>
     <string name="note_body_hint">Start writing...</string>

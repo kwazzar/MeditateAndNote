@@ -45,9 +45,29 @@
 
 **Автотести:** `connectedDebugAndroidTest` — 31/31 PASS (3 нові в `NoteInsightsContractTest`: інсайти є, порожній стор → порожній список, `topThemes` ранжує). iOS: `NoteInsightTests` — 14/14 PASS (2 нові на `analyzeSync`).
 
+## Прохід Android AI Draft (дата: 2026-10-20, середовище: Android emulator `emulator-5554` / Medium_Phone_API_37.0, API 37, arm64, провайдер: локальний mock на `10.0.2.2:8731`)
+
+| # | Крок | Очікування | Pass/Fail | Лог/примітка |
+|---|------|-----------|-----------|--------------|
+| 1 | Settings → секція «AI drafts» | endpoint, model, API key | PASS | поля зберігаються; key у prefs — лише шифротекст (`api_key_cipher` + `api_key_iv`), ключ у Keystore |
+| 2 | Третє поле «API key» | маскований | PASS | показується `••••••••`; у logcat не потрапляє |
+| 3 | Нотатка з текстом, тап по ✨ | підказки приходять | PASS | «Proposals»: «What did the river sound like this morning?» + «Try describing the moment before you felt calm.» |
+| 4 | Запит до провайдера | правильний формат | PASS | body = system-інструкції + `Request: Give me ideas to continue this note` + текст нотатки (спільне правило з Core) |
+| 5 | Accept однієї підказки | переходить у «Accepted» | PASS | рядок «Accepted» з’явився, у підказки лишився «Remove», з’явився «Transfer (1)» |
+| 6 | Accept All / Remove | масові дії | PASS | `acceptAll` переносить усі pending; `reject` повертаєAccepted у pending (контракт-тест) |
+| 7 | Transfer (1) | текст потрапляє в нотатку | PASS | body = `I walked by the river this morning and felt very calm.\n\nWhat did the river sound like this morning?` — порожній рядок-роздільник, як в iOS |
+| 8 | Лічильник квоти | зростає на успішну генерацію | PASS | `ai_draft_quota.xml` → `used=1` |
+| 9 | Квота вичерпана | 6-та генерація відхиляється | PASS | контракт-тест: після 5 успішних — `freeQuotaExhausted` |
+| 10 | Провайдер падає | зрозуміла помилка | PASS | контракт-тест: HTTP 500 → `providerUnavailable`, UI показує «Could not generate suggestions» |
+| 11 | Без ключа | не мертва кнопка | PASS | без ключа показується «Add an API key in Settings to use AI drafts» |
+| 12 | Регресія: інсайти | працюють | PASS | секція Insights у списку нотаток на місці, 31/31 тестів зелені |
+
+**Автотести:** `connectedDebugAndroidTest` — 38/38 PASS (7 нових у `AIDraftContractTest`: підказки приходять, без контексту — питання, accept/reject/acceptAll, квота, помилка провайдера). iOS: `RemoteLLMDraftServiceTests` + `AIDraftManagerTests` + `AIDraftSessionTests` — 50/50 PASS.
+
 ## Історія прогонів
 
-| Прохід | Дата | Результат | Примітки |
+| Прохід | Дата | Результат | Нотатки |
 |--------|------|-----------|----------|
 | 1 | 2026-09-23 | 20 PASS (усі, п.14 та 17–20 закриті 2026-09-25) | QA спринту 4D завершено |
 | 2 | 2026-10-20 | 10 PASS (Android AI Insights) | v1 інсайтів на Android, без LLM |
+| 3 | 2026-10-20 | 12 PASS (Android AI Draft) | v2 чернетки: remote-провайдер, парітет з iOS |
