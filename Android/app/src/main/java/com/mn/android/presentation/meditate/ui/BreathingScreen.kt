@@ -1,6 +1,7 @@
 package com.mn.android.presentation.meditate.ui
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,9 +14,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.Air
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Create
@@ -74,18 +77,23 @@ internal val phaseLabel = mapOf(
     "holdAfterExhale" to "Hold",
 )
 
-internal fun phaseColor(d: String): Color = when (d) {
-    "inhale" -> MnBreathing.inhale
-    "holdAfterInhale" -> MnBreathing.holdAfterInhale
-    "exhale" -> MnBreathing.exhale
-    else -> MnBreathing.holdAfterExhale
+@Composable
+internal fun phaseColor(d: String): Color {
+    val dark = MnTheme.colors.isDark
+    return when (d) {
+        "inhale" -> if (dark) MnBreathing.inhaleDark else MnBreathing.inhaleLight
+        "holdAfterInhale" -> if (dark) MnBreathing.holdAfterInhaleDark else MnBreathing.holdAfterInhaleLight
+        "exhale" -> if (dark) MnBreathing.exhaleDark else MnBreathing.exhaleLight
+        else -> if (dark) MnBreathing.holdAfterExhaleDark else MnBreathing.holdAfterExhaleLight
+    }
 }
 
-internal fun durationLabel(d: MeditationDuration): String = when (d) {
-    MeditationDuration.oneMin(SwiftMemoryManagement.DEFAULT_SWIFT_JAVA_AUTO_ARENA) -> "1 min"
-    MeditationDuration.threeMin(SwiftMemoryManagement.DEFAULT_SWIFT_JAVA_AUTO_ARENA) -> "3 min"
-    MeditationDuration.fiveMin(SwiftMemoryManagement.DEFAULT_SWIFT_JAVA_AUTO_ARENA) -> "5 min"
-    else -> ""
+/** Minutes for the duration picker, so the sheet can spell "1 minute"/"n minutes". */
+internal fun durationMinutes(d: MeditationDuration): Int = when (d) {
+    MeditationDuration.oneMin(SwiftMemoryManagement.DEFAULT_SWIFT_JAVA_AUTO_ARENA) -> 1
+    MeditationDuration.threeMin(SwiftMemoryManagement.DEFAULT_SWIFT_JAVA_AUTO_ARENA) -> 3
+    MeditationDuration.fiveMin(SwiftMemoryManagement.DEFAULT_SWIFT_JAVA_AUTO_ARENA) -> 5
+    else -> 0
 }
 
 internal val meditationDurations: List<MeditationDuration>
@@ -109,20 +117,37 @@ fun BreathingScreen(
 
     Box(Modifier.fillMaxSize()) {
         MnBackground()
-        Column(Modifier.fillMaxSize().padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Back", tint = MnTheme.textPrimary)
-                }
-                Text(
-                    vm.meditationTitle,
-                    color = MnTheme.textPrimary,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f),
-                )
-                TextButton(onClick = { vm.stop(); onBack() }) {
-                    Text("Stop", color = MnTheme.textSecondary)
+        // iOS completion is a bare screen: no title bar, no close button.
+        val finished = vm.uiState is BreathingSessionViewModel.UiState.Finished
+        Column(
+            Modifier.fillMaxSize().then(if (finished) Modifier else Modifier.padding(16.dp)),
+        ) {
+            if (!finished) {
+                Box(Modifier.fillMaxWidth()) {
+                    Text(
+                        vm.meditationTitle,
+                        color = MnTheme.textPrimary,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    Box(
+                        Modifier
+                            .align(Alignment.CenterEnd)
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(MnTheme.toolbarBackground)
+                            .clickable { vm.stop(); onBack() },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            Icons.Filled.Close,
+                            contentDescription = "Close",
+                            tint = MnTheme.iconPrimary,
+                            modifier = Modifier.size(16.dp),
+                        )
+                    }
                 }
             }
 
@@ -136,6 +161,9 @@ fun BreathingScreen(
                                 sheetOpen = false
                                 vm.start(SessionDuration.init(selectedDuration, vm.arena))
                             },
+                            // Dismissing the only actionable UI = leaving, and
+                            // it also detaches the modal so the close button works.
+                            onDismiss = onBack,
                         )
                     }
                 }

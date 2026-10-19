@@ -38,21 +38,24 @@ data class MnColors(
     val background: Color get() = gradient.first()
 }
 
-private val GREEN = Color(0xFF009900)        // UIColor.green
-private val BLUE = Color(0xFF0000FF)         // UIColor.blue
-private val PURPLE = Color(0xFF800080)       // UIColor.purple
-private val ORANGE = Color(0xFFFF9500)       // UIColor.orange
-private val RED = Color(0xFFFF0000)          // UIColor.red
-private val GRAY = Color(0xFF808080)         // UIColor.gray
+// SwiftUI system colours per colour scheme (UIColor.green etc.), not the web
+// named colours — `.green` is #34C759 light / #30D158 dark.
+private val GREEN_L = Color(0xFF34C759)
+private val BLUE_L = Color(0xFF007AFF)
+private val PURPLE_L = Color(0xFFAF52DE)
+private val ORANGE_L = Color(0xFFFF9500)
+private val RED_L = Color(0xFFFF3B30)
+
+
 private val WHITE = Color(0xFFFFFFFF)
 private val BLACK = Color(0xFF000000)
 
 // .opacity() variants, pre-multiplied: SwiftUI dark themes dim the same UIColor.
-private val GREEN_85 = Color(0xD9009900)
-private val BLUE_85 = Color(0xD90000FF)
-private val PURPLE_85 = Color(0xD9800080)
-private val ORANGE_75 = Color(0xBFFF9500)
-private val RED_80 = Color(0xCCFF0000)
+private val GREEN_85 = Color(0xD930D158)
+private val BLUE_85 = Color(0xD90A84FF)
+private val PURPLE_85 = Color(0xD9BF5AF2)
+private val ORANGE_75 = Color(0xBFFF9F0A)
+private val RED_80 = Color(0xCCFF453A)
 
 private val WHITE_60 = Color(0x99FFFFFF)
 private val WHITE_20 = Color(0x33FFFFFF)
@@ -65,10 +68,13 @@ private val BLACK_60 = Color(0x99000000)
 private val BLACK_10 = Color(0x1A000000)
 private val BLACK_04 = Color(0x0A000000)
 
-private val GRAY_35 = Color(0x59808080)
+private val GRAY_35 = Color(0x598E8E93)
 
-/** `MainTheme.accentButton` — one opaque brand accent, identical in every theme. */
-private val ACCENT = Color(0xFFB052B5)
+/** `MainTheme.accentButton` — SwiftUI `.purple`, i.e. the system accent
+ *  (iOS 26 dark `#DB34F2`, light `#AF52DE`). Matches what iOS renders; the
+ *  app keeps one opaque brand accent per colour scheme. */
+private val ACCENT_DARK = Color(0xFFDB34F2)
+private val ACCENT_LIGHT = Color(0xFFAF52DE)
 
 /** Destructive tint (`delete`), constant across themes. */
 internal val DANGER_DELETE = Color(0xFFFF453A)
@@ -133,15 +139,15 @@ private fun lightColors(
     toolbarBackground = toolbarBackground,
     divider = BLACK_10,           // .black.opacity(0.1)
     editorBackground = editorBackground,
-    streakSuccess = GREEN,        // .green
-    streakActiveMeditation = PURPLE,
-    streakActiveNote = BLUE,
+    streakSuccess = GREEN_L,      // .green
+    streakActiveMeditation = PURPLE_L,
+    streakActiveNote = BLUE_L,
     streakMuted = GRAY_35,        // .gray.opacity(0.35)
     cardBackground = cardBackground,
     buttonText = WHITE,           // .white
-    accentButton = ACCENT,
-    streakIndicator = ORANGE,     // .orange
-    danger = RED,                 // .red
+    accentButton = ACCENT_LIGHT,
+    streakIndicator = ORANGE_L,   // .orange
+    danger = RED_L,               // .red
     star = WHITE_08,              // unused without starfield
 )
 
@@ -166,7 +172,7 @@ private fun darkColors(
     streakMuted = WHITE_20,       // .white.opacity(0.2)
     cardBackground = WHITE_06,    // .white.opacity(0.06)
     buttonText = WHITE,
-    accentButton = ACCENT,
+    accentButton = ACCENT_DARK,
     streakIndicator = ORANGE_75,  // .orange.opacity(0.75)
     danger = RED_80,              // .red.opacity(0.8)
     star = WHITE_08,              // .white.opacity(0.08)

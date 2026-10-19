@@ -1,6 +1,7 @@
 package com.mn.android.presentation.streak.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,13 +22,14 @@ import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.SelfImprovement
-import androidx.compose.material.icons.filled.Whatshot
+import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.outlined.Circle
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -74,21 +76,30 @@ internal fun StreakDayDetailSheet(
             .padding(bottom = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        // iOS nav bar: centred title with a bordered "Done" pill trailing.
+        Box(Modifier.fillMaxWidth()) {
             Text(
                 if (day.date == LocalDate.now()) "Today"
-                else day.date.format(DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.US)),
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 16.sp,
+                else day.date.format(DateTimeFormatter.ofPattern("d MMM yyyy", Locale.US)),
+                fontWeight = FontWeight.Bold,
+                fontSize = 17.sp,
                 color = MnTheme.textPrimary,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.align(Alignment.Center),
             )
-            Text(
-                stringResource(R.string.done),
-                color = MnTheme.streakIndicator,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.clickable(onClick = onClose),
-            )
+            Box(
+                Modifier
+                    .align(Alignment.CenterEnd)
+                    .clip(CircleShape)
+                    .border(1.dp, MnTheme.divider, CircleShape)
+                    .clickable(onClick = onClose)
+                    .padding(horizontal = 18.dp, vertical = 7.dp),
+            ) {
+                Text(
+                    stringResource(R.string.done),
+                    color = MnTheme.textPrimary,
+                    fontSize = 15.sp,
+                )
+            }
         }
 
         MnCard {
@@ -108,7 +119,7 @@ internal fun StreakDayDetailSheet(
                             DayCellState.COMPLETE -> Icons.Filled.CheckCircle
                             DayCellState.MEDITATION_ONLY -> Icons.Filled.SelfImprovement
                             DayCellState.NOTE_ONLY -> Icons.AutoMirrored.Filled.Notes
-                            DayCellState.EMPTY -> Icons.Filled.Whatshot
+                            DayCellState.EMPTY -> Icons.Filled.DarkMode
                         },
                         contentDescription = null,
                         tint = accent,

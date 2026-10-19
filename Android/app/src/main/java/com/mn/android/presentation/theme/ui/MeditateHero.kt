@@ -39,7 +39,23 @@ fun MeditateHero(
 ) {
     val colors = MnTheme.colors
     val theme = LocalMnThemeManager.current.theme
-    val shadowColor = colors.accentButton.copy(alpha = 0.35f)
+    // iOS per-theme shadow: darkZen/obsidian/liquidGlass use `dividerColor`
+    // (a barely-visible white glow), breathing uses accent 0.35, softDawn
+    // streakIndicator 0.2. The default black shadow would flatten the dark
+    // themes; the per-theme color is what gives the iOS halo.
+    val shadowColor = when (theme) {
+        MainTheme.BREATHING -> colors.accentButton.copy(alpha = 0.35f)
+        MainTheme.SOFT_DAWN -> colors.streakIndicator.copy(alpha = 0.2f)
+        else -> colors.divider
+    }
+    // iOS only gives the two light themes a visible halo; darkZen/obsidian's
+    // `dividerColor` shadow is a barely-visible white glow that the emulator
+    // renders as a polygonal artifact, so it is dropped for dark themes.
+    val shadowElevation = when (theme) {
+        MainTheme.BREATHING -> 24.dp
+        MainTheme.SOFT_DAWN -> 16.dp
+        else -> 0.dp
+    }
 
     Box(modifier.scale(scale), contentAlignment = Alignment.Center) {
         for (i in 0..2) {
@@ -74,7 +90,7 @@ fun MeditateHero(
         Box(
             Modifier
                 .size(140.dp)
-                .shadow(16.dp, CircleShape, ambientColor = shadowColor, spotColor = shadowColor)
+                .shadow(shadowElevation, CircleShape, ambientColor = shadowColor, spotColor = shadowColor)
                 .clip(CircleShape)
                 .then(innerFill),
             contentAlignment = Alignment.Center,

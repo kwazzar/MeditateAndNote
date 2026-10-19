@@ -7,5 +7,5 @@ package com.mn.android.data
  * so Kotlin never touches the serialization shape.
  */
 object SessionRecorder {
-    external fun record(meditationId: String, seconds: Double): Long
+    external fun record(meditationId: String, seconds: Double, tzOffsetMinutes: Int): Long
 }

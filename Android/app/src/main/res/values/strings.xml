@@ -12,6 +12,18 @@
     <!-- CustomTabBar label for the meditations tab (iOS: "Meditations") -->
     <string name="meditations">Meditations</string>
 
+    <!-- MeditateSelect (iOS MeditateSelectView + MeditationCard) -->
+    <string name="meditate_title_fallback">Meditation Session</string>
+    <string name="meditate_subtitle_ready">Ready to begin your journey</string>
+    <string name="meditate_subtitle_choose">Choose your path to inner peace</string>
+    <string name="available_meditations">Available Meditations</string>
+    <string name="long_press_for_details">Long press for details</string>
+    <string name="meditate_start">Start Meditation</string>
+    <string name="sound_settings">Sound settings</string>
+    <string name="pattern_suffix">%1$s pattern</string>
+    <string name="no_meditations_available">No Meditations Available</string>
+    <string name="check_back_later">Check back later for guided meditation sessions</string>
+
     <!-- DayCellView accessibility, matching the iOS labels: "Mo: completed" etc. -->
     <string name="day_cell_description">%1$s: %2$s</string>
     <string name="day_cell_completed">completed</string>

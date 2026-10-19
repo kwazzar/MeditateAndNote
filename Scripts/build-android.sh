@@ -137,7 +137,56 @@ PYEOF
 # Nothing on the Android side touches DomainEvent, so the thunks are dropped
 # rather than worked around. Add them back if a Kotlin caller ever needs them.
 rm -f "$THUNKS/DomainEvents+SwiftJava.swift"
+# Same for EntitlementProviding: @MainActor instance methods trip jextract's
+# thunk printer ("call to main actor-isolated 'canAccess' ..."), and no Kotlin
+# caller exists while premium is iOS-only.
+rm -f "$THUNKS/SubscriptionManaging+SwiftJava.swift"
 
+# The generated Box class for SubscriptionManaging names a parameter `package`
+# (Java keyword) and the whole subscription/entitlement silhouette trips javac
+# or the subsequent compilation. Nothing on Android consumes them, so the
+# corresponding generated files are dropped plus DomainEvent/PremiumFeature and
+# the two methods that take a DomainEvent (StreakInsightManager etc.) get the
+# method stubbed out — the Kotlin-side StreakInsightsProbe still loads the class
+# by name, only the event-fed method was inside the broken silhouette. When
+# premium/event-bus work starts on Android, this block should be revisited.
+rm -rf "$GENERATED/java/com/mn/core/Subscription"* \
+       "$GENERATED/java/com/mn/core/Entitlement"* \
+       "$GENERATED/java/com/mn/core/DomainEvent.java" \
+       "$GENERATED/java/com/mn/core/DomainEventBus.java" \
+       "$GENERATED/java/com/mn/core/DomainEventPublisher.java" \
+       "$GENERATED/java/com/mn/core/DomainEventPublisherBox.java" \
+       "$GENERATED/java/com/mn/core/PremiumFeature.java"
+python3 - "$GENERATED/java/com/mn/core" <<'PYEOF'
+import pathlib, sys
+root = pathlib.Path(sys.argv[1])
+for name in ("StreakInsightManager.java", "InMemoryAIDraftMetricStore.java"):
+    f = root / name
+    lines = f.read_text().split("\n")
+    header = next((i for i, l in enumerate(lines) if "handle(DomainEvent event)" in l and "private static native" not in l), None)
+    if header is None:
+        continue  # already munged on a previous run
+    # back up over the javadoc that precedes the method
+    start = header
+    while start > 0 and lines[start].strip() not in ("// =====---", ""):
+        start -= 1
+        if lines[start].strip() == "/**":
+            start -= 1  # keep the line above the javadoc as anchor
+            break
+    # brace-balance from the method's opening '{' to find its real end
+    depth, end = 0, header
+    for i in range(header, len(lines)):
+        depth += lines[i].count("{") - lines[i].count("}")
+        if depth <= 0 and "{" in "".join(lines[header:i + 1]):
+            end = i
+            break
+    del lines[start + 1:end + 1]
+    # drop the orphaned native downcall that follows the removed method
+    after = [i for i, l in enumerate(lines) if "static native" in l and "$handle" in l]
+    for i in reversed(after):
+        del lines[i]
+    f.write_text("\n".join(lines))
+PYEOF
 echo "==> Compiled $(ls "$THUNKS" | wc -l | tr -d ' ') generated thunks into the JNI target"
 
 echo "==> Building the JNI library for $TARGET_TRIPLE"

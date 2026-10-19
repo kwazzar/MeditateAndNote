@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -24,6 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AllInclusive
 import androidx.compose.material.icons.outlined.Air
+import androidx.compose.material.icons.outlined.BlurCircular
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Eco
@@ -32,12 +34,13 @@ import androidx.compose.material.icons.outlined.Psychology
 import androidx.compose.material.icons.outlined.TrackChanges
 import androidx.compose.material.icons.rounded.VolumeUp
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -50,10 +53,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.mn.android.R
 import com.mn.android.infrastructure.persistence.local.meditation.MeditationCatalog
 import com.mn.android.infrastructure.persistence.local.meditation.MeditationSelection
 import com.mn.android.domain.meditation.model.MeditationUi
@@ -73,10 +78,9 @@ import kotlinx.coroutines.withContext
  * Deliberately missing vs iOS: the 500 ms artificial load delay (a real JNI
  * call does not need help feeling slow) and haptic feedback on long-press.
  */
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun MeditateSelectScreen(
-    onBack: () -> Unit,
     onStartMeditation: (String) -> Unit = {},
 ) {
     val context = LocalContext.current
@@ -114,32 +118,30 @@ fun MeditateSelectScreen(
                 .fillMaxSize()
                 .padding(16.dp),
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBack) {
-                Icon(
-                    Icons.AutoMirrored.Outlined.ArrowBack,
-                    contentDescription = "Back",
-                    tint = MnTheme.textPrimary,
-                )
-            }
+            // iOS headerSection: `selectedMeditation?.title` in `.largeTitle` bold,
+            // centered, with no back affordance — this screen is the Meditations tab.
             Text(
-                "Meditations",
+                selected?.title ?: stringResource(R.string.meditate_title_fallback),
                 color = MnTheme.textPrimary,
-                style = MaterialTheme.typography.titleLarge,
+                style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 24.dp),
             )
-        }
 
-        Text(
-            text = if (selected != null) "Ready to begin your journey"
-            else "Choose your path to inner peace",
-            color = MnTheme.textSecondary,
-            style = MaterialTheme.typography.bodyMedium,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-        )
+            Text(
+                text = if (selected != null) stringResource(R.string.meditate_subtitle_ready)
+                else stringResource(R.string.meditate_subtitle_choose),
+                color = MnTheme.textSecondary,
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp, bottom = 8.dp),
+            )
 
         when {
             error != null -> Text(
@@ -149,12 +151,34 @@ fun MeditateSelectScreen(
                 modifier = Modifier.padding(top = 24.dp),
             )
 
-            items.isEmpty() -> Text(
-                "No Meditations Available",
-                color = MnTheme.textPrimary,
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(top = 40.dp),
-            )
+            items.isEmpty() -> Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 40.dp),
+            ) {
+                Icon(
+                    Icons.Outlined.Nightlight,
+                    contentDescription = null,
+                    tint = MnTheme.textSecondary,
+                    modifier = Modifier.size(60.dp),
+                )
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    stringResource(R.string.no_meditations_available),
+                    color = MnTheme.textPrimary,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Medium,
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    stringResource(R.string.check_back_later),
+                    color = MnTheme.textSecondary,
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center,
+                )
+            }
 
             else -> {
                 Row(
@@ -164,14 +188,14 @@ fun MeditateSelectScreen(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        "Available Meditations",
+                        stringResource(R.string.available_meditations),
                         color = MnTheme.textPrimary,
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
                     )
                     Spacer(Modifier.weight(1f))
                     Text(
-                        "Long press for details",
+                        stringResource(R.string.long_press_for_details),
                         color = MnTheme.textSecondary,
                         style = MaterialTheme.typography.bodySmall,
                         fontStyle = FontStyle.Italic,
@@ -188,7 +212,7 @@ fun MeditateSelectScreen(
                     ) {
                         Icon(
                             Icons.Rounded.VolumeUp,
-                            contentDescription = "Sound settings",
+                            contentDescription = stringResource(R.string.sound_settings),
                             tint = MnTheme.textPrimary,
                             modifier = Modifier.size(16.dp),
                         )
@@ -230,7 +254,7 @@ fun MeditateSelectScreen(
                     shape = RoundedCornerShape(12.dp),
                 ) {
                     Text(
-                        "Start Meditation",
+                        stringResource(R.string.meditate_start),
                         color = MnTheme.buttonText,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
@@ -242,36 +266,38 @@ fun MeditateSelectScreen(
     }
 
     infoItem?.let { meditation ->
-        AlertDialog(
+        ModalBottomSheet(
             onDismissRequest = { infoItem = null },
-            title = {
+            containerColor = MnTheme.background,
+        ) {
+            Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
                     meditation.title,
                     color = MnTheme.textPrimary,
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                 )
-            },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(
-                        "${meditation.category} · ${meditation.patternName} pattern",
-                        color = MnTheme.streakActiveNote,
-                        style = MaterialTheme.typography.labelMedium,
-                    )
-                    Text(
-                        meditation.description.orEmpty(),
-                        color = MnTheme.textSecondary,
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
+                Text(
+                    "${meditation.category} · ${meditation.patternName} pattern",
+                    color = MnTheme.streakActiveNote,
+                    style = MaterialTheme.typography.labelMedium,
+                )
+                Text(
+                    meditation.description.orEmpty(),
+                    color = MnTheme.textSecondary,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                Spacer(Modifier.height(8.dp))
+                Button(
+                    onClick = { infoItem = null },
+                    colors = ButtonDefaults.buttonColors(containerColor = MnTheme.accentButton),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text("Close", color = MnTheme.buttonText)
                 }
-            },
-            confirmButton = {
-                TextButton(onClick = { infoItem = null }) {
-                    Text("Close", color = MnTheme.accentButton)
-                }
-            },
-            containerColor = MnTheme.background,
-        )
+                Spacer(Modifier.height(24.dp))
+            }
+        }
     }
 
     if (showSoundSettings) {
@@ -301,8 +327,8 @@ private fun MeditationCard(
                 shape = RoundedCornerShape(12.dp),
             )
             .combinedClickable(onClick = onSelect, onLongClick = onLongPress)
-            .padding(12.dp)
-            .height(120.dp),
+            .padding(16.dp)
+            .heightIn(min = 120.dp),
     ) {
         Row(
             Modifier.fillMaxWidth(),
@@ -318,19 +344,19 @@ private fun MeditationCard(
             if (isSelected) {
                 Icon(
                     Icons.Outlined.CheckCircle,
-                    contentDescription = "Selected",
+                    contentDescription = null,
                     tint = MnTheme.streakSuccess,
                     modifier = Modifier.size(24.dp),
                 )
             }
         }
 
-        Spacer(Modifier.weight(1f))
+        Spacer(Modifier.height(8.dp))
 
         Text(
             meditation.title,
             color = MnTheme.textPrimary,
-            style = MaterialTheme.typography.titleSmall,
+            style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
             maxLines = 2,
         )
@@ -346,12 +372,15 @@ private fun MeditationCard(
             )
             Spacer(Modifier.width(4.dp))
             Text(
-                "${meditation.patternName} pattern",
+                stringResource(R.string.pattern_suffix, meditation.patternName),
                 color = MnTheme.textSecondary,
                 style = MaterialTheme.typography.labelSmall,
                 maxLines = 2,
             )
         }
+
+        // iOS: title/pattern sit directly under the icon, the slack stays at the bottom.
+        Spacer(Modifier.weight(1f))
     }
 }
 
@@ -368,6 +397,6 @@ private fun MeditationUi.icon(): ImageVector {
         lower.contains("focus") -> Icons.Outlined.TrackChanges
         lower.contains("calm") || lower.contains("relax") -> Icons.Outlined.Eco
         lower.contains("mindful") -> Icons.Outlined.Psychology
-        else -> Icons.Outlined.AllInclusive
+        else -> Icons.Outlined.BlurCircular  // SF "circle.dotted"
     }
 }

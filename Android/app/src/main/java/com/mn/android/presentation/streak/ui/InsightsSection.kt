@@ -27,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -126,7 +127,14 @@ private fun RecommendationsBlock(
     recommendations: List<Recommendation>,
     onAction: (RecommendationAction?) -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(MnTheme.cardBackground)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
         Text(
             stringResource(R.string.recommendations),
             fontWeight = FontWeight.SemiBold,
@@ -226,7 +234,7 @@ private fun rangeSubtitle(bundle: Bundle, range: String): String {
 private fun RangePicker(range: String, onRangeChange: (String) -> Unit) {
     Row(
         Modifier
-            .background(MnTheme.toolbarBackground, RoundedCornerShape(8.dp))
+            .background(MnTheme.cardBackground, RoundedCornerShape(8.dp))
             .padding(2.dp),
     ) {
         listOf("last7", "last30", "last90").forEach { option ->
@@ -238,7 +246,7 @@ private fun RangePicker(range: String, onRangeChange: (String) -> Unit) {
                 color = if (selected) MnTheme.buttonText else MnTheme.textSecondary,
                 modifier = Modifier
                     .background(
-                        if (selected) MnTheme.streakActiveMeditation else Color.Transparent,
+                        if (selected) MnTheme.toolbarBackground else Color.Transparent,
                         RoundedCornerShape(6.dp),
                     )
                     .clickable { onRangeChange(option) }

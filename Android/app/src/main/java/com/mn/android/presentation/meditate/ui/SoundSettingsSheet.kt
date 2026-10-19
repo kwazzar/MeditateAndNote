@@ -23,6 +23,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
@@ -35,6 +36,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -129,8 +131,17 @@ fun SoundSettingsSheet(onDismiss: () -> Unit) {
                         SoundSettings.volume = it
                     },
                     valueRange = 0f..1f,
+                    // iOS UISlider: round white knob, not the M3 vertical bar.
+                    thumb = {
+                        Box(
+                            Modifier
+                                .size(22.dp)
+                                .clip(CircleShape)
+                                .background(MnTheme.buttonText),
+                        )
+                    },
                     colors = SliderDefaults.colors(
-                        thumbColor = MnTheme.streakActiveMeditation,
+                        thumbColor = Color.Transparent,
                         activeTrackColor = MnTheme.streakActiveMeditation,
                     ),
                 )

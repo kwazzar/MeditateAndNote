@@ -19,9 +19,9 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Notes
+import androidx.compose.material.icons.filled.Article
 import androidx.compose.material.icons.filled.Whatshot
-import androidx.compose.material.icons.filled.Eco
+import androidx.compose.material.icons.outlined.Eco
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -208,12 +208,12 @@ private val appSlides = listOf(
     Slide(
         title = "Meditations",
         subtitle = "Focus on your breathing with guided sessions and soothing animations.",
-        icon = Icons.Filled.Eco,
+        icon = Icons.Outlined.Eco,
     ),
     Slide(
         title = "Notes",
         subtitle = "Capture your thoughts right after a session, while they are still fresh.",
-        icon = Icons.AutoMirrored.Filled.Notes,
+        icon = Icons.Filled.Article,
     ),
     Slide(
         title = "Streak tracking",

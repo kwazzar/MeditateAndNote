@@ -210,17 +210,23 @@ public func Java_com_mn_android_data_StreakHeaderSource_read(
     thisClass: jclass,
     dayStartMillis: jlongArray,
     medFlags: jlongArray,
-    noteFlags: jlongArray
+    noteFlags: jlongArray,
+    tzOffsetMinutes: jint
 ) -> jlong {
     let days = [Int64](fromJNI: dayStartMillis, in: environment)
     let snapshot = KotlinStreakActivityStore().load()
+
+    // Swift-on-Android resolves TimeZone.current to UTC (no tzdata); the JVM
+    // passes its current offset so day buckets match what Kotlin displays.
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = TimeZone(secondsFromGMT: Int(tzOffsetMinutes) * 60) ?? .current
 
     var med = [Int64](repeating: 0, count: days.count)
     var note = [Int64](repeating: 0, count: days.count)
     for (i, millis) in days.enumerated() {
         let day = Date(timeIntervalSince1970: Double(millis) / 1000.0)
         let activity = snapshot?.activities.first {
-            Calendar.current.isDate($0.date, inSameDayAs: day)
+            calendar.isDate($0.date, inSameDayAs: day)
         }
         med[i] = activity?.hasMeditation == true ? 1 : 0
         note[i] = activity?.hasNote == true ? 1 : 0

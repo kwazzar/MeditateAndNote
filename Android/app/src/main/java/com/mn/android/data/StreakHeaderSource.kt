@@ -34,6 +34,7 @@ object StreakHeaderSource {
         dayStartMillis: LongArray,
         medFlags: LongArray,
         noteFlags: LongArray,
+        tzOffsetMinutes: Int,
     ): Long
 
     /** 7 day-start millis for the local zone, oldest first, today last. */
@@ -59,7 +60,11 @@ object StreakHeaderSource {
     fun readHeader(): Header {
         val med = LongArray(7)
         val note = LongArray(7)
-        val streak = read(last7DayStartMillis(), med, note)
+        // Swift-on-Android resolves TimeZone.current to UTC (no tzdata), so the
+        // JVM passes its current offset — same rule as ReminderScheduleSource.
+        val tzOffsetMinutes =
+            java.util.TimeZone.getDefault().getOffset(System.currentTimeMillis()) / 60_000
+        val streak = read(last7DayStartMillis(), med, note, tzOffsetMinutes)
         return Header(
             currentStreak = streak.toInt(),
             dayFlags = med.zip(note) { m, n -> DayFlags(m == 1L, n == 1L) },

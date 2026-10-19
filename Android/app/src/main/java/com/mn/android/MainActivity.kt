@@ -9,20 +9,25 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Notes
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.SelfImprovement
+import androidx.compose.material.icons.filled.Article
+import androidx.compose.material.icons.outlined.Eco
+import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.darkColorScheme
@@ -35,7 +40,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -50,6 +59,7 @@ import com.mn.android.R
 import com.mn.android.infrastructure.persistence.local.settings.AnimationSettings
 import com.mn.android.infrastructure.persistence.local.meditation.MeditationSelection
 import com.mn.android.data.NoteBlobStore
+import com.mn.android.data.SessionBlobStore
 import com.mn.android.infrastructure.persistence.local.settings.OnboardingStore
 import com.mn.android.data.SharedPrefsReminderSettingsStore
 import com.mn.android.infrastructure.persistence.local.settings.SoundSettings
@@ -125,6 +135,7 @@ private fun MnNav() {
     OnboardingStore.configure(LocalContext.current)
     StreakSnapshotStore.configure(LocalContext.current)
     NoteBlobStore.configure(LocalContext.current)
+    SessionBlobStore.configure(LocalContext.current)
     SharedPrefsReminderSettingsStore.configure(LocalContext.current)
     MeditationSelection.configure(LocalContext.current)
     SoundSettings.configure(LocalContext.current)
@@ -154,50 +165,18 @@ private fun MnNav() {
         containerColor = MnTheme.background,
         bottomBar = {
             if (currentRoute in TabBarRoutes) {
-                // iOS CustomTabBar container: maxWidth 480 in landscape,
-                // centered (RootContainer.mainTabBar).
-                val landscape = LocalConfiguration.current.orientation ==
-                    android.content.res.Configuration.ORIENTATION_LANDSCAPE
-                Box(
-                    if (landscape) Modifier.fillMaxWidth() else Modifier
-                ) {
-                    NavigationBar(
-                        containerColor = MnTheme.background,
-                        tonalElevation = 0.dp,
-                        modifier = if (landscape) {
-                            Modifier
-                                .align(Alignment.Center)
-                                .width(480.dp)
-                        } else Modifier,
-                    ) {
-                        TabBarItems.forEach { tab ->
-                            val selected = currentRoute == tab.route
-                            NavigationBarItem(
-                                selected = selected,
-                                onClick = {
-                                    navController.navigate(tab.route) {
-                                        popUpTo(navController.graph.findStartDestination().id) {
-                                            saveState = true
-                                        }
-                                        launchSingleTop = true
-                                        restoreState = true
-                                    }
-                                },
-                                icon = {
-                                    Icon(tab.icon, contentDescription = null)
-                                },
-                                label = { Text(tab.labelResourceId.let { stringResource(it) }) },
-                                colors = NavigationBarItemDefaults.colors(
-                                    selectedIconColor = MnTheme.accentColor,
-                                    selectedTextColor = MnTheme.accentColor,
-                                    unselectedIconColor = MnTheme.textSecondary,
-                                    unselectedTextColor = MnTheme.textSecondary,
-                                    indicatorColor = MnTheme.accentColor.copy(alpha = 0.12f),
-                                ),
-                            )
+                MnTabBar(
+                    currentRoute = currentRoute,
+                    onSelect = { tab ->
+                        navController.navigate(tab.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
                         }
-                    }
-                }
+                    },
+                )
             }
         },
     ) { innerPadding ->
@@ -267,7 +246,6 @@ private fun MnNav() {
             }
             composable("meditate") {
                 MeditateSelectScreen(
-                    onBack = { navController.popBackStack() },
                     onStartMeditation = { id -> navController.navigate("breathing/$id") },
                 )
             }
@@ -297,11 +275,75 @@ private fun MnNav() {
 private data class TabItem(val route: String, val labelResourceId: Int, val icon: ImageVector)
 
 private val TabBarItems = listOf(
-    TabItem("notes", R.string.notes, Icons.AutoMirrored.Filled.Notes),
-    TabItem("home", R.string.home, Icons.Filled.Home),
-    TabItem("meditate", R.string.meditations, Icons.Filled.SelfImprovement),
+    TabItem("notes", R.string.notes, Icons.Filled.Article),
+    TabItem("home", R.string.home, Icons.Outlined.Home),
+    TabItem("meditate", R.string.meditations, Icons.Outlined.Eco),
 )
 
 /** Tab roots only: pushed screens (settings, breathing, editor) go full-screen. */
 private val TabBarRoutes = TabBarItems.map { it.route }.toSet()
+
+/**
+ * Port of the iOS `CustomTabBar`: a floating capsule inset from the screen edges,
+ * not an M3 `NavigationBar`. The iOS bar is `Capsule().fill(.ultraThinMaterial)`
+ * with a shadow; `.ultraThinMaterial` is approximated with `MnTheme.toolbarBackground`
+ * (the project's existing material token), and the selected item is a trailing
+ * `RoundedRectangle(cornerRadius: 10)` filled with the accent at 12%.
+ *
+ * iOS paddings: bar `padding(.horizontal, 16)` + `padding(.vertical, 6)`, items
+ * `spacing 10`; each item is `VStack(spacing: 4)` of a 22pt semibold icon over a
+ * caption label, with its own `padding(.vertical, 6)` / `padding(.horizontal, 16)`.
+ */
+@Composable
+private fun MnTabBar(currentRoute: String?, onSelect: (TabItem) -> Unit) {
+    val landscape = LocalConfiguration.current.orientation ==
+        android.content.res.Configuration.ORIENTATION_LANDSCAPE
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+    ) {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .then(if (landscape) Modifier.width(480.dp).align(Alignment.Center) else Modifier)
+                .shadow(8.dp, CircleShape)
+                .background(MnTheme.toolbarBackground, CircleShape)
+                .padding(horizontal = 16.dp, vertical = 6.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            TabBarItems.forEach { tab ->
+                val selected = currentRoute == tab.route
+                val tint = if (selected) MnTheme.accentColor else MnTheme.textSecondary
+                Column(
+                    Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(
+                            if (selected) MnTheme.accentColor.copy(alpha = 0.12f)
+                            else Color.Transparent
+                        )
+                        .clickable { onSelect(tab) }
+                        .padding(vertical = 6.dp, horizontal = 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Icon(
+                        tab.icon,
+                        contentDescription = null,
+                        tint = tint,
+                        modifier = Modifier.size(22.dp),
+                    )
+                    Text(
+                        stringResource(tab.labelResourceId),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = tint,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+        }
+    }
+}
 

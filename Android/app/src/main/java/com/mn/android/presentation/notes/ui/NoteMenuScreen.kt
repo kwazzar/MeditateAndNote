@@ -16,12 +16,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -29,18 +29,23 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.mn.android.R
 import com.mn.android.data.NoteMenuSource
@@ -64,7 +69,11 @@ fun NoteMenuScreen(
 ) {
     var query by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf<List<NoteMenuSource.NoteRecord>>(emptyList()) }
-
+    val listState = rememberLazyListState()
+    var isScrolling by remember { mutableStateOf(false) }
+    LaunchedEffect(listState.isScrollInProgress) {
+        isScrolling = listState.isScrollInProgress
+    }
     // Manual reload fallback: reloads every time this screen resumes —
     // covers both tab switches and popping back from the pushed note editor
     // (the editor destination stays composed under neither; without this the
@@ -95,7 +104,8 @@ fun NoteMenuScreen(
                     .padding(horizontal = 16.dp, vertical = 12.dp),
             )
             LazyColumn(
-                Modifier
+                state = listState,
+                modifier = Modifier
                     .fillMaxSize()
                     .padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -110,9 +120,19 @@ fun NoteMenuScreen(
         }
         AddNoteButton(
             onClick = onAddNote,
+            // alpha(0) still hit-tests in Compose — disable clicks while the
+            // button is hidden, or taps near the bottom-right get eaten.
+            enabled = !isScrolling,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(bottom = 16.dp, end = 26.dp),
+                .alpha(if (isScrolling) 0f else 1f)
+                .scale(if (isScrolling) 0.6f else 1f)
+                .padding(
+                    bottom = if (LocalConfiguration.current.orientation ==
+                        android.content.res.Configuration.ORIENTATION_LANDSCAPE
+                    ) 52.dp else 80.dp,
+                    end = 26.dp,
+                ),
         )
     }
 }
@@ -131,13 +151,6 @@ private fun NotesSearchBar(
         placeholder = {
             Text(stringResource(R.string.search_notes_hint), color = MnTheme.textSecondary)
         },
-        leadingIcon = {
-            Icon(
-                Icons.Filled.Search,
-                contentDescription = null,
-                tint = MnTheme.textSecondary,
-            )
-        },
         trailingIcon = {
             if (query.isNotEmpty()) {
                 IconButton(onClick = { onQueryChange("") }) {
@@ -155,8 +168,8 @@ private fun NotesSearchBar(
             focusedTextColor = MnTheme.textPrimary,
             unfocusedTextColor = MnTheme.textPrimary,
             cursorColor = MnTheme.streakActiveMeditation,
-            focusedBorderColor = MnTheme.divider,
-            unfocusedBorderColor = MnTheme.divider,
+            focusedBorderColor = Color.Transparent,
+            unfocusedBorderColor = Color.Transparent,
             focusedContainerColor = MnTheme.cardBackground,
             unfocusedContainerColor = MnTheme.cardBackground,
         ),
@@ -231,13 +244,13 @@ private fun NoteCard(note: NoteMenuSource.NoteRecord, onClick: () -> Unit, modif
 // MARK: - Add Note
 
 @Composable
-private fun AddNoteButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun AddNoteButton(onClick: () -> Unit, enabled: Boolean = true, modifier: Modifier = Modifier) {
     Row(
         modifier
             .height(44.dp)
+            .shadow(8.dp, CircleShape)
             .background(MnTheme.cardBackground, CircleShape)
-            .border(1.dp, MnTheme.divider, CircleShape)
-            .clickable(onClick = onClick)
+            .clickable(enabled = enabled, onClick = onClick)
             .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

@@ -31,6 +31,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -69,6 +72,8 @@ fun HomeScreen(
     Box(Modifier.fillMaxSize()) {
         MnBackground()
         val header = remember { StreakHeaderSource.readHeader() }
+        val isLandscape = LocalConfiguration.current.orientation ==
+            android.content.res.Configuration.ORIENTATION_LANDSCAPE
         Column(
             Modifier
                 .fillMaxSize()
@@ -78,7 +83,9 @@ fun HomeScreen(
                 header = header,
                 onStreakDetail = onStreakDetail,
                 onNewNote = onNewNote,
-                modifier = Modifier.padding(horizontal = 16.dp),
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .scale(if (isLandscape) 0.85f else 1f),
             )
             Spacer(Modifier.weight(1f))
         }
@@ -226,28 +233,23 @@ private fun NoteReminderBanner(onNewNote: () -> Unit) {
 // MARK: - Settings
 
 @Composable
-private fun SettingsButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+internal fun SettingsButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     Row(
         modifier
             .height(40.dp)
-            .alpha(0.9f)
+            .shadow(5.dp, CircleShape, ambientColor = Color.Gray.copy(alpha = 0.3f), spotColor = Color.Gray.copy(alpha = 0.3f))
             .background(MnTheme.cardBackground, CircleShape)
             .border(1.dp, MnTheme.divider, CircleShape)
             .clickable(onClick = onClick)
-            .padding(horizontal = 15.dp),
+            .padding(horizontal = 15.dp)
+            .alpha(0.9f),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(
-            imageVector = Icons.Filled.Settings,
-            contentDescription = null,
-            tint = MnTheme.textPrimary,
-            modifier = Modifier.size(18.dp),
-        )
         Text(
             stringResource(R.string.settings),
             color = MnTheme.textPrimary,
             style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(start = 6.dp),
+            modifier = Modifier.padding(horizontal = 2.dp),
         )
     }
 }

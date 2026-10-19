@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.shadow
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -51,10 +53,16 @@ fun LoadingScreen(modifier: Modifier = Modifier) {
         MnBackground()
 
         MeditateHero(
-            modifier = Modifier.align(Alignment.Center),
+            modifier = Modifier
+                .align(Alignment.Center)
+                .shadow(
+                    30.dp,
+                    CircleShape,
+                    ambientColor = MnTheme.accentColor.copy(alpha = 0.35f),
+                    spotColor = MnTheme.accentColor.copy(alpha = 0.35f),
+                ),
             scale = breathing,
         )
-
         Column(
             Modifier
                 .align(Alignment.BottomCenter)

@@ -73,12 +73,10 @@ class BreathingSessionViewModel(private val savedStateHandle: SavedStateHandle) 
   fun done() {
     ticker?.cancel(); ticker = null
     val active = engine.getActiveDuration(arena)
-    val seconds = active.map { it.getSeconds() }.orElse(0.0)
     engine.forceComplete(
       active.map { java.util.Optional.of(it) }.orElse(java.util.Optional.empty()),
       arena,
     )
-    SessionRecorder.record(meditationId, seconds)
     snapshot()
   }
 
@@ -139,6 +137,13 @@ class BreathingSessionViewModel(private val savedStateHandle: SavedStateHandle) 
     }
     if (new is UiState.Finished && old !is UiState.Finished) {
       SoundPlayer.play(MeditationSound.FINISHED)
+      // mirrors iOS `.completed` event handler: publish session once, with the
+      // full selected duration (iOS passes the same value down the event).
+      SessionRecorder.record(
+          meditationId,
+          totalSeconds,
+          java.util.TimeZone.getDefault().getOffset(System.currentTimeMillis()) / 60_000,
+      )
     }
   }
 
@@ -166,9 +171,7 @@ class BreathingSessionViewModel(private val savedStateHandle: SavedStateHandle) 
           phaseIndex = phaseIndexFor(elapsed = totalSeconds - c.remaining),
         )
       }
-      is MeditationSessionEngine.SessionState.Case.Finished -> UiState.Finished(
-        engine.getActiveDuration(arena).map { it.getSeconds() }.orElse(0.0)
-      )
+      is MeditationSessionEngine.SessionState.Case.Finished -> UiState.Finished(totalSeconds)
     }
   }
 
