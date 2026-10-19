@@ -39,6 +39,26 @@ while fixing them. The deltas that mattered are listed below.
   (`inhale #64D2FF @ 90%`, `hold-after-inhale #0A84FF`, `exhale #BF5AF2`,
   `hold-after-exhale #5E5CE6`; light equivalents `#008CA6`/`#007AFF`/`#AF52DE`/`#5856D6`).
 
+**Meditation animation**
+- The engine publishes `phaseProgress` at 10 Hz (iOS: a 0.1 s `phaseTimer`; Android: a
+  100 ms `HandlerTicker`). iOS smooths those steps with SwiftUI's implicit animation,
+  Android drew them raw — the path ball jumped ten times a second and the rings never
+  rippled.
+- Path view: the ball now glides with iOS's `.animation(.linear(duration: 0.1),
+  value: phaseProgress)`. Only the ball is interpolated — SwiftUI cannot interpolate a
+  `Path`, so the progress line stays stepped on both platforms.
+- Rings view: one `Animatable` per ring, eased over 80 % of the phase with a 0.2 s
+  stagger per ring — iOS `ConcentricRing`'s
+  `.easeInOut(duration: phase * 0.8).delay(index * 0.2)`. Verified on device: the outer
+  rings trail the inner ones mid-phase.
+- Rings view: the phase colour cross-fades over 0.3 s (iOS
+  `.animation(.easeInOut(duration: 0.3), value: breathingColor)`).
+- Path view: the ball takes the phase colour — iOS passes `ballColor: breathingColor`,
+  Android used `streakIndicator` (orange).
+- Phase index: Android derived it from the session `remaining`, which only moves at
+  1 Hz, so it lagged the engine by up to a second and the ball drew on the previous
+  segment. Now reads `engine.getCurrentPhaseIndex()` — the same value iOS reads.
+
 **Components**
 - Tab bar: floating capsule with a selection pill; icons `Article` / `Home` / `Eco`.
 - Meditate select re-ported: title is the selected meditation name, card layout, strings.
@@ -74,5 +94,8 @@ while fixing them. The deltas that mattered are listed below.
 - **Note insights** — the premium insights panel (`NoteInsightsViewModel`) has no Android
   counterpart.
 - **Rings animation mode** — ported (5 rings, `120 + i*30` base, ×`1 + 0.3(i+1)`
-  expansion) and captured in `05b-breathing-rings.png`; there is no iOS reference
-  screenshot to diff against, so the match rests on reading `ConcentricRing.swift`.
+  expansion, per-ring 0.2 s stagger, 0.3 s colour cross-fade) and captured in
+  `05b-breathing-rings.png`. iOS gates Rings behind the Pro entitlement, so no iOS
+  screenshot exists to diff against: the match rests on reading `ConcentricRing.swift`
+  plus the Path mode, whose iOS reference video was recorded and compared frame by
+  frame (iOS interpolates the ball every frame; Android now does too).
