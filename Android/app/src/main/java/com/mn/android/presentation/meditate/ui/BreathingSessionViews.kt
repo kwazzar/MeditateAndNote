@@ -18,6 +18,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.EaseInOut
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -39,6 +42,9 @@ import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -55,6 +61,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import com.mn.android.R
 import com.mn.android.infrastructure.persistence.local.settings.AnimationSettings
 import com.mn.android.presentation.theme.ui.MnBreathing
@@ -210,12 +218,19 @@ internal fun BreathContent(
         // iOS MeditationView chronology: animation then progress.
         Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
             if (AnimationSettings.style == AnimationSettings.RINGS) {
-                BreathingRings(discriminator, phaseProgress, phaseRemaining, size.dp)
+                BreathingRings(
+                    discriminator = discriminator,
+                    phaseIndex = phaseIndex,
+                    phaseRemaining = phaseRemaining,
+                    phaseDurationSeconds = currentDuration,
+                    size = size.dp,
+                )
             } else {
                 BreathingPathView(
                     phases = phases,
                     phaseIndex = phaseIndex,
                     phaseProgress = phaseProgress,
+                    discriminator = discriminator,
                     modifier = Modifier.height(size.dp),
                 )
             }
@@ -235,44 +250,86 @@ internal fun BreathContent(
     }
 }
 
+/**
+ * Port of iOS `ConcentricRing` (5 rings around a filled core).
+ *
+ * iOS drives every ring with
+ * `.animation(.easeInOut(duration: phase.duration * 0.8).delay(index * 0.2),
+ * value: phaseProgress)`: the ring eases from the phase-start size to the
+ * phase-end size over 80% of the phase, and each ring starts 0.2 s after the
+ * previous one (the ripple). The engine only publishes `phaseProgress` every
+ * 100 ms, so the animation layer is what turns those 10 Hz steps into
+ * continuous motion — without it the rings jump.
+ *
+ * Same spec here: one `Animatable` per ring, restarted on every phase change,
+ * so the eased curve is interpolated by the framework at display rate.
+ */
 @Composable
 private fun BreathingRings(
     discriminator: String,
-    phaseProgress: Double,
+    phaseIndex: Int,
     phaseRemaining: Int,
+    phaseDurationSeconds: Double,
     size: androidx.compose.ui.unit.Dp,
 ) {
-    val color = phaseColor(discriminator)
-    val hasPhase = discriminator in setOf("inhale", "holdafterinhale", "exhale", "holdafterexhale") || true
+    // iOS `.animation(.easeInOut(duration: 0.3), value: breathingColor)`:
+    // the ring colour cross-fades over 0.3 s when the phase changes.
+    val color by animateColorAsState(
+        targetValue = phaseColor(discriminator),
+        animationSpec = tween(durationMillis = 300, easing = EaseInOut),
+        label = "breathColor",
+    )
     val ringCount = 5
     val density = LocalDensity.current
     val sizePx = with(density) { size.toPx() }
+    val scale = sizePx / 250f
+    val moving = discriminator == "inhale" || discriminator == "exhale"
+
+    // Eased phase progress per ring: 0 = phase start, 1 = phase end.
+    val eased = remember { List(ringCount) { Animatable(0f) } }
+    LaunchedEffect(discriminator, phaseIndex) {
+        coroutineScope {
+            eased.forEachIndexed { index, anim ->
+                launch {
+                    anim.snapTo(if (moving) 0f else 1f)
+                    if (moving) {
+                        anim.animateTo(
+                            targetValue = 1f,
+                            animationSpec = tween(
+                                durationMillis = (phaseDurationSeconds * 800).toInt(),
+                                delayMillis = index * 200,
+                                easing = EaseInOut,
+                            ),
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     // iOS ConcentricRing baseSize = 120 + i*30 (diameters), expanded by 1+0.3*(i+1).
     Box(contentAlignment = Alignment.Center, modifier = Modifier.size(size)) {
         Canvas(Modifier.size(size)) {
             for (i in 0 until ringCount) {
-                val base = (120 + i * 30)
-                val expansion = 1.0 + 0.3 * (i + 1)
-                val ringSize = when {
-                    discriminator == "inhale" ->
-                        base + (base * expansion - base) * phaseProgress
-                    discriminator == "exhale" ->
-                        base + (base * expansion - base) * (1.0 - phaseProgress)
-                    discriminator == "holdafterinhale" -> base * expansion
-                    discriminator == "holdafterexhale" -> base.toDouble()
-                    else -> base.toDouble()
-                }.toFloat() * (sizePx / 250f)
-                val baseOpacity = 0.8 - (i * 0.15)
+                val p = eased[i].value
+                val base = (120 + i * 30).toFloat()
+                val expansion = 1f + 0.3f * (i + 1)
+                val ringSize = when (discriminator) {
+                    "inhale" -> base + (base * expansion - base) * p
+                    "exhale" -> base + (base * expansion - base) * (1f - p)
+                    "holdafterinhale" -> base * expansion
+                    else -> base
+                } * scale
+                val baseOpacity = 0.8f - (i * 0.15f)
                 val opacity = when (discriminator) {
-                    "inhale" -> baseOpacity * (0.3 + 0.7 * phaseProgress)
-                    "exhale" -> baseOpacity * (1.0 - 0.7 * phaseProgress)
+                    "inhale" -> baseOpacity * (0.3f + 0.7f * p)
+                    "exhale" -> baseOpacity * (1f - 0.7f * p)
                     "holdafterinhale" -> baseOpacity
-                    "holdafterexhale" -> baseOpacity * 0.3
-                    else -> 0.3
-                }.toFloat().coerceIn(0.1f, 1f)
+                    else -> baseOpacity * 0.3f
+                }.coerceIn(0.1f, 1f)
                 val ringLineWidth = when (discriminator) {
-                    "inhale" -> 3f + (phaseProgress.toFloat() * 2f)
-                    "exhale" -> 3f + ((1f - phaseProgress.toFloat()) * 2f)
+                    "inhale" -> 3f + 2f * p
+                    "exhale" -> 3f + 2f * (1f - p)
                     "holdafterinhale" -> 5f
                     else -> 3f
                 }

@@ -165,24 +165,16 @@ class BreathingSessionViewModel(private val savedStateHandle: SavedStateHandle) 
           progress = engine.progress,
           remainingSeconds = c.remaining,
           paused = clock.isPaused(),
-          // iOS reads engine.currentPhaseIndex; jextract does not expose it, so
-          // the index is derived from elapsed time against the phase table —
-          // the same value, because the engine also derives phases from the clock.
-          phaseIndex = phaseIndexFor(elapsed = totalSeconds - c.remaining),
+          // iOS reads `engine.currentPhaseIndex`. The jextract binding exposes
+          // it too — deriving it from `remaining` was wrong: `remaining` only
+          // moves on `tickSecond` (1 Hz), so the derived index lagged the
+          // engine's real phase by up to a second and the path view drew the
+          // ball on the previous segment.
+          phaseIndex = engine.getCurrentPhaseIndex().toInt(),
         )
       }
       is MeditationSessionEngine.SessionState.Case.Finished -> UiState.Finished(totalSeconds)
     }
-  }
-
-  /** First phase whose cumulative end is past [elapsed] — clamped to the table. */
-  private fun phaseIndexFor(elapsed: Double): Int {
-    var cumulative = 0.0
-    breathingPhases.forEachIndexed { index, phase ->
-      cumulative += phase.durationSeconds
-      if (elapsed < cumulative) return index
-    }
-    return (breathingPhases.size - 1).coerceAtLeast(0)
   }
 
   private fun pattern(): BreathingPattern {

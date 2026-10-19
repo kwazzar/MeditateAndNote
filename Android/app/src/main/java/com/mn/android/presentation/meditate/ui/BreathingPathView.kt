@@ -1,15 +1,24 @@
 package com.mn.android.presentation.meditate.ui
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.mn.android.presentation.theme.ui.MnTheme
 import kotlin.math.max
@@ -22,61 +31,61 @@ import com.mn.android.presentation.meditate.viewmodel.BreathingSessionViewModel
  *
  * Same math as the Swift view: partial curves via de Casteljau split, so the
  * progress path and the ball always agree.
+ *
+ * iOS animates the view with `.animation(.linear(duration: 0.1),
+ * value: phaseProgress)`. The engine publishes `phaseProgress` every 100 ms, so
+ * that modifier is what makes the ball glide instead of jumping 10 times a
+ * second. SwiftUI can interpolate a `Circle`'s position, so only the ball
+ * moves smoothly there — the path shape (a `Path`) snaps, exactly as here.
  */
 @Composable
 fun BreathingPathView(
     phases: List<BreathingSessionViewModel.Phase>,
     phaseIndex: Int,
     phaseProgress: Double,
+    discriminator: String,
     modifier: Modifier = Modifier,
 ) {
     val lineColor = MnTheme.textPrimary
     val progressColor = MnTheme.accentColor
-    val ballColor = MnTheme.streakIndicator
+    // iOS passes `ballColor: breathingColor` — the phase colour, same as the
+    // ring colour and the phase label.
+    val ballColor = phaseColor(discriminator)
     val heightDp = 280.dp
+
+    // The path geometry needs the canvas size, which is only known after
+    // layout — the ball is animated outside the Canvas, so it needs it here.
+    var canvasSize by remember { mutableStateOf(IntSize.Zero) }
+
+    val segments = remember(phases, canvasSize) {
+        buildSegments(phases, canvasSize.width.toFloat(), canvasSize.height.toFloat())
+    }
+    val target = remember(segments, phaseIndex, phaseProgress) {
+        ballPosition(segments, phaseIndex, phaseProgress.toFloat().coerceIn(0f, 1f))
+    }
+    // iOS: `.animation(.linear(duration: 0.1), value: phaseProgress)`.
+    // The ball's position is continuous across phase changes (the path is one
+    // unbroken curve), so it never slides backwards.
+    val ballX by animateFloatAsState(
+        targetValue = target.x,
+        animationSpec = tween(durationMillis = 100, easing = LinearEasing),
+        label = "ballX",
+    )
+    val ballY by animateFloatAsState(
+        targetValue = target.y,
+        animationSpec = tween(durationMillis = 100, easing = LinearEasing),
+        label = "ballY",
+    )
 
     Canvas(
         modifier
             .fillMaxWidth()
             .height(heightDp)
+            .onSizeChanged { canvasSize = it }
     ) {
-        if (phases.isEmpty()) return@Canvas
+        if (phases.isEmpty() || segments.isEmpty()) return@Canvas
 
-        val heightPx = size.height
-        val totalSeconds = max(phases.sumOf { it.durationSeconds }, 1.0)
-        val widthPerSecond = size.width / totalSeconds.toFloat()
-
-        data class Segment(val start: Offset, val end: Offset, val hold: Boolean)
-
-        fun segments(): List<Segment> {
-            val result = ArrayList<Segment>(phases.size)
-            var x = 0f
-            var y = heightPx
-            for (phase in phases) {
-                val start = Offset(x, y)
-                x += (phase.durationSeconds * widthPerSecond).toFloat()
-                y = when (phase.type) {
-                    "inhale" -> 0f
-                    "exhale" -> heightPx
-                    else -> y // holds stay flat
-                }
-                result.add(Segment(start, Offset(x, y), phase.type !in setOf("inhale", "exhale")))
-            }
-            return result
-        }
-
-        fun curveControls(segment: Segment): Triple<Offset, Offset, Offset> {
-            // p0, control points (midX at each end's y), p3 — the iOS S-curve.
-            val midX = (segment.start.x + segment.end.x) / 2f
-            return Triple(
-                Offset(midX, segment.start.y),
-                Offset(midX, segment.end.y),
-                segment.end,
-            )
-        }
-
-        val segs = segments()
-        if (segs.isEmpty()) return@Canvas
+        val segs = segments
 
         // Full static path — always visible, 35% line color.
         val full = Path().apply {
@@ -128,18 +137,58 @@ fun BreathingPathView(
         }
         drawPath(partial, progressColor, style = Stroke(width = 4f, cap = StrokeCap.Round))
 
-        // Ball — cubic point (or lerp on holds) of the current segment.
-        val seg = segs[index]
-        val t = phaseProgress.toFloat().coerceIn(0f, 1f)
-        val ball = if (seg.hold) {
-            Offset(seg.start.x + (seg.end.x - seg.start.x) * t, seg.start.y)
-        } else {
-            val (c1, c2, end) = curveControls(seg)
-            val u = 1f - t
-            val x = u * u * u * seg.start.x + 3 * u * u * t * c1.x + 3 * u * t * t * c2.x + t * t * t * end.x
-            val y = u * u * u * seg.start.y + 3 * u * u * t * c1.y + 3 * u * t * t * c2.y + t * t * t * end.y
-            Offset(x, y)
-        }
-        drawCircle(ballColor, radius = 20f, center = ball)
+        // Ball — animated position (iOS animates the same way).
+        drawCircle(ballColor, radius = 20f, center = Offset(ballX, ballY))
     }
+}
+
+private data class PathSegment(val start: Offset, val end: Offset, val hold: Boolean)
+
+private fun buildSegments(
+    phases: List<BreathingSessionViewModel.Phase>,
+    widthPx: Float,
+    heightPx: Float,
+): List<PathSegment> {
+    if (phases.isEmpty() || widthPx <= 0f || heightPx <= 0f) return emptyList()
+    val result = ArrayList<PathSegment>(phases.size)
+    val totalSeconds = max(phases.sumOf { it.durationSeconds }, 1.0)
+    val widthPerSecond = widthPx / totalSeconds.toFloat()
+    var x = 0f
+    var y = heightPx
+    for (phase in phases) {
+        val start = Offset(x, y)
+        x += (phase.durationSeconds * widthPerSecond).toFloat()
+        y = when (phase.type) {
+            "inhale" -> 0f
+            "exhale" -> heightPx
+            else -> y // holds stay flat
+        }
+        result.add(PathSegment(start, Offset(x, y), phase.type !in setOf("inhale", "exhale")))
+    }
+    return result
+}
+
+/** iOS S-curve: control points sit at the segment's mid-x, on each end's y. */
+private fun curveControls(segment: PathSegment): Triple<Offset, Offset, Offset> {
+    val midX = (segment.start.x + segment.end.x) / 2f
+    return Triple(
+        Offset(midX, segment.start.y),
+        Offset(midX, segment.end.y),
+        segment.end,
+    )
+}
+
+/** Ball position on the current segment — cubic point (or lerp on holds). */
+private fun ballPosition(segments: List<PathSegment>, index: Int, t: Float): Offset {
+    if (segments.isEmpty()) return Offset.Zero
+    val seg = segments[index.coerceIn(0, segments.lastIndex)]
+    if (seg.hold) {
+        return Offset(seg.start.x + (seg.end.x - seg.start.x) * t, seg.start.y)
+    }
+    val (c1, c2, end) = curveControls(seg)
+    val u = 1f - t
+    return Offset(
+        u * u * u * seg.start.x + 3 * u * u * t * c1.x + 3 * u * t * t * c2.x + t * t * t * end.x,
+        u * u * u * seg.start.y + 3 * u * u * t * c1.y + 3 * u * t * t * c2.y + t * t * t * end.y,
+    )
 }
