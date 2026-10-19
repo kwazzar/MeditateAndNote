@@ -103,8 +103,7 @@ internal fun DurationSheet(
                         close()
                     }
                     drawPath(path, domeColor)
-                }
-                .padding(horizontal = 24.dp),
+                },
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Spacer(Modifier.height(64.dp))
@@ -116,18 +115,19 @@ internal fun DurationSheet(
                 Box(
                     Modifier
                         .fillMaxWidth()
-                        .height(38.dp)
+                        .padding(horizontal = 14.dp)
+                        .height(32.dp)
                         .clickable { onSelected(d) }
                         .background(
                             if (isSelected) MnTheme.divider else Color.Transparent,
-                            RoundedCornerShape(19.dp),
+                            RoundedCornerShape(16.dp),
                         ),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
                         if (mins == 1) "1 minute" else "$mins minutes",
                         color = if (isSelected) MnTheme.textPrimary else MnTheme.textSecondary,
-                        fontSize = if (isSelected) 24.sp else 18.sp,
+                        fontSize = if (isSelected) 22.sp else 18.sp,
                         fontWeight = FontWeight.Normal,
                         textAlign = TextAlign.Center,
                     )
@@ -139,12 +139,16 @@ internal fun DurationSheet(
                 color = MnTheme.textPrimary,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.padding(horizontal = 16.dp),
             )
             Spacer(Modifier.height(20.dp))
             Button(
                 onClick = onStart,
                 colors = ButtonDefaults.buttonColors(containerColor = MnTheme.accentButton),
-                modifier = Modifier.fillMaxWidth().height(50.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .height(50.dp),
                 shape = RoundedCornerShape(12.dp),
             ) {
                 Text("Start Meditation", color = MnTheme.buttonText, fontWeight = FontWeight.Bold)

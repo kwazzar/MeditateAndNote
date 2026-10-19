@@ -50,8 +50,9 @@ while fixing them. The deltas that mattered are listed below.
   stripe instead of a growing bar. Now a plain `Box` + `clickable` with the fill anchored
   `CenterStart`, colored by the current phase.
 - Duration sheet: the iOS `CustomTopRoundedShape` dome (quad curve, `toolbarBackground`)
-  is drawn behind the sheet; rows are 38dp with the centre row enlarged (24sp vs 18sp)
-  to read as a drum, plus pluralized labels, a transparent container and scrim.
+  is drawn behind the sheet; rows are 32dp with the centre row at 22sp against 18sp to
+  read as a drum. Insets measured off iOS: pill 14dp, Start button 16dp. Transparent
+  container and scrim so the wheel floats.
 - Completion: no top bar and no close button, `CheckCircle`, 32sp "Well Done!",
   bottom-pinned actions.
 - Notes: search field lost its magnifier and hairline borders; Add Note is a shadowed pill.
