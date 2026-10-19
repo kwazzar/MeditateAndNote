@@ -61,6 +61,8 @@
     <!-- Settings: AI draft provider -->
     <string name="ai_settings_title">AI drafts</string>
     <string name="ai_settings_summary">Provider for the AI draft suggestions</string>
+    <string name="ai_settings_privacy">Drafts send the note text to the provider.</string>
+    <string name="ai_settings_use_hosted">Use the hosted provider</string>
     <string name="ai_settings_endpoint">Endpoint</string>
     <string name="ai_settings_model">Model</string>
     <string name="ai_settings_api_key">API key</string>

@@ -1218,7 +1218,7 @@ iOS: build зелений, **478 тестів** зелені (без нових 
 | `server/README.md` | деплой, підключення застосунків, локальний запуск |
 
 **Зміни в застосунках:**
-- **Android**: дефолтний endpoint з build-властивості (`-PaiDraftEndpoint=…` → `BuildConfig.AI_DRAFT_ENDPOINT`); у Settings поле заповнюється цим дефолтом, користувач може перебити. Ключ не потрібен ✅.
+- **Android**: дефолтний endpoint з build-властивості (`-PaiDraftEndpoint=…` → `BuildConfig.AI_DRAFT_ENDPOINT`) + **перемикач «Use the hosted provider»** у Settings. Вимкнено — власний endpoint/модель/ключ користувача; увімкнено — наш проксі (дефолт, коли білд на нього вказує). Секція прямо каже: «Drafts send the note text to the provider» — вибір, кому дістається текст, належить користувачеві (як opt-in `useRemoteFallback` на iOS) ✅.
 - **iOS**: API-ключ став **необов'язковим** (`RemoteLLMDraftService`): запит іде без заголовка `Authorization`, якщо ключа немає; провайдер, якому ключ потрібен, відповість 401 → «unavailable». Персональний OpenAI-сумісний endpoint працює як раніше ✅.
 - **Ключ у застосунку не потрібен** — проксі його не віддає ✅.
 

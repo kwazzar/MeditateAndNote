@@ -114,6 +114,7 @@
 | 5 | iOS: ключ став необов'язковим | запит без Authorization | PASS | 2 тести переписані (`testSuggest_missingKey_sendsRequestWithoutAuthorization`, `…blankKey…`); AI-тести 22/22 ✅ |
 | 6 | Android: дефолтний endpoint | з build-властивості | PASS | `-PaiDraftEndpoint=…` → `BuildConfig.AI_DRAFT_ENDPOINT`; Settings показує його як значення поля ✅ |
 | 7 | Android: без жодного налаштування | працює з коробки | PASS | prefs-файл endpoint'а видалено → застосунок узяв build-дефолт, запит пішов через проксі (провайдер бачив `llama-3.3-70b-versatile`), підказки в редакторі ✅ |
+| 8 | Settings → «Use the hosted provider» | вибір за користувачем | PASS | перемикач увімкнено за замовчуванням (якщо білд вказує на проксі) → показано hosted endpoint; вимкнено → з'являються поля Endpoint/Model/API key ✅; під секцією рядок «Drafts send the note text to the provider.» ✅ |
 
 ## Історія прогонів
 
@@ -124,4 +125,4 @@
 | 3 | 2026-10-20 | 12 PASS (Android AI Draft) | v2 чернетки: remote-провайдер, парітет з iOS |
 | 4 | 2026-10-20 | 8 PASS (сесія + метрики) | v3: чернетка переживає закриття редактора, телеметрія як в iOS |
 | 5 | 2026-10-20 | 11 PASS (реальний пристрій SM-A245F) | матриця: 42/42 тестів + повний флоу чернетки на справжньому Android |
-| 6 | 2026-10-20 | 7 PASS (проксі Groq) | власний провайдер: проксі на Vercel, ключ у середовищі, ланцюг перевірено end-to-end |
+| 6 | 2026-10-20 | 8 PASS (проксі Groq) | власний провайдер: проксі на Vercel, ключ у середовищі, ланцюг перевірено end-to-end |

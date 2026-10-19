@@ -12,6 +12,8 @@ import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -29,15 +31,17 @@ import com.mn.android.data.AIDraftSettingsStore
 import com.mn.android.presentation.theme.ui.MnTheme
 
 /**
- * Where the AI draft provider is configured: an OpenAI-compatible endpoint,
- * a model and an API key.
+ * Where the AI draft provider is configured.
  *
- * The key is stored encrypted (Android Keystore) by the store, never in the
- * clear. It is the user's own key, so the app has no key of its own to ship.
+ * Two ways to answer a draft: the hosted provider (our proxy, which carries
+ * the provider key) or an endpoint of the user's own. Both send the note
+ * text off the device, so the section says so - the switch is the user's
+ * choice of who receives it, not a promise of privacy.
  */
 @Composable
 internal fun AIDraftSettingsSection() {
-    var endpoint by remember { mutableStateOf(AIDraftSettingsStore.endpoint()) }
+    var useHosted by remember { mutableStateOf(AIDraftSettingsStore.useHostedProvider()) }
+    var endpoint by remember { mutableStateOf(AIDraftSettingsStore.userEndpoint()) }
     var model by remember { mutableStateOf(AIDraftSettingsStore.model()) }
     var apiKey by remember { mutableStateOf(AIDraftSettingsStore.apiKey().orEmpty()) }
     var saved by remember { mutableStateOf(false) }
@@ -49,30 +53,69 @@ internal fun AIDraftSettingsSection() {
             color = MnTheme.textSecondary,
             style = MaterialTheme.typography.bodySmall,
         )
+        Text(
+            stringResource(R.string.ai_settings_privacy),
+            color = MnTheme.textSecondary,
+            style = MaterialTheme.typography.bodySmall,
+        )
         Spacer(Modifier.height(8.dp))
-        AIDraftField(
-            value = endpoint,
-            label = stringResource(R.string.ai_settings_endpoint),
-            onValueChange = { endpoint = it; saved = false },
-        )
-        AIDraftField(
-            value = model,
-            label = stringResource(R.string.ai_settings_model),
-            onValueChange = { model = it; saved = false },
-        )
-        AIDraftField(
-            value = apiKey,
-            label = stringResource(R.string.ai_settings_api_key),
-            onValueChange = { apiKey = it; saved = false },
-            isSecret = true,
-        )
+        Row(
+            Modifier.fillMaxWidth(),
+            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+        ) {
+            Text(
+                stringResource(R.string.ai_settings_use_hosted),
+                color = MnTheme.textPrimary,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.weight(1f),
+            )
+            Switch(
+                checked = useHosted,
+                onCheckedChange = { useHosted = it; saved = false },
+                colors = SwitchDefaults.colors(
+                    checkedTrackColor = MnTheme.streakActiveMeditation,
+                    checkedThumbColor = MnTheme.buttonText,
+                ),
+            )
+        }
+
+        if (useHosted) {
+            Spacer(Modifier.height(8.dp))
+            Text(
+                AIDraftSettingsStore.hostedEndpoint(),
+                color = MnTheme.textSecondary,
+                style = MaterialTheme.typography.bodySmall,
+            )
+        } else {
+            Spacer(Modifier.height(8.dp))
+            AIDraftField(
+                value = endpoint,
+                label = stringResource(R.string.ai_settings_endpoint),
+                onValueChange = { endpoint = it; saved = false },
+            )
+            AIDraftField(
+                value = model,
+                label = stringResource(R.string.ai_settings_model),
+                onValueChange = { model = it; saved = false },
+            )
+            AIDraftField(
+                value = apiKey,
+                label = stringResource(R.string.ai_settings_api_key),
+                onValueChange = { apiKey = it; saved = false },
+                isSecret = true,
+            )
+        }
+
         Row(
             Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.End,
         ) {
             TextButton(
                 onClick = {
-                    AIDraftSettingsStore.save(endpoint, model, apiKey)
+                    AIDraftSettingsStore.setUseHostedProvider(useHosted)
+                    if (!useHosted) {
+                        AIDraftSettingsStore.save(endpoint, model, apiKey)
+                    }
                     saved = true
                 },
             ) {

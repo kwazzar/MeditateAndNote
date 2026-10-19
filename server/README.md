@@ -41,6 +41,12 @@ same URL. The API key field stays empty: the proxy carries it. (A key is
 still sent when the user fills one in, so a personal OpenAI-compatible
 endpoint keeps working the way it did.)
 
+**The switch.** The Android app asks before it sends anything: Settings →
+AI drafts → "Use the hosted provider". Off means the user's own endpoint,
+on means ours. Either way the note text leaves the device, and the section
+says so in as many words - the choice of who receives it belongs to the
+user, not to the build.
+
 ## Run it locally
 
 ```bash
