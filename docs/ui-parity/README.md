@@ -29,6 +29,7 @@ while fixing them. The deltas that mattered are listed below.
 | 14 | Notes list — AI insights | — | `14-notes-insights.png` | Android-only section (v1 insights, no LLM); iOS reference: `NoteInsightsSection` in the notes list |
 | 15 | Note editor — AI draft bar | — | `15-note-editor-ai-draft.png` | Android-only shot (remote provider, mock answer); iOS reference: `aiDraftBar` in `NoteEditorView` |
 | 16 | Note editor — restored draft | — | `16-note-editor-draft-restored.png` | the same draft after leaving and reopening the note: the session is stored, no new generation |
+| 17 | Note editor — AI draft on a real device | — | `17-note-editor-ai-draft-device.png` | Samsung SM-A245F, Android 16: the same bar against a mock provider reached over `adb reverse` |
 
 ## What was fixed
 

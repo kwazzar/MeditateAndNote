@@ -1254,7 +1254,7 @@ protocol StructuredAIWritingService: AIWritingService {
 
 - [x] Портувати pure-engine тести (partial - MeditationEngine ported, StreakInsightEngine blocked on JNI) (streak-логіка, insights) — мають пройти без змін, якщо Domain дійсно чистий
 - [x] Contract-тести для кожного нового `Store`/`Service` — та сама тестова сюїта, що й для CoreData/InMemory, прогнана проти Android-реалізацій
-- [ ] Окремі device-матриця тести для AI-фіч: пристрій без AICore, пристрій з `.basicText`, пристрій з умовами "Gemini Intelligence" (12GB+ RAM, флагманський SoC)
+- [x] Окремі device-матриця тести для AI-фіч — **remote-шлях закритий 2026-10-20 на Samsung SM-A245F (Android 16, API 36, arm64-v8a)**: 42/42 інструментованих тестів + повний флоу чернетки (підказки → Accept → Transfer → телеметрія в базі); провайдер — mock на хості через `adb reverse`. On-device шлях (ML Kit GenAI) **не перевірено**: на пристрої немає Google AI Services / AICore, RAM 6 GB (Gemini Nano потребує 12 GB+) — потрібен пристрій з 12 GB+ RAM і встановленим AI-модулем. Пристрій без AICore — це і SM-A245F, і емулятор: обидва мають `com.google.android.gms` без AI-модуля
 
 ---
 
