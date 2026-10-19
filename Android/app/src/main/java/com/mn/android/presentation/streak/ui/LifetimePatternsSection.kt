@@ -34,6 +34,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mn.android.data.StreakInsightsSource.Bundle
 import com.mn.android.presentation.theme.ui.MnTheme
+import androidx.compose.ui.res.stringResource
+import com.mn.android.R
 
 /**
  * Port of iOS `LifetimePatternsSection`: streak-length distribution,
@@ -48,7 +50,7 @@ internal fun LifetimePatternsSection(bundle: Bundle) {
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(
-                "Lifetime Patterns",
+                stringResource(R.string.lifetime_patterns),
                 fontWeight = FontWeight.SemiBold,
                 color = MnTheme.textPrimary,
             )
@@ -86,7 +88,7 @@ private fun StreakDistributionCard(bundle: Bundle) {
                 modifier = Modifier.size(12.dp),
             )
             Text(
-                "Streak Distribution",
+                stringResource(R.string.streak_distribution),
                 fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = MnTheme.textSecondary,
@@ -126,7 +128,7 @@ private fun StreakDistributionCard(bundle: Bundle) {
                         )
                     }
                     Text(
-                        "${bucket.count}",
+                        stringResource(R.string.streak_count_format, bucket.count),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = MnTheme.textPrimary,
@@ -168,7 +170,7 @@ private fun ResilienceCard(resilience: com.mn.android.data.StreakInsightsSource.
                 modifier = Modifier.size(12.dp),
             )
             Text(
-                "Resilience",
+                stringResource(R.string.resilience),
                 fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = MnTheme.textSecondary,
@@ -237,7 +239,7 @@ private fun BreakPatternCard(heatmap: com.mn.android.data.StreakInsightsSource.H
                 modifier = Modifier.size(12.dp),
             )
             Text(
-                "Break Pattern",
+                stringResource(R.string.break_pattern),
                 fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = MnTheme.textSecondary,
@@ -277,7 +279,7 @@ private fun BreakPatternCard(heatmap: com.mn.android.data.StreakInsightsSource.H
                         )
                     }
                     Text(
-                        "${(day.breakRate * 100).toInt()}%",
+                        stringResource(R.string.percent_format, (day.breakRate * 100).toInt()),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = MnTheme.textPrimary,

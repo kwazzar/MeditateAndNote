@@ -41,6 +41,8 @@ import androidx.compose.ui.unit.dp
 import com.mn.android.presentation.theme.ui.MnBackground
 import com.mn.android.presentation.theme.ui.MnTheme
 import kotlinx.coroutines.launch
+import androidx.compose.ui.res.stringResource
+import com.mn.android.R
 
 /**
  * The onboarding flow, ported from `OnboardingView` + `OnboardingPageView`.
@@ -79,7 +81,7 @@ fun OnboardingScreen(onCompleted: () -> Unit) {
             ) {
                 TextButton(onClick = onCompleted) {
                     Text(
-                        "Skip",
+                        stringResource(R.string.skip),
                         color = MnTheme.textSecondary,
                         style = MaterialTheme.typography.labelLarge,
                     )

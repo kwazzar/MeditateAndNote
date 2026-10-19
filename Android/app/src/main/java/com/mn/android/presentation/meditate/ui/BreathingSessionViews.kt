@@ -146,7 +146,7 @@ internal fun DurationSheet(
             }
             Spacer(Modifier.height(20.dp))
             Text(
-                "Select Duration",
+                stringResource(R.string.select_duration),
                 color = MnTheme.textPrimary,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
@@ -162,7 +162,7 @@ internal fun DurationSheet(
                     .height(50.dp),
                 shape = RoundedCornerShape(12.dp),
             ) {
-                Text("Start Meditation", color = MnTheme.buttonText, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.start_meditation), color = MnTheme.buttonText, fontWeight = FontWeight.Bold)
             }
             Spacer(Modifier.height(24.dp))
         }
@@ -351,7 +351,7 @@ private fun BreathingRings(
             )
         }
         Text(
-            "$phaseRemaining",
+            stringResource(R.string.number_format, phaseRemaining),
             color = MnTheme.textPrimary,
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Normal,
@@ -430,7 +430,7 @@ internal fun FinishedView(
         )
         Spacer(Modifier.height(16.dp))
         Text(
-            "Well Done!",
+            stringResource(R.string.well_done),
             color = MnTheme.textPrimary,
             fontSize = 32.sp,
             fontWeight = FontWeight.Bold,
@@ -438,7 +438,7 @@ internal fun FinishedView(
         )
         Spacer(Modifier.height(16.dp))
         Text(
-            "You completed your meditation session",
+            stringResource(R.string.session_completed),
             color = MnTheme.textSecondary,
             textAlign = TextAlign.Center,
         )

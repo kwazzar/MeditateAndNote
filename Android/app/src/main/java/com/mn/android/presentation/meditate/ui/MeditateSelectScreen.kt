@@ -145,7 +145,7 @@ fun MeditateSelectScreen(
 
         when {
             error != null -> Text(
-                "failed: $error",
+                stringResource(R.string.load_failed, error ?: ""),
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(top = 24.dp),
@@ -293,7 +293,7 @@ fun MeditateSelectScreen(
                     colors = ButtonDefaults.buttonColors(containerColor = MnTheme.accentButton),
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Text("Close", color = MnTheme.buttonText)
+                    Text(stringResource(R.string.close), color = MnTheme.buttonText)
                 }
                 Spacer(Modifier.height(24.dp))
             }

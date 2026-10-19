@@ -193,7 +193,7 @@ private fun StreakNumberSection(currentStreak: Int, isTodayComplete: Boolean) {
             )
             Spacer(Modifier.width(4.dp))
             Text(
-                "$currentStreak",
+                stringResource(R.string.streak_count_format, currentStreak),
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Medium,
                 color = MnTheme.textPrimary,

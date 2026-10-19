@@ -50,6 +50,8 @@ import com.mn.android.infrastructure.platform.sound.MeditationSound
 import com.mn.android.infrastructure.platform.sound.SoundPlayer
 import com.mn.android.presentation.theme.ui.MnTheme
 import com.mn.android.presentation.theme.ui.MnVolumeSlider
+import androidx.compose.ui.res.stringResource
+import com.mn.android.R
 
 /**
  * Port of iOS `SoundSettingsSheet`: ~360 pt sheet with a volume slider
@@ -87,7 +89,7 @@ fun SoundSettingsSheet(onDismiss: () -> Unit) {
                 ) {
                     Icon(
                         Icons.Rounded.Close,
-                        contentDescription = "Close",
+                        contentDescription = stringResource(R.string.close),
                         tint = MnTheme.iconPrimary,
                         modifier = Modifier.size(16.dp),
                     )
@@ -117,7 +119,7 @@ fun SoundSettingsSheet(onDismiss: () -> Unit) {
             ) {
                 Row {
                     Text(
-                        "Sound Volume",
+                        stringResource(R.string.sound_volume),
                         color = MnTheme.textPrimary,
                         // iOS `.font(.headline)` = 17pt semibold.
                         fontSize = 17.sp,
@@ -125,7 +127,7 @@ fun SoundSettingsSheet(onDismiss: () -> Unit) {
                     )
                     Spacer(Modifier.weight(1f))
                     Text(
-                        "${(volume * 100).toInt()}%",
+                        stringResource(R.string.percent_format, (volume * 100).toInt()),
                         color = MnTheme.textSecondary,
                         // iOS `.font(.subheadline)` = 15pt.
                         fontSize = 15.sp,
@@ -178,7 +180,7 @@ fun SoundSettingsSheet(onDismiss: () -> Unit) {
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(
-                    "Play sample",
+                    stringResource(R.string.play_sample),
                     color = MnTheme.buttonText,
                     style = MaterialTheme.typography.headlineSmall,
                     fontSize = 16.sp,

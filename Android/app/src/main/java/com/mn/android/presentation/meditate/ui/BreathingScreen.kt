@@ -143,7 +143,7 @@ fun BreathingScreen(
                     ) {
                         Icon(
                             Icons.Filled.Close,
-                            contentDescription = "Close",
+                            contentDescription = stringResource(R.string.close),
                             tint = MnTheme.iconPrimary,
                             modifier = Modifier.size(16.dp),
                         )

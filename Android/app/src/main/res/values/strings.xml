@@ -94,4 +94,24 @@
     <string name="app_theme">App Theme</string>
     <string name="meditation_sound_volume">Meditation Sound Volume</string>
 
+    <!-- Hardcoded literals moved out of the presentation layer. -->
+    <string name="app_title">Meditate &amp; Note</string>
+    <string name="close">Close</string>
+    <string name="select_duration">Select Duration</string>
+    <string name="well_done">Well Done!</string>
+    <string name="session_completed">You completed your meditation session</string>
+    <string name="play_sample">Play sample</string>
+    <string name="sound_volume">Sound Volume</string>
+    <string name="skip">Skip</string>
+    <string name="completion_by_day">Completion by Day</string>
+    <string name="progress">Progress</string>
+    <string name="weekly_completion">Weekly Completion</string>
+    <string name="break_pattern">Break Pattern</string>
+    <string name="lifetime_patterns">Lifetime Patterns</string>
+    <string name="resilience">Resilience</string>
+    <string name="streak_distribution">Streak Distribution</string>
+    <string name="percent_format">%1$d%%</string>
+    <string name="streak_count_format">%1$d</string>
+    <string name="number_format">%1$d</string>
+    <string name="load_failed">Failed: %1$s</string>
 </resources>

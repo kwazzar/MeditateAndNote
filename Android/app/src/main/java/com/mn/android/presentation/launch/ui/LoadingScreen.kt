@@ -30,6 +30,8 @@ import androidx.compose.ui.unit.sp
 import com.mn.android.presentation.theme.ui.MnBackground
 import com.mn.android.presentation.theme.ui.MnTheme
 import com.mn.android.presentation.theme.ui.MeditateHero
+import androidx.compose.ui.res.stringResource
+import com.mn.android.R
 
 /**
  * Port of iOS `LoadingScreenView`: themed full-screen launch loader with a
@@ -88,7 +90,7 @@ fun LoadingScreen(modifier: Modifier = Modifier) {
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                "Meditate & Note",
+                stringResource(R.string.app_title),
                 color = MnTheme.textPrimary,
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,

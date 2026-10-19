@@ -57,6 +57,8 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import com.mn.android.R
+import androidx.compose.ui.res.stringResource
 
 /**
  * Port of iOS `WeekdayHeatmapView` (`WeekdayHeatmapView.swift`): seven
@@ -96,7 +98,7 @@ internal fun WeekdayHeatmapView(data: Heatmap) {
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
-                        "${(day.completionRate * 100).toInt()}",
+                        stringResource(R.string.number_format, (day.completionRate * 100).toInt()),
                         fontSize = 9.sp,
                         fontWeight = FontWeight.Bold,
                         color = if (day.completionRate > 0.4) MnTheme.buttonText else MnTheme.textSecondary,

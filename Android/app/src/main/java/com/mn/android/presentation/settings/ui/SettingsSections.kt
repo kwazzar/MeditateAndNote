@@ -151,7 +151,7 @@ internal fun VolumeSection() {
             SectionHeader(stringResource(R.string.meditation_sound_volume), Icons.Filled.VolumeUp)
             var volume by remember { mutableFloatStateOf(SoundSettings.volume) }
             Text(
-                "${(volume * 100).toInt()}%",
+                stringResource(R.string.percent_format, (volume * 100).toInt()),
                 color = MnTheme.textSecondary,
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.fillMaxWidth(),

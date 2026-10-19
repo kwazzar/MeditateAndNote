@@ -32,6 +32,8 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import androidx.compose.ui.res.stringResource
+import com.mn.android.R
 
 /** iOS `InsightDetailView` drill-down sheet: header, heatmap, weekly bars,
  *  progress, message. Presented as a bottom sheet (like StreakDayDetailSheet). */
@@ -71,7 +73,7 @@ internal fun InsightDetailSheet(
                     modifier = Modifier.weight(1f),
                 )
                 Text(
-                    "Done",
+                    stringResource(R.string.done),
                     color = MnTheme.streakIndicator,
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier
@@ -122,7 +124,7 @@ internal fun InsightDetailSheet(
                         verticalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
                         Text(
-                            "Completion by Day",
+                            stringResource(R.string.completion_by_day),
                             fontWeight = FontWeight.SemiBold,
                             color = MnTheme.textPrimary,
                         )
@@ -159,7 +161,7 @@ internal fun InsightDetailSheet(
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                "Weekly Completion",
+                                stringResource(R.string.weekly_completion),
                                 fontWeight = FontWeight.SemiBold,
                                 color = MnTheme.textPrimary,
                                 modifier = Modifier.weight(1f),
@@ -199,13 +201,13 @@ internal fun InsightDetailSheet(
                     ) {
                         Row {
                             Text(
-                                "Progress",
+                                stringResource(R.string.progress),
                                 fontWeight = FontWeight.SemiBold,
                                 color = MnTheme.textPrimary,
                                 modifier = Modifier.weight(1f),
                             )
                             Text(
-                                "${(value * 100).toInt()}%",
+                                stringResource(R.string.percent_format, (value * 100).toInt()),
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = insight.category.accent(),

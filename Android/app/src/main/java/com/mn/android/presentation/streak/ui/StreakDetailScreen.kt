@@ -223,7 +223,7 @@ private fun StatColumn(title: String, value: Int, accent: Boolean) {
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Text(
-            "$value",
+            stringResource(R.string.number_format, value),
             fontSize = 22.sp,
             fontWeight = FontWeight.Medium,
             color = if (accent) MnTheme.streakIndicator else MnTheme.textPrimary,

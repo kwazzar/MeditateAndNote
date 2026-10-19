@@ -87,6 +87,12 @@ while fixing them. The deltas that mattered are listed below.
   `EditNote`, not a bare pencil) and a 17 pt semibold label.
 - Tab bar: iOS insets the capsule 6 pt vertically, Android 8 dp.
 
+**Strings**
+- Every user-visible literal in the presentation layer now comes from
+  `strings.xml`: the last 29 hardcoded ones (titles, "Close", "Skip", "Play sample",
+  "Sound Volume", the section headings and the `%-format` numbers) moved into
+  resources with format arguments.
+
 **Components**
 - Tab bar: floating capsule with a selection pill; icons `Article` / `Home` / `Eco`.
 - Meditate select re-ported: title is the selected meditation name, card layout, strings.
@@ -121,6 +127,9 @@ while fixing them. The deltas that mattered are listed below.
   Android could use is `DisabledAIDraftService`, so the sparkle entry point is hidden.
 - **Note insights** — the premium insights panel (`NoteInsightsViewModel`) has no Android
   counterpart.
+- **Note editor formatting toolbar** — iOS shows a `FloatingToolbar` (bold / italic /
+  list) above the keyboard, but its three buttons are `Button(action: {})` — they do
+  nothing. Not ported: dead UI on one side is not worth cloning.
 - **Rings animation mode** — ported (5 rings, `120 + i*30` base, ×`1 + 0.3(i+1)`
   expansion, per-ring 0.2 s stagger, 0.3 s colour cross-fade) and captured in
   `05b-breathing-rings.png`. iOS gates Rings behind the Pro entitlement, so no iOS
