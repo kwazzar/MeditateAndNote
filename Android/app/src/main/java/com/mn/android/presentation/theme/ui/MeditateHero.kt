@@ -95,11 +95,13 @@ fun MeditateHero(
                 .then(innerFill),
             contentAlignment = Alignment.Center,
         ) {
+            // 56dp, not the iOS 48pt: Material's Air glyph carries ~8dp of
+            // viewport padding, so 48dp drew visibly smaller than the SF Symbol.
             Icon(
                 Icons.Outlined.Air,
                 contentDescription = null,
                 tint = colors.buttonText,
-                modifier = Modifier.size(48.dp),
+                modifier = Modifier.size(56.dp),
             )
         }
     }

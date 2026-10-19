@@ -13,7 +13,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.ui.draw.shadow
+import androidx.compose.foundation.background
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -52,17 +55,32 @@ fun LoadingScreen(modifier: Modifier = Modifier) {
     Box(modifier.fillMaxSize()) {
         MnBackground()
 
-        MeditateHero(
-            modifier = Modifier
+        Box(
+            Modifier
                 .align(Alignment.Center)
-                .shadow(
-                    30.dp,
-                    CircleShape,
-                    ambientColor = MnTheme.accentColor.copy(alpha = 0.35f),
-                    spotColor = MnTheme.accentColor.copy(alpha = 0.35f),
-                ),
-            scale = breathing,
-        )
+                .scale(breathing),
+            contentAlignment = Alignment.Center,
+        ) {
+            // iOS `.shadow(color: accentColor.opacity(0.35), radius: 30, y: 8)`.
+            // Drawn as a radial gradient rather than `Modifier.shadow`: Android
+            // tessellates the outline of a Generic (circle) path into a
+            // polygon, which showed up as an octagon behind the hero.
+            val glow = MnTheme.accentColor
+            Box(
+                Modifier
+                    .size(272.dp)
+                    .background(
+                        Brush.radialGradient(
+                            0f to Color.Transparent,
+                            0.79f to Color.Transparent,
+                            0.83f to glow.copy(alpha = 0.14f),
+                            1f to Color.Transparent,
+                        ),
+                        CircleShape,
+                    )
+            )
+            MeditateHero(scale = 1f)
+        }
         Column(
             Modifier
                 .align(Alignment.BottomCenter)

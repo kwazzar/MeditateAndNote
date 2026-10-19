@@ -42,7 +42,10 @@ while fixing them. The deltas that mattered are listed below.
 **Components**
 - Tab bar: floating capsule with a selection pill; icons `Article` / `Home` / `Eco`.
 - Meditate select re-ported: title is the selected meditation name, card layout, strings.
-- Hero: per-theme shadow (octagon artifact gone).
+- Hero: the launch loader's glow is a radial gradient, not `Modifier.shadow` — Android
+  tessellates a circle outline into a polygon, which drew an octagon behind the icon. The
+  wind glyph went 48dp → 56dp because Material's `Air` carries viewport padding and drew
+  ~8dp smaller than iOS's SF Symbol at the same nominal size (now 45.7dp wide vs 46.7pt).
 - Progress capsule was a Material `Button` that centred its fill — this produced a vertical
   stripe instead of a growing bar. Now a plain `Box` + `clickable` with the fill anchored
   `CenterStart`, colored by the current phase.
