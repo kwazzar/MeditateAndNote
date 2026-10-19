@@ -39,6 +39,11 @@
     <string name="notes">Notes</string>
     <string name="home">Home</string>
 
+    <!-- NoteMenu insights (NoteInsightsSection) -->
+    <string name="note_insights_title">✨ Insights</string>
+    <string name="note_insights_refresh">Refresh insights</string>
+    <string name="note_insights_loading">Loading insights…</string>
+
     <!-- NoteEditor -->
     <string name="note_title_hint">Title</string>
     <string name="note_body_hint">Start writing...</string>

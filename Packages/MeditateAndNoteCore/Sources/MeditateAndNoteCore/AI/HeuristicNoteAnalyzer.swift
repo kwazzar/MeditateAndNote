@@ -16,6 +16,14 @@ public struct HeuristicNoteAnalyzer: NoteAnalyzer {
     public var isAvailable: Bool { true }
 
     public func analyze(notes: [Note]) async throws -> [NoteInsight] {
+        try analyzeSync(notes: notes)
+    }
+
+    /// The analysis itself, without the async wrapper. The heuristic is pure
+    /// CPU work, so the JNI bridge (a blocking call with no event loop to await
+    /// on) drives this form; `analyze` stays the thin wrapper over it, and
+    /// there is only one implementation of the rules.
+    public func analyzeSync(notes: [Note]) throws -> [NoteInsight] {
         let analyzable = notes.filter { !Self.combinedText(of: $0).isEmpty }
         guard !analyzable.isEmpty else {
             throw NoteAnalysisError.insufficientData

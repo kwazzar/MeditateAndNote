@@ -1118,6 +1118,41 @@ iOS: build зелений, **478 тестів** зелені (без нових 
 
 ## Фаза 3 — AI-сервіс: уніфікація протоколів
 
+### 3.0 Статус (2026-10-20)
+
+**v1 — AI Insights на Android, без LLM. Зроблено.**
+
+Що зроблено:
+
+- **Core**: `HeuristicNoteAnalyzer.analyzeSync(notes:)` — аналіз без async-обгортки; `analyze` став thin-wrapper над ним. Правила (теми, summary, теги) лишились в домені, реалізація одна.
+- **CoreJNI**: `AiInsightsBridge.swift` — `@_cdecl("Java_com_mn_android_data_NoteInsightsSource_read")`: `KotlinNoteDataSource().fetchAllSync()` → `analyzeSync` → один JSON `{"insights":[{id,summary,tags[],themes[{label,relevance}]}]}`. Шаблон — `StreakInsightsBridge`.
+- **Kotlin**: `data/NoteInsightsSource.kt` — `external fun read(): String` + org.json → data-класи; `topThemes` (top-5) дзеркалить `NoteInsightsViewModel.topThemes`.
+- **Compose**: `presentation/notes/ui/NoteInsightsSection.kt` — collapsible-блок над списком нотаток: «✨ Insights» + refresh + chevron, chip-рядок тем, до 3 карток (summary maxLines 3 + `#теги`).
+- **Wiring**: `NoteMenuScreen` — аналіз на кожному resume, ключ — токен (новий прохід скасовує попередній), сама робота — на `Dispatchers.IO`.
+- **Тести**: `androidTest/.../NoteInsightsContractTest.kt` — 3 тести (наявність інсайтів, порожній стор, ранжування `topThemes`).
+
+**Свідомі відхилення від iOS** (зафіксовано, бо вона — референс, а не контракт):
+
+| Аспект | iOS | Android v1 | Чому |
+|---|---|---|---|
+| Збереження | `NoteInsightStore` (CoreData) | без збереження, перерахунок на demand | iOS-аналізатор — LLM (дорого), Android — keyword-лічильник (дешево) |
+| Premium-гейт | `isEntitled` (`.pro`) | без гейту | на Android немає billing/RevenueCat — гейт технічно неможливий |
+| Дебаунс | 30 с / throttle 60 с | без дебаунсу | перерахунок лише на resume + refresh |
+
+**Перевірено**: `assembleDebug` зелений; 31 інструментований тест зелений (3 нові); ручний QA на `emulator-5554` (Medium_Phone_API_37.0) — секція рендериться, refresh працює, collapse працює; iOS `NoteInsightTests` — 14 зелених (2 нові на `analyzeSync`).
+
+**Зауваження до поведінки**: порядок тем при рівних частотах нестабільний — `HeuristicNoteAnalyzer` сортує словник Swift (`Dictionary`), а порядок ключів при однаковій частоті випадковий. Це поведінка ядра, спільна з iOS, не баг порту.
+
+**v2 — AI draft (ще не зроблено).** Відкриті рішення:
+
+- **D1** — де живе `AIDraftManager`: у Core (разом з `AIDraftService`/`AIDraftSession`) чи Kotlin-менеджер поверх доменних типів.
+- **D2** — провайдер: ML Kit GenAI Prompt API (on-device) / remote OpenAI-сумісний / гібрид. Емулятор **не має** AICore/GenAI — on-device шлях перевіряється лише на реальному пристрої; remote — перевіряється скрізь.
+- **D3** — де живуть prompt і парсинг відповіді: спільно в Core, щоб iOS і Android ділили одне правило.
+- **D4** — `AIDraftSessionStore` / `AIDraftQuotaStore` / `AIDraftMetricStore` на Android: Kotlin-реалізації (SharedPreferences/SQLite) за протоколами з Core.
+- **D5** — перевірка: on-device шлях потребує реального пристрою з Gemini Intelligence (12 GB+ RAM, флагманський SoC); remote-флоу перевіряється на емуляторі.
+
+**Застарілий контракт у 3.1.** Запропонований тут `AIWritingService`/`AICapabilityLevel` не застосовується: у Core вже є `AIDraftService`, `AIDraftSession`, `AIPrompt`, `AISuggestion`, `AIDraftQuota`, `AIDraftSettings`, `AIDraftError`, `AIDraftState` (згенеровані Java-біндінги — 114 файлів у `com/mn/core/`). Паралельний контракт заводити не треба: розширюємо наявний.
+
 ### 3.1 Базовий контракт (рівень 1, спільний)
 
 ```swift

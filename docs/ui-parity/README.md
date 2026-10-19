@@ -26,6 +26,7 @@ while fixing them. The deltas that mattered are listed below.
 | 11 | Paywall | `11-paywall.png` | — | no IAP on Android |
 | 12 | Onboarding 1–3 | `12-onboarding-{1,2,3}.png` | `12-onboarding-{1,2,3}.png` | |
 | 13 | Sound sheet | `13-sound-sheet.png` | `13-sound-sheet.png` | visual only, see gaps |
+| 14 | Notes list — AI insights | — | `14-notes-insights.png` | Android-only section (v1 insights, no LLM); iOS reference: `NoteInsightsSection` in the notes list |
 
 ## What was fixed
 

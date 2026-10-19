@@ -28,8 +28,26 @@
 | 19 | Regression: медитація→streak | streak росте | PASS | медитацію дотиснуто, streak на Home збільшився |
 | 20 | Regression: AI-інсайти | працюють | PASS | секція Insights: теми + 3 картки (summary + теги), refresh працює; аналіз на debounced-події (нова/редагована нотатка + ~30с), heuristic fallback без FM |
 
+## Прохід Android AI Insights (дата: 2026-10-20, середовище: Android emulator `emulator-5554` / Medium_Phone_API_37.0, API 37, arm64)
+
+| # | Крок | Очікування | Pass/Fail | Лог/примітка |
+|---|------|-----------|-----------|--------------|
+| 1 | Чистий старт, онбординг skip | таби рендеряться, крашів немає | PASS | notes-таб відкрився, список порожній, секції інсайтів немає (порожній стор → блок приховано) |
+| 2 | Створення нотатки (Add Note) | нотатка збережена | PASS | title `Untitled`, body `calm breathing practice for anxiety before sleep`; окремо зафіксовано: поле title уже містить `Untitled`, тому ввод додається перед ним (поведінка редактора, не інсайтів) |
+| 3 | Секція «✨ Insights» | блок над списком | PASS | заголовок + кнопка refresh (`contentDescription` = «Refresh insights») |
+| 4 | Чипи тем | до 5 тем | PASS | `breathing`, `sleep`, `calm`, `practice`, `anxiety` |
+| 5 | Картка інсайту | summary + теги | PASS | summary `calm breathing practice for anxiety before sleep`, рядок `#breathing #sleep #calm #practice #anxiety` |
+| 6 | Refresh | перерахунок | PASS | набір тем змінився (порядок при рівних частотах випадковий — `Dictionary` у Swift, спільно з iOS), контент той самий |
+| 7 | Collapse (тап по заголовку) | блок згортається | PASS | лише заголовок + refresh, чипи й картка сховалися |
+| 8 | Порожній стор | секція прихована | PASS | після `NoteBlobStore.deleteAll()` у контракт-тесті — блок не рендериться, crash немає |
+| 9 | Аналіз не блокує UI | відгук лишається плавним | PASS | аналіз на `Dispatchers.IO`, main thread вільний |
+| 10 | Регресія: список нотаток | список як раніше | PASS | карточка нотатки під секцією, дата «20 October», «Read» на місці |
+
+**Автотести:** `connectedDebugAndroidTest` — 31/31 PASS (3 нові в `NoteInsightsContractTest`: інсайти є, порожній стор → порожній список, `topThemes` ранжує). iOS: `NoteInsightTests` — 14/14 PASS (2 нові на `analyzeSync`).
+
 ## Історія прогонів
 
 | Прохід | Дата | Результат | Примітки |
 |--------|------|-----------|----------|
 | 1 | 2026-09-23 | 20 PASS (усі, п.14 та 17–20 закриті 2026-09-25) | QA спринту 4D завершено |
+| 2 | 2026-10-20 | 10 PASS (Android AI Insights) | v1 інсайтів на Android, без LLM |

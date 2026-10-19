@@ -120,6 +120,33 @@ final class NoteInsightTests: XCTestCase {
         XCTAssertFalse(insights[0].summary.isEmpty)
     }
 
+    /// The JNI bridge drives the synchronous form — it is a blocking call with
+    /// no event loop to await on. Same rules, same results, same error.
+    func testHeuristic_analyzeSync_matchesAsyncResult() async throws {
+        let analyzer = HeuristicNoteAnalyzer()
+        let notes = [
+            Note(title: "Morning", content: "Morning meditation brought calm and calm focus"),
+        ]
+
+        let sync = try analyzer.analyzeSync(notes: notes)
+        let asynchronous = try await analyzer.analyze(notes: notes)
+
+        XCTAssertEqual(sync.map(\.noteID), asynchronous.map(\.noteID))
+        XCTAssertEqual(sync.map(\.summary), asynchronous.map(\.summary))
+        XCTAssertEqual(
+            sync.flatMap(\.suggestedTags).sorted(),
+            asynchronous.flatMap(\.suggestedTags).sorted()
+        )
+    }
+
+    func testHeuristic_analyzeSync_throwsInsufficientData_whenNothingToAnalyze() {
+        let analyzer = HeuristicNoteAnalyzer()
+
+        XCTAssertThrowsError(try analyzer.analyzeSync(notes: [])) { error in
+            XCTAssertEqual(error as? NoteAnalysisError, .insufficientData)
+        }
+    }
+
     // MARK: - Helpers
 
     private func XCTAssertThrowsErrorType(
