@@ -6,6 +6,7 @@ When the user types `/graphify`, use the installed graphify skill or instruction
 
 Rules:
 - For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
+- **Two graphs:** root `graphify-out/` = iOS/Swift side; `Android/graphify-out/` = Android/Kotlin side (Compose UI, stores, JNI probes, tests, Gradle). For Android-focused questions run query/path/explain from inside `Android/` (`cd Android` or set the tool workdir) with the same commands. After modifying Android code, run `graphify update .` inside `Android/`.
 - Dirty graphify-out/ files are expected after hooks or incremental updates; dirty graph files are not a reason to skip graphify. Only skip graphify if the task is about stale or incorrect graph output, or the user explicitly says not to use it.
 - If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
 - Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
@@ -20,6 +21,8 @@ Goal: generated code follows DDD principles (per Scott Wlaschin) and matches the
 ### Stack
 
 - SwiftUI, CoreData, `@Observable` (Observation framework throughout — state is injected via `.environment(...)` / `@Environment(Type.self)`; no `ObservableObject`/`@EnvironmentObject` remains)
+- Domain core shared as local Swift package: `Packages/MeditateAndNoteCore` (entities, engines, domain events) — Android consumes the same package through `Packages/MeditateAndNoteCoreJNI`
+- Subscriptions: RevenueCat (`purchases-ios-spm`, the only external SPM dependency); key injected via `Config/*.xcconfig` → `Info.plist`
 - Navigation: custom Router-based approach (NOT `NavigationStack` with logic directly in the View)
 - Theming: custom `ThemeManager`
 
@@ -53,9 +56,9 @@ Hard rules:
 - **`CoreDataManager`** — owns the `NSPersistentContainer` stack (`.newBackgroundContext()`, `.buildModel()`). DataSources/Stores use it for contexts; nothing else touches it directly.
 - **`AppContainer`** — the DI root, but implemented as **factory methods**, not a registration container: `.makeMainViewModel()`, `.makeNoteEditorViewModel()`, `.makeMeditateSelectViewModel()`, etc. New ViewModels get a `make<X>ViewModel()` factory here, wiring up the right Manager(s).
 
-**No known exceptions.** Every persistence contract is a protocol now: `CoreDataSessionStore` conforms to `MeditationSessionStore` (`CORE/Sessions/MeditationSessionStore.swift`) as of 2026-10-06, closing the last case where a store was used as a concrete type with no abstraction. Each has at least one Android implementation in `MeditateAndNoteCoreJNI` + `Android/`, driven from device probes in `Android/app/src/main/java/com/mn/android/*Probe.kt` — see `ANDROID_PORT_PLAN.md` section 2.x for the pattern and the measured JNI constraints before writing another.
+**No known exceptions.** Every persistence contract is a protocol now: `CoreDataSessionStore` conforms to `MeditationSessionStore` (`Packages/MeditateAndNoteCore/Sources/MeditateAndNoteCore/Sessions/MeditationSessionStore.swift`) as of 2026-10-06, closing the last case where a store was used as a concrete type with no abstraction. Each has at least one Android implementation in `MeditateAndNoteCoreJNI` + `Android/`, driven from device probes in `Android/app/src/main/java/com/mn/android/*Probe.kt` — see `ANDROID_PORT_PLAN.md` section 2.x for the pattern and the measured JNI constraints before writing another.
 
-**Domain Events:** there's an existing `DomainEvent` type (in Core: `Packages/MeditateAndNoteCore/Sources/MeditateAndNoteCore/Events/DomainEvents.swift`) — `CoreDataSessionStore.handle()` reacts to one. New cross-cutting side effects (an action that needs to update state in more than one Store/Manager) should go through this mechanism rather than being wired manually across call sites.
+**Domain Events:** there's an existing `DomainEvent` type (in Core: `Packages/MeditateAndNoteCore/Sources/MeditateAndNoteCore/Events/DomainEvents.swift`, 8 cases incl. `.subscriptionChanged`) — routing goes through `EventLoopCoordinator` + per-domain `DomainEventRouting` scopes in `AppContainer/`; `CoreDataSessionStore.handle()` persists `.meditationCompleted` via `MeditationScope`. New cross-cutting side effects (an action that needs to update state in more than one Store/Manager) should go through this mechanism rather than being wired manually across call sites.
 
 > This section reflects the codebase as of the graphify snapshot. Re-verify with `graphify query`/`graphify explain` if the structure has moved on.
 

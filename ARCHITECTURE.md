@@ -26,9 +26,11 @@ maps to domain models only inside the concrete DataSource/Store.
 > use `context.perform`/`await`, view models that touch observable state are
 > `@MainActor`, and the single `DomainEventBus` is a lock-based
 > `DomainEventPublisher` with a synchronous `nonisolated` `publish` that runs
-> on the emitter's thread. Consumers read an `AsyncStream<DomainEvent>` via a
-> single stored `Task { for await ... }` on `@MainActor`, so events are handled
-> sequentially in publish order before mutating observable/CoreData state.
+> on the emitter's thread. Each consumer (the `EventLoopCoordinator`,
+> `NoteMenuViewModel`, `NoteInsightsViewModel`) reads its own
+> `AsyncStream<DomainEvent>` via a single stored `Task { for await ... }`,
+> so events are handled sequentially in publish order before mutating
+> observable/CoreData state.
 
 ## App Entry & Dependency Injection
 
@@ -37,12 +39,14 @@ graph TB
     subgraph Entry["App Entry"]
         App["MeditateAndNoteApp<br/>@main"]
         Router["Router<br/>@Observable<br/>Navigation State"]
-        Container["AppContainer<br/>plain class<br/>DI Factory"]
+        Container["AppContainer<br/>plain class<br/>DI Factory + Scopes"]
         Theme["ThemeManager<br/>@Observable<br/>UserDefaults"]
         Streak["StreakTracker<br/>@Observable<br/>engine + store"]
-        SessionStore["CoreDataSessionStore<br/>@Observable"]
+        SessionStore["CoreDataSessionStore<br/>@Observable · MeditationSessionStore"]
         Insights["StreakInsightManager"]
         Reminders["ReminderManager<br/>@Observable"]
+        Sub["SubscriptionManager<br/>@MainActor @Observable<br/>RevenueCat + cache"]
+        Paywall["PaywallPresenter<br/>shared full-screen flag"]
     end
 
     App -->|"@State + environment"| Router
@@ -52,19 +56,29 @@ graph TB
     App -->|"environment"| SessionStore
     App -->|"environment"| Reminders
     App -->|"root view"| Root
+    Container --> Sub
+    Container --> Paywall
 ```
 
 `AppContainer` is the DI root. It owns the singletons (DomainEventBus, data
-sources, sync coordinator, managers) and exposes `make<X>ViewModel()` factory
-methods; it never acts as a registration container. Production shares exactly
-one instance — `AppContainer.shared`, used both by the `EnvironmentKey`
+sources, managers) and exposes `make<X>ViewModel()` factory methods; it never
+acts as a registration container. Production shares exactly one instance —
+`AppContainer.shared`, used both by the `EnvironmentKey`
 `defaultValue` and the App struct — because `init()` starts the event loop as
 a side effect and a second instance would run duplicate loops/managers.
-Fresh `init()`s are only for previews/tests isolation. Cross-cutting side effects
-are wired in `init` via `startEventListening()`: a single stored `Task` runs
-`for await` over the bus's `AsyncStream` and dispatches through `handleEvent`,
-hopping to `@MainActor` before touching the observers (`StreakTracker`,
-`CoreDataSessionStore`, `StreakInsightManager`, `AIDraftMetricStore`).
+Fresh `init()`s are only for previews/tests isolation.
+
+**Event routing.** Cross-cutting side effects are wired through lazy
+*Scopes* — one per bounded context (`NoteScope`, `StreakScope`,
+`MeditationScope`, `SearchScope`, `AIDraftScope`, `SettingsScope`,
+`SubscriptionScope`), each conforming to `DomainEventRouting`
+(`static handles(_:)` + `handle(_:)`). A single `EventLoopCoordinator` owns
+the one stored `Task { for await }` over `DomainEventBus.shared`'s
+`AsyncStream` and, per event, asks the container's `handlers` closure which
+scopes react — the `handles` filter runs *before* the scope's `lazy` backing
+is touched, so an unhandled event never builds a CoreData stack. All handlers
+hop to `@MainActor` before mutating observable/CoreData state; events are
+processed sequentially in publish order.
 
 Factored ViewModel constructors:
 
@@ -74,9 +88,17 @@ Factored ViewModel constructors:
 - `makeMeditationViewModel(for:)` → `MeditationViewModel(meditation, eventBus, soundPlayer)`
 - `makeNoteMenuViewModel()` → the shared singleton `NoteMenuViewModel`
 - `makeNoteAIDraftViewModel(noteID:currentContent:)` → `NoteAIDraftViewModel(drafts, eventBus)`
+- `makeAIDraftSettingsViewModel()` → `AIDraftSettingsStoreObservable`
 - `makeNoteInsightsViewModel()` → cached `lazy var` in `AppContainer`
 - `makeOnboardingViewModel(onCompletion:)` → `OnboardingViewModel(store, pages, onCompletion)`
 - `makeInsightsViewModel()` → `InsightsViewModel(StreakInsightManager)`
+- `makeSubscriptionViewModel()` → `SubscriptionViewModel(providable/manageable: SubscriptionScope.manager)`
+- `makePaywallViewModel()` → `PaywallViewModel(...)`
+
+Domain entities, value objects, engines and `DomainEvent` live in the local
+Swift package `Packages/MeditateAndNoteCore` — plain Swift, no
+`CoreData`/`SwiftUI`/`UIKit`, shared with the Android build through
+`Packages/MeditateAndNoteCoreJNI`.
 
 ### AI Notes (Sprints 1–3)
 
@@ -103,6 +125,36 @@ Factored ViewModel constructors:
   `NoteInsightsViewModel` + `NoteInsightsSection` in `NoteMenu`
   (shows loading spinner until `hasLoaded`, hides when empty,
   refreshes on `.noteCreated/.noteUpdated/.noteDeleted` events).
+
+### Subscriptions / Premium (RevenueCat)
+
+- **Domain:** `SubscriptionStatus` / `Entitlement` / `SubscriptionOffering` /
+  `SubscriptionPackage` VOs + `SubscriptionManaging` (provider port) and
+  `SubscriptionCache` protocols in `MeditateAndNoteCore` (`Subscriptions/`);
+  `AIDraftQuota` (5 lifetime free generations) + `AIDraftQuotaStore` — a
+  counter that can only *restrict*, never grant.
+- **Application:** `SubscriptionManager` (`@MainActor @Observable`,
+  `SubscriptionProvidable`/`SubscriptionManageable`) owns the current
+  `SubscriptionStatus`. Trust model: the provider is the sole authority —
+  `UserDefaultsSubscriptionCache` is a UX fast-path for the initial value,
+  every `refresh()`/purchase/restore result overwrites it; an unconfigured
+  service never grants an entitlement. Every mutation publishes
+  `.subscriptionChanged(SubscriptionStatus)`.
+- **Infrastructure:** `RevenueCatPurchasesService` (wraps RevenueCat SDK,
+  configured in `SubscriptionScope` with `Config.revenueCatAPIKey` from
+  `Info.plist` ← `Config/*.xcconfig` and the `premium` entitlement ID),
+  `UserDefaultsSubscriptionCache`.
+- **Gating:** free surfaces stay open; premium ones route a locked tap to
+  the paywall via the shared `PaywallPresenter` (`RootContainer` hosts the
+  single full-screen cover — views never present paywalls themselves).
+  Locked: `MainTheme.liquidGlass/softDawn/obsidian` (clamp → `.darkZen`),
+  `BreathingAnimationStyle.rings` (clamp → `.path`), note insights analysis
+  pass (skipped entirely), AI drafts beyond `AIDraftQuota.freeLimit`.
+  `ThemeManager`/`AnimationSettings` subscribe to `.subscriptionChanged` so a
+  mid-session revoke clamps the active value at runtime.
+- **Presentation:** `SubscriptionViewModel` (Settings `SubscriptionSection`),
+  `PaywallViewModel`/`PaywallView` (offerings, purchase, restore; dismisses
+  itself when `isPremium` flips true).
 
 ### Semantic Search (Sprint 4 — built, fallback disabled)
 
@@ -242,7 +294,7 @@ reflects the latest passed reference and still tracks `@Observable` updates.
 
 ```mermaid
 graph LR
-    subgraph Models["Domain Models (plain Swift, no CoreData/SwiftUI)"]
+    subgraph Models["Domain Models — Packages/MeditateAndNoteCore (plain Swift, no CoreData/SwiftUI)"]
         Note["Note<br/>id, title, content, date"]
         NoteBook["NoteBook<br/>aggregate: one entry per id,<br/>last-write-wins"]
         Meditation["Meditation<br/>id, title, breathingStyle, category"]
@@ -262,6 +314,7 @@ graph LR
         RemindVO["ReminderSettings +<br/>ReminderScheduleBuilder<br/>(pure scheduling math)"]
         Search["SearchQuery / NoteFilter"]
         MainTheme["MainTheme<br/>liquidGlass, breathing, softDawn,<br/>darkZen, obsidian"]
+        SubVO["SubscriptionStatus / Entitlement /<br/>SubscriptionOffering / SubscriptionPackage /<br/>AIDraftQuota (free limit 5)"]
     end
 
     Meditation --> BreathingStyle
@@ -289,6 +342,8 @@ Domain invariants live in the Value Objects / aggregate / engines:
 - `ReminderSettings` clamps `hour`/`minute` and guarantees a non-empty,
   valid weekday set; `ReminderScheduleBuilder` computes fire dates with pure
   calendar math (no `UNUserNotificationCenter`).
+- `SubscriptionStatus`/`Entitlement` decide premium access; `AIDraftQuota`
+  (`freeLimit = 5`) is a lifetime counter that can only restrict, never grant.
 - `MeditationSessionEngine` is a deterministic state machine
   (`idle → countdown → active → finished`). `active` carries a wall-clock
   `anchoredAt` and a `finishing` flag — remaining time is derived from real
@@ -312,17 +367,19 @@ graph TB
         StreakTracker["StreakTracker<br/>@Observable<br/>StreakSnapshotProvidable"]
         InsightMgr["StreakInsightManager<br/>StreakInsightProvidable<br/>cached"]
         ReminderMgr["ReminderManager<br/>@Observable<br/>ReminderProvidable & ReminderManageable"]
+        SubMgr["SubscriptionManager<br/>@MainActor @Observable<br/>SubscriptionProvidable &<br/>SubscriptionManageable"]
         OnbStore["OnboardingStore<br/>protocol + UserDefaultsOnboardingStore"]
         ThemeManager["ThemeManager<br/>@Observable"]
         Sound["SoundPlayer<br/>SoundPlaying protocol"]
-        Bus["DomainEventBus<br/>DomainEventPublisher"]
+        Bus["DomainEventBus<br/>DomainEventPublisher<br/>.shared"]
 
         NoteProv["NoteProvidable<br/>currentNotes, note(with:),<br/>notes(matching:), refresh"]
         NoteMan["NoteManageable<br/>add, update, delete"]
         InsightProv["StreakInsightProvidable<br/>insights(for:), recommendations(for:),<br/>weeklyBreakdown, streakLengthDistribution,<br/>resilience, weekdayBreakPattern,<br/>weekdayBreakHeatmap"]
         RemindProv["ReminderProvidable / ReminderManageable"]
+        SubProv["SubscriptionProvidable / SubscriptionManageable"]
 
-        Evt["DomainEvent<br/>noteCreated / noteUpdated /<br/>noteDeleted / meditationCompleted"]
+        Evt["DomainEvent (8 cases)<br/>noteCreated / noteUpdated /<br/>noteDeleted / meditationCompleted /<br/>aiDraftGenerated / aiDraftMetric /<br/>noteInsightsUpdated / subscriptionChanged"]
     end
 
     NM --- NoteProv
@@ -331,6 +388,8 @@ graph TB
     StreakTracker ---- InsightMgr
     InsightMgr --- InsightProv
     ReminderMgr --- RemindProv
+    SubMgr --- SubProv
+    SubMgr --> Bus
     OnbStore -.->|"implements"| UserDefaultsOnboardingStore
     StreakTracker --> Bus
     InsightMgr --> Bus
@@ -344,8 +403,9 @@ graph TB
 (`MeditationService`), `Events/` (`DomainEvents`), `Reminders/`
 (`ReminderManager`, `NotificationScheduling`), `Settings/`
 (`AnimationSettings`), `Onboarding/` (`OnboardingStore`), `Theme/`
-(`ThemeManager`), plus `Sound/` (`SoundPlayer`, `SoundSettings`) and `Streak/`
-(`StreakTracker`, `StreakInsightEngine`, `StreakInsightManager`).
+(`ThemeManager`), `Subscriptions/` (`SubscriptionManager`,
+`RevenueCatPurchasesService`), plus `Sound/` (`SoundPlayer`, `SoundSettings`)
+and `Streak/` (`StreakTracker`, `StreakInsightEngine`, `StreakInsightManager`).
 
 - **`NoteManager`** (actor) is the application service for notes. It exposes
   two protocols: `NoteProvidable` (read) and `NoteManageable` (write), plus a
@@ -363,13 +423,14 @@ graph TB
   `ReminderSettings` with a `NotificationScheduling` abstraction; every
   mutation persists and reschedules a 7-day notification horizon.
 - **Domain events** decouple bounded contexts: `DomainEvent` is a closed sum
-  type; subscribers (`StreakTracker`, `CoreDataSessionStore`,
-  `StreakInsightManager`, `NoteMenuViewModel`) switch exhaustively, so adding a
-  case is a compile-time decision. The bus publishes on the emitter's thread;
-  consumers (`AppContainer`, `NoteMenuViewModel`) read an
-  `AsyncStream<DomainEvent>` with a stored, cancellable `Task { for await }`,
-  so events are processed sequentially in publish order before mutating
-  observable/CoreData state.
+  type with 8 cases (notes, meditation, AI drafts/insights,
+  `subscriptionChanged`); every `DomainEventRouting` scope and direct
+  subscriber switches exhaustively, so adding a case is a compile-time
+  decision. The bus (`DomainEventBus.shared`) publishes on the emitter's
+  thread; the single `EventLoopCoordinator` task, the VM stream consumers
+  (`NoteMenuViewModel`, `NoteInsightsViewModel`) and the direct subscribers
+  (`ThemeManager`, `AnimationSettings`) all read sequentially, so events are
+  processed in publish order before mutating observable/CoreData state.
 
 ## Infrastructure (Persistence)
 
@@ -379,7 +440,7 @@ graph TB
         CDM["CoreDataManager<br/>NSPersistentContainer<br/>buildModel(), newBackgroundContext()"]
         CDNote["CoreDataNoteDataSource<br/>conforms NoteDataSource"]
         CDStreak["CoreDataStreakStore<br/>conforms StreakActivityStore"]
-        CDSession["CoreDataSessionStore<br/>concrete store (accepted exception)<br/>@Observable"]
+        CDSession["CoreDataSessionStore<br/>conforms MeditationSessionStore<br/>@Observable"]
 
         CDEvent["CDNote / CDMeditationSession /<br/>CDDailyActivity / CDStreakMeta<br/>NSManagedObject entities"]
     end
@@ -390,6 +451,7 @@ graph TB
         RS["ReminderSettingsStore<br/>load / save ReminderSettings"]
         NS["NotificationScheduling<br/>isAuthorized / requestAuthorization /<br/>scheduleNotification / removeAllPending"]
         OS["OnboardingStore<br/>hasCompletedOnboarding /<br/>markOnboardingCompleted"]
+        MS["MeditationSessionStore<br/>save / sessions<br/>(domain ACL, Core package)"]
         IM["InMemoryNoteDataSource<br/>actor · conforms NoteDataSource<br/>(tests & previews)"]
         UDS["UserDefaultsStreakStore<br/>conforms StreakActivityStore<br/>+ legacy migration"]
         UDReminder["UserDefaultsReminderSettingsStore<br/>conforms ReminderSettingsStore"]
@@ -401,6 +463,7 @@ graph TB
     IM -.-> ND
     CDStreak -.-> SA
     UDS -.-> SA
+    CDSession -.-> MS
     UDReminder -.-> RS
     SysSched -.-> NS
     UDOnb -.-> OS
@@ -418,9 +481,10 @@ graph TB
   back to an in-memory store so the app stays usable.
 - All NSManagedObject → domain mapping stays inside the concrete
   DataSource/Store (`.toNote()`, `.apply()`, `.findOrCreate()`).
-- `CoreDataSessionStore` is a known accepted exception — a concrete `@Observable`
-  type with no protocol abstraction (unlike `CoreDataStreakStore`, which
-  conforms to `StreakActivityStore`).
+- Every persistence contract is a protocol: `CoreDataSessionStore` conforms
+  to `MeditationSessionStore` (defined in the Core package — closed as of
+  2026-10-06), alongside `CoreDataStreakStore: StreakActivityStore` and the
+  rest; no store is consumed as a bare concrete type anymore.
 - Async / actor persistence: CoreData data sources route I/O through
   `context.perform` / `await context.perform`; `InMemoryNoteDataSource` is an
   actor. These live in `Persistence/` plus `Services/` (streak/reminder store
@@ -452,7 +516,7 @@ sequenceDiagram
     Mgr-->>VM: Updates @Observable state
     VM-->>View: UI re-renders
     Mgr--)Bus: Publishes DomainEvent (noteCreated/meditationCompleted)
-    Bus--)Streak/CoreDataSessionStore/StreakInsightManager: Reacts (@MainActor hop)
+    Bus--)Loop as EventLoopCoordinator: Routes to reacting scopes (@MainActor hop)
 
     Note over View,Container: On Navigation
     View->>Nav: router.navigate(to: .push / .sheet / .fullScreen)

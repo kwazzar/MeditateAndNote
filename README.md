@@ -8,18 +8,22 @@ Native iOS (SwiftUI) app for guided meditation with breathing visuals and a shor
 - **Journaling** — searchable notes list, rich note editor with floating toolbar.
 - **Daily streak** — meditate **and** write a note on the same day to complete it. Insights engine surfaces weak days, break-risk, time-of-day patterns, weekday heatmap, milestones and more.
 - **AI-assisted writing (iOS 26+, on-device)** — "Help me write" drafts and per-note AI summaries.
+- **Premium (RevenueCat)** — "Pro" subscription gates 3 of 5 themes, the `rings` animation style, unlimited AI drafts (free tier: 5 lifetime) and note insights; paywall presented from a single shared presenter, `.subscriptionChanged` domain event re-evaluates entitlements at runtime (revoked → clamped back to free defaults).
 - **Reminders** — configurable daily reminder with a 7-day notification horizon.
 - **Theming** — 5 built-in themes (liquid glass, breathing, soft dawn, dark zen, obsidian) plus sound and animation settings.
 - **Onboarding** — multi-page onboarding and deep-link navigation.
 
 ## Tech stack
 
-Pure Apple platform — **zero external dependencies**:
+Apple platform with one external dependency — RevenueCat (`purchases-ios-spm`, SPM):
 
 - SwiftUI + `@Observable` (Observation framework), iOS 17.6+
 - CoreData (programmatic model, no `.xcdatamodeld`)
 - AVFoundation (sounds), UserNotifications (reminders), Security (Keychain)
 - FoundationModels / Apple Intelligence on-device LLM (iOS 26+, optional)
+- RevenueCat Purchases SDK (subscriptions; key injected via `Config/*.xcconfig` → `Info.plist`)
+
+Shared domain logic lives in the local Swift package `Packages/MeditateAndNoteCore` (entities, value objects, engines, domain events) — it is also compiled for Android (`Packages/MeditateAndNoteCoreJNI` → Kotlin/Compose UI).
 
 ## Architecture
 
@@ -47,23 +51,35 @@ open MeditateAndNote.xcodeproj
 
 To replay onboarding during development, add the `-showOnboarding` launch argument.
 
+RevenueCat key comes from `Config/*.xcconfig` (`REVENUECAT_API_KEY`) → `Info.plist`; commit only the placeholder configs and keep `*.local.xcconfig` overrides out of git.
+
 ## Project layout
 
 ```
 MeditateAndNote/
-├── AppContainer/     DI root (make<X>ViewModel() factories)
-├── Models/           Domain entities, value objects, pure engines
-├── Navigation/       Router, destinations, deep links, onboarding
-├── Views/            SwiftUI views
+├── AppContainer/     DI root: lazy event Scopes + make<X>ViewModel() factories
+├── Config/           xcconfig (RevenueCat key, build settings)
+├── Navigation/       Router, destinations, deep links, onboarding, Config
+├── Views/            SwiftUI views (Paywall, Settings, Theme, ...)
 ├── ViewModels/       @Observable view models
-├── Services/         Domain services (notes, streak, meditation, AI, ...)
+├── Services/         Domain services (notes, streak, meditation, AI, subscriptions, ...)
 ├── Persistence/      CoreData/UserDefaults data sources & stores
-└── MeditateAndNoteTests/
+├── Extensions/
+Packages/
+├── MeditateAndNoteCore/       Shared Swift package: domain, engines, events
+├── MeditateAndNoteCoreJNI/    swift-java wrappers for the Android build
+Android/                        Kotlin/Compose UI over the shared Core (see ANDROID_PORT_PLAN.md)
+MeditateAndNoteTests/          Unit tests
+MeditateAndNoteUITests/        UI tests
 ```
+
+## Android
+
+Port runs Swift Core + Kotlin/Compose UI (Swift SDK for Android + `swift-java` JNI). Progress, phases and measured JNI constraints: [ANDROID_PORT_PLAN.md](ANDROID_PORT_PLAN.md), status analysis: [ANDROID_PORT_ANALYSIS.md](ANDROID_PORT_ANALYSIS.md). Android-side knowledge graph lives in `Android/graphify-out/`.
 
 ## Tests
 
-33 test files covering pure engines, managers, data sources, view models, navigation and AI services. Run from Xcode (`Cmd+U`) or:
+46 test files (44 unit + 2 UI) covering pure engines, managers, data sources, view models, navigation, AI and subscription services. Run from Xcode (`Cmd+U`) or:
 
 ```bash
 xcodebuild test -project MeditateAndNote.xcodeproj -scheme MeditateAndNote -destination 'platform=iOS Simulator,name=iPhone 16'
