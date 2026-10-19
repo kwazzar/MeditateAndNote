@@ -58,6 +58,17 @@ while fixing them. The deltas that mattered are listed below.
 - Phase index: Android derived it from the session `remaining`, which only moves at
   1 Hz, so it lagged the engine by up to a second and the ball drew on the previous
   segment. Now reads `engine.getCurrentPhaseIndex()` — the same value iOS reads.
+- Progress capsule: iOS animates the fill with `.animation(.linear(duration: 0.3),
+  value: progress)`; Android drew the raw progress, so the fill edge crept in steps.
+- Home hero: iOS `MeditateThemeButtonStyle` scales the hero on press (0.92–0.95 per
+  theme, plus a dim) with `.easeInOut(duration: 0.15)`. Android had no press state at
+  all — `clickable` alone draws none. Measured on device: 564 px idle → 532 px pressed
+  (0.943×, iOS darkZen's 0.94).
+- Checked and left alone: the loader's breathing pulse (2.4 s reverse, matches), the
+  weekday heatmap's staggered appear (300 ms + 50 ms per column, matches), the
+  lifetime-patterns stagger (matches), and the countdown digit — iOS declares a
+  `.scale.combined(with: .opacity)` transition, but the reference video shows the
+  digits swapping instantly (flat size, flat brightness), so Android already matches.
 
 **Components**
 - Tab bar: floating capsule with a selection pill; icons `Article` / `Home` / `Eco`.
