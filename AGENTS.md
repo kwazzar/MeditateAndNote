@@ -136,18 +136,17 @@ For Android-only tasks (`Android/`, Kotlin), skip steps 2-4 (Xcode-specific); st
 Working on this project in parallel sessions is done with git worktrees. **One session = one worktree — never open two sessions on the same worktree.**
 
 Current layout (`git worktree list`):
-- `/Users/nazar/Swift/MeditateAndNote` → branch `main`
-- `/Users/nazar/Swift/task2` → branch `task2`
+- `/Users/nazar/Swift/MeditateAndNote` → branch `main` (the only worktree right now; `checkout -b task3` etc. there, or add a new worktree per task)
+
+Create a new worktree for a task:
+```bash
+git worktree add /Users/nazar/Swift/<task> -b <task>
+```
 
 Rules that keep this working:
 
 - Every shared file is tracked in git (e.g. the scheme in `xcshareddata/xcschemes/`) — untracked/ignored files are NOT copied into new worktrees. New worktree ⇒ re-open its Xcode project once; auto-created schemes are per-worktree.
-- Per-worktree DerivedData is already configured via `project.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings` (`IDECustomDerivedDataLocation`) and `.xcodebuildmcp/config.yaml` in each worktree → both go to `~/Library/Developer/Xcode/DerivedData/{MeditateAndNote,MeditateAndNote-task2}`. Parallel builds don't collide. Do not point both at the same path.
+- Per-worktree DerivedData is configured via `project.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings` (`IDECustomDerivedDataLocation`) and `.xcodebuildmcp/config.yaml` in each worktree → point each worktree at its own `~/Library/Developer/Xcode/DerivedData/<name>`. Parallel builds don't collide. Never point two worktrees at the same path.
 - `.git` is shared by all worktrees: commit/merge from any of them works, writes just serialize on the `.git` lock.
 - Run the app from only one worktree at a time per simulator device — use a different simulator or sequential runs.
-- One task = one short-lived branch in its worktree. Merge often: `git merge main` in the task tree, `git merge task2` (or cherry-pick) in the main tree. Delete the branch after merge, `git checkout -b task3`.
-
-Quick start for two sessions:
-```bash
-./Scripts/start-session.sh   # opens both Xcode projects
-```
+- One task = one short-lived branch in its worktree. Merge often: `git merge main` in the task tree, `git merge <task>` (or cherry-pick) in the main tree. Delete the branch + worktree after merge: `git worktree remove <path>` then `git branch -d <task>`.
