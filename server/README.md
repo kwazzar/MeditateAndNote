@@ -39,7 +39,13 @@ npx vercel deploy --prod                     # env vars apply to the next deploy
 2. Link it: `npx vercel git connect` (from the repository root) or
    Project → Settings → Git → *Connect Git Repository*.
 3. Push to `main`. Every push builds the `server/` folder and deploys it to
-   production; the alias the app points at follows the newest deployment.
+   production.
+
+**The endpoint the app points at** is the project's own domain,
+`https://meditate-and-note-ai.vercel.app/api/draft`. It is a project
+domain, not a hand-made alias, so it follows every deployment on its own -
+an alias pinned to one deployment would serve stale code after the next
+push.
 
 The endpoint the app talks to is then `https://<your-domain>/api/draft`.
 
