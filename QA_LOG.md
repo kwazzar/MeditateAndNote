@@ -116,6 +116,22 @@
 | 7 | Android: без жодного налаштування | працює з коробки | PASS | prefs-файл endpoint'а видалено → застосунок узяв build-дефолт, запит пішов через проксі (провайдер бачив `llama-3.3-70b-versatile`), підказки в редакторі ✅ |
 | 8 | Settings → «Use the hosted provider» | вибір за користувачем | PASS | перемикач увімкнено за замовчуванням (якщо білд вказує на проксі) → показано hosted endpoint; вимкнено → з'являються поля Endpoint/Model/API key ✅; під секцією рядок «Drafts send the note text to the provider.» ✅ |
 
+## Прохід — живий провайдер (Groq через Vercel), дата: 2026-10-20
+
+Проксі задеплоєний на Vercel, провайдер — справжній Groq (`openai/gpt-oss-120b`), модель визначена з ключа.
+
+| # | Крок | Очікування | Pass/Fail | Лог/примітка |
+|---|------|-----------|-----------|--------------|
+| 1 | Живий curl через проксі | конверт Groq | PASS | `POST https://meditate-and-note-ai.vercel.app/api/draft` → `{"model":"openai/gpt-oss-120b","choices":[{"message":{"content":"{\"suggestions\":[…]}"}}]}` ✅ |
+| 2 | Модель з ключа | знайдена | PASS | `llama-3.3-70b-versatile` у цьому ключі відсутня (`model_not_found`); доступні `openai/gpt-oss-120b`, `openai/gpt-oss-20b`, `qwen/qwen3.8-27b` ✅ |
+| 3 | Застосунок без налаштувань | бере build-дефолт | PASS | endpoint у prefs відсутній → узято `aiDraftEndpoint` з gradle.properties ✅ |
+| 4 | ✨ у редакторі | справжні підказки | PASS | 4 підказки від Groq, кожна називає конкретну деталь нотатки («м'який плеск сірої води об каміння», «запах вологої землі») ✅ |
+| 5 | Accept → Transfer | текст у нотатці | PASS | `content = "…felt calm for the first time\n\nDescribe the soft ripple of the low, grey water as it brushed the stones."` ✅ |
+| 6 | Метрики | реальна затримка | PASS | `generationCompleted(latency_ms=4024, suggestion_count=4)`, `suggestionInserted(index=0)` ✅ |
+| 7 | Квота | одна генерація | PASS | `used=1` ✅ |
+
+**Заміряна затримка:** ~4 с на генерацію (справжній Groq через Vercel) — UI показує спінер ✅.
+
 ## Історія прогонів
 
 | Прохід | Дата | Результат | Нотатки |
@@ -126,3 +142,4 @@
 | 4 | 2026-10-20 | 8 PASS (сесія + метрики) | v3: чернетка переживає закриття редактора, телеметрія як в iOS |
 | 5 | 2026-10-20 | 11 PASS (реальний пристрій SM-A245F) | матриця: 42/42 тестів + повний флоу чернетки на справжньому Android |
 | 6 | 2026-10-20 | 8 PASS (проксі Groq) | власний провайдер: проксі на Vercel, ключ у середовищі, ланцюг перевірено end-to-end |
+| 7 | 2026-10-20 | 7 PASS (живий Groq) | задеплоєний проксі + справжній Groq: підказки, перенесення, телеметрія |
