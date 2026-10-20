@@ -18,6 +18,15 @@
         "XCODEBUILDMCP_ENABLED_WORKFLOWS": "simulator,project-discovery",
         "XCODEBUILDMCP_SENTRY_DISABLED": "true"
       }
+    },
+    "mobile-mcp": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@mobilenext/mobile-mcp@latest"
+      ],
+      "enabled": true
     }
   },
   "permission": {
