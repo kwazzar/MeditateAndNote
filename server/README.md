@@ -19,12 +19,31 @@ when the provider behind the endpoint changes.
 ```bash
 cd server
 npx vercel deploy --prod          # or connect the folder in the Vercel dashboard
-vercel env add GROQ_API_KEY        # the Groq key
-vercel env add GROQ_MODEL          # optional, e.g. llama-3.3-70b-versatile
+npx vercel env add GROQ_API_KEY production   # the Groq key
+npx vercel env add GROQ_MODEL production     # a model your key can reach
+npx vercel env add DAILY_LIMIT production    # answers per client address per day
+npx vercel deploy --prod                     # env vars apply to the next deployment
 ```
 
-The endpoint the app talks to is then
-`https://<your-deployment>/api/draft`.
+The endpoint the app talks to is then `https://<your-domain>/api/draft`.
+
+**Turn the deployment protection off.** A project with Vercel Authentication
+on answers `401` (or `404` on the production domain) to every anonymous
+request - the app is such a request. Project -> Settings -> Deployment
+Protection -> Vercel Authentication -> *Disabled* (or *Only Production*).
+The CLI's `--sso` flag does not apply it in every version; the dashboard
+does.
+
+**The model must be one your key can reach.** Groq answers
+`model_not_found` for a model outside the account's tier. List what the key
+can use:
+
+```bash
+curl -s https://api.groq.com/openai/v1/models -H "Authorization: Bearer $KEY" \
+  | python3 -c "import sys,json; [print(m['id']) for m in json.load(sys.stdin)['data']]"
+```
+
+The proxy pins that model (`GROQ_MODEL`); the app never names one.
 
 ## Point the apps at it
 
