@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		01028B003F0E4B6097568B82 /* RemoteLLMDraftServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A78650882AD04E53917624CF /* RemoteLLMDraftServiceTests.swift */; };
+		C683B696142E5F8BB9A30B77 /* RemoteDraftConsentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9135ABAAB4E95D07900D0E8C /* RemoteDraftConsentTests.swift */; };
 		096B78E3E88B87EA5E3E59B7 /* UserDefaultsReminderSettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1C20BEA552DE5FA2D6680E4 /* UserDefaultsReminderSettingsStore.swift */; };
 		1319DD5B5051A8A4C9C10470 /* ReminderManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA2A9BB90A0B40656AE57601 /* ReminderManager.swift */; };
 		1A7AFC26A1BAB5C9AA2CCD86 /* SubscriptionStatusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1489C105D1E21FC347D63B81 /* SubscriptionStatusTests.swift */; };
@@ -29,6 +30,7 @@
 		3BCCAAAA0000000000000022 /* SemanticSearchManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BCCAAAA0000000000000023 /* SemanticSearchManagerTests.swift */; };
 		3E9CE03EB7B14212A537B025 /* SettingsScope.swift in Sources */ = {isa = PBXBuildFile; fileRef = 400F08B4FFA041E4828570D8 /* SettingsScope.swift */; };
 		46AF5819145340EA90DEBAC9 /* RemoteLLMDraftService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CABE108FA80445DB6B918B7 /* RemoteLLMDraftService.swift */; };
+		D5BB552EEA645032A01AE9A7 /* RemoteDraftConsent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 924B28D3F8185F07850AE710 /* RemoteDraftConsent.swift */; };
 		47C7FEEF91D17CEB73589285 /* InsightsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09E4AAB15B1383604B747363 /* InsightsViewModel.swift */; };
 		482D230263934D9B83AD5538 /* SearchScope.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04C52FDBAEAF4851A0D68D86 /* SearchScope.swift */; };
 		4DEA3FE741F1A4530712630B /* StreakReminderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73571B9E27145AED24F2D353 /* StreakReminderTests.swift */; };
@@ -37,6 +39,7 @@
 		560F687501104A498D567742 /* EventLoopCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B42F20B28984B1B9C38B36E /* EventLoopCoordinator.swift */; };
 		56E4DD50F699B80FD4FC0261 /* UserDefaultsSubscriptionCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9228AE795452B9F0B40DC8E /* UserDefaultsSubscriptionCache.swift */; };
 		0C0F1F1900000000000000C2 /* UserDefaultsAIDraftQuotaStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C0F1F1900000000000000C1 /* UserDefaultsAIDraftQuotaStore.swift */; };
+		A8CB611E5E3F50CCA4D47BE6 /* HostedProviderSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E04F041930C9524FAFD4B329 /* HostedProviderSettings.swift */; };
 		0C0F1F1900000000000000C4 /* PaywallPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C0F1F1900000000000000C3 /* PaywallPresenter.swift */; };
 		0C0F1F1900000000000000C6 /* PremiumAccessTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C0F1F1900000000000000C5 /* PremiumAccessTests.swift */; };
 		65152FA4DBF69BE8299A3895 /* UserDefaultsSubscriptionCacheTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE436B752A09533F03711DE5 /* UserDefaultsSubscriptionCacheTests.swift */; };
@@ -241,6 +244,7 @@
 		648FE2FCBB1DD6E50BB5E61E /* MeditationCompletionView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MeditationCompletionView.swift; sourceTree = "<group>"; };
 		649B89478F0844FB834076E9 /* NoteMenuViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NoteMenuViewModelTests.swift; sourceTree = "<group>"; };
 		6CABE108FA80445DB6B918B7 /* RemoteLLMDraftService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteLLMDraftService.swift; sourceTree = "<group>"; };
+		924B28D3F8185F07850AE710 /* RemoteDraftConsent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteDraftConsent.swift; sourceTree = "<group>"; };
 		6FF5CC1CC273909C3EF0192B /* CoreDataAIDraftSessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataAIDraftSessionStore.swift; sourceTree = "<group>"; };
 		70119D3AECE1D5E2F27AEAF9 /* StreakInsightEngineTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StreakInsightEngineTests.swift; sourceTree = "<group>"; };
 		73571B9E27145AED24F2D353 /* StreakReminderTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StreakReminderTests.swift; sourceTree = "<group>"; };
@@ -272,6 +276,7 @@
 		A26AF60B2C86F8EF6B2A2474 /* SubscriptionMocks.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SubscriptionMocks.swift; path = MeditateAndNoteTests/Support/SubscriptionMocks.swift; sourceTree = SOURCE_ROOT; };
 		A3831FA841983654315E91BF /* PaywallViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PaywallViewModelTests.swift; path = MeditateAndNoteTests/PaywallViewModelTests.swift; sourceTree = SOURCE_ROOT; };
 		A78650882AD04E53917624CF /* RemoteLLMDraftServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteLLMDraftServiceTests.swift; sourceTree = "<group>"; };
+		9135ABAAB4E95D07900D0E8C /* RemoteDraftConsentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteDraftConsentTests.swift; sourceTree = "<group>"; };
 		AA00000220260903C00003 /* AnimationSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimationSettings.swift; sourceTree = "<group>"; };
 		AA00000220260903C00005 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		AA00000220260903C00007 /* AnimationSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimationSettingsTests.swift; sourceTree = "<group>"; };
@@ -293,6 +298,7 @@
 		ACED283CF7A40C96B22C4762 /* AIDraftServiceFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIDraftServiceFactory.swift; sourceTree = "<group>"; };
 		B9228AE795452B9F0B40DC8E /* UserDefaultsSubscriptionCache.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = UserDefaultsSubscriptionCache.swift; path = MeditateAndNote/Persistence/UserDefaultsSubscriptionCache.swift; sourceTree = SOURCE_ROOT; };
 		0C0F1F1900000000000000C1 /* UserDefaultsAIDraftQuotaStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDefaultsAIDraftQuotaStore.swift; sourceTree = "<group>"; };
+		E04F041930C9524FAFD4B329 /* HostedProviderSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostedProviderSettings.swift; sourceTree = "<group>"; };
 		0C0F1F1900000000000000C3 /* PaywallPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallPresenter.swift; sourceTree = "<group>"; };
 		0C0F1F1900000000000000C5 /* PremiumAccessTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumAccessTests.swift; sourceTree = "<group>"; };
 		BB00D11220260905000002 /* StreakDayDetailSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakDayDetailSheet.swift; sourceTree = "<group>"; };
@@ -435,6 +441,7 @@
 				0FB281AE971D4DB672406825 /* AIDraftManager.swift */,
 				3BCCAAAA0000000000000006 /* KeychainService.swift */,
 				6CABE108FA80445DB6B918B7 /* RemoteLLMDraftService.swift */,
+				924B28D3F8185F07850AE710 /* RemoteDraftConsent.swift */,
 				3C2BB67EADD34167B544CAAE /* FoundationModelsNoteAnalyzer.swift */,
 				FC3FB19986AD48CBB9285299 /* NoteInsightManager.swift */,
 				3BCCAAAA000000000000001D /* NLEmbeddingService.swift */,
@@ -646,6 +653,7 @@
 				C7648CA347C57421E7F2B662 /* AIDraftSessionTests.swift */,
 				07F5E247FA129DC74064AF00 /* AIDraftManagerTests.swift */,
 				A78650882AD04E53917624CF /* RemoteLLMDraftServiceTests.swift */,
+				9135ABAAB4E95D07900D0E8C /* RemoteDraftConsentTests.swift */,
 				DF01E6683058484B8508AA5B /* FoundationModelsDraftServiceTests.swift */,
 				441E68DB04904AA091E7274B /* NoteInsightTests.swift */,
 				36795F95436641CF9362FD4A /* NoteInsightManagerTests.swift */,
@@ -691,6 +699,7 @@
 				5BC160799DFD41468C12B455 /* CoreDataNoteInsightStore.swift */,
 				3BCCAAAA0000000000000021 /* CoreDataNoteEmbeddingStore.swift */,
 				0C0F1F1900000000000000C1 /* UserDefaultsAIDraftQuotaStore.swift */,
+				E04F041930C9524FAFD4B329 /* HostedProviderSettings.swift */,
 			);
 			path = Persistence;
 			sourceTree = "<group>";
@@ -1063,6 +1072,7 @@
 				36380375A3F74EE7B91B2250 /* CoreDataNoteInsightStoreTests.swift in Sources */,
 				B50BA45CEDD14CE39B089DD0 /* FoundationModelsDraftServiceTests.swift in Sources */,
 				01028B003F0E4B6097568B82 /* RemoteLLMDraftServiceTests.swift in Sources */,
+				C683B696142E5F8BB9A30B77 /* RemoteDraftConsentTests.swift in Sources */,
 				3BCCAAAA0000000000000022 /* SemanticSearchManagerTests.swift in Sources */,
 				CA7048E92B45AB3E93B50AC0 /* NoteEditorAIDraftTests.swift in Sources */,
 				65B28676E72FE36885DAFAE9 /* EventRoutingTableTests.swift in Sources */,
@@ -1170,6 +1180,7 @@
 				D090E4DDC1458412DDFCB91D /* NoteAIDraftViewModel.swift in Sources */,
 				3BCCAAAA0000000000000002 /* AIDraftSettingsView.swift in Sources */,
 				46AF5819145340EA90DEBAC9 /* RemoteLLMDraftService.swift in Sources */,
+				D5BB552EEA645032A01AE9A7 /* RemoteDraftConsent.swift in Sources */,
 				2FB6ECE237A74E428A0DFD7E /* FoundationModelsNoteAnalyzer.swift in Sources */,
 				710DC865B1B648958C8400CF /* NoteInsightManager.swift in Sources */,
 				3AEDBF51D2294DC6B04A3516 /* CoreDataNoteInsightStore.swift in Sources */,
@@ -1180,6 +1191,7 @@
 				3BCCAAAA0000000000000020 /* CoreDataNoteEmbeddingStore.swift in Sources */,
 				56E4DD50F699B80FD4FC0261 /* UserDefaultsSubscriptionCache.swift in Sources */,
 				0C0F1F1900000000000000C2 /* UserDefaultsAIDraftQuotaStore.swift in Sources */,
+				A8CB611E5E3F50CCA4D47BE6 /* HostedProviderSettings.swift in Sources */,
 				0C0F1F1900000000000000C4 /* PaywallPresenter.swift in Sources */,
 				EB1A5636420FDC4D24E9F8F0 /* SubscriptionManager.swift in Sources */,
 				4E8FC16521B9F753037C63D1 /* RevenueCatPurchasesService.swift in Sources */,

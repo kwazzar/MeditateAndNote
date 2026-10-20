@@ -15,7 +15,10 @@ import MeditateAndNoteCore
 
 struct RemoteLLMDraftService: AIDraftService, @unchecked Sendable {
     private let session: URLSession
-    private let settingsStore: any AIDraftSettingsStore
+    private let settingsStore: any HostedProviderSettings
+    /// The hosted provider (our proxy) this build points at. It carries the
+    /// provider key, so no key is sent to it.
+    private let hostedEndpoint: String
     // UserDefaults isn't Sendable; all access is confined to async service
     // calls (no concurrent mutation), so unchecked conformance is safe here.
     private let userDefaults: UserDefaults
@@ -26,22 +29,38 @@ struct RemoteLLMDraftService: AIDraftService, @unchecked Sendable {
 
     init(
         session: URLSession = .shared,
-        settingsStore: any AIDraftSettingsStore,
+        settingsStore: any HostedProviderSettings,
+        hostedEndpoint: String = Config.aiDraftEndpoint,
         userDefaults: UserDefaults = .standard
     ) {
         self.session = session
         self.settingsStore = settingsStore
+        self.hostedEndpoint = hostedEndpoint
         self.userDefaults = userDefaults
+    }
+
+    /// Where a remote answer comes from, and whether one is allowed at all.
+    ///
+    /// The hosted provider needs no second switch: it is the fallback the
+    /// app ships with, so choosing it means a remote answer is allowed. The
+    /// user's own endpoint stays opt-in, exactly as it was.
+    private func remoteTarget(_ settings: AIDraftSettings) -> (url: URL?, allowed: Bool) {
+        if settingsStore.useHostedProvider(), !hostedEndpoint.isEmpty {
+            return (URL(string: hostedEndpoint), true)
+        }
+        guard settings.useRemoteFallback else { return (nil, false) }
+        return (URL(string: settings.remoteEndpointURL), true)
     }
 
     var isAvailable: Bool {
         get async {
             let settings = settingsStore.loadSettings()
-            guard settings.useRemoteFallback else { return false }
+            let target = remoteTarget(settings)
             // The key is optional: our own hosted proxy carries the provider
             // key, and an endpoint that wants one says so by failing. A
             // provider that needs auth answers 401, which lands as
             // "unavailable" - the same answer as a missing key.
+            guard target.allowed, target.url != nil else { return false }
             guard checkAndIncrementDailyUsage(readOnly: true, limit: settings.dailyGenerationLimit) else {
                 return false
             }
@@ -51,7 +70,8 @@ struct RemoteLLMDraftService: AIDraftService, @unchecked Sendable {
 
     func suggest(_ prompt: AIPrompt) async throws -> [AISuggestion] {
         let settings = settingsStore.loadSettings()
-        guard settings.useRemoteFallback else {
+        let target = remoteTarget(settings)
+        guard target.allowed, let url = target.url else {
             throw AIDraftError.providerUnavailable
         }
 
@@ -59,10 +79,6 @@ struct RemoteLLMDraftService: AIDraftService, @unchecked Sendable {
 
         guard checkAndIncrementDailyUsage(readOnly: false, limit: settings.dailyGenerationLimit) else {
             throw AIDraftError.rateLimited
-        }
-
-        guard let url = URL(string: settings.remoteEndpointURL) else {
-            throw AIDraftError.providerUnavailable
         }
 
         let requestBody = AIDraftRemoteProtocol.requestBody(

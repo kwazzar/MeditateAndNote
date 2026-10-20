@@ -42,6 +42,10 @@ final class AppContainer: @unchecked Sendable {
     /// `RootContainer` hosts the single full-screen cover.
     @MainActor lazy var paywallPresenter = PaywallPresenter()
 
+    /// Whether the note text may leave the device. The note editor asks it
+    /// before the first draft that a remote provider answers.
+    @MainActor lazy var remoteDraftConsent = RemoteDraftConsent()
+
     // MARK: - Core
 
     private let eventBus = DomainEventBus.shared

@@ -71,6 +71,17 @@ final class AIDraftGroundingUITests: XCTestCase {
         let button = app.buttons["aiDraftButton"]
         XCTAssertTrue(button.waitForExistence(timeout: 8), "✨ should exist")
         button.tap()
+        acceptRemoteConsentIfShown()
+    }
+
+    /// The cloud-draft notice stands between the tap and the first draft
+    /// when a remote provider answers. It is shown once, so the suite may or
+    /// may not meet it.
+    private func acceptRemoteConsentIfShown() {
+        let cont = app.buttons["Continue"]
+        if cont.waitForExistence(timeout: 3) {
+            cont.tap()
+        }
     }
 
     /// Waits for the bar to settle on ready and returns its section header.

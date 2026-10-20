@@ -15,6 +15,7 @@ struct NoteEditorView: View {
     @FocusState private var isEditorFocused: Bool
     @State private var isKeyboardVisible = false
     @State private var showDeleteConfirmation = false
+    @State private var showRemoteConsent = false
     @State private var safeInsets: UIEdgeInsets = .zero
     @Environment(\.verticalSizeClass) private var verticalSizeClass
 
@@ -63,11 +64,33 @@ struct NoteEditorView: View {
         } message: {
             Text("This action cannot be undone.")
         }
+        .alert("Drafts are generated on our servers", isPresented: $showRemoteConsent) {
+            Button("Continue") {
+                Task {
+                    container.remoteDraftConsent.acknowledge()
+                    await viewModel.startAIDraft()
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("The note text is sent to the AI provider, so it leaves this device.")
+        }
     }
 }
 
 private extension NoteEditorView {
     // MARK: - AI Draft Bottom Bar
+
+    /// Starts a draft, but asks first when a remote provider answers: the
+    /// note text leaves the device with the request, and the user is told
+    /// once, not on every tap.
+    func startAIDraft() async {
+        if await container.remoteDraftConsent.requiresConsent() {
+            showRemoteConsent = true
+            return
+        }
+        await viewModel.startAIDraft()
+    }
 
     @ViewBuilder
     var aiDraftBar: some View {
@@ -241,7 +264,7 @@ private extension NoteEditorView {
                     if viewModel.isDirty {
                         await viewModel.save()
                     }
-                    await viewModel.startAIDraft()
+                    await startAIDraft()
                 }
             }) {
                 if viewModel.isAIDraftGenerating {

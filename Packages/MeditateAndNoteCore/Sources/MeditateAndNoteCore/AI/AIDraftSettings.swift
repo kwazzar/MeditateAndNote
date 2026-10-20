@@ -24,7 +24,9 @@ public struct AIDraftSettings: Equatable, Codable, Sendable {
 
     public static let defaultEndpointURL = "https://api.openai.com/v1/chat/completions"
     public static let defaultModel = "gpt-4o-mini"
-    public static let defaultDailyLimit = 5
+    /// The cap on remote answers per day. It matches the hosted provider's
+    /// own cap, so the provider is the one that stops the traffic.
+    public static let defaultDailyLimit = 50
 
     public init(
         useRemoteFallback: Bool = false,

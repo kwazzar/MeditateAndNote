@@ -18,14 +18,15 @@ struct AIDraftSettingsView: View {
         VStack(alignment: .leading, spacing: 16) {
             sectionHeader("AI Settings", icon: "sparkles")
 
-            Toggle("Use remote AI when on-device unavailable", isOn: $settingsStore.settings.useRemoteFallback)
-                .tint(themeManager.current.streakActiveMeditation)
+            hostedProviderSection
 
-            if settingsStore.settings.useRemoteFallback {
-                remoteEndpointSection
-                modelSelectionSection
-                dailyLimitSection
+            if settingsStore.useHostedProvider {
+                hostedEndpointSection
+            } else {
+                remoteFallbackSection
             }
+
+            dailyLimitSection
 
             privacyNotice
         }
@@ -41,6 +42,53 @@ struct AIDraftSettingsView: View {
         }
         .task {
             hasStoredKey = settingsStore.getAPIKey() != nil
+        }
+    }
+
+    /// Who answers the drafts: our proxy, or an endpoint of the user's own.
+    /// The proxy carries the provider key, so the app needs no key for it.
+    private var hostedProviderSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Toggle("Use the hosted provider", isOn: Binding(
+                get: { settingsStore.useHostedProvider },
+                set: { settingsStore.setUseHostedProvider($0) }
+            ))
+            .tint(themeManager.current.streakActiveMeditation)
+            .disabled(settingsStore.hostedEndpoint.isEmpty)
+
+            if settingsStore.hostedEndpoint.isEmpty {
+                Text("This build points at no hosted provider. Enter your own endpoint below.")
+                    .font(.caption2)
+                    .foregroundColor(themeManager.current.textSecondary)
+            } else {
+                Text("Our proxy carries the provider key. Your note text is sent to it.")
+                    .font(.caption2)
+                    .foregroundColor(themeManager.current.textSecondary)
+            }
+        }
+    }
+
+    /// The user's own endpoint: the remote answer, but theirs.
+    private var remoteFallbackSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Toggle("Use remote AI when on-device unavailable", isOn: $settingsStore.settings.useRemoteFallback)
+                .tint(themeManager.current.streakActiveMeditation)
+
+            remoteEndpointSection
+            modelSelectionSection
+        }
+    }
+
+    private var hostedEndpointSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Remote Endpoint")
+                .font(.caption)
+                .foregroundColor(themeManager.current.textSecondary)
+
+            Text(settingsStore.hostedEndpoint)
+                .font(.caption)
+                .foregroundColor(themeManager.current.textPrimary)
+                .textSelection(.enabled)
         }
     }
 
@@ -97,7 +145,11 @@ struct AIDraftSettingsView: View {
                 .font(.caption2)
                 .foregroundColor(themeManager.current.textSecondary)
 
-            apiKeySection
+            // The hosted provider carries the key, so there is nothing to
+            // fill in while it answers.
+            if !settingsStore.useHostedProvider {
+                apiKeySection
+            }
         }
     }
 

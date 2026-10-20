@@ -4,5 +4,7 @@
 <dict>
 	<key>RevenueCatAPIKey</key>
 	<string>$(REVENUECAT_API_KEY)</string>
+	<key>AIDraftEndpoint</key>
+	<string>$(AI_DRAFT_ENDPOINT)</string>
 </dict>
 </plist>

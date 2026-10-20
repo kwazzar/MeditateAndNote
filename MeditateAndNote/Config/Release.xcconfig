@@ -3,3 +3,7 @@
 // which is optionally included below and overrides the placeholder.
 REVENUECAT_API_KEY = appl_REPLACE_ME
 #include? "Release.local.xcconfig"
+
+// The hosted AI provider (our proxy). It carries the provider key, so the app
+// ships without one. Empty = the user brings their own endpoint.
+AI_DRAFT_ENDPOINT = https://meditate-and-note-ai.vercel.app/api/draft

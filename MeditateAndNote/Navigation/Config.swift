@@ -14,5 +14,12 @@ public enum Config {
     public static var revenueCatAPIKey: String {
         (Bundle.main.object(forInfoDictionaryKey: "RevenueCatAPIKey") as? String) ?? ""
     }
+    /// The hosted AI provider (our proxy): it carries the provider key, so
+    /// the app ships without one. Empty when the build names no provider —
+    /// then the user brings their own endpoint.
+    public static var aiDraftEndpoint: String {
+        let value = (Bundle.main.object(forInfoDictionaryKey: "AIDraftEndpoint") as? String) ?? ""
+        return value.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
     public static let proEntitlementID: String = "premium"
 }

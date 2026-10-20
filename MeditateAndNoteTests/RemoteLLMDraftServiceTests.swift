@@ -64,13 +64,20 @@ private final class StubURLProtocol: URLProtocol {
 
 // MARK: - Stub settings
 
-private struct StubSettingsStore: AIDraftSettingsStore {
+private struct StubSettingsStore: HostedProviderSettings {
     let settings: AIDraftSettings
     let apiKey: String?
+    /// Whether the hosted provider answers the drafts.
+    let useHosted: Bool
 
-    init(settings: AIDraftSettings = AIDraftSettings(), apiKey: String? = "test-key") {
+    init(
+        settings: AIDraftSettings = AIDraftSettings(),
+        apiKey: String? = "test-key",
+        useHosted: Bool = false
+    ) {
         self.settings = settings
         self.apiKey = apiKey
+        self.useHosted = useHosted
     }
 
     func loadSettings() -> AIDraftSettings { settings }
@@ -78,6 +85,8 @@ private struct StubSettingsStore: AIDraftSettingsStore {
     func getAPIKey() -> String? { apiKey }
     func saveAPIKey(_ key: String) throws {}
     func deleteAPIKey() throws {}
+    func useHostedProvider() -> Bool { useHosted }
+    func setUseHostedProvider(_ value: Bool) {}
 }
 
 // MARK: - Tests
@@ -103,13 +112,16 @@ final class RemoteLLMDraftServiceTests: XCTestCase {
 
     private func makeService(
         settings: AIDraftSettings = AIDraftSettings(useRemoteFallback: true),
-        apiKey: String? = "test-key"
+        apiKey: String? = "test-key",
+        useHosted: Bool = false,
+        hostedEndpoint: String = "https://hosted.example.com/api/draft"
     ) -> RemoteLLMDraftService {
         let config = URLSessionConfiguration.ephemeral
         config.protocolClasses = [StubURLProtocol.self]
         return RemoteLLMDraftService(
             session: URLSession(configuration: config),
-            settingsStore: StubSettingsStore(settings: settings, apiKey: apiKey),
+            settingsStore: StubSettingsStore(settings: settings, apiKey: apiKey, useHosted: useHosted),
+            hostedEndpoint: hostedEndpoint,
             userDefaults: defaults
         )
     }
@@ -249,6 +261,56 @@ final class RemoteLLMDraftServiceTests: XCTestCase {
             try await service.suggest(makePrompt()),
             AIDraftError.rateLimited
         )
+    }
+
+    // MARK: - The hosted provider
+
+    /// The hosted provider answers on its own: it needs neither the remote
+    /// switch nor a key, and it is where the request goes.
+    func testSuggest_hostedProvider_asksTheHostedEndpointWithoutKey() async throws {
+        let settings = AIDraftSettings(
+            useRemoteFallback: false,
+            remoteEndpointURL: "https://own.example.com/v1/chat/completions"
+        )
+        let service = makeService(settings: settings, apiKey: nil, useHosted: true)
+        StubURLProtocol.next = .success(.init(status: 200, body: chatJSON(texts: [("a", "")])))
+
+        let suggestions = try await service.suggest(makePrompt())
+
+        XCTAssertEqual(suggestions.count, 1)
+        let request = try XCTUnwrap(StubURLProtocol.requestLog.last)
+        XCTAssertEqual(request.url?.absoluteString, "https://hosted.example.com/api/draft")
+        XCTAssertNil(request.value(forHTTPHeaderField: "Authorization"))
+    }
+
+    /// Without the hosted provider the user's own endpoint answers, and only
+    /// when the remote switch says so.
+    func testSuggest_ownEndpoint_asksTheUserEndpoint() async throws {
+        let settings = AIDraftSettings(
+            useRemoteFallback: true,
+            remoteEndpointURL: "https://own.example.com/v1/chat/completions"
+        )
+        let service = makeService(settings: settings)
+        StubURLProtocol.next = .success(.init(status: 200, body: chatJSON(texts: [("a", "")])))
+
+        _ = try await service.suggest(makePrompt())
+
+        let request = try XCTUnwrap(StubURLProtocol.requestLog.last)
+        XCTAssertEqual(request.url?.absoluteString, "https://own.example.com/v1/chat/completions")
+    }
+
+    func testSuggest_ownEndpoint_remoteSwitchOff_throwsUnavailableWithoutNetwork() async {
+        let settings = AIDraftSettings(
+            useRemoteFallback: false,
+            remoteEndpointURL: "https://own.example.com/v1/chat/completions"
+        )
+        let service = makeService(settings: settings)
+
+        await XCTAssertThrowsErrorType(
+            try await service.suggest(makePrompt()),
+            AIDraftError.providerUnavailable
+        )
+        XCTAssertTrue(StubURLProtocol.requestLog.isEmpty, "No remote answer must not hit network")
     }
 
     // MARK: - Factory wiring
