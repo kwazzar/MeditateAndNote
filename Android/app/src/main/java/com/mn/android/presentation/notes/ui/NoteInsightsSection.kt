@@ -44,24 +44,23 @@ import com.mn.android.presentation.theme.ui.MnTheme
  * Port of the iOS `NoteInsightsSection`: a collapsible block above the note
  * list with the aggregate top themes and the freshest per-note summaries.
  *
- * Hidden while there is nothing to show — the analysis is cheap (a keyword
- * count per note), so it runs on demand instead of being persisted the way
- * iOS persists it, where the analyzer is an LLM.
+ * Hidden while there is nothing to show — the section appears with the first
+ * insight, whether it came from the stored pass or from the heuristic one.
  */
 @Composable
 internal fun NoteInsightsSection(
     insights: List<NoteInsightsSource.Insight>,
+    themes: List<String>,
     isLoading: Boolean,
+    error: String?,
     onRefresh: () -> Unit,
 ) {
     var isExpanded by remember { mutableStateOf(true) }
 
     if (insights.isEmpty()) {
-        if (isLoading) LoadingState()
+        if (isLoading) LoadingState() else if (error != null) ErrorState()
         return
     }
-
-    val themes = remember(insights) { NoteInsightsSource.topThemes(insights) }
 
     Column(
         Modifier
@@ -77,6 +76,13 @@ internal fun NoteInsightsSection(
             onToggle = { isExpanded = !isExpanded },
             onRefresh = onRefresh,
         )
+        if (error != null) {
+            Text(
+                stringResource(R.string.note_insights_error),
+                fontSize = 12.sp,
+                color = MnTheme.textSecondary,
+            )
+        }
         if (isExpanded) {
             if (themes.isNotEmpty()) ThemeChips(themes)
             insights.take(3).forEach { InsightCard(it) }
@@ -197,6 +203,27 @@ private fun LoadingState() {
         Spacer(Modifier.width(8.dp))
         Text(
             stringResource(R.string.note_insights_loading),
+            fontSize = 14.sp,
+            color = MnTheme.textSecondary,
+        )
+    }
+}
+
+// MARK: - Error
+
+/** The pass failed and there is nothing to show instead. */
+@Composable
+private fun ErrorState() {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .background(MnTheme.cardBackground, RoundedCornerShape(12.dp))
+            .border(1.dp, MnTheme.divider, RoundedCornerShape(12.dp))
+            .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            stringResource(R.string.note_insights_error),
             fontSize = 14.sp,
             color = MnTheme.textSecondary,
         )

@@ -26,7 +26,7 @@ while fixing them. The deltas that mattered are listed below.
 | 11 | Paywall | `11-paywall.png` | — | no IAP on Android |
 | 12 | Onboarding 1–3 | `12-onboarding-{1,2,3}.png` | `12-onboarding-{1,2,3}.png` | |
 | 13 | Sound sheet | `13-sound-sheet.png` | `13-sound-sheet.png` | visual only, see gaps |
-| 14 | Notes list — AI insights | — | `14-notes-insights.png` | Android-only section (v1 insights, no LLM); iOS reference: `NoteInsightsSection` in the notes list |
+| 14 | Notes list — AI insights | — | `14-notes-insights.png` | the same section as iOS: top themes plus the three freshest per-note summaries. The analysis runs through the hosted provider on a refresh, the heuristic analyzer is the fallback |
 | 15 | Note editor — AI draft bar | — | `15-note-editor-ai-draft.png` | Android-only shot (remote provider, mock answer); iOS reference: `aiDraftBar` in `NoteEditorView` |
 | 16 | Note editor — restored draft | — | `16-note-editor-draft-restored.png` | the same draft after leaving and reopening the note: the session is stored, no new generation |
 | 17 | Note editor — AI draft on a real device | — | `17-note-editor-ai-draft-device.png` | Samsung SM-A245F, Android 16: the same bar against a mock provider reached over `adb reverse` |
@@ -132,8 +132,14 @@ while fixing them. The deltas that mattered are listed below.
   badges are absent rather than dead.
 - **AI draft bar** — iOS suggestions come from Foundation Models; the only provider
   Android could use is `DisabledAIDraftService`, so the sparkle entry point is hidden.
-- **Note insights** — the premium insights panel (`NoteInsightsViewModel`) has no Android
-  counterpart.
+- **Note insights** — ported: the same panel, the same state holder
+  (`NoteInsightsViewModel`), the same prompt and parsing rules (Core's
+  `NoteInsightRemoteProtocol`, which iOS' on-device analyzer also reads). The
+  analysis runs on a refresh, through the hosted provider, with the heuristic
+  analyzer as the fallback; the result is persisted, so opening the tab costs
+  nothing. Two differences remain: iOS analyzes in the background after a note
+  changes (Android waits for the refresh button), and iOS gates the surface
+  behind the Pro entitlement (there is no IAP on Android yet).
 - **Note editor formatting toolbar** — iOS shows a `FloatingToolbar` (bold / italic /
   list) above the keyboard, but its three buttons are `Button(action: {})` — they do
   nothing. Not ported: dead UI on one side is not worth cloning.

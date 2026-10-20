@@ -285,14 +285,16 @@ private func mutateSession(
 
 // MARK: - Kotlin calls
 
-private struct ProviderSettings {
+// Internal, not private: the insights bridge talks to the same provider
+// through the same two helpers.
+struct ProviderSettings {
     let endpoint: String
     let model: String
 }
 
 /// The user's endpoint and model. Empty values fall back to the domain
 /// defaults, so an unconfigured app still talks to a sane provider.
-private func providerSettings() throws -> ProviderSettings {
+func providerSettings() throws -> ProviderSettings {
     let json = try JavaClass<AIDraftProvider>()
         .dynamicJavaStaticMethodCall(methodName: "settings", resultType: String.self)
     guard let data = json.data(using: .utf8),
@@ -316,7 +318,7 @@ private func providerSettings() throws -> ProviderSettings {
 /// Kotlin answers with `{"ok":true,"body":"…"}` or
 /// `{"ok":false,"status":429}` — the transport reports failures as data, so
 /// this side never has to read an exception message.
-private func providerPost(endpoint: String, body: String) throws -> String {
+func providerPost(endpoint: String, body: String) throws -> String {
     let json = try JavaClass<AIDraftProvider>()
         .dynamicJavaStaticMethodCall(
             methodName: "post",
@@ -363,7 +365,9 @@ private func failure(_ error: AIDraftError, metric: [String: Any]? = nil) -> Str
     return encode(payload)
 }
 
-private func encode(_ payload: [String: Any]) -> String {
+// Internal, not private: the insights bridge encodes its envelopes with the
+// same helper.
+func encode(_ payload: [String: Any]) -> String {
     guard let data = try? JSONSerialization.data(withJSONObject: payload),
           let json = String(data: data, encoding: .utf8) else {
         return "{\"ok\":false,\"error\":\"providerUnavailable\"}"

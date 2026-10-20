@@ -22,7 +22,14 @@ object NoteInsightsSource {
         Class.forName("com.mn.core.AIDraftMetric")
     }
 
+    /** The heuristic pass — always available, costs nothing. */
     external fun read(): String
+
+    /** The persisted insights — no analysis, no provider call. */
+    external fun stored(): String
+
+    /** An analysis pass: provider first, heuristic as the fallback. */
+    external fun analyze(): String
 
     data class Theme(
         val label: String,
@@ -37,12 +44,48 @@ object NoteInsightsSource {
     )
 
     /**
+     * The result of an analysis pass: the insights, where they came from
+     * ("llm" or "heuristic") and the error, when there was one.
+     */
+    data class Analysis(
+        val insights: List<Insight>,
+        val source: String,
+        val error: String? = null,
+    )
+
+    /**
      * Insights in note order — the blob store hands the notes over newest
      * first, so index 0 is the freshest note.
      */
     fun load(): List<Insight> {
         val root = JSONObject(read())
         return root.getJSONArray("insights").mapObjects { insight(it) }
+    }
+
+    /** The insights of the last analysis pass, as they were stored. */
+    fun storedInsights(): List<Insight> {
+        val root = try {
+            JSONObject(stored())
+        } catch (error: Exception) {
+            return emptyList()
+        }
+        return insights(root)
+    }
+
+    /** Runs an analysis pass. Never throws: a failure comes back as data. */
+    fun analyzeInsights(): Analysis {
+        val root = try {
+            JSONObject(analyze())
+        } catch (error: Exception) {
+            return Analysis(emptyList(), source = "", error = "providerUnavailable")
+        }
+        if (!root.optBoolean("ok")) {
+            return Analysis(emptyList(), source = "", error = root.optString("error"))
+        }
+        return Analysis(
+            insights = insights(root),
+            source = root.optString("source"),
+        )
     }
 
     /**
@@ -60,6 +103,9 @@ object NoteInsightsSource {
     }
 
     // MARK: - Decoding
+
+    private fun insights(root: JSONObject): List<Insight> =
+        root.optJSONArray("insights")?.mapObjects { insight(it) } ?: emptyList()
 
     private fun insight(json: JSONObject) = Insight(
         id = json.getString("id"),

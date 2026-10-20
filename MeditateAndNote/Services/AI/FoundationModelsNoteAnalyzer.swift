@@ -78,64 +78,19 @@ struct FoundationModelsNoteAnalyzer: NoteAnalyzer {
         guard !analyzable.isEmpty else {
             throw NoteAnalysisError.insufficientData
         }
-        let batch = Array(analyzable.prefix(10))
+        let batch = Array(analyzable.prefix(NoteInsightRemoteProtocol.maxNotes))
 
         let session = LanguageModelSession(
             model: .default,
             tools: [],
-            instructions: Self.systemInstructions
+            instructions: NoteInsightRemoteProtocol.systemInstructions()
         )
-        let response = try await session.respond(to: Self.batchPrompt(for: batch))
-        let parsed = Self.parseInsights(from: response.content, notes: batch)
+        let response = try await session.respond(to: NoteInsightRemoteProtocol.batchPrompt(for: batch))
+        let parsed = NoteInsightRemoteProtocol.insights(from: response.content, notes: batch)
         guard !parsed.isEmpty else {
             return try await fallback.analyze(notes: notes)
         }
         return parsed
-    }
-
-    @available(iOS 26.0, *)
-    private static var systemInstructions: String {
-        """
-        You analyze reflective journaling notes. For each note return up to 3 \
-        single-word theme labels, a one-sentence summary under 140 characters, \
-        and up to 3 lowercase tag suggestions. Never invent personal facts. \
-        Reply with a JSON object only: \
-        {"insights": [{"noteID": "<uuid>", "themes": ["calm"], "summary": "...", "tags": ["calm"]}]}
-        """
-    }
-
-    @available(iOS 26.0, *)
-    private static func batchPrompt(for notes: [Note]) -> String {
-        let blocks = notes.map { note -> String in
-            let text = HeuristicNoteAnalyzer.combinedText(of: note)
-            return "NOTE \(note.id.rawValue.uuidString):\n\(text.prefix(500))"
-        }
-        return blocks.joined(separator: "\n\n---\n\n")
-    }
-
-    @available(iOS 26.0, *)
-    private static func parseInsights(from text: String, notes: [Note]) -> [NoteInsight] {
-        guard let data = text.data(using: .utf8),
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let items = json["insights"] as? [[String: Any]] else {
-            return []
-        }
-        let byID = Dictionary(uniqueKeysWithValues: notes.map { ($0.id.rawValue.uuidString, $0) })
-        var result: [NoteInsight] = []
-        for item in items {
-            guard let idString = item["noteID"] as? String,
-                  let note = byID[idString] else { continue }
-            let themes = ((item["themes"] as? [String]) ?? []).prefix(NoteInsight.maxThemes).enumerated().map {
-                NoteTheme(label: $0.element, relevance: 1 - Double($0.offset) * 0.15)
-            }
-            let summary = (item["summary"] as? String) ?? ""
-            let tags = (item["tags"] as? [String]) ?? []
-            let insight = NoteInsight(noteID: note.id, themes: themes, summary: summary, suggestedTags: tags)
-            if !insight.isEmpty {
-                result.append(insight)
-            }
-        }
-        return result
     }
     #endif
 }
