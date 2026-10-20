@@ -19,6 +19,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -171,6 +177,12 @@ private fun MnNav() {
     Box(Modifier.fillMaxSize()) {
         Scaffold(
         containerColor = MnTheme.background,
+        // The tab bar reserves the navigation bar inset itself, so the content
+        // must not reserve it a second time — otherwise the content keeps a
+        // 34 dp gap above a bar that already floats above the gesture area.
+        contentWindowInsets = WindowInsets.systemBars.only(
+            WindowInsetsSides.Top + WindowInsetsSides.Horizontal,
+        ),
         bottomBar = {
             if (currentRoute in TabBarRoutes) {
                 MnTabBar(
@@ -310,7 +322,10 @@ private fun MnTabBar(currentRoute: String?, onSelect: (TabItem) -> Unit) {
         Modifier
             .fillMaxWidth()
             // iOS CustomTabBar: `.padding(.horizontal)` + `.padding(.vertical, 6)`.
-            .padding(horizontal = 16.dp, vertical = 6.dp),
+            .padding(horizontal = 16.dp, vertical = 6.dp)
+            // The bar floats above the gesture area — iOS keeps the same 34 pt
+            // of clearance under the capsule (the home indicator's safe area).
+            .windowInsetsPadding(WindowInsets.navigationBars),
     ) {
         Row(
             Modifier

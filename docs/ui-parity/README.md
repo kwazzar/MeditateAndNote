@@ -141,6 +141,11 @@ while fixing them. The deltas that mattered are listed below.
   Android `Scaffold` already reserves the tab bar's height — the padding was counted
   twice and the capsules floated 80 dp above the bar (in landscape the Add Note pill
   landed on top of a note card). Both now sit 12 dp above the bar.
+- The tab bar's capsule was glued to the bottom edge, with the gesture handle drawn
+  across it. It now reserves the navigation bar inset itself (34 dp on the device,
+  the same clearance iOS keeps under the capsule for the home indicator), and the
+  `Scaffold` no longer reserves the same inset a second time — so the content keeps
+  its 12 dp gap above the bar instead of drifting away from it.
 - Settings: centred title, segmented-control selection uses the grey toolbar background
   (not accent), slider thumbs are plain 22dp white circles.
 - Streak detail: `CenterAlignedTopAppBar` with a bordered "Done" pill, recommendations
