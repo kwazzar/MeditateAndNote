@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -244,7 +245,13 @@ fun NoteEditorScreen(
 
     Box(Modifier.fillMaxSize()) {
         MnBackground()
-        Column(Modifier.fillMaxSize()) {
+        Column(
+            Modifier
+                .fillMaxSize()
+                // The keyboard covers the bottom of the window: the AI draft
+                // bar has to sit above it, or the proposals are invisible.
+                .imePadding(),
+        ) {
             EditorTopBar(
                 showDelete = !isNewNote,
                 isDrafting = isDrafting,

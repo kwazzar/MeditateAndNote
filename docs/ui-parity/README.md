@@ -141,6 +141,12 @@ while fixing them. The deltas that mattered are listed below.
   Android `Scaffold` already reserves the tab bar's height — the padding was counted
   twice and the capsules floated 80 dp above the bar (in landscape the Add Note pill
   landed on top of a note card). Both now sit 12 dp above the bar.
+- The note editor lost the AI draft bar under the keyboard: the window was panned
+  up by the system (the focused field was behind the keyboard), which pushed the
+  top bar off the screen and the proposals below the keyboard. The activity now
+  asks for `adjustResize`, the editor's column takes `imePadding()`, and the
+  `Scaffold` keeps the bottom inset for the pushed screens — the tab routes are
+  the only ones that drop it, because the tab bar holds it.
 - The tab bar's capsule was glued to the bottom edge, with the gesture handle drawn
   across it. It now reserves the navigation bar inset itself (34 dp on the device,
   the same clearance iOS keeps under the capsule for the home indicator), and the

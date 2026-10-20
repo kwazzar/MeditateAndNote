@@ -177,12 +177,18 @@ private fun MnNav() {
     Box(Modifier.fillMaxSize()) {
         Scaffold(
         containerColor = MnTheme.background,
-        // The tab bar reserves the navigation bar inset itself, so the content
-        // must not reserve it a second time — otherwise the content keeps a
-        // 34 dp gap above a bar that already floats above the gesture area.
-        contentWindowInsets = WindowInsets.systemBars.only(
-            WindowInsetsSides.Top + WindowInsetsSides.Horizontal,
-        ),
+        // The tab bar reserves the navigation bar inset itself, so the tab
+        // routes must not reserve it a second time — otherwise the content
+        // keeps a 34 dp gap above a bar that already floats above the gesture
+        // area. The pushed screens keep the inset: nothing else is there to
+        // hold their content off the gesture area.
+        contentWindowInsets = if (currentRoute in TabBarRoutes) {
+            WindowInsets.systemBars.only(
+                WindowInsetsSides.Top + WindowInsetsSides.Horizontal,
+            )
+        } else {
+            WindowInsets.systemBars
+        },
         bottomBar = {
             if (currentRoute in TabBarRoutes) {
                 MnTabBar(
