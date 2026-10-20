@@ -1,8 +1,6 @@
 package com.mn.android.presentation.meditate.ui
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,13 +10,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.Air
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Create
@@ -26,13 +21,11 @@ import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Spa
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.RadioButton
@@ -47,7 +40,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -62,6 +54,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.mn.android.R
 import com.mn.android.infrastructure.persistence.local.settings.AnimationSettings
 import com.mn.android.presentation.theme.ui.MnBackground
+import com.mn.android.presentation.theme.ui.MnCloseButton
 import com.mn.android.presentation.theme.ui.MnBreathing
 import com.mn.android.presentation.theme.ui.MnTheme
 import com.mn.core.MeditationDuration
@@ -132,22 +125,10 @@ fun BreathingScreen(
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth(),
                     )
-                    Box(
-                        Modifier
-                            .align(Alignment.CenterEnd)
-                            .size(32.dp)
-                            .clip(CircleShape)
-                            .background(MnTheme.toolbarBackground)
-                            .clickable { vm.stop(); onBack() },
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(
-                            Icons.Filled.Close,
-                            contentDescription = stringResource(R.string.close),
-                            tint = MnTheme.iconPrimary,
-                            modifier = Modifier.size(16.dp),
-                        )
-                    }
+                    MnCloseButton(
+                        onClick = { vm.stop(); onBack() },
+                        modifier = Modifier.align(Alignment.CenterEnd),
+                    )
                 }
             }
 

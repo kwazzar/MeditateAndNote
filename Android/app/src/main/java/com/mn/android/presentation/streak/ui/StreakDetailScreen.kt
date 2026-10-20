@@ -57,6 +57,7 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.mn.android.R
 import com.mn.android.data.StreakDetailSource
 import com.mn.android.data.StreakInsightsSource
+import com.mn.android.presentation.theme.ui.MnDoneButton
 import com.mn.android.presentation.theme.ui.MnBackground
 import com.mn.android.presentation.theme.ui.MnTheme
 
@@ -104,20 +105,7 @@ fun StreakDetailScreen(
             CenterAlignedTopAppBar(
                 title = { Text(stringResource(R.string.streak), fontWeight = FontWeight.Bold) },
                 actions = {
-                    Box(
-                        Modifier
-                            .padding(end = 12.dp)
-                            .clip(CircleShape)
-                            .border(1.dp, MnTheme.divider, CircleShape)
-                            .clickable(onClick = onBack)
-                            .padding(horizontal = 20.dp, vertical = 8.dp),
-                    ) {
-                        Text(
-                            stringResource(R.string.done),
-                            color = MnTheme.textPrimary,
-                            style = MaterialTheme.typography.titleMedium,
-                        )
-                    }
+                    MnDoneButton(onClick = onBack, modifier = Modifier.padding(end = 12.dp))
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.Transparent,

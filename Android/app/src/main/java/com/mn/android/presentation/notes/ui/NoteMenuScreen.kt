@@ -46,7 +46,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -147,16 +146,14 @@ fun NoteMenuScreen(
             // alpha(0) still hit-tests in Compose — disable clicks while the
             // button is hidden, or taps near the bottom-right get eaten.
             enabled = !isScrolling,
+            // The Scaffold already reserves the tab bar's height — the capsule
+            // only needs a small gap above it, not the iOS 80 pt that assumes
+            // a tab bar floating over the content.
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .alpha(if (isScrolling) 0f else 1f)
                 .scale(if (isScrolling) 0.6f else 1f)
-                .padding(
-                    bottom = if (LocalConfiguration.current.orientation ==
-                        android.content.res.Configuration.ORIENTATION_LANDSCAPE
-                    ) 52.dp else 80.dp,
-                    end = 26.dp,
-                ),
+                .padding(bottom = 12.dp, end = 26.dp),
         )
     }
 }

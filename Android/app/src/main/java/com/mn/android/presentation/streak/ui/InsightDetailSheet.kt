@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mn.android.data.StreakInsightsSource.Insight
 import com.mn.android.data.StreakInsightsSource.WeeklyBucket
+import com.mn.android.presentation.theme.ui.MnDoneButton
 import com.mn.android.presentation.theme.ui.MnTheme
 import java.time.Instant
 import java.time.ZoneId
@@ -72,14 +73,7 @@ internal fun InsightDetailSheet(
                     color = MnTheme.textPrimary,
                     modifier = Modifier.weight(1f),
                 )
-                Text(
-                    stringResource(R.string.done),
-                    color = MnTheme.streakIndicator,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier
-                        .clickable(onClick = onClose)
-                        .padding(start = 8.dp),
-                )
+                MnDoneButton(onClick = onClose, modifier = Modifier.padding(start = 8.dp))
             }
 
             // Header card

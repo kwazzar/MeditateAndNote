@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
@@ -50,6 +49,7 @@ import com.mn.android.data.AIDraftSource
 import com.mn.android.data.NoteEditorSource
 import com.mn.android.infrastructure.persistence.local.ai.AIDraftMetrics
 import com.mn.android.presentation.theme.ui.MnBackground
+import com.mn.android.presentation.theme.ui.MnBackButton
 import com.mn.android.presentation.theme.ui.MnTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
@@ -332,17 +332,7 @@ private fun EditorTopBar(
             .height(50.dp)
             .padding(horizontal = 12.dp, vertical = 6.dp),
     ) {
-        IconButton(
-            onClick = onBack,
-            modifier = Modifier.height(36.dp),
-        ) {
-            Icon(
-                Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                contentDescription = stringResource(R.string.back),
-                tint = MnTheme.iconPrimary,
-                modifier = Modifier.size(26.dp),
-            )
-        }
+        MnBackButton(onClick = onBack)
         Row(
             Modifier
                 .height(36.dp)

@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -40,6 +41,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
@@ -51,15 +53,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -85,88 +90,128 @@ internal fun DurationSheet(
     onDismiss: () -> Unit,
 ) {
     // iOS TimeMeditationSheet: top spacing, wheel picker, "Select Duration",
-    // full-width Start button, top-rounded slab.
+    // full-width Start button, on a `CustomTopRoundedShape` dome.
+    val landscape = LocalConfiguration.current.orientation ==
+        android.content.res.Configuration.ORIENTATION_LANDSCAPE
+    // iOS proportions: 72 pt of empty space above a 150 pt wheel, the selected
+    // row in the middle of the wheel. The landscape sheet is shorter — the
+    // screen is.
+    val topSpace = if (landscape) 24.dp else 72.dp
+    val pickerHeight = if (landscape) 120.dp else 150.dp
+    // iOS puts the dome's shoulders 140 pt below the sheet's top and the
+    // selected row 147 pt below it — the pill therefore always sits on the
+    // slab, never on its edge.
+    val shoulder = topSpace + pickerHeight / 2 - 7.dp
+    val domeColor = MnTheme.toolbarBackground
+
+    // The half-expanded anchor would clip the sheet in landscape: the content
+    // is taller than the anchor, and the sheet would stay there.
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ModalBottomSheet(
+        sheetState = sheetState,
         // Swipe-down must leave the composition (caller pops the screen) —
         // an empty handler leaves the modal window attached and it eats
         // every tap on the close button behind the sheet.
         onDismissRequest = onDismiss,
         // iOS floats the wheel over the game background: no slab, no scrim,
-        // only the selection pill is drawn.
+        // only the dome is drawn.
         containerColor = Color.Transparent,
         scrimColor = Color.Transparent,
         dragHandle = null,
+        // The dome reaches the bottom of the screen (iOS ignores the safe
+        // area), so the sheet must not reserve the navigation bar inset.
+        contentWindowInsets = { WindowInsets(0) },
     ) {
-        val domeColor = MnTheme.toolbarBackground
-        Column(
+        Box(
             Modifier
-                .drawBehind {
-                    // iOS `CustomTopRoundedShape`: a quad-curved dome behind the
-                    // sheet, apex ~65pt, shoulders at 140pt, filled with
-                    // `toolbarBackground`.
-                    val shoulder = 140.dp.toPx()
-                    val apex = -10.dp.toPx()
-                    val path = Path().apply {
-                        moveTo(0f, size.height)
-                        lineTo(0f, shoulder)
-                        quadraticBezierTo(size.width / 2f, apex, size.width, shoulder)
-                        lineTo(size.width, size.height)
-                        close()
-                    }
+                .fillMaxWidth()
+                .drawWithContent {
+                    // iOS `CustomTopRoundedShape`: a quad-curved dome, filled
+                    // with `toolbarBackground` and clipping the content to the
+                    // same path — `.background(shape.fill())` + `.clipShape(shape)`.
+                    val path = domePath(size, shoulder.toPx(), (-10).dp.toPx())
                     drawPath(path, domeColor)
+                    val content = this
+                    clipPath(path) { content.drawContent() }
                 },
-            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Spacer(Modifier.height(64.dp))
-            meditationDurations.forEach { d ->
-                val mins = durationMinutes(d)
-                val isSelected = d == selected
-                // iOS wheel picker: the centre row is larger and brighter, the
-                // selection pill sits behind it.
+            Column(
+                Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Spacer(Modifier.height(topSpace))
+                // The wheel: the selected row in its middle, the other two
+                // above and below it.
                 Box(
                     Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 14.dp)
-                        .height(32.dp)
-                        .clickable { onSelected(d) }
-                        .background(
-                            if (isSelected) MnTheme.divider else Color.Transparent,
-                            RoundedCornerShape(16.dp),
-                        ),
+                        .height(pickerHeight),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(
-                        if (mins == 1) "1 minute" else "$mins minutes",
-                        color = if (isSelected) MnTheme.textPrimary else MnTheme.textSecondary,
-                        fontSize = if (isSelected) 22.sp else 18.sp,
-                        fontWeight = FontWeight.Normal,
-                        textAlign = TextAlign.Center,
-                    )
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        meditationDurations.forEach { d ->
+                            val mins = durationMinutes(d)
+                            val isSelected = d == selected
+                            // iOS wheel picker: the centre row is larger and
+                            // brighter, the selection pill sits behind it.
+                            Box(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 14.dp)
+                                    .height(32.dp)
+                                    .clickable { onSelected(d) }
+                                    .background(
+                                        if (isSelected) MnTheme.divider else Color.Transparent,
+                                        RoundedCornerShape(16.dp),
+                                    ),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text(
+                                    pluralStringResource(R.plurals.minutes, mins, mins),
+                                    color = if (isSelected) MnTheme.textPrimary else MnTheme.textSecondary,
+                                    fontSize = if (isSelected) 22.sp else 18.sp,
+                                    fontWeight = FontWeight.Normal,
+                                    textAlign = TextAlign.Center,
+                                )
+                            }
+                        }
+                    }
                 }
+                Spacer(Modifier.height(25.dp))
+                Text(
+                    stringResource(R.string.select_duration),
+                    color = MnTheme.textPrimary,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+                Spacer(Modifier.height(25.dp))
+                Button(
+                    onClick = onStart,
+                    colors = ButtonDefaults.buttonColors(containerColor = MnTheme.accentButton),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .height(50.dp),
+                    shape = RoundedCornerShape(12.dp),
+                ) {
+                    Text(stringResource(R.string.start_meditation), color = MnTheme.buttonText, fontWeight = FontWeight.Bold)
+                }
+                Spacer(Modifier.height(32.dp))
             }
-            Spacer(Modifier.height(20.dp))
-            Text(
-                stringResource(R.string.select_duration),
-                color = MnTheme.textPrimary,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(horizontal = 16.dp),
-            )
-            Spacer(Modifier.height(20.dp))
-            Button(
-                onClick = onStart,
-                colors = ButtonDefaults.buttonColors(containerColor = MnTheme.accentButton),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .height(50.dp),
-                shape = RoundedCornerShape(12.dp),
-            ) {
-                Text(stringResource(R.string.start_meditation), color = MnTheme.buttonText, fontWeight = FontWeight.Bold)
-            }
-            Spacer(Modifier.height(24.dp))
         }
     }
+}
+
+/** iOS `CustomTopRoundedShape`: a quad curve from (0, shoulder) to (width,
+ *  shoulder) with the control point at (width/2, apex) — the dome the sheet
+ *  is drawn on. */
+private fun domePath(size: Size, shoulder: Float, apex: Float): Path = Path().apply {
+    moveTo(0f, size.height)
+    lineTo(0f, shoulder)
+    quadraticTo(size.width / 2f, apex, size.width, shoulder)
+    lineTo(size.width, size.height)
+    close()
 }
 
 @Composable

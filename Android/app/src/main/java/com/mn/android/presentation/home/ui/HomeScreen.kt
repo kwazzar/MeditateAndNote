@@ -113,11 +113,14 @@ fun HomeScreen(
                 ),
         )
 
+        // The Scaffold already reserves the tab bar's height, so the capsule
+        // only needs a small gap above it — the iOS 80 pt bottom padding is
+        // for a tab bar that floats over the content.
         SettingsButton(
             onClick = onSettings,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(bottom = 80.dp, end = 26.dp),
+                .padding(bottom = 12.dp, end = 26.dp),
         )
     }
 }

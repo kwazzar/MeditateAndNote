@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mn.android.R
 import com.mn.android.data.StreakDetailSource
+import com.mn.android.presentation.theme.ui.MnDoneButton
 import com.mn.android.presentation.theme.ui.MnTheme
 import java.time.Instant
 import java.time.LocalDate
@@ -86,20 +87,7 @@ internal fun StreakDayDetailSheet(
                 color = MnTheme.textPrimary,
                 modifier = Modifier.align(Alignment.Center),
             )
-            Box(
-                Modifier
-                    .align(Alignment.CenterEnd)
-                    .clip(CircleShape)
-                    .border(1.dp, MnTheme.divider, CircleShape)
-                    .clickable(onClick = onClose)
-                    .padding(horizontal = 18.dp, vertical = 7.dp),
-            ) {
-                Text(
-                    stringResource(R.string.done),
-                    color = MnTheme.textPrimary,
-                    fontSize = 15.sp,
-                )
-            }
+            MnDoneButton(onClick = onClose, modifier = Modifier.align(Alignment.CenterEnd))
         }
 
         MnCard {

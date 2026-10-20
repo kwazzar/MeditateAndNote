@@ -13,14 +13,14 @@ while fixing them. The deltas that mattered are listed below.
 
 | # | Screen | iOS | Android | Notes |
 |---|--------|-----|---------|-------|
-| 01 | Home | `01-home.png`, `01b-home-active.png` | `01-home.png` | |
+| 01 | Home | `01-home.png`, `01b-home-active.png` | `01-home.png` | re-shot: the Settings capsule now sits right above the tab bar |
 | 02 | Settings | `02-settings.png`, `02-settings-scrolled.png` | `02-settings.png`, `02-settings-scrolled{,2,3}.png` | Android split across 4 scroll positions |
 | 03 | Meditate select | `03-meditate-select.png` | `03-meditate-select.png`, `03-meditate-selected.png` | |
-| 04 | Duration wheel | `04-duration-sheet.png` | `04-duration-sheet.png` | |
+| 04 | Duration wheel | `04-duration-sheet.png` | `04-duration-sheet.png` | re-shot: the dome covers the whole picker, the selection pill no longer sticks out of the sheet |
 | 05 | Breathing session | `05-breathing.png` | `05-breathing.png`, `05b-breathing-rings.png` | Android also captures the Rings style, which has no iOS reference shot |
 | 06 | Completion | `06-completion.png` | `06-completion.png` | recaptured — the old Android shot showed Home |
-| 07 | Note editor | `07-note-editor.png` | `07-note-editor.png` | |
-| 08 | Notes list | `08-notes.png` | `08-notes.png` | |
+| 07 | Note editor | `07-note-editor.png` | `07-note-editor.png` | re-shot: the back button is the shared chevron |
+| 08 | Notes list | `08-notes.png` | `08-notes.png` | re-shot — the old Android capture was the launcher; the Add Note capsule now sits right above the tab bar |
 | 09 | Streak detail | `09-streak-detail.png` … `09d-streak-detail-bottom.png` | `09-streak-detail.png`, `09b`…`09d` | |
 | 10 | Streak day sheet | `10-streak-day-sheet.png` | `10-streak-day-sheet.png` | |
 | 11 | Paywall | `11-paywall.png` | — | no IAP on Android |
@@ -114,11 +114,35 @@ while fixing them. The deltas that mattered are listed below.
   is drawn behind the sheet; rows are 32dp with the centre row at 22sp against 18sp to
   read as a drum. Insets measured off iOS: pill 14dp, Start button 16dp. Transparent
   container and scrim so the wheel floats.
+- Duration sheet, second pass: the dome was drawn with `drawBehind` and the rows were
+  placed above the curve, so the slab covered only the empty space under the picker and
+  the "3 minutes" pill stuck out of the sheet. The dome is now one path used for both
+  the fill and the clip (iOS: `.background(shape.fill())` + `.clipShape(shape)`), and the
+  rows sit where iOS puts them: 72 dp of empty space, a 150 dp wheel with the selected
+  row in its middle, the curve's shoulders 140 dp below the sheet's top — 7 dp above
+  the selected row's centre, so the pill is always on the slab. `contentWindowInsets = 0`
+  puts the dome on the bottom edge of the screen (iOS ignores the safe area) and
+  `skipPartiallyExpanded` keeps the sheet from resting on the half-expanded anchor,
+  which clipped the sheet in landscape.
 - Completion: no top bar and no close button, `CheckCircle`, 32sp "Well Done!",
   bottom-pinned actions.
 - Notes: search field lost its magnifier and hairline borders; Add Note is a shadowed pill.
-- Settings: circular bordered back button with centred title, segmented-control selection
-  uses the grey toolbar background (not accent), slider thumbs are plain 22dp white circles.
+
+**Exit buttons (third pass)**
+- The app had three different back affordances: a bordered circle with a Material
+  `ArrowBack` on Settings, a bare 26 dp chevron in the editor, and a "Done" that was a
+  bordered capsule on the streak screens but a bare coloured text in the insight sheet.
+  They are now three shared components in `presentation/theme/ui/MnButtons.kt`:
+  `MnBackButton` (iOS `chevron.left`, 16 pt in a 36×36 frame, no chrome),
+  `MnCloseButton` (iOS `xmark` in a 32 pt `toolbarBackground` circle) and
+  `MnDoneButton` (the bordered capsule). Settings, the note editor, the breathing
+  screen, the sound sheet and all three streak screens use them.
+- The "Settings" and "Add Note" capsules carried the iOS 80 pt bottom padding, but the
+  Android `Scaffold` already reserves the tab bar's height — the padding was counted
+  twice and the capsules floated 80 dp above the bar (in landscape the Add Note pill
+  landed on top of a note card). Both now sit 12 dp above the bar.
+- Settings: centred title, segmented-control selection uses the grey toolbar background
+  (not accent), slider thumbs are plain 22dp white circles.
 - Streak detail: `CenterAlignedTopAppBar` with a bordered "Done" pill, recommendations
   collected into one card, grey range-picker selection.
 - Onboarding / editor icons matched to the SF Symbols used on iOS.
@@ -143,6 +167,9 @@ while fixing them. The deltas that mattered are listed below.
 - **Note editor formatting toolbar** — iOS shows a `FloatingToolbar` (bold / italic /
   list) above the keyboard, but its three buttons are `Button(action: {})` — they do
   nothing. Not ported: dead UI on one side is not worth cloning.
+- **Duration sheet width in landscape** — Material 3 caps a bottom sheet at 640 dp, so
+  in landscape the dome is a centred 640 dp slab; iOS draws it full width. The dome's
+  geometry (the curve, the rows, the button) is identical, only the width differs.
 - **Rings animation mode** — ported (5 rings, `120 + i*30` base, ×`1 + 0.3(i+1)`
   expansion, per-ring 0.2 s stagger, 0.3 s colour cross-fade) and captured in
   `05b-breathing-rings.png`. iOS gates Rings behind the Pro entitlement, so no iOS

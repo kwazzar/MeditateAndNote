@@ -6,6 +6,12 @@
         <item quantity="other">days</item>
     </plurals>
 
+    <!-- TimeMeditationSheet: "1 minute" / "n minutes" -->
+    <plurals name="minutes">
+        <item quantity="one">1 minute</item>
+        <item quantity="other">%d minutes</item>
+    </plurals>
+
     <string name="streak_note_reminder">Write a note to complete today\'s streak</string>
     <string name="settings">Settings</string>
     <string name="meditate">Meditate</string>
