@@ -6,6 +6,7 @@
   "description": "Vercel function: an OpenAI-compatible chat-completions proxy for Groq, used by the Meditate & Note apps.",
   "scripts": {
     "dev": "node dev-server.ts",
-    "test": "node --test test/"
+    "test": "node --test test/",
+    "compare": "node compare-models.mjs"
   }
 }

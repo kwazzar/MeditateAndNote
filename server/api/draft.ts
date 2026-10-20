@@ -106,9 +106,14 @@ export async function handler(req: any, res: any): Promise<void> {
     }
 
     // The client may name a model; the proxy pins its own. The price of the
-    // answer is the server's decision, not the caller's.
+    // answer is the server's decision, not the caller's - unless the
+    // deployment opted into letting clients choose, which only the model
+    // comparison tool needs.
+    const clientModel = process.env.GROQ_ALLOW_CLIENT_MODEL === "1"
+        ? (typeof body?.model === "string" ? body.model : "")
+        : "";
     const payload = {
-        model: process.env.GROQ_MODEL || DEFAULT_MODEL,
+        model: clientModel || process.env.GROQ_MODEL || DEFAULT_MODEL,
         messages,
         temperature: typeof body?.temperature === "number" ? body.temperature : 0.7,
         max_tokens: Number(process.env.GROQ_MAX_TOKENS ?? DEFAULT_MAX_TOKENS),

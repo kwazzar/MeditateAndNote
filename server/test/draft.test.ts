@@ -115,6 +115,26 @@ test("the key, the pinned model and the token cap are the proxy's business", asy
     assert.deepEqual(sent.messages.map((m: any) => m.role), ["system", "user"]);
 });
 
+test("a deployment may let the client name the model (the comparison tool)", async () => {
+    process.env.GROQ_API_KEY = "test-key";
+    process.env.GROQ_MODEL = "pinned-model";
+    process.env.GROQ_ALLOW_CLIENT_MODEL = "1";
+    const provider = stubFetch(200, JSON.stringify({ choices: [{ message: { content: "ok" } }] }));
+
+    await handler(
+        {
+            method: "POST",
+            headers: {},
+            body: { model: "client-model", messages: [{ role: "user", content: "hi" }] },
+        },
+        fakeRes(),
+    );
+
+    const sent = JSON.parse(provider.calls[0].init.body);
+    assert.equal(sent.model, "client-model");
+    delete process.env.GROQ_ALLOW_CLIENT_MODEL;
+});
+
 test("the provider's envelope reaches the app unchanged", async () => {
     process.env.GROQ_API_KEY = "test-key";
     const envelope = JSON.stringify({

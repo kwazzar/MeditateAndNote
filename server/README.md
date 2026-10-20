@@ -76,6 +76,34 @@ The daily cap is **per instance** — serverless instances come and go, so it
 is a guard against a runaway client, not an accounting system. A durable
 store (Vercel KV, Upstash) is the real answer when the cap has to hold.
 
+## Picking the model
+
+Do not guess - measure. `compare-models.mjs` sends the app's own request
+once per model and prints the status, the latency, whether the answer came
+back in the JSON shape the app expects, and the answer itself:
+
+```bash
+GROQ_API_KEY=your-key GROQ_ALLOW_CLIENT_MODEL=1 npm run dev
+node compare-models.mjs http://127.0.0.1:8732/api/draft llama-3.3-70b-versatile llama-3.1-8b-instant
+```
+
+`GROQ_ALLOW_CLIENT_MODEL=1` is what lets the client name a model; without
+it the proxy pins `GROQ_MODEL` and ignores the client. The comparison needs
+it, production does not - keep it off there, because the price of an answer
+is the server's decision.
+
+What to look at in the result:
+
+| | |
+|---|---|
+| `format` | `json` means the model followed the shape the app parses; `text` means it answered in plain lines - the app still works (the parser falls back to lines), but the `rationale` is lost |
+| `suggestions` | how many of them came back - the app shows up to five |
+| `ms` | the latency the user waits |
+| the answer | does it name a specific moment from the note, or is it generic advice? The prompt forbids generic advice; a small model breaks that rule more often |
+
+Then set the winner as `GROQ_MODEL` and redeploy - no app change, no
+rebuild: the app never names a model.
+
 ## Files
 
 | File | What |
@@ -83,4 +111,5 @@ store (Vercel KV, Upstash) is the real answer when the cap has to hold.
 | `api/draft.ts` | the function: the whole proxy |
 | `test/draft.test.ts` | the proxy's tests (key, pinned model, token cap, envelope, 429) |
 | `dev-server.ts` | runs the same function locally |
+| `compare-models.mjs` | measures the candidate models against each other |
 | `.env.example` | the environment the function reads |
