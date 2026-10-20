@@ -31,6 +31,7 @@ while fixing them. The deltas that mattered are listed below.
 | 16 | Note editor — restored draft | — | `16-note-editor-draft-restored.png` | the same draft after leaving and reopening the note: the session is stored, no new generation |
 | 17 | Note editor — AI draft on a real device | — | `17-note-editor-ai-draft-device.png` | Samsung SM-A245F, Android 16: the same bar against a mock provider reached over `adb reverse` |
 | 18 | Note editor — AI draft, live provider | — | `18-note-editor-ai-draft-live-provider.png` | the deployed Vercel proxy answering with the real Groq (`openai/gpt-oss-120b`) |
+| 19 | Note editor — AI draft, live provider on a device | — | `19-note-editor-ai-draft-live-provider-device.png` | Samsung SM-A245F against the same hosted proxy |
 
 ## What was fixed
 
