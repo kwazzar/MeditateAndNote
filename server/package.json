@@ -8,5 +8,8 @@
     "dev": "node dev-server.ts",
     "test": "node --test test/",
     "compare": "node compare-models.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2"
   }
 }

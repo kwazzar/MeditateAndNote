@@ -16,14 +16,30 @@ when the provider behind the endpoint changes.
 
 ## Deploy
 
+The project is linked at the repository root (the `.vercel` folder lives
+there), and its **Root Directory is `server`** - so the function lands at
+`/api/draft` whether it is built from the repository or uploaded by hand.
+
 ```bash
-cd server
-npx vercel deploy --prod          # or connect the folder in the Vercel dashboard
+# from the repository root
+npx vercel deploy --prod          # manual deploy
 npx vercel env add GROQ_API_KEY production   # the Groq key
 npx vercel env add GROQ_MODEL production     # a model your key can reach
 npx vercel env add DAILY_LIMIT production    # answers per client address per day
 npx vercel deploy --prod                     # env vars apply to the next deployment
 ```
+
+**Deploy on push** (instead of the manual command):
+
+1. Install the Vercel GitHub App for the repository:
+   <https://github.com/apps/vercel> → *Install* → pick the account →
+   *Only select repositories* → select `MeditateAndNote` → *Install*.
+   Without the app installed, Vercel answers: *"To link a GitHub repository,
+   you need to install the GitHub integration first."*
+2. Link it: `npx vercel git connect` (from the repository root) or
+   Project → Settings → Git → *Connect Git Repository*.
+3. Push to `main`. Every push builds the `server/` folder and deploys it to
+   production; the alias the app points at follows the newest deployment.
 
 The endpoint the app talks to is then `https://<your-domain>/api/draft`.
 

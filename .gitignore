@@ -145,3 +145,6 @@ Android/app/build.gradle.kts.bak
 # Tombstones (crash logs)
 tombstones/
 MeditateAndNote/Config/*.local.xcconfig
+
+# Vercel CLI project link (created when the server folder was linked)
+.vercel/

@@ -1,0 +1,15 @@
+# The Vercel project builds the server/ folder; nothing else in the repo is
+# part of that build. Without this the CLI uploads the whole working tree -
+# the Android build output and the graphify snapshots included - and it runs
+# into the 15000-file limit.
+Android/app/build
+Android/build
+Android/.gradle
+Packages/*/.build
+Packages/*/.build-android
+Packages/MeditateAndNoteCore/.generated
+graphify-out
+Android/graphify-out
+*.xcodeproj
+docs
+tombstones
