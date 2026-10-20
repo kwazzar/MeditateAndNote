@@ -113,9 +113,42 @@ GROQ_API_KEY=test GROQ_URL=http://127.0.0.1:8733/openai/v1/chat/completions npm 
 | Privacy | the note text is not logged; only counts and timings are kept |
 | Pass-through | the provider's envelope reaches the app as it is, including 429 |
 
-The daily cap is **per instance** — serverless instances come and go, so it
-is a guard against a runaway client, not an accounting system. A durable
-store (Vercel KV, Upstash) is the real answer when the cap has to hold.
+## The daily counter
+
+The cap has to hold between serverless instances - they come and go, so a
+count kept in an instance's memory forgets everything the moment the instance
+is recycled. The count therefore lives in Redis when the deployment has one:
+
+| | |
+|---|---|
+| Key | `mn:draft:<date>:<client address>`, counted with `INCR` |
+| Store | Upstash / Vercel KV over its REST API - one `fetch`, no dependency |
+| Env | `KV_REST_API_URL` + `KV_REST_API_TOKEN` (Vercel KV) or `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` (Upstash) |
+| Without a store | the count stays in the instance's memory - the old behaviour, good enough for local runs |
+| A store that is down | the count falls back to memory and the answer still goes out: the cap loses its reach, the proxy does not lose its answers |
+| The audit trail | one log line per request: `daily count=7 limit=50` |
+
+The counter lives in `api/draft.ts` on purpose: Vercel transpiles the files
+of `api/` one by one and does not bundle them, so a module imported from
+outside `api/` would be left dangling in the deployment.
+
+The free Upstash plan (500K commands a month) is plenty: one answer costs two
+commands, and the cap itself is 50 answers a day per client address.
+
+**Set it up** (the store is a marketplace resource, the dashboard does it):
+
+1. Vercel → the project → **Storage → Create Database → Upstash Redis** →
+   plan **Free**, environment **Production** → Connect.
+2. Vercel injects `KV_REST_API_URL` and `KV_REST_API_TOKEN` into the project.
+   Nothing to copy by hand.
+3. Redeploy - env vars apply to the next deployment, not to the running one.
+
+Check that it counts:
+
+```bash
+curl -s "$KV_REST_API_URL/get/mn:draft:$(date +%F):1.2.3.4" \
+  -H "Authorization: Bearer $KV_REST_API_TOKEN"
+```
 
 ## Picking the model
 
@@ -149,8 +182,8 @@ rebuild: the app never names a model.
 
 | File | What |
 |---|---|
-| `api/draft.ts` | the function: the whole proxy |
-| `test/draft.test.ts` | the proxy's tests (key, pinned model, token cap, envelope, 429) |
+| `api/draft.ts` | the function: the whole proxy, the daily counter included |
+| `test/draft.test.ts` | the proxy's tests (key, pinned model, token cap, envelope, 429, daily cap) |
 | `dev-server.ts` | runs the same function locally |
 | `compare-models.mjs` | measures the candidate models against each other |
 | `.env.example` | the environment the function reads |
