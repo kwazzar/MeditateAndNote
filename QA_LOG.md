@@ -142,6 +142,8 @@
 | 4 | Accept | PASS | підказка перейшла в «Accepted» ✅ |
 | 5 | Transfer | PASS | `content = "…felt calm for the first time in a week.\n\nWrite about the quiet sound of the low, grey water as it filled the sink that morning."` ✅; метрика `suggestionInserted(index=0)` ✅ |
 
+**Після зняття Deployment Protection** (проєкт `server` → Settings → Deployment Protection → Vercel Authentication → Disabled, `ssoProtection: null` ✅): усі домени публічні ✅ — `meditate-and-note-ai.vercel.app`, `server-iota-livid-44.vercel.app`, `server-nazar-094e.vercel.app` і per-deployment URL відповідають 200 анонімно ✅. Нова генерація на девайсі через публічний домен: 5 підказок ✅, `generationCompleted(latency_ms=1792, suggestion_count=5)` ✅, квота `used=1` ✅.
+
 **Знайдений і виправлений дефект:** панель інсайтів не мала обмеження висоти — у ландшафті (або з відкритою клавіатурою) список підказок виростав за нижній край екрана й тягнув за собою кнопки «Accept All»/«Transfer» (тап йшов у клавіатуру, а не в кнопку ✅ — через це перші спроби на девайсі виглядали як «кнопка мертва» ✅). Виправлено: список підказок має `heightIn(max = 260.dp)` і скролиться ✅, заголовок і кнопки лишаються на екрані ✅.
 
 ## Історія прогонів
@@ -156,3 +158,4 @@
 | 6 | 2026-10-20 | 8 PASS (проксі Groq) | власний провайдер: проксі на Vercel, ключ у середовищі, ланцюг перевірено end-to-end |
 | 7 | 2026-10-20 | 7 PASS (живий Groq) | задеплоєний проксі + справжній Groq: підказки, перенесення, телеметрія |
 | 8 | 2026-10-20 | 5 PASS (живий Groq на SM-A245F) | те саме на реальному девайсі + виправлено переповнення панелі інсайтів у ландшафті |
+| 9 | 2026-10-20 | PASS (публічний провайдер) | Deployment Protection знято: всі домени 200 анонімно, нова генерація на девайсі через публічний домен |

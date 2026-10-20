@@ -32,6 +32,7 @@ while fixing them. The deltas that mattered are listed below.
 | 17 | Note editor — AI draft on a real device | — | `17-note-editor-ai-draft-device.png` | Samsung SM-A245F, Android 16: the same bar against a mock provider reached over `adb reverse` |
 | 18 | Note editor — AI draft, live provider | — | `18-note-editor-ai-draft-live-provider.png` | the deployed Vercel proxy answering with the real Groq (`openai/gpt-oss-120b`) |
 | 19 | Note editor — AI draft, live provider on a device | — | `19-note-editor-ai-draft-live-provider-device.png` | Samsung SM-A245F against the same hosted proxy |
+| 20 | Note editor — AI draft, public provider | — | `20-note-editor-ai-draft-public-provider.png` | the same, after the deployment protection came off — the endpoint answers anonymous requests |
 
 ## What was fixed
 
