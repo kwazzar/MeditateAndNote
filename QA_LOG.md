@@ -190,6 +190,21 @@ Debug-збірка з `aiDraftEndpoint=https://meditate-and-note-ai.vercel.app/a
 | 5 | Проксі побачив запит | лічильник зріс | PASS | `daily count=11 limit=50`, потім `daily count=12 limit=50` ✅ (телефон у тій самій мережі → той самий ключ, лічильник у KV) |
 
 **Висновок:** Android ходить у наш проксі за замовчуванням, без ключа, і кожна генерація проходить через стійкий лічильник у Vercel KV ✅.
+## Прохід Android AI Insights — LLM-аналіз + персистентність (дата: 2026-10-20, середовище: Android emulator `emulator-5554` / Medium_Phone_API_37.0, API 37, arm64, провайдер: живий Groq через Vercel-проксі)
+
+| # | Крок | Очікування | Pass/Fail | Лог/примітка |
+|---|------|-----------|-----------|--------------|
+| 1 | Чистий старт, онбординг skip | таби рендеряться | PASS | без падінь |
+| 2 | Порожній стор | секції інсайтів немає | PASS | блок приховано (немає ніStored, ні евристики) |
+| 3 | Нова нотатка (body: «I walked by the river this morning and felt very calm. The light came early and the water was quiet.») | нотатка збережена | PASS | (як і раніше: поле title уже містить «Untitled», тому ввод додається перед ним — поведінка редактора, не інсайтів) |
+| 4 | Секція «✨ Insights» без refresh | евристика | PASS | теми `calm came early light morning`, summary = перші 140 символів, теги `#calm #came #early #light #morning` |
+| 5 | Refresh | спінер у заголовку, потім новий результат | PASS | поки триває запит — кнопка міняється на спінер ✅ |
+| 6 | Відповідь провайдера | LLM-інсайти | PASS | теми `calm nature morning`, summary «Morning river walk brought a calm feeling as early light illuminated the quiet water.», теги `#calm #nature #morning` ✅ |
+| 7 | Перезапуск застосунку → notes-таб | ті самі інсайти, без нового запиту | PASS | інсайти приходять зі сховища (`NoteInsightBlobStore`), провайдер не кликається ✅ |
+| 8 | Перемикання табів (Home → Notes) | секція лишається, без перерахунку | PASS | стан живе у `NoteInsightsViewModel` (scope — NavBackStackEntry) ✅ |
+| 9 | Регресія: список нотаток | список як раніше | PASS | карточка нотатки під секцією, дата «20 October», «Read» на місці |
+
+**Автотести:** `connectedDebugAndroidTest` — 50/50 PASS (4 нові в `NoteInsightsContractTest`: провайдер, евристичний fallback, персистентність, порожній стор; 4 нові в `NoteInsightsViewModelTest`: stored → load, евристика, refresh, помилка). iOS: 69 тестів (інсайти + чернетки) — 0 failures.
 
 ## Історія прогонів
 
@@ -206,3 +221,4 @@ Debug-збірка з `aiDraftEndpoint=https://meditate-and-note-ai.vercel.app/a
 | 9 | 2026-10-20 | PASS (публічний провайдер) | Deployment Protection знято: всі домени 200 анонімно, нова генерація на девайсі через публічний домен |
 | 10 | 2026-10-20 | 11 PASS (iOS на проксі + стійкий лічильник) | iOS за замовчуванням на наш проксі (світч + endpoint з xcconfig, ліміт 50), алерт «провайдер не на девайсі», лічильник у Vercel KV переживає деплой |
 | 11 | 2026-10-20 | 5 PASS (Android на реальному девайсі) | SM-A245F через USB: світч увімкнено, endpoint наш, 2 генерації × 5 пропозицій, лічильник у KV зріз: 11 → 12 |
+| 12 | 2026-10-20 | 9 PASS (Android AI Insights, LLM) | інсайти з провайдера + персистентність: refresh → LLM-відповідь, рестарт → збережені інсайти, стан у VM |

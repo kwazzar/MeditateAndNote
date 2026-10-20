@@ -48,54 +48,39 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.mn.android.R
-import com.mn.android.data.NoteInsightsSource
 import com.mn.android.data.NoteMenuSource
+import com.mn.android.presentation.notes.viewmodel.NoteInsightsViewModel
 import com.mn.android.presentation.theme.ui.MnBackground
 import com.mn.android.presentation.theme.ui.MnTheme
 import java.text.SimpleDateFormat
 import java.util.Locale
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 /**
  * Port of the iOS NoteMenu: search bar, the note cards list and the
  * Add Note capsule. Row tap opens the note, Add Note opens the editor.
  *
- * Loads on every entry to this destination — the manual reload fallback for
- * the DomainEventBus that is not ported yet; the bus wiring replaces this
- * when it lands.
+ * The insights live in `NoteInsightsViewModel`: it survives the tab switches,
+ * so the section does not re-analyze every time the user comes back to the
+ * notes tab. The note list itself still reloads on every entry — the manual
+ * fallback for the DomainEventBus that is not ported yet.
  */
 @Composable
 fun NoteMenuScreen(
     onOpenNote: (String) -> Unit,
     onAddNote: () -> Unit,
 ) {
+    val insightsViewModel: NoteInsightsViewModel = viewModel()
+    val insightsState by insightsViewModel.state.collectAsStateWithLifecycle()
     var query by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf<List<NoteMenuSource.NoteRecord>>(emptyList()) }
-    var insights by remember { mutableStateOf<List<NoteInsightsSource.Insight>>(emptyList()) }
-    var isLoadingInsights by remember { mutableStateOf(false) }
-    // Bumped on every resume and on every refresh; the load itself is keyed on
-    // it, so a new pass cancels the one in flight.
-    var insightsToken by remember { mutableStateOf(0) }
     val listState = rememberLazyListState()
     var isScrolling by remember { mutableStateOf(false) }
     LaunchedEffect(listState.isScrollInProgress) {
         isScrolling = listState.isScrollInProgress
     }
-
-    // The analysis walks every note, so it stays off the main thread. The
-    // token guards the state writes: a pass that was superseded must not clear
-    // the spinner of the pass that replaced it.
-    suspend fun loadInsights(token: Int): List<NoteInsightsSource.Insight> {
-        isLoadingInsights = true
-        return try {
-            withContext(Dispatchers.IO) { NoteInsightsSource.load() }
-        } finally {
-            if (token == insightsToken) isLoadingInsights = false
-        }
-    }
-
 
     // Manual reload fallback: reloads every time this screen resumes —
     // covers both tab switches and popping back from the pushed note editor
@@ -104,15 +89,8 @@ fun NoteMenuScreen(
     // when it lands.
     LifecycleResumeEffect(Unit) {
         notes = NoteMenuSource.readMenu().notes
-        insightsToken++
+        insightsViewModel.load()
         onPauseOrDispose { }
-    }
-
-    LaunchedEffect(insightsToken) {
-        if (insightsToken == 0) return@LaunchedEffect
-        val token = insightsToken
-        val loaded = loadInsights(token)
-        if (token == insightsToken) insights = loaded
     }
 
     val shown = remember(notes, query) {
@@ -141,12 +119,18 @@ fun NoteMenuScreen(
                     .padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                if (insights.isNotEmpty() || isLoadingInsights) {
+                if (insightsState.insights.isNotEmpty() ||
+                    insightsState.isLoading ||
+                    insightsState.isRefreshing ||
+                    insightsState.error != null
+                ) {
                     item(key = "note_insights") {
                         NoteInsightsSection(
-                            insights = insights,
-                            isLoading = isLoadingInsights,
-                            onRefresh = { insightsToken++ },
+                            insights = insightsState.insights,
+                            themes = insightsViewModel.topThemes,
+                            isLoading = insightsState.isLoading || insightsState.isRefreshing,
+                            error = insightsState.error,
+                            onRefresh = { insightsViewModel.refresh() },
                         )
                     }
                 }

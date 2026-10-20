@@ -43,6 +43,7 @@
     <string name="note_insights_title">✨ Insights</string>
     <string name="note_insights_refresh">Refresh insights</string>
     <string name="note_insights_loading">Loading insights…</string>
+    <string name="note_insights_error">Could not refresh insights</string>
 
     <!-- NoteEditor AI draft bar -->
     <string name="ai_draft_button">AI draft</string>
