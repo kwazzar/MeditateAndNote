@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- darkZen background: #0F1424, same value as MainTheme darkZen on both
-         platforms. Used as the adaptive-icon background layer. -->
-    <color name="ic_launcher_background">#FF0F1424</color>
+         platforms. Shared by the adaptive-icon background and the launch window. -->
+    <color name="dark_zen_background">#FF0F1424</color>
 </resources>

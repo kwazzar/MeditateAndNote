@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Compose draws everything; the platform theme only needs to not fight it. -->
-    <style name="Theme.MeditationCompose" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- Compose draws everything; the platform theme only needs to not fight it.
+         windowBackground matches the darkZen colour so the window behind the
+         first Compose frame is never white. -->
+    <style name="Theme.MeditationCompose" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/dark_zen_background</item>
+    </style>
 </resources>

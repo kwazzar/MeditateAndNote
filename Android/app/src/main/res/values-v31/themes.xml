@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Android 12+ shows the launcher icon on windowSplashScreenBackground.
+         Both it and the icon circle use the darkZen colour, so a cold start
+         never flashes the platform's default white splash. -->
+    <style name="Theme.MeditationCompose" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/dark_zen_background</item>
+        <item name="android:windowSplashScreenBackground">@color/dark_zen_background</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">@color/dark_zen_background</item>
+    </style>
+</resources>
