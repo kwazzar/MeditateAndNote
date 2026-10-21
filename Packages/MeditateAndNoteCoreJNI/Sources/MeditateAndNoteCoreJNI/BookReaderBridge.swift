@@ -196,6 +196,7 @@ private struct ReaderCacheKey: Hashable {
     let fontSize: Double
     let width: Double
     let height: Double
+    let widthScale: Double
 }
 
 private final class ReaderCache: @unchecked Sendable {
@@ -209,17 +210,19 @@ private final class ReaderCache: @unchecked Sendable {
         fontSize: Double,
         width: Double,
         height: Double,
+        widthScale: Double,
         restoring position: ReadingPosition?
     ) -> (PaginatedBook, Int) {
         let key = ReaderCacheKey(
             bookID: book.id.rawValue.uuidString,
             fontSize: fontSize,
             width: width,
-            height: height
+            height: height,
+            widthScale: widthScale
         )
         lock.lock()
         defer { lock.unlock() }
-        let engine = PaginationEngine(measurer: KotlinTextMeasurer(fontSize: fontSize))
+        let engine = PaginationEngine(measurer: KotlinTextMeasurer(fontSize: fontSize, widthScale: widthScale))
         if let entry, entry.key == key {
             let page = position.flatMap { engine.page(of: $0, in: entry.paginated) } ?? 0
             return (entry.paginated, page)
@@ -249,7 +252,8 @@ public func Java_com_mn_android_data_ReaderSource_openNative(
     jId: jstring?,
     fontSize: jdouble,
     width: jdouble,
-    height: jdouble
+    height: jdouble,
+    widthScale: jdouble
 ) -> jstring? {
     return withReaderContext(jId, in: environment) { book, content, position in
         let (paginated, page) = ReaderCache.shared.paginate(
@@ -258,6 +262,7 @@ public func Java_com_mn_android_data_ReaderSource_openNative(
             fontSize: fontSize,
             width: width,
             height: height,
+            widthScale: widthScale,
             restoring: position
         )
         return ["title": book.title, "pageCount": paginated.pages.count, "page": page]
@@ -290,7 +295,8 @@ public func Java_com_mn_android_data_ReaderSource_repaginateNative(
     jId: jstring?,
     fontSize: jdouble,
     width: jdouble,
-    height: jdouble
+    height: jdouble,
+    widthScale: jdouble
 ) -> jstring? {
     return withReaderContext(jId, in: environment) { book, content, position in
         let (paginated, page) = ReaderCache.shared.paginate(
@@ -299,6 +305,7 @@ public func Java_com_mn_android_data_ReaderSource_repaginateNative(
             fontSize: fontSize,
             width: width,
             height: height,
+            widthScale: widthScale,
             restoring: position
         )
         return ["pageCount": paginated.pages.count, "page": page]
@@ -316,7 +323,9 @@ public func Java_com_mn_android_data_ReaderSource_savePositionNative(
     let id = String(fromJNI: jId, in: environment)
     guard let uuid = UUID(uuidString: id),
           let entry = ReaderCache.shared.current() else { return }
-    let engine = PaginationEngine(measurer: KotlinTextMeasurer(fontSize: entry.key.fontSize))
+    let engine = PaginationEngine(
+        measurer: KotlinTextMeasurer(fontSize: entry.key.fontSize, widthScale: entry.key.widthScale)
+    )
     let position = engine.position(atPage: Int(index), in: entry.paginated)
     try? KotlinBookStore().saveReadingPositionSync(position, for: BookID(rawValue: uuid))
 }

@@ -218,15 +218,24 @@ public enum BookFileBridge {
 public struct KotlinTextMeasurer: TextMeasurer {
 
     public let fontSize: Double
+    /// Ratio between the width Compose renders a string at and the width
+    /// Paint measures for it (the two shape text slightly differently, 5–10%
+    /// apart on some devices). The reader computes it on the Compose side and
+    /// passes it in, so the engine wraps exactly as wide as the renderer can
+    /// paint — otherwise the renderer re-wraps the engine's line and the page
+    /// grows orphan words and double-height rows.
+    public let widthScale: Double
 
-    public init(fontSize: Double) {
+    public init(fontSize: Double, widthScale: Double = 1.0) {
         self.fontSize = fontSize
+        self.widthScale = widthScale
     }
 
     public func width(of text: String) -> Double {
         do {
-            return try JavaClass<KotlinTextMetrics>()
+            let measured = try JavaClass<KotlinTextMetrics>()
                 .dynamicJavaStaticMethodCall(methodName: "measure", arguments: text, fontSize, resultType: Double.self)
+            return measured * widthScale
         } catch {
             // Conservative fallback: slightly wide monospace estimate.
             KotlinBookStore.logMeasureFailure(error)

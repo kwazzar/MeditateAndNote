@@ -73,8 +73,14 @@ object ReaderSource {
 
     data class OpenedBook(val title: String, val pageCount: Int, val page: Int)
 
-    fun open(id: String, fontSize: Double, width: Double, height: Double): OpenedBook {
-        val obj = JSONObject(openNative(id, fontSize, width, height))
+    fun open(
+        id: String,
+        fontSize: Double,
+        width: Double,
+        height: Double,
+        widthScale: Double,
+    ): OpenedBook {
+        val obj = JSONObject(openNative(id, fontSize, width, height, widthScale))
         return OpenedBook(
             title = obj.getString("title"),
             pageCount = obj.getInt("pageCount"),
@@ -83,8 +89,14 @@ object ReaderSource {
     }
 
     /** (pageCount, page the reader should land on). */
-    fun repaginate(id: String, fontSize: Double, width: Double, height: Double): Pair<Int, Int> {
-        val obj = JSONObject(repaginateNative(id, fontSize, width, height))
+    fun repaginate(
+        id: String,
+        fontSize: Double,
+        width: Double,
+        height: Double,
+        widthScale: Double,
+    ): Pair<Int, Int> {
+        val obj = JSONObject(repaginateNative(id, fontSize, width, height, widthScale))
         return obj.getInt("pageCount") to obj.getInt("page")
     }
 
@@ -99,8 +111,21 @@ object ReaderSource {
         savePositionNative(id, page)
     }
 
-    private external fun openNative(id: String, fontSize: Double, width: Double, height: Double): String
-    private external fun repaginateNative(id: String, fontSize: Double, width: Double, height: Double): String
+    private external fun openNative(
+        id: String,
+        fontSize: Double,
+        width: Double,
+        height: Double,
+        widthScale: Double,
+    ): String
+
+    private external fun repaginateNative(
+        id: String,
+        fontSize: Double,
+        width: Double,
+        height: Double,
+        widthScale: Double,
+    ): String
     private external fun pageNative(index: Int): String
     private external fun savePositionNative(id: String, page: Int)
 }

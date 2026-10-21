@@ -42,12 +42,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.ExperimentalTextApi
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.sp
 import com.mn.android.R
 import com.mn.android.data.ReaderSettingsStore
+import com.mn.android.data.TextMetrics
 import com.mn.android.data.ReaderSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -86,7 +90,7 @@ private enum class ReaderPaper(
     ),
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalTextApi::class)
 @Composable
 fun ReaderScreen(
     bookId: String,
@@ -115,13 +119,48 @@ fun ReaderScreen(
     // Swift paginates in pixels (Android Paint metrics), so the page box and
     // the font size are converted to px — dp would wrap every line far too early.
     val configuration = androidx.compose.ui.platform.LocalConfiguration.current
-    val density = androidx.compose.ui.platform.LocalDensity.current.density
+    val localDensity = androidx.compose.ui.platform.LocalDensity.current
+    val density = localDensity.density
     val pageWidth = (configuration.screenWidthDp - 40.0) * density
     val pageHeight = (configuration.screenHeightDp - 140.0) * density
-    val fontSizePx = fontSize * density
+    // sp -> px through the Compose density: it carries the system font scale,
+    // which the engine's Paint metrics must match or every line wraps early.
+    val fontSizePx = with(localDensity) { fontSize.sp.toPx() }
+
+    // The engine wraps with Paint metrics, the page renders with Compose
+    // metrics, and the two differ by 5-10% on some devices. Measure one probe
+    // string both ways and hand the ratio to the engine, so its lines are
+    // exactly as wide as the renderer can paint.
+    val textMeasurer = rememberTextMeasurer()
+    val widthScale = remember(fontSizePx) {
+        // The ratio is not perfectly uniform across strings (different glyph
+        // mixes, kerning), so the worst probe wins: one line that is slightly
+        // too wide would be re-wrapped by the renderer into an orphan word.
+        val probes = listOf(
+            "The quiet mind observes its own breath, and every thought passes.",
+            "Chapter line 84. The quiet mind observes",
+            "own breath and lets each thought pass like a",
+            "ill1 O0 0123456789 — narrow: Wm",
+        )
+        // Floor of 1.10: even when the probes measure a smaller drift, the
+        // engine keeps wrapping ~10% early, so no line can ever be too wide
+        // for the renderer. The right edge stays ragged, like a paper book.
+        var worst = 1.10
+        for (probe in probes) {
+            val composeWidth = textMeasurer.measure(
+                text = probe,
+                style = TextStyle(fontSize = fontSize.sp, fontFamily = FontFamily.Serif),
+            ).size.width.toDouble()
+            val paintWidth = TextMetrics.measure(probe, fontSizePx.toDouble())
+            if (paintWidth > 0) {
+                worst = maxOf(worst, composeWidth / paintWidth)
+            }
+        }
+        worst * 1.01
+    }
 
     suspend fun openBook() = withContext(Dispatchers.IO) {
-        val opened = ReaderSource.open(bookId, fontSizePx.toDouble(), pageWidth, pageHeight)
+        val opened = ReaderSource.open(bookId, fontSizePx.toDouble(), pageWidth, pageHeight, widthScale)
         title = opened.title
         pageCount = opened.pageCount
         page = opened.page
@@ -278,7 +317,7 @@ fun ReaderScreen(
                             scope.launch {
                                 val result = runCatching {
                                     withContext(Dispatchers.IO) {
-                                        ReaderSource.repaginate(bookId, fontSizePx.toDouble(), pageWidth, pageHeight)
+                                        ReaderSource.repaginate(bookId, fontSizePx.toDouble(), pageWidth, pageHeight, widthScale)
                                     }
                                 }.getOrNull()
                                 if (result != null) {
