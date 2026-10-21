@@ -162,4 +162,16 @@
     <string name="reader_paper_sepia">Sepia</string>
     <string name="reader_paper_dark">Dark</string>
     <string name="reader_page_format">%1$d / %2$d</string>
+    <!-- Reader: contents, bookmarks, highlights -->
+    <string name="reader_contents">Contents</string>
+    <string name="reader_bookmarks">Bookmarks</string>
+    <string name="reader_marks_empty">No bookmarks yet. Long-press a line to highlight it.</string>
+    <string name="reader_page_mark">Page bookmark</string>
+    <string name="reader_has_note">note</string>
+    <string name="reader_on_this_page">this page</string>
+    <string name="reader_highlight">Highlight</string>
+    <string name="reader_add_to_notes">Add to notes</string>
+    <string name="reader_bookmark_page">Bookmark this page</string>
+    <string name="reader_delete_mark_title">Delete mark?</string>
+    <string name="reader_delete_mark_body">This cannot be undone.</string>
 </resources>

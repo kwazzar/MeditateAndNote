@@ -15,6 +15,8 @@ struct ReaderView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var showsSettings = false
     @State private var showsChrome = false
+    @State private var showsContents = false
+    @State private var showsMarks = false
     @State private var lastSizeClass: UserInterfaceSizeClass?
 
     init(viewModel: ReaderViewModel) {
@@ -48,6 +50,27 @@ struct ReaderView: View {
                 viewModel.persistPosition()
             }
         }
+        .sheet(isPresented: $showsContents) {
+            TableOfContentsSheet(
+                entries: viewModel.tableOfContents,
+                currentPage: viewModel.currentPage,
+                onSelect: { viewModel.jump(to: $0) }
+            )
+        }
+        .sheet(isPresented: $showsMarks) {
+            ReaderMarksSheet(
+                marks: viewModel.marks,
+                currentPage: viewModel.currentPage,
+                onSelect: { mark in
+                    if let page = page(for: mark) {
+                        viewModel.jump(to: page)
+                    }
+                },
+                onDelete: { mark in
+                    Task { await viewModel.deleteMark(mark) }
+                }
+            )
+        }
         .sheet(isPresented: $showsSettings) {
             ReaderSettingsSheet(viewModel: viewModel)
                 .presentationDetents([.medium])
@@ -63,14 +86,22 @@ struct ReaderView: View {
                     .frame(width: proxy.size.width - 48)
                     .position(x: proxy.size.width / 2, y: proxy.size.height / 2)
 
-                // Tap zones: left/right turn, center toggles chrome.
-                HStack(spacing: 0) {
-                    tapZone { viewModel.goToPreviousPage() }
-                    tapZone { showsChrome.toggle() }
-                    tapZone { viewModel.goToNextPage() }
-                }
             }
             .contentShape(Rectangle())
+            // One handler for the whole page: a tap in the left/right third
+            // turns the page, a tap in the center toggles the chrome. A
+            // separate overlay would swallow the long press that opens the
+            // line actions, so the zones live in this handler instead.
+            .onTapGesture(count: 1, coordinateSpace: .local) { location in
+                let third = proxy.size.width / 3
+                if location.x < third {
+                    viewModel.goToPreviousPage()
+                } else if location.x > third * 2 {
+                    viewModel.goToNextPage()
+                } else {
+                    showsChrome.toggle()
+                }
+            }
             .onChange(of: proxy.size) { _, newSize in
                 // Re-paginate when the usable area changes (rotation).
                 if lastSizeClass == nil {
@@ -98,20 +129,38 @@ struct ReaderView: View {
 
     private func pageContent(_ page: PaginatedBook.Page) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            ForEach(Array(page.lines.enumerated()), id: \.offset) { _, line in
+            ForEach(Array(page.lines.enumerated()), id: \.offset) { index, line in
                 Text(line)
                     .font(.system(size: viewModel.fontSize, design: .serif))
                     .lineLimit(1)
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    .contextMenu {
+                        Button {
+                            Task { await viewModel.createHighlight(line: line, lineIndex: index, asNote: false) }
+                        } label: {
+                            Label("Highlight", systemImage: "highlighter")
+                        }
+                        Button {
+                            Task { await viewModel.createHighlight(line: line, lineIndex: index, asNote: true) }
+                        } label: {
+                            Label("Add to notes", systemImage: "note.text")
+                        }
+                        Button {
+                            Task { await viewModel.addBookmark() }
+                        } label: {
+                            Label("Bookmark this page", systemImage: "bookmark")
+                        }
+                    }
             }
         }
         .foregroundStyle(readerText)
     }
 
-    private func tapZone(_ action: @escaping () -> Void) -> some View {
-        Color.clear
-            .contentShape(Rectangle())
-            .onTapGesture(perform: action)
+    /// The page a mark points at, resolved against the current layout.
+    private func page(for mark: Bookmark) -> Int? {
+        guard let paginated = viewModel.paginated else { return nil }
+        return PaginationEngine(measurer: UITextMeasurer(fontSize: viewModel.fontSize))
+            .page(of: mark.position, in: paginated)
     }
 
     // MARK: - Chrome
@@ -126,6 +175,19 @@ struct ReaderView: View {
                         .font(.headline)
                 }
                 Spacer()
+                Button {
+                    showsContents = true
+                } label: {
+                    Image(systemName: "list.bullet")
+                        .font(.headline)
+                }
+                Button {
+                    showsMarks = true
+                    Task { await viewModel.loadMarks() }
+                } label: {
+                    Image(systemName: "bookmark")
+                        .font(.headline)
+                }
                 Button {
                     showsSettings = true
                 } label: {

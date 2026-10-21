@@ -100,11 +100,22 @@ object ReaderSource {
         return obj.getInt("pageCount") to obj.getInt("page")
     }
 
-    /** (page lines, progress 0..1) for the cached layout. */
-    fun page(index: Int): Pair<List<String>, Double> {
+    /** A logical position inside a page (chapter, block, character offset). */
+    data class LinePosition(val chapter: Int, val block: Int, val offset: Int)
+
+    /** (page lines, their positions, progress 0..1) for the cached layout. */
+    fun page(index: Int): Triple<List<String>, List<LinePosition>, Double> {
         val obj = JSONObject(pageNative(index))
         val lines = obj.getJSONArray("lines")
-        return (0 until lines.length()).map { lines.getString(it) } to obj.getDouble("progress")
+        val positions = obj.getJSONArray("positions")
+        return Triple(
+            (0 until lines.length()).map { lines.getString(it) },
+            (0 until positions.length()).map { i ->
+                val item = positions.getJSONObject(i)
+                LinePosition(item.getInt("chapter"), item.getInt("block"), item.getInt("offset"))
+            },
+            obj.getDouble("progress"),
+        )
     }
 
     fun savePosition(id: String, page: Int) {

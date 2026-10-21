@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		BR0000052026102200000104 /* BookmarkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BR0000052026102200000204 /* BookmarkTests.swift */; };
+		BR0000052026102200000103 /* CoreDataBookmarkStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BR0000052026102200000203 /* CoreDataBookmarkStore.swift */; };
+		BR0000052026102200000102 /* BookmarkManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BR0000052026102200000202 /* BookmarkManager.swift */; };
+		BR0000052026102200000101 /* ReaderSheets.swift in Sources */ = {isa = PBXBuildFile; fileRef = BR0000052026102200000201 /* ReaderSheets.swift */; };
 		BR0000042026102100000104 /* BookManagerIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BR0000042026102100000204 /* BookManagerIntegrationTests.swift */; };
 		BR0000042026102100000101 /* PaginationEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BR0000042026102100000201 /* PaginationEngineTests.swift */; };
 		BR0000042026102100000102 /* BookParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BR0000042026102100000202 /* BookParserTests.swift */; };
@@ -213,6 +217,10 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		BR0000052026102200000204 /* BookmarkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookmarkTests.swift; sourceTree = "<group>"; };
+		BR0000052026102200000203 /* CoreDataBookmarkStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataBookmarkStore.swift; sourceTree = "<group>"; };
+		BR0000052026102200000202 /* BookmarkManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookmarkManager.swift; sourceTree = "<group>"; };
+		BR0000052026102200000201 /* ReaderSheets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderSheets.swift; sourceTree = "<group>"; };
 		BR0000042026102100000204 /* BookManagerIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookManagerIntegrationTests.swift; sourceTree = "<group>"; };
 		BR0000042026102100000201 /* PaginationEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaginationEngineTests.swift; sourceTree = "<group>"; };
 		BR0000042026102100000202 /* BookParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookParserTests.swift; sourceTree = "<group>"; };
@@ -667,6 +675,7 @@
 				BR0000042026102100000201 /* PaginationEngineTests.swift */,
 				BR0000042026102100000202 /* BookParserTests.swift */,
 				BR0000042026102100000203 /* CoreDataBookStoreTests.swift */,
+				BR0000052026102200000204 /* BookmarkTests.swift */,
 				BR0000042026102100000204 /* BookManagerIntegrationTests.swift */,
 				2191349DA8C57C98F66164B8 /* MeditationViewModelTests.swift */,
 				73571B9E27145AED24F2D353 /* StreakReminderTests.swift */,
@@ -738,6 +747,7 @@
 				E04F041930C9524FAFD4B329 /* HostedProviderSettings.swift */,
 				BR0000012026102100000207 /* CoreDataBookStore.swift */,
 				BR0000012026102100000208 /* BookFileStorage.swift */,
+				BR0000052026102200000203 /* CoreDataBookmarkStore.swift */,
 			);
 			path = Persistence;
 			sourceTree = "<group>";
@@ -938,6 +948,7 @@
 				BR0000012026102100000201 /* LibraryView.swift */,
 				BR0000012026102100000202 /* ReaderView.swift */,
 				BR0000012026102100000203 /* ReaderSettingsSheet.swift */,
+				BR0000052026102200000201 /* ReaderSheets.swift */,
 			);
 			path = Reading;
 			sourceTree = "<group>";
@@ -948,6 +959,7 @@
 				BR0000012026102100000204 /* BookManager.swift */,
 				BR0000012026102100000205 /* ReaderSettings.swift */,
 				BR0000012026102100000206 /* UITextMeasurer.swift */,
+				BR0000052026102200000202 /* BookmarkManager.swift */,
 			);
 			path = Books;
 			sourceTree = "<group>";
@@ -1116,6 +1128,7 @@
 				BR0000042026102100000101 /* PaginationEngineTests.swift in Sources */,
 				BR0000042026102100000102 /* BookParserTests.swift in Sources */,
 				BR0000042026102100000103 /* CoreDataBookStoreTests.swift in Sources */,
+				BR0000052026102200000104 /* BookmarkTests.swift in Sources */,
 				BR0000042026102100000104 /* BookManagerIntegrationTests.swift in Sources */,
 				ADCF424E00CF12AEB7374BEA /* MeditationViewModelTests.swift in Sources */,
 				4DEA3FE741F1A4530712630B /* StreakReminderTests.swift in Sources */,
@@ -1210,11 +1223,14 @@
 				BR0000012026102100000101 /* LibraryView.swift in Sources */,
 				BR0000012026102100000102 /* ReaderView.swift in Sources */,
 				BR0000012026102100000103 /* ReaderSettingsSheet.swift in Sources */,
+				BR0000052026102200000101 /* ReaderSheets.swift in Sources */,
 				BR0000012026102100000104 /* BookManager.swift in Sources */,
 				BR0000012026102100000105 /* ReaderSettings.swift in Sources */,
 				BR0000012026102100000106 /* UITextMeasurer.swift in Sources */,
+				BR0000052026102200000102 /* BookmarkManager.swift in Sources */,
 				BR0000012026102100000107 /* CoreDataBookStore.swift in Sources */,
 				BR0000012026102100000108 /* BookFileStorage.swift in Sources */,
+				BR0000052026102200000103 /* CoreDataBookmarkStore.swift in Sources */,
 				BR0000012026102100000109 /* BookScope.swift in Sources */,
 				BR000001202610210000010A /* LibraryViewModel.swift in Sources */,
 				BR000001202610210000010B /* ReaderViewModel.swift in Sources */,

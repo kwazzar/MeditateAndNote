@@ -280,8 +280,16 @@ public func Java_com_mn_android_data_ReaderSource_pageNative(
     let paginated = entry.paginated
     let clamped = min(max(Int(index), 0), paginated.pages.count - 1)
     let page = paginated.pages[clamped]
+    let positions: [[String: Any]] = page.linePositions.map { position in
+        [
+            "chapter": position.chapterIndex,
+            "block": position.blockIndex,
+            "offset": position.characterOffset,
+        ]
+    }
     return jwire([
         "lines": page.lines,
+        "positions": positions,
         "progress": paginated.progress(ofPageAt: clamped),
     ], in: environment)
 }
@@ -352,4 +360,184 @@ private func withReaderContext(
         KotlinBookStore.logProbeFailure(error)
         return nil
     }
+}
+
+// MARK: - Table of contents
+
+/// Chapters of the open book with the page each one starts on.
+/// Wire JSON: `[{"chapter","title","page"}]`.
+@_cdecl("Java_com_mn_android_data_BookmarksSource_tocNative")
+public func Java_com_mn_android_data_BookmarksSource_tocNative(
+    environment: UnsafeMutablePointer<JNIEnv?>!,
+    thisClass: jclass,
+    jId: jstring?
+) -> jstring? {
+    let id = String(fromJNI: jId, in: environment)
+    guard let uuid = UUID(uuidString: id) else { return nil }
+    do {
+        let store = KotlinBookStore()
+        guard let book = try store.librarySync().first(where: { $0.id.rawValue == uuid }) else {
+            return nil
+        }
+        let parsed = try BookContentParsing.parse(book)
+        let entry = ReaderCache.shared.current()
+        var records: [[String: Any]] = []
+        for (index, chapter) in parsed.content.chapters.enumerated() {
+            var page = 0
+            if let entry {
+                if let first = entry.paginated.pages.firstIndex(where: { $0.origin.chapterIndex == index }) {
+                    page = first
+                }
+            }
+            records.append([
+                "chapter": index,
+                "title": chapter.title?.isEmpty == false ? chapter.title! : "Chapter \(index + 1)",
+                "page": page,
+            ])
+        }
+        return jwire(["chapters": records], in: environment)
+    } catch {
+        KotlinBookStore.logProbeFailure(error)
+        return nil
+    }
+}
+
+/// The page a logical position resolves to in the current layout.
+@_cdecl("Java_com_mn_android_data_BookmarksSource_pageForPositionNative")
+public func Java_com_mn_android_data_BookmarksSource_pageForPositionNative(
+    environment: UnsafeMutablePointer<JNIEnv?>!,
+    thisClass: jclass,
+    chapter: jint,
+    block: jint,
+    offset: jint
+) -> jint {
+    guard let entry = ReaderCache.shared.current() else { return 0 }
+    let position = ReadingPosition(
+        chapterIndex: Int(chapter),
+        blockIndex: Int(block),
+        characterOffset: Int(offset)
+    )
+    let engine = PaginationEngine(
+        measurer: KotlinTextMeasurer(fontSize: entry.key.fontSize, widthScale: entry.key.widthScale)
+    )
+    return jint(engine.page(of: position, in: entry.paginated) ?? 0)
+}
+
+// MARK: - Marks (bookmarks + highlights)
+
+/// The reader's marks in one book. Wire JSON:
+/// `[{"id","chapter","block","offset","text","noteId","createdAt"}]`.
+@_cdecl("Java_com_mn_android_data_BookmarksSource_readNative")
+public func Java_com_mn_android_data_BookmarksSource_readNative(
+    environment: UnsafeMutablePointer<JNIEnv?>!,
+    thisClass: jclass,
+    jId: jstring?
+) -> jstring? {
+    let id = String(fromJNI: jId, in: environment)
+    guard let uuid = UUID(uuidString: id) else { return nil }
+    do {
+        let marks = try KotlinBookmarkStore().allSync().filter { $0.bookID.rawValue == uuid }
+        let records: [[String: Any]] = marks.map { mark in
+            [
+                "id": mark.id.rawValue.uuidString,
+                "chapter": mark.position.chapterIndex,
+                "block": mark.position.blockIndex,
+                "offset": mark.position.characterOffset,
+                "text": mark.text ?? "",
+                "noteId": mark.noteID?.rawValue.uuidString ?? "",
+                "createdAt": mark.createdAt.timeIntervalSince1970 * 1000.0,
+            ]
+        }
+        return jwire(["marks": records], in: environment)
+    } catch {
+        KotlinBookStore.logProbeFailure(error)
+        return nil
+    }
+}
+
+/// Adds a page bookmark. Returns the mark id.
+@_cdecl("Java_com_mn_android_data_BookmarksSource_addPageNative")
+public func Java_com_mn_android_data_BookmarksSource_addPageNative(
+    environment: UnsafeMutablePointer<JNIEnv?>!,
+    thisClass: jclass,
+    jId: jstring?,
+    chapter: jint,
+    block: jint,
+    offset: jint
+) -> jstring? {
+    let id = String(fromJNI: jId, in: environment)
+    guard let uuid = UUID(uuidString: id) else { return nil }
+    do {
+        let mark = Bookmark.page(
+            BookID(rawValue: uuid),
+            at: ReadingPosition(chapterIndex: Int(chapter), blockIndex: Int(block), characterOffset: Int(offset))
+        )
+        try KotlinBookmarkStore().saveSync(mark)
+        return jstringFor(mark.id.rawValue.uuidString, in: environment)
+    } catch {
+        KotlinBookStore.logProbeFailure(error)
+        return nil
+    }
+}
+
+/// Adds a highlight; with `asNote` it also writes a note with the passage.
+/// Returns the mark id.
+@_cdecl("Java_com_mn_android_data_BookmarksSource_addHighlightNative")
+public func Java_com_mn_android_data_BookmarksSource_addHighlightNative(
+    environment: UnsafeMutablePointer<JNIEnv?>!,
+    thisClass: jclass,
+    jId: jstring?,
+    chapter: jint,
+    block: jint,
+    offset: jint,
+    jText: jstring?,
+    jBookTitle: jstring?,
+    jLocation: jstring?,
+    asNote: jboolean
+) -> jstring? {
+    let id = String(fromJNI: jId, in: environment)
+    let text = String(fromJNI: jText, in: environment)
+    let bookTitle = String(fromJNI: jBookTitle, in: environment)
+    let location = String(fromJNI: jLocation, in: environment)
+    guard let uuid = UUID(uuidString: id) else { return nil }
+    do {
+        var mark = Bookmark.highlight(
+            BookID(rawValue: uuid),
+            at: ReadingPosition(chapterIndex: Int(chapter), blockIndex: Int(block), characterOffset: Int(offset)),
+            text: text
+        )
+        if asNote != 0 {
+            let note = Note(
+                title: NoteTitle(bookTitle),
+                content: NoteContent("\"\(text)\"\n\n— \(bookTitle), \(location)")
+            )
+            try KotlinNoteDataSource().saveSync(note)
+            mark.noteID = note.id
+        }
+        try KotlinBookmarkStore().saveSync(mark)
+        return jstringFor(mark.id.rawValue.uuidString, in: environment)
+    } catch {
+        KotlinBookStore.logProbeFailure(error)
+        return nil
+    }
+}
+
+/// Removes a mark by id.
+@_cdecl("Java_com_mn_android_data_BookmarksSource_deleteNative")
+public func Java_com_mn_android_data_BookmarksSource_deleteNative(
+    environment: UnsafeMutablePointer<JNIEnv?>!,
+    thisClass: jclass,
+    jId: jstring?
+) {
+    let id = String(fromJNI: jId, in: environment)
+    guard let uuid = UUID(uuidString: id) else { return }
+    do {
+        try KotlinBookmarkStore().deleteSync(BookmarkID(rawValue: uuid))
+    } catch {
+        KotlinBookStore.logProbeFailure(error)
+    }
+}
+
+private func jstringFor(_ value: String, in environment: UnsafeMutablePointer<JNIEnv?>!) -> jstring? {
+    value.getJNILocalRefValue(in: environment)
 }

@@ -116,4 +116,12 @@ object NativeProbe {
      * Swift side: BookProbes.swift
      */
     external fun bookPaginationProbe(out: LongArray)
+
+    /**
+     * Runs the reader's marks round trip through Swift and fills [out] with
+     * one flag per check. Same out-param rule.
+     *
+     * Swift side: BookBookmarkProbes.swift
+     */
+    external fun bookmarkProbe(out: LongArray)
 }

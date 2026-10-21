@@ -21,6 +21,7 @@ enum CDEntity {
     static let noteInsight = "CDNoteInsight"
     static let noteEmbedding = "CDNoteEmbedding"
     static let book = "CDBook"
+    static let bookmark = "CDBookmark"
 }
 
 // MARK: - CoreDataManager
@@ -437,11 +438,68 @@ final class CoreDataManager: @unchecked Sendable {
         ]
         bookEntity.uniquenessConstraints = [[bookID]]
 
+        // ── CDBookmark ──────────────────────────────────────────
+        // The reader's marks: page bookmarks and passage highlights,
+        // optionally linked to a note.
+        let bookmarkEntity = NSEntityDescription()
+        bookmarkEntity.name = CDEntity.bookmark
+        bookmarkEntity.managedObjectClassName = NSStringFromClass(NSManagedObject.self)
+
+        let bookmarkID = NSAttributeDescription()
+        bookmarkID.name = "id"
+        bookmarkID.attributeType = .UUIDAttributeType
+        bookmarkID.isOptional = false
+
+        let bookmarkBookID = NSAttributeDescription()
+        bookmarkBookID.name = "bookID"
+        bookmarkBookID.attributeType = .UUIDAttributeType
+        bookmarkBookID.isOptional = false
+
+        let bookmarkPositionChapter = NSAttributeDescription()
+        bookmarkPositionChapter.name = "positionChapter"
+        bookmarkPositionChapter.attributeType = .integer32AttributeType
+        bookmarkPositionChapter.isOptional = false
+        bookmarkPositionChapter.defaultValue = 0
+
+        let bookmarkPositionBlock = NSAttributeDescription()
+        bookmarkPositionBlock.name = "positionBlock"
+        bookmarkPositionBlock.attributeType = .integer32AttributeType
+        bookmarkPositionBlock.isOptional = false
+        bookmarkPositionBlock.defaultValue = 0
+
+        let bookmarkPositionOffset = NSAttributeDescription()
+        bookmarkPositionOffset.name = "positionOffset"
+        bookmarkPositionOffset.attributeType = .integer32AttributeType
+        bookmarkPositionOffset.isOptional = false
+        bookmarkPositionOffset.defaultValue = 0
+
+        let bookmarkText = NSAttributeDescription()
+        bookmarkText.name = "text"
+        bookmarkText.attributeType = .stringAttributeType
+        bookmarkText.isOptional = true
+
+        let bookmarkNoteID = NSAttributeDescription()
+        bookmarkNoteID.name = "noteID"
+        bookmarkNoteID.attributeType = .UUIDAttributeType
+        bookmarkNoteID.isOptional = true
+
+        let bookmarkCreatedAt = NSAttributeDescription()
+        bookmarkCreatedAt.name = "createdAt"
+        bookmarkCreatedAt.attributeType = .dateAttributeType
+        bookmarkCreatedAt.isOptional = false
+        bookmarkCreatedAt.defaultValue = Date.distantPast
+
+        bookmarkEntity.properties = [
+            bookmarkID, bookmarkBookID, bookmarkPositionChapter, bookmarkPositionBlock,
+            bookmarkPositionOffset, bookmarkText, bookmarkNoteID, bookmarkCreatedAt,
+        ]
+        bookmarkEntity.uniquenessConstraints = [[bookmarkID]]
+
         // ── Register ─────────────────────────────────────────────
         model.entities = [
             noteEntity, sessionEntity, activityEntity, streakEntity,
             aiDraftEntity, aiDraftMetricEntity, noteInsightEntity,
-            noteEmbeddingEntity, bookEntity,
+            noteEmbeddingEntity, bookEntity, bookmarkEntity,
         ]
 
         return model

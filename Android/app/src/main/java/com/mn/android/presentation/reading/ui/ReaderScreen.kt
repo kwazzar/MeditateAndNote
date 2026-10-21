@@ -1,6 +1,8 @@
 package com.mn.android.presentation.reading.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,7 +26,9 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.FormatSize
+import androidx.compose.material.icons.filled.List
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -50,6 +54,7 @@ import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.sp
 import com.mn.android.R
+import com.mn.android.data.BookmarksSource
 import com.mn.android.data.ReaderSettingsStore
 import com.mn.android.data.TextMetrics
 import com.mn.android.data.ReaderSource
@@ -90,7 +95,7 @@ private enum class ReaderPaper(
     ),
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalTextApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalTextApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun ReaderScreen(
     bookId: String,
@@ -113,8 +118,16 @@ fun ReaderScreen(
     var pageCount by remember { mutableIntStateOf(0) }
     var page by remember { mutableIntStateOf(0) }
     var lines by remember { mutableStateOf<List<String>>(emptyList()) }
+    var linePositions by remember { mutableStateOf<List<ReaderSource.LinePosition>>(emptyList()) }
     var progress by remember { mutableFloatStateOf(0f) }
     var loadFailed by remember { mutableStateOf(false) }
+
+    var chapters by remember { mutableStateOf<List<BookmarksSource.Chapter>>(emptyList()) }
+    var marks by remember { mutableStateOf<List<BookmarksSource.Mark>>(emptyList()) }
+    var showContents by remember { mutableStateOf(false) }
+    var showMarks by remember { mutableStateOf(false) }
+    var actionLine by remember { mutableStateOf<Int?>(null) }
+    val scrollState = rememberScrollState()
 
     // Swift paginates in pixels (Android Paint metrics), so the page box and
     // the font size are converted to px — dp would wrap every line far too early.
@@ -164,13 +177,18 @@ fun ReaderScreen(
         title = opened.title
         pageCount = opened.pageCount
         page = opened.page
-        val (pageLines, pageProgress) = ReaderSource.page(opened.page)
+        val (pageLines, pagePositions, pageProgress) = ReaderSource.page(opened.page)
         lines = pageLines
+        linePositions = pagePositions
         progress = pageProgress.toFloat()
     }
 
     LaunchedEffect(bookId) {
-        runCatching { openBook() }.onFailure {
+        runCatching {
+            openBook()
+            chapters = withContext(Dispatchers.IO) { BookmarksSource.readChapters(bookId) }
+            marks = withContext(Dispatchers.IO) { BookmarksSource.readMarks(bookId) }
+        }.onFailure {
             android.util.Log.e("ReaderScreen", "open failed", it)
             loadFailed = true
         }
@@ -180,10 +198,11 @@ fun ReaderScreen(
         val clamped = index.coerceIn(0, (pageCount - 1).coerceAtLeast(0))
         page = clamped
         scope.launch {
-            val (pageLines, pageProgress) = runCatching {
+            val (pageLines, pagePositions, pageProgress) = runCatching {
                 withContext(Dispatchers.IO) { ReaderSource.page(clamped) }
-            }.getOrNull() ?: (emptyList<String>() to 0.0)
+            }.getOrNull() ?: Triple(emptyList<String>(), emptyList<ReaderSource.LinePosition>(), 0.0)
             lines = pageLines
+            linePositions = pagePositions
             progress = pageProgress.toFloat()
             withContext(Dispatchers.IO) { ReaderSource.savePosition(bookId, clamped) }
         }
@@ -219,11 +238,37 @@ fun ReaderScreen(
         Modifier
             .fillMaxSize()
             .background(paper.background)
+            // One handler for the whole page: a tap turns the page (left /
+            // right thirds) or toggles the chrome (center), a long press opens
+            // the actions for the line under the finger. Separate overlays
+            // would swallow the long press before the text sees it.
+            .pointerInput(pageCount) {
+                detectTapGestures(
+                    onTap = { offset ->
+                        val third = size.width / 3f
+                        when {
+                            offset.x < third -> showPage(page - 1)
+                            offset.x > third * 2 -> showPage(page + 1)
+                            else -> showChrome = !showChrome
+                        }
+                    },
+                    onLongPress = { offset ->
+                        val lineHeightPx = with(density) { (fontSize * 1.45f).sp.toPx() }
+                        val topPaddingPx = with(density) { 56.dp.toPx() }
+                        if (lineHeightPx > 0 && lines.isNotEmpty()) {
+                            val index = ((offset.y + scrollState.value - topPaddingPx) / lineHeightPx)
+                                .toInt()
+                                .coerceIn(0, lines.lastIndex)
+                            actionLine = index
+                        }
+                    },
+                )
+            }
     ) {
         Column(
             Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scrollState)
                 .padding(horizontal = 20.dp, vertical = 56.dp),
         ) {
             lines.forEach { line ->
@@ -237,24 +282,6 @@ fun ReaderScreen(
                 )
             }
         }
-
-        // Tap zones over the page: left = back, center = chrome, right = forward.
-        // The top and bottom bars are excluded so their buttons stay clickable.
-        Box(
-            Modifier
-                .fillMaxSize()
-                .padding(top = 56.dp, bottom = 56.dp)
-                .pointerInput(pageCount) {
-                    detectTapGestures { offset ->
-                        val third = size.width / 3f
-                        when {
-                            offset.x < third -> showPage(page - 1)
-                            offset.x > third * 2 -> showPage(page + 1)
-                            else -> showChrome = !showChrome
-                        }
-                    }
-                }
-        )
 
         if (showChrome) {
             Row(
@@ -280,6 +307,30 @@ fun ReaderScreen(
                         tint = paper.text,
                     )
                 }
+                IconButton(onClick = {
+                    showMarks = true
+                    scope.launch {
+                        marks = withContext(Dispatchers.IO) { BookmarksSource.readMarks(bookId) }
+                    }
+                }) {
+                    Icon(
+                        Icons.Filled.Bookmark,
+                        contentDescription = stringResource(R.string.reader_bookmarks),
+                        tint = paper.text,
+                    )
+                }
+                IconButton(onClick = {
+                    showContents = true
+                    scope.launch {
+                        chapters = withContext(Dispatchers.IO) { BookmarksSource.readChapters(bookId) }
+                    }
+                }) {
+                    Icon(
+                        Icons.Filled.List,
+                        contentDescription = stringResource(R.string.reader_contents),
+                        tint = paper.text,
+                    )
+                }
             }
             Row(
                 Modifier
@@ -301,6 +352,94 @@ fun ReaderScreen(
                 )
             }
         }
+    }
+
+    if (showContents) {
+        TableOfContentsSheet(
+            chapters = chapters,
+            currentPage = page,
+            onSelect = { chapter ->
+                showPage(chapter.page)
+                showContents = false
+            },
+            onDismiss = { showContents = false },
+        )
+    }
+
+    if (showMarks) {
+        ReaderMarksSheet(
+            marks = marks,
+            onSelect = { mark ->
+                scope.launch {
+                    val target = withContext(Dispatchers.IO) {
+                        BookmarksSource.pageForPosition(mark.chapter, mark.block, mark.offset)
+                    }
+                    showPage(target)
+                }
+                showMarks = false
+            },
+            onDelete = { mark ->
+                scope.launch {
+                    withContext(Dispatchers.IO) { BookmarksSource.delete(mark.id) }
+                    marks = withContext(Dispatchers.IO) { BookmarksSource.readMarks(bookId) }
+                }
+            },
+            onDismiss = { showMarks = false },
+        )
+    }
+
+    actionLine?.let { index ->
+        val line = lines.getOrNull(index).orEmpty()
+        val position = linePositions.getOrNull(index)
+        LineActionsSheet(
+            lineText = line,
+            onHighlight = {
+                scope.launch {
+                    withContext(Dispatchers.IO) {
+                        BookmarksSource.addHighlight(
+                            bookId = bookId,
+                            chapter = position?.chapter ?: 0,
+                            block = position?.block ?: 0,
+                            offset = position?.offset ?: 0,
+                            text = line,
+                            bookTitle = title,
+                            location = "page ${page + 1}",
+                            asNote = false,
+                        )
+                    }
+                    marks = withContext(Dispatchers.IO) { BookmarksSource.readMarks(bookId) }
+                }
+                actionLine = null
+            },
+            onAddToNotes = {
+                scope.launch {
+                    withContext(Dispatchers.IO) {
+                        BookmarksSource.addHighlight(
+                            bookId = bookId,
+                            chapter = position?.chapter ?: 0,
+                            block = position?.block ?: 0,
+                            offset = position?.offset ?: 0,
+                            text = line,
+                            bookTitle = title,
+                            location = "page ${page + 1}",
+                            asNote = true,
+                        )
+                    }
+                    marks = withContext(Dispatchers.IO) { BookmarksSource.readMarks(bookId) }
+                }
+                actionLine = null
+            },
+            onBookmarkPage = {
+                scope.launch {
+                    withContext(Dispatchers.IO) {
+                        BookmarksSource.addPageBookmark(bookId, 0, 0, 0)
+                    }
+                    marks = withContext(Dispatchers.IO) { BookmarksSource.readMarks(bookId) }
+                }
+                actionLine = null
+            },
+            onDismiss = { actionLine = null },
+        )
     }
 
     if (showSettings) {

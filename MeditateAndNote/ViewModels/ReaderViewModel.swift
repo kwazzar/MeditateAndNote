@@ -14,6 +14,7 @@ final class ReaderViewModel {
     let bookID: BookID
 
     private let manager: any BookProvidable & BookManageable
+    private let bookmarks: any BookmarkProvidable & BookmarkManageable
     private let settings: ReaderSettings
 
     private(set) var book: Book?
@@ -21,6 +22,11 @@ final class ReaderViewModel {
     var currentPage: Int = 0
     private(set) var isLoading = true
     private(set) var loadFailed = false
+
+    /// The book's chapters with the page each one starts on.
+    private(set) var tableOfContents: [ChapterEntry] = []
+    /// The reader's marks in this book, newest last.
+    private(set) var marks: [Bookmark] = []
 
     private var content: BookContent?
     private var paginationTask: Task<Void, Never>?
@@ -43,6 +49,94 @@ final class ReaderViewModel {
         set { settings.theme = newValue }
     }
 
+    // MARK: - Table of contents
+
+    /// A chapter and the page it starts on.
+    struct ChapterEntry: Identifiable, Hashable {
+        let id: Int
+        let title: String
+        let page: Int
+    }
+
+    /// Rebuilds the chapter list against the current layout.
+    func rebuildTableOfContents() {
+        guard let paginated, let content else {
+            tableOfContents = []
+            return
+        }
+        var entries: [ChapterEntry] = []
+        for (index, chapter) in content.chapters.enumerated() {
+            guard let page = paginated.pages.firstIndex(where: { $0.origin.chapterIndex == index }) else {
+                continue
+            }
+            entries.append(
+                ChapterEntry(
+                    id: index,
+                    title: chapter.title?.isEmpty == false ? chapter.title! : "Chapter \(index + 1)",
+                    page: page
+                )
+            )
+        }
+        tableOfContents = entries
+    }
+
+    // MARK: - Marks
+
+    func loadMarks() async {
+        marks = (try? await bookmarks.bookmarks(for: bookID)) ?? []
+    }
+
+    /// The logical position of the page currently shown.
+    func currentPosition() -> ReadingPosition {
+        guard let paginated else { return ReadingPosition() }
+        return PaginationEngine(measurer: UITextMeasurer(fontSize: settings.fontSize))
+            .position(atPage: currentPage, in: paginated)
+    }
+
+    /// Position of a line on the current page (used for highlights).
+    func position(ofLineAt index: Int) -> ReadingPosition {
+        guard let paginated,
+              let page = paginated.pages.indices.contains(currentPage) ? paginated.pages[currentPage] : nil,
+              page.linePositions.indices.contains(index) else {
+            return currentPosition()
+        }
+        return page.linePositions[index]
+    }
+
+    func addBookmark() async {
+        let mark = Bookmark.page(bookID, at: currentPosition())
+        try? await bookmarks.add(mark)
+        await loadMarks()
+    }
+
+    func deleteMark(_ mark: Bookmark) async {
+        try? await bookmarks.delete(id: mark.id)
+        await loadMarks()
+    }
+
+    /// Highlights a line and optionally writes a note with the passage.
+    func createHighlight(line: String, lineIndex: Int, asNote: Bool) async {
+        let position = position(ofLineAt: lineIndex)
+        let location = "page \(currentPage + 1)"
+        try? await bookmarks.createHighlight(
+            bookID: bookID,
+            position: position,
+            text: line,
+            bookTitle: book?.title ?? "",
+            location: location,
+            asNote: asNote
+        )
+        await loadMarks()
+    }
+
+    // MARK: - Navigation
+
+    func jump(to page: Int) {
+        guard pageCount > 0 else { return }
+        currentPage = min(max(page, 0), pageCount - 1)
+        persistPosition()
+    }
+
     /// Re-layout (font size or rotation change) that lands on the same
     /// logical position, not the same page index.
     func repaginateKeepingPosition() {
@@ -54,9 +148,11 @@ final class ReaderViewModel {
 
     init(bookID: BookID,
          manager: any BookProvidable & BookManageable,
+         bookmarks: any BookmarkProvidable & BookmarkManageable,
          settings: ReaderSettings = .shared) {
         self.bookID = bookID
         self.manager = manager
+        self.bookmarks = bookmarks
         self.settings = settings
     }
 
@@ -71,6 +167,7 @@ final class ReaderViewModel {
             self.content = content
             try? await manager.markOpened(bookID)
             await repaginate(restoring: position)
+            await loadMarks()
         } catch {
             loadFailed = true
         }
@@ -126,6 +223,7 @@ final class ReaderViewModel {
             } else {
                 self.currentPage = min(self.currentPage, result.pages.count - 1)
             }
+            self.rebuildTableOfContents()
         }
     }
 
