@@ -150,6 +150,13 @@ extension RootContainer {
                         .toolbar(.hidden, for: .tabBar)
                 }
                 .tag(TabDestination.meditations)
+
+                NavigationContainer(parentRouter: router, tab: .reading) {
+                    LibraryView(viewModel: container.makeLibraryViewModel())
+                        .environment(themeManager)
+                        .toolbar(.hidden, for: .tabBar)
+                }
+                .tag(TabDestination.reading)
             }
             .ignoresSafeArea(.container, edges: .all)
 

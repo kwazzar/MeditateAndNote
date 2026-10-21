@@ -156,8 +156,8 @@ private let noteProbeSlots = 8
 /// after deleteAll, [6] 1 if a step threw, [7] unused.
 ///
 /// Kotlin side: NoteProbe.kt
-@_cdecl("Java_com_mn_android_NativeProbe_noteProbe")
-public func Java_com_mn_android_NativeProbe_noteProbe(
+@_cdecl("Java_com_mn_android_debug_NativeProbe_noteProbe")
+public func Java_com_mn_android_debug_NativeProbe_noteProbe(
     environment: UnsafeMutablePointer<JNIEnv?>!,
     thisClass: jclass,
     out: jlongArray

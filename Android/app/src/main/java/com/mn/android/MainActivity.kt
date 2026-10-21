@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Article
 import androidx.compose.material.icons.outlined.Eco
 import androidx.compose.material.icons.outlined.Home
@@ -82,7 +83,11 @@ import com.mn.android.presentation.settings.ui.SettingsScreen
 import com.mn.android.presentation.meditate.ui.BreathingScreen
 import com.mn.android.presentation.meditate.ui.MeditateSelectScreen
 import com.mn.android.presentation.notes.ui.NoteEditorScreen
+import com.mn.android.data.BookBlobStore
+import com.mn.android.data.ReaderSettingsStore
 import com.mn.android.presentation.notes.ui.NoteMenuScreen
+import com.mn.android.presentation.reading.ui.LibraryScreen
+import com.mn.android.presentation.reading.ui.ReaderScreen
 import com.mn.android.presentation.onboarding.ui.OnboardingScreen
 import com.mn.android.presentation.streak.ui.StreakDetailScreen
 import com.mn.android.presentation.theme.ui.MnThemeProvider
@@ -270,6 +275,20 @@ private fun MnNav() {
                     onBack = { navController.popBackStack() },
                 )
             }
+            composable("reading") {
+                BookBlobStore.configure(LocalContext.current)
+                LibraryScreen(
+                    onOpenBook = { id -> navController.navigate("reader/$id") },
+                )
+            }
+            composable("reader/{bookId}") { backStackEntry ->
+                val id = backStackEntry.arguments?.getString("bookId") ?: ""
+                ReaderSettingsStore.configure(LocalContext.current)
+                ReaderScreen(
+                    bookId = id,
+                    onBack = { navController.popBackStack() },
+                )
+            }
             composable("meditate") {
                 MeditateSelectScreen(
                     onStartMeditation = { id -> navController.navigate("breathing/$id") },
@@ -304,6 +323,7 @@ private val TabBarItems = listOf(
     TabItem("notes", R.string.notes, Icons.Filled.Article),
     TabItem("home", R.string.home, Icons.Outlined.Home),
     TabItem("meditate", R.string.meditations, Icons.Outlined.Eco),
+    TabItem("reading", R.string.reading, Icons.AutoMirrored.Filled.MenuBook),
 )
 
 /** Tab roots only: pushed screens (settings, breathing, editor) go full-screen. */

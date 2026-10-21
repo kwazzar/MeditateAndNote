@@ -143,8 +143,8 @@ private let sessionProbeSlots = 8
 /// survived, [6] sessions after deleteAll, [7] 1 if a step threw.
 ///
 /// Kotlin side: SessionProbe.kt
-@_cdecl("Java_com_mn_android_NativeProbe_sessionProbe")
-public func Java_com_mn_android_NativeProbe_sessionProbe(
+@_cdecl("Java_com_mn_android_debug_NativeProbe_sessionProbe")
+public func Java_com_mn_android_debug_NativeProbe_sessionProbe(
     environment: UnsafeMutablePointer<JNIEnv?>!,
     thisClass: jclass,
     out: jlongArray

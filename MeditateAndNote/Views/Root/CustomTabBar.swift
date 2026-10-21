@@ -16,6 +16,7 @@ struct CustomTabBar: View {
             tabButton(.notes, systemImage: "note.text", title: "Notes")
             tabButton(.home, systemImage: "house", title: "Home")
             tabButton(.meditations, systemImage: "leaf", title: "Meditations")
+            tabButton(.reading, systemImage: "book", title: "Reading")
         }
         .padding(.horizontal)
         .padding(.vertical, 6)

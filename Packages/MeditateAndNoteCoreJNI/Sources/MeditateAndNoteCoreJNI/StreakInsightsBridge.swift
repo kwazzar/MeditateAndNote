@@ -246,8 +246,8 @@ public func Java_com_mn_android_data_ReminderScheduleSource_fillNextFireDates(
 /// distributionOk, resilienceOk, heatmapOk, failed].
 ///
 /// Kotlin side: StreakInsightsProbe.kt
-@_cdecl("Java_com_mn_android_NativeProbe_streakInsightsProbe")
-public func Java_com_mn_android_NativeProbe_streakInsightsProbe(
+@_cdecl("Java_com_mn_android_debug_NativeProbe_streakInsightsProbe")
+public func Java_com_mn_android_debug_NativeProbe_streakInsightsProbe(
     environment: UnsafeMutablePointer<JNIEnv?>!,
     thisClass: jclass,
     out: jlongArray
@@ -298,8 +298,8 @@ public func Java_com_mn_android_NativeProbe_streakInsightsProbe(
 /// Fills `out` from a known settings (daily at 20:00) and checks the builder
 /// produced seven strictly-future dates a day apart. Results: [countOk,
 /// orderedOk, spacedOk, failed]. Kotlin side: ReminderScheduleProbe.kt
-@_cdecl("Java_com_mn_android_NativeProbe_reminderScheduleProbe")
-public func Java_com_mn_android_NativeProbe_reminderScheduleProbe(
+@_cdecl("Java_com_mn_android_debug_NativeProbe_reminderScheduleProbe")
+public func Java_com_mn_android_debug_NativeProbe_reminderScheduleProbe(
     environment: UnsafeMutablePointer<JNIEnv?>!,
     thisClass: jclass,
     out: jlongArray

@@ -28,11 +28,15 @@ let package = Package(
         .package(path: swiftJavaPath),
     ],
     targets: [
+        // zlib C shim for the minimal EPUB zip reader (`MiniZipReader`): the
+        // NDK sysroot ships zlib.h and libz, so no pkg-config is needed.
+        .systemLibrary(name: "CZlib"),
         .target(
             name: "MeditateAndNoteCoreJNI",
             dependencies: [
                 .product(name: "MeditateAndNoteCore", package: "MeditateAndNoteCore"),
                 .product(name: "SwiftJavaStatic", package: "swift-java"),
+                "CZlib",
             ],
             swiftSettings: [.swiftLanguageMode(.v5)]
         )

@@ -23,8 +23,8 @@ final class RouterTests: XCTestCase {
     func testPush_appendsToNavigationPath() {
         let router = Router(level: 1, identifierTab: .notes)
         router.push(.settings)
-        router.push(.readingView)
-        XCTAssertEqual(router.navigationStackPath, [.settings, .readingView])
+        router.push(.streakDetail)
+        XCTAssertEqual(router.navigationStackPath, [.settings, .streakDetail])
     }
 
     func testNavigate_push_routesOntoStack() {
@@ -237,7 +237,7 @@ final class DestinationTests: XCTestCase {
 
     func testDestinationDescriptions() {
         XCTAssertEqual(Destination.tab(.home).description, ".tab(home)")
-        XCTAssertEqual(Destination.push(.readingView).description, ".push(.readingView)")
+        XCTAssertEqual(Destination.push(.streakDetail).description, ".push(.streakDetail)")
         XCTAssertEqual(Destination.sheet(.newNote).description, ".sheet(.newNote)")
         let session = FullScreenDestination.meditationSession(id: "m1")
         XCTAssertEqual(Destination.fullScreen(session).description, ".fullScreen(\(session))")
