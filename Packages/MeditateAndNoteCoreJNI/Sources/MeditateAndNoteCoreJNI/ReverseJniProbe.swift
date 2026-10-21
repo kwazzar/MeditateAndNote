@@ -21,7 +21,7 @@ import SwiftJava
 import SwiftJavaJNICore
 
 /// Binds the Kotlin object's JVM class so its static methods can be looked up.
-@JavaClass("com.mn.android.ReverseJniProbe")
+@JavaClass("com.mn.android.debug.ReverseJniProbe")
 public class ReverseJniProbe: JavaObject {}
 
 /// Result handed back to Kotlin, so the test does not depend on logging.

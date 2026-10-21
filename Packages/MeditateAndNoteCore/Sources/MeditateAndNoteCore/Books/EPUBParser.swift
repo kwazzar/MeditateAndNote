@@ -4,6 +4,9 @@
 //
 
 import Foundation
+#if canImport(FoundationXML)
+import FoundationXML
+#endif
 
 /// Parses EPUB (OPF spine order + XHTML chapters) into `BookContent`.
 ///
@@ -30,7 +33,7 @@ public struct EPUBParser: Sendable {
             throw BookParseError.invalidFormat("missing OPF at \(opfPath)")
         }
         let opf = try Self.parseOPF(opfData)
-        let baseDir = (opfPath as NSString).deletingLastPathComponent
+        let baseDir = Self.directory(of: opfPath)
 
         var chapters: [BookChapter] = []
         for item in opf.spine {
@@ -253,6 +256,11 @@ public struct EPUBParser: Sendable {
     }
 
     // MARK: - Helpers
+
+    private static func directory(of path: String) -> String {
+        guard let lastSlash = path.lastIndex(of: "/") else { return "" }
+        return String(path[..<lastSlash])
+    }
 
     private static func resolve(_ baseDir: String, _ href: String) -> String {
         let path = href.split(separator: "?").first.map(String.init) ?? href

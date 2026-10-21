@@ -113,8 +113,8 @@ private let streakProbeSlots = 8
 /// [7] 1 if a step threw.
 ///
 /// Kotlin side: StreakProbe.kt
-@_cdecl("Java_com_mn_android_NativeProbe_streakProbe")
-public func Java_com_mn_android_NativeProbe_streakProbe(
+@_cdecl("Java_com_mn_android_debug_NativeProbe_streakProbe")
+public func Java_com_mn_android_debug_NativeProbe_streakProbe(
     environment: UnsafeMutablePointer<JNIEnv?>!,
     thisClass: jclass,
     out: jlongArray
@@ -248,8 +248,8 @@ public func Java_com_mn_android_data_StreakHeaderSource_read(
 /// cleared, [5] today clean, [6] 1 if a step threw.
 ///
 /// Kotlin side: StreakHeaderProbe.kt
-@_cdecl("Java_com_mn_android_NativeProbe_streakHeaderProbe")
-public func Java_com_mn_android_NativeProbe_streakHeaderProbe(
+@_cdecl("Java_com_mn_android_debug_NativeProbe_streakHeaderProbe")
+public func Java_com_mn_android_debug_NativeProbe_streakHeaderProbe(
     environment: UnsafeMutablePointer<JNIEnv?>!,
     thisClass: jclass,
     out: jlongArray
@@ -376,8 +376,8 @@ public func Java_com_mn_android_data_StreakDetailSource_read(
 /// [5] longestStreak, [6] totalCompleteDays, [7] 1 if a step threw.
 ///
 /// Kotlin side: StreakDetailProbe.kt
-@_cdecl("Java_com_mn_android_NativeProbe_streakDetailProbe")
-public func Java_com_mn_android_NativeProbe_streakDetailProbe(
+@_cdecl("Java_com_mn_android_debug_NativeProbe_streakDetailProbe")
+public func Java_com_mn_android_debug_NativeProbe_streakDetailProbe(
     environment: UnsafeMutablePointer<JNIEnv?>!,
     thisClass: jclass,
     out: jlongArray

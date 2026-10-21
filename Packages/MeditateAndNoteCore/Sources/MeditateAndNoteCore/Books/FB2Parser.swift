@@ -4,6 +4,9 @@
 //
 
 import Foundation
+#if canImport(FoundationXML)
+import FoundationXML
+#endif
 
 /// Parses FictionBook 2 (FB2) XML into `BookContent`.
 /// Extracts title, author, cover image reference; text only (no inline images).

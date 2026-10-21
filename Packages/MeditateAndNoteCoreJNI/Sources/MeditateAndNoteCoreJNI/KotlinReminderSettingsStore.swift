@@ -105,8 +105,8 @@ public struct KotlinReminderSettingsStore: ReminderSettingsStore {
 /// `out` receives [enabled, hour, minute, weekdayCount, ...weekdays].
 ///
 /// Kotlin side: ReminderSettingsProbe.kt
-@_cdecl("Java_com_mn_android_NativeProbe_saveReminders")
-public func Java_com_mn_android_NativeProbe_saveReminders(
+@_cdecl("Java_com_mn_android_debug_NativeProbe_saveReminders")
+public func Java_com_mn_android_debug_NativeProbe_saveReminders(
     environment: UnsafeMutablePointer<JNIEnv?>!,
     thisClass: jclass,
     enabled: jboolean,
@@ -135,8 +135,8 @@ public func Java_com_mn_android_NativeProbe_saveReminders(
 /// ...weekdays] into `out`.
 ///
 /// Kotlin side: ReminderSettingsProbe.kt
-@_cdecl("Java_com_mn_android_NativeProbe_loadReminders")
-public func Java_com_mn_android_NativeProbe_loadReminders(
+@_cdecl("Java_com_mn_android_debug_NativeProbe_loadReminders")
+public func Java_com_mn_android_debug_NativeProbe_loadReminders(
     environment: UnsafeMutablePointer<JNIEnv?>!,
     thisClass: jclass,
     out: jlongArray

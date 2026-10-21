@@ -16,8 +16,8 @@ import SwiftJavaJNICore
 /// Kotlin returns is already pinned by the comparison in callIntoKotlin().
 ///
 /// Kotlin side: ReverseJniProbe.kt
-@_cdecl("Java_com_mn_android_NativeProbe_reverseJNI")
-public func Java_com_mn_android_NativeProbe_reverseJNI(
+@_cdecl("Java_com_mn_android_debug_NativeProbe_reverseJNI")
+public func Java_com_mn_android_debug_NativeProbe_reverseJNI(
     environment: UnsafeMutablePointer<JNIEnv?>!,
     thisClass: jclass
 ) -> jlong {

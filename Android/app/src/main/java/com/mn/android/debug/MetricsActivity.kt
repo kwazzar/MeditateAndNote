@@ -117,7 +117,11 @@ private fun MetricsScreen() {
             .getOrElse { "streak insights probe failed: ${it.javaClass.simpleName}: ${it.message}" }
         val reminderSchedule = runCatching { ReminderScheduleProbe.roundTrip(context) }
             .getOrElse { "reminder schedule probe failed: ${it.javaClass.simpleName}: ${it.message}" }
-        reverseStatus = "reverse jni: $reverse\n$store\n$notes\n$streak\n$streakHeader\n$streakDetail\n$sessions\n$streakInsights\n$reminderSchedule"
+        val bookStore = runCatching { BookStoreProbe.roundTrip(context) }
+            .getOrElse { "book store probe failed: ${it.javaClass.simpleName}: ${it.message}" }
+        val bookPagination = runCatching { PaginationProbe.roundTrip(context) }
+            .getOrElse { "pagination probe failed: ${it.javaClass.simpleName}: ${it.message}" }
+        reverseStatus = "reverse jni: $reverse\n$store\n$notes\n$streak\n$streakHeader\n$streakDetail\n$sessions\n$streakInsights\n$reminderSchedule\n$bookStore\n$bookPagination"
     }
 
     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {

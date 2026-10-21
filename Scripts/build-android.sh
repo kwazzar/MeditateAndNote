@@ -204,6 +204,7 @@ echo "==> Building the JNI library for $TARGET_TRIPLE"
     --static-swift-stdlib \
     --product MeditateAndNoteCoreJNI \
     -c release \
+    -Xlinker -lz \
     --scratch-path "$SCRATCH"
 )
 [ -f "$PRODUCT" ] || die "expected product missing: $PRODUCT"

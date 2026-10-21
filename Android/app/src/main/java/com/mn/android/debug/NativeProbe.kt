@@ -100,4 +100,20 @@ object NativeProbe {
      * Swift side: StreakInsightsBridge.swift
      */
     external fun reminderScheduleProbe(out: LongArray)
+
+    /**
+     * Runs the book store round trip through Swift and fills [out] with one
+     * flag per check. Same out-param rule.
+     *
+     * Swift side: BookProbes.swift
+     */
+    external fun bookStoreProbe(out: LongArray)
+
+    /**
+     * Runs the FB2/TXT parsers and the pagination engine through Swift and
+     * fills [out] with counts and flags. Same out-param rule.
+     *
+     * Swift side: BookProbes.swift
+     */
+    external fun bookPaginationProbe(out: LongArray)
 }
