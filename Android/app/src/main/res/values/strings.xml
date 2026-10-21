@@ -145,4 +145,21 @@
     <string name="streak_count_format">%1$d</string>
     <string name="number_format">%1$d</string>
     <string name="load_failed">Failed: %1$s</string>
+
+    <!-- Reading tab + reader -->
+    <string name="reading">Reading</string>
+    <string name="library">Library</string>
+    <string name="import_book">Import</string>
+    <string name="no_books_yet">No books yet</string>
+    <string name="no_books_hint">Import .fb2, .epub or .txt files to start reading</string>
+    <string name="import_failed">Import failed</string>
+    <string name="import_failed_hint">Unsupported format. Use .fb2, .epub or .txt</string>
+    <string name="delete_book_title">Delete book?</string>
+    <string name="reader_open_failed">Could not open the book</string>
+    <string name="reader_font_size">Font size</string>
+    <string name="reader_paper">Paper</string>
+    <string name="reader_paper_light">Light</string>
+    <string name="reader_paper_sepia">Sepia</string>
+    <string name="reader_paper_dark">Dark</string>
+    <string name="reader_page_format">%1$d / %2$d</string>
 </resources>

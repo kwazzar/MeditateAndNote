@@ -28,6 +28,7 @@ object TextMetrics {
         cache[key]?.let { return it }
 
         val width = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+            typeface = android.graphics.Typeface.SERIF
             textSize = fontSize.toFloat()
         }.measureText(text).toDouble()
 
@@ -42,6 +43,7 @@ object TextMetrics {
         lineHeightCache[fontSize]?.let { return it }
 
         val metrics = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+            typeface = android.graphics.Typeface.SERIF
             textSize = fontSize.toFloat()
         }.fontMetrics
 
