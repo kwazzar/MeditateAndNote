@@ -20,6 +20,7 @@ enum CDEntity {
     static let aiDraftMetric = "CDAIDraftMetric"
     static let noteInsight = "CDNoteInsight"
     static let noteEmbedding = "CDNoteEmbedding"
+    static let book = "CDBook"
 }
 
 // MARK: - CoreDataManager
@@ -361,11 +362,86 @@ final class CoreDataManager: @unchecked Sendable {
         ]
         noteEmbeddingEntity.uniquenessConstraints = [[embeddingNoteID]]
 
+        // ── CDBook ─────────────────────────────────────────────
+        // One row per imported book + its reading position + cover.
+        let bookEntity = NSEntityDescription()
+        bookEntity.name = CDEntity.book
+        bookEntity.managedObjectClassName = NSStringFromClass(NSManagedObject.self)
+
+        let bookID = NSAttributeDescription()
+        bookID.name = "id"
+        bookID.attributeType = .UUIDAttributeType
+        bookID.isOptional = false
+
+        let bookTitle = NSAttributeDescription()
+        bookTitle.name = "title"
+        bookTitle.attributeType = .stringAttributeType
+        bookTitle.isOptional = false
+        bookTitle.defaultValue = ""
+
+        let bookAuthor = NSAttributeDescription()
+        bookAuthor.name = "author"
+        bookAuthor.attributeType = .stringAttributeType
+        bookAuthor.isOptional = true
+
+        let bookFormat = NSAttributeDescription()
+        bookFormat.name = "formatRaw"
+        bookFormat.attributeType = .stringAttributeType
+        bookFormat.isOptional = false
+        bookFormat.defaultValue = ""
+
+        let bookFileName = NSAttributeDescription()
+        bookFileName.name = "fileName"
+        bookFileName.attributeType = .stringAttributeType
+        bookFileName.isOptional = false
+        bookFileName.defaultValue = ""
+
+        let bookAddedAt = NSAttributeDescription()
+        bookAddedAt.name = "addedAt"
+        bookAddedAt.attributeType = .dateAttributeType
+        bookAddedAt.isOptional = false
+        bookAddedAt.defaultValue = Date.distantPast
+
+        let bookLastOpenedAt = NSAttributeDescription()
+        bookLastOpenedAt.name = "lastOpenedAt"
+        bookLastOpenedAt.attributeType = .dateAttributeType
+        bookLastOpenedAt.isOptional = true
+
+        let positionChapter = NSAttributeDescription()
+        positionChapter.name = "positionChapter"
+        positionChapter.attributeType = .integer32AttributeType
+        positionChapter.isOptional = false
+        positionChapter.defaultValue = 0
+
+        let positionBlock = NSAttributeDescription()
+        positionBlock.name = "positionBlock"
+        positionBlock.attributeType = .integer32AttributeType
+        positionBlock.isOptional = false
+        positionBlock.defaultValue = 0
+
+        let positionOffset = NSAttributeDescription()
+        positionOffset.name = "positionOffset"
+        positionOffset.attributeType = .integer32AttributeType
+        positionOffset.isOptional = false
+        positionOffset.defaultValue = 0
+
+        let bookCoverData = NSAttributeDescription()
+        bookCoverData.name = "coverData"
+        bookCoverData.attributeType = .binaryDataAttributeType
+        bookCoverData.isOptional = true
+
+        bookEntity.properties = [
+            bookID, bookTitle, bookAuthor, bookFormat, bookFileName,
+            bookAddedAt, bookLastOpenedAt, positionChapter, positionBlock,
+            positionOffset, bookCoverData,
+        ]
+        bookEntity.uniquenessConstraints = [[bookID]]
+
         // ── Register ─────────────────────────────────────────────
         model.entities = [
             noteEntity, sessionEntity, activityEntity, streakEntity,
             aiDraftEntity, aiDraftMetricEntity, noteInsightEntity,
-            noteEmbeddingEntity,
+            noteEmbeddingEntity, bookEntity,
         ]
 
         return model

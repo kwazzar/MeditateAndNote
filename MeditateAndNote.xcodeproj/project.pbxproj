@@ -7,6 +7,21 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		BR0000042026102100000104 /* BookManagerIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BR0000042026102100000204 /* BookManagerIntegrationTests.swift */; };
+		BR0000042026102100000101 /* PaginationEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BR0000042026102100000201 /* PaginationEngineTests.swift */; };
+		BR0000042026102100000102 /* BookParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BR0000042026102100000202 /* BookParserTests.swift */; };
+		BR0000042026102100000103 /* CoreDataBookStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BR0000042026102100000203 /* CoreDataBookStoreTests.swift */; };
+		BR0000012026102100000101 /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BR0000012026102100000201 /* LibraryView.swift */; };
+		BR0000012026102100000102 /* ReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BR0000012026102100000202 /* ReaderView.swift */; };
+		BR0000012026102100000103 /* ReaderSettingsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = BR0000012026102100000203 /* ReaderSettingsSheet.swift */; };
+		BR0000012026102100000104 /* BookManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BR0000012026102100000204 /* BookManager.swift */; };
+		BR0000012026102100000105 /* ReaderSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = BR0000012026102100000205 /* ReaderSettings.swift */; };
+		BR0000012026102100000106 /* UITextMeasurer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BR0000012026102100000206 /* UITextMeasurer.swift */; };
+		BR0000012026102100000107 /* CoreDataBookStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BR0000012026102100000207 /* CoreDataBookStore.swift */; };
+		BR0000012026102100000108 /* BookFileStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = BR0000012026102100000208 /* BookFileStorage.swift */; };
+		BR0000012026102100000109 /* BookScope.swift in Sources */ = {isa = PBXBuildFile; fileRef = BR0000012026102100000209 /* BookScope.swift */; };
+		BR000001202610210000010A /* LibraryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BR000001202610210000020A /* LibraryViewModel.swift */; };
+		BR000001202610210000010B /* ReaderViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BR000001202610210000020B /* ReaderViewModel.swift */; };
 		01028B003F0E4B6097568B82 /* RemoteLLMDraftServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A78650882AD04E53917624CF /* RemoteLLMDraftServiceTests.swift */; };
 		C683B696142E5F8BB9A30B77 /* RemoteDraftConsentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9135ABAAB4E95D07900D0E8C /* RemoteDraftConsentTests.swift */; };
 		096B78E3E88B87EA5E3E59B7 /* UserDefaultsReminderSettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1C20BEA552DE5FA2D6680E4 /* UserDefaultsReminderSettingsStore.swift */; };
@@ -153,7 +168,6 @@
 		E389732B2D7918E700A9A662 /* MeditateSelectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E389732A2D7918E700A9A662 /* MeditateSelectView.swift */; };
 		E389732D2D79191200A9A662 /* MeditateSelectViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E389732C2D79191200A9A662 /* MeditateSelectViewModel.swift */; };
 		E398CE782EDE464000B96376 /* NoteManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E398CE772EDE464000B96376 /* NoteManager.swift */; };
-		E3BAF8A62E293D340036E250 /* ReadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3BAF8A52E293D340036E250 /* ReadingView.swift */; };
 		E3BAF8A92E2940380036E250 /* NavigationContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3BAF8A82E2940380036E250 /* NavigationContainer.swift */; };
 		E3F0F1A12E4600000000AB11 /* NoteManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3F0F1A22E4600000000AB12 /* NoteManagerTests.swift */; };
 		E3F0F1A82E5B00000000AB23 /* MeditationEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3F0F1A92E5B00000000AB24 /* MeditationEngineTests.swift */; };
@@ -177,6 +191,8 @@
 		OB0100050000000000000005 /* OnboardingCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0000050000000000000005 /* OnboardingCoordinator.swift */; };
 		OB0100070000000000000007 /* OnboardingViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0000070000000000000007 /* OnboardingViewModelTests.swift */; };
 		RC0000102026101300000001 /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = RC0000102026101300000002 /* RevenueCat */; };
+		ZF0000102026102100000001 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = ZF0000102026102100000002 /* ZIPFoundation */; };
+		ZF0000102026102100000004 /* ZIPFoundation in Frameworks (tests) */ = {isa = PBXBuildFile; productRef = ZF0000102026102100000002 /* ZIPFoundation */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -197,6 +213,21 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		BR0000042026102100000204 /* BookManagerIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookManagerIntegrationTests.swift; sourceTree = "<group>"; };
+		BR0000042026102100000201 /* PaginationEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaginationEngineTests.swift; sourceTree = "<group>"; };
+		BR0000042026102100000202 /* BookParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookParserTests.swift; sourceTree = "<group>"; };
+		BR0000042026102100000203 /* CoreDataBookStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataBookStoreTests.swift; sourceTree = "<group>"; };
+		BR0000012026102100000201 /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
+		BR0000012026102100000202 /* ReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderView.swift; sourceTree = "<group>"; };
+		BR0000012026102100000203 /* ReaderSettingsSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderSettingsSheet.swift; sourceTree = "<group>"; };
+		BR0000012026102100000204 /* BookManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookManager.swift; sourceTree = "<group>"; };
+		BR0000012026102100000205 /* ReaderSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderSettings.swift; sourceTree = "<group>"; };
+		BR0000012026102100000206 /* UITextMeasurer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITextMeasurer.swift; sourceTree = "<group>"; };
+		BR0000012026102100000207 /* CoreDataBookStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataBookStore.swift; sourceTree = "<group>"; };
+		BR0000012026102100000208 /* BookFileStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookFileStorage.swift; sourceTree = "<group>"; };
+		BR0000012026102100000209 /* BookScope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookScope.swift; sourceTree = "<group>"; };
+		BR000001202610210000020A /* LibraryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryViewModel.swift; sourceTree = "<group>"; };
+		BR000001202610210000020B /* ReaderViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderViewModel.swift; sourceTree = "<group>"; };
 		0C0F1F1900000000000000A0 /* Config */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Config; sourceTree = "<group>"; };
 		0C0F1F1900000000000000A1 /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = MeditateAndNote/Config/Debug.xcconfig; sourceTree = SOURCE_ROOT; };
 		0C0F1F1900000000000000A2 /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = MeditateAndNote/Config/Release.xcconfig; sourceTree = SOURCE_ROOT; };
@@ -353,7 +384,6 @@
 		E389732A2D7918E700A9A662 /* MeditateSelectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditateSelectView.swift; sourceTree = "<group>"; };
 		E389732C2D79191200A9A662 /* MeditateSelectViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditateSelectViewModel.swift; sourceTree = "<group>"; };
 		E398CE772EDE464000B96376 /* NoteManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteManager.swift; sourceTree = "<group>"; };
-		E3BAF8A52E293D340036E250 /* ReadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingView.swift; sourceTree = "<group>"; };
 		E3BAF8A82E2940380036E250 /* NavigationContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationContainer.swift; sourceTree = "<group>"; };
 		E3F0F1A22E4600000000AB12 /* NoteManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteManagerTests.swift; sourceTree = "<group>"; };
 		E3F0F1A92E5B00000000AB24 /* MeditationEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationEngineTests.swift; sourceTree = "<group>"; };
@@ -385,6 +415,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				ZF0000102026102100000004 /* ZIPFoundation in Frameworks (tests) */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -394,6 +425,7 @@
 			files = (
 				AA0000102026091000000003 /* MeditateAndNoteCore in Frameworks */,
 				RC0000102026101300000001 /* RevenueCat in Frameworks */,
+				ZF0000102026102100000001 /* ZIPFoundation in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -632,6 +664,10 @@
 				DD0000042026082800000004 /* CoreDataStreakStoreTests.swift */,
 				E3F0F1A22E4600000000AB12 /* NoteManagerTests.swift */,
 				E3F0F1A92E5B00000000AB24 /* MeditationEngineTests.swift */,
+				BR0000042026102100000201 /* PaginationEngineTests.swift */,
+				BR0000042026102100000202 /* BookParserTests.swift */,
+				BR0000042026102100000203 /* CoreDataBookStoreTests.swift */,
+				BR0000042026102100000204 /* BookManagerIntegrationTests.swift */,
 				2191349DA8C57C98F66164B8 /* MeditationViewModelTests.swift */,
 				73571B9E27145AED24F2D353 /* StreakReminderTests.swift */,
 				AA00014020260902C00006 /* SoundSettingsTests.swift */,
@@ -700,6 +736,8 @@
 				3BCCAAAA0000000000000021 /* CoreDataNoteEmbeddingStore.swift */,
 				0C0F1F1900000000000000C1 /* UserDefaultsAIDraftQuotaStore.swift */,
 				E04F041930C9524FAFD4B329 /* HostedProviderSettings.swift */,
+				BR0000012026102100000207 /* CoreDataBookStore.swift */,
+				BR0000012026102100000208 /* BookFileStorage.swift */,
 			);
 			path = Persistence;
 			sourceTree = "<group>";
@@ -740,6 +778,7 @@
 				6031996A773F475FABDBA7E1 /* MeditationScope.swift */,
 				04C52FDBAEAF4851A0D68D86 /* SearchScope.swift */,
 				400F08B4FFA041E4828570D8 /* SettingsScope.swift */,
+				BR0000012026102100000209 /* BookScope.swift */,
 			);
 			path = AppContainer;
 			sourceTree = "<group>";
@@ -803,11 +842,11 @@
 				A1B2C3D4E5F6000000000003 /* Launch */,
 				78DA4DAF3047BAFF00A36E6A /* Root */,
 				78C86D8E3037C27500950DB9 /* Main */,
-				E3BAF8A52E293D340036E250 /* ReadingView.swift */,
 				AA0000AA2026082200000001 /* Theme */,
 				782A8C0C302D0DE70004249F /* NoteMenu */,
 				E34D18AB2E424CEE004CCFA8 /* Meditation */,
 				78C59AE03036C554007C155E /* NoteEditor */,
+				BR0000032026102100000001 /* Reading */,
 				OB0001000000000000000001 /* Onboarding */,
 				E31DE9A32E6C84EA00C330DC /* MeditationSelect */,
 				E36187842D68D087000E326D /* Components */,
@@ -846,6 +885,8 @@
 				09E4AAB15B1383604B747363 /* InsightsViewModel.swift */,
 				C41C9EA24F3766528DEEC350 /* NoteAIDraftViewModel.swift */,
 				752F419E4E3F4F8E97054D73 /* NoteInsightsViewModel.swift */,
+				BR000001202610210000020A /* LibraryViewModel.swift */,
+				BR000001202610210000020B /* ReaderViewModel.swift */,
 				DE55C23FE1A24E7EA0A2A2A4 /* AIDraftSettingsObservable.swift */,
 				0C0F1F1900000000000000C3 /* PaywallPresenter.swift */,
 			);
@@ -862,6 +903,7 @@
 				8A0000052026090700000005 /* Settings */,
 				8A0000072026090700000007 /* Theme */,
 				28418663D622F46F427B6E65 /* AI */,
+				BR0000032026102100000002 /* Books */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -888,6 +930,26 @@
 				OB0000020000000000000002 /* OnboardingPageView.swift */,
 			);
 			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		BR0000032026102100000001 /* Reading */ = {
+			isa = PBXGroup;
+			children = (
+				BR0000012026102100000201 /* LibraryView.swift */,
+				BR0000012026102100000202 /* ReaderView.swift */,
+				BR0000012026102100000203 /* ReaderSettingsSheet.swift */,
+			);
+			path = Reading;
+			sourceTree = "<group>";
+		};
+		BR0000032026102100000002 /* Books */ = {
+			isa = PBXGroup;
+			children = (
+				BR0000012026102100000204 /* BookManager.swift */,
+				BR0000012026102100000205 /* ReaderSettings.swift */,
+				BR0000012026102100000206 /* UITextMeasurer.swift */,
+			);
+			path = Books;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -924,6 +986,9 @@
 				AA0004302026082200000001 /* PBXTargetDependency */,
 			);
 			name = MeditateAndNoteTests;
+			packageProductDependencies = (
+				ZF0000102026102100000002 /* ZIPFoundation */,
+			);
 			productName = MeditateAndNoteTests;
 			productReference = AA0000202026082100000002 /* MeditateAndNoteTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -944,6 +1009,7 @@
 			packageProductDependencies = (
 				AA0000102026091000000002 /* MeditateAndNoteCore */,
 				RC0000102026101300000002 /* RevenueCat */,
+				ZF0000102026102100000002 /* ZIPFoundation */,
 			);
 			productName = MeditateAndNote;
 			productReference = E361876B2D68B221000E326D /* MeditateAndNote.app */;
@@ -984,6 +1050,7 @@
 			packageReferences = (
 				AA0000102026091000000001 /* XCLocalSwiftPackageReference "MeditateAndNoteCore" */,
 				RC0000102026101300000003 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */,
+				ZF0000102026102100000003 /* XCRemoteSwiftPackageReference "ZIPFoundation" */,
 			);
 			productRefGroup = E361876C2D68B221000E326D /* Products */;
 			projectDirPath = "";
@@ -1046,6 +1113,10 @@
 				DD0000042026082800000008 /* CoreDataStreakStoreTests.swift in Sources */,
 				E3F0F1A12E4600000000AB11 /* NoteManagerTests.swift in Sources */,
 				E3F0F1A82E5B00000000AB23 /* MeditationEngineTests.swift in Sources */,
+				BR0000042026102100000101 /* PaginationEngineTests.swift in Sources */,
+				BR0000042026102100000102 /* BookParserTests.swift in Sources */,
+				BR0000042026102100000103 /* CoreDataBookStoreTests.swift in Sources */,
+				BR0000042026102100000104 /* BookManagerIntegrationTests.swift in Sources */,
 				ADCF424E00CF12AEB7374BEA /* MeditationViewModelTests.swift in Sources */,
 				4DEA3FE741F1A4530712630B /* StreakReminderTests.swift in Sources */,
 				AA00014120260902C00005 /* SoundSettingsTests.swift in Sources */,
@@ -1121,7 +1192,6 @@
 				E320C3F12E2D1CD6009452DD /* Router.swift in Sources */,
 				E361643F2E41048C00A5DCCF /* MeditationView.swift in Sources */,
 				E398CE782EDE464000B96376 /* NoteManager.swift in Sources */,
-				E3BAF8A62E293D340036E250 /* ReadingView.swift in Sources */,
 				E3BAF8A92E2940380036E250 /* NavigationContainer.swift in Sources */,
 				788513DE3033D35D0052F4BC /* FloatingToolbar.swift in Sources */,
 				E36187862D68D0A5000E326D /* NoteCard.swift in Sources */,
@@ -1137,6 +1207,17 @@
 				788956A2303201A80001D509 /* ThemeManager.swift in Sources */,
 				E3848D562E3BD098001BE8AB /* ContainerView.swift in Sources */,
 				788513E03033D9250052F4BC /* NoteEditorView.swift in Sources */,
+				BR0000012026102100000101 /* LibraryView.swift in Sources */,
+				BR0000012026102100000102 /* ReaderView.swift in Sources */,
+				BR0000012026102100000103 /* ReaderSettingsSheet.swift in Sources */,
+				BR0000012026102100000104 /* BookManager.swift in Sources */,
+				BR0000012026102100000105 /* ReaderSettings.swift in Sources */,
+				BR0000012026102100000106 /* UITextMeasurer.swift in Sources */,
+				BR0000012026102100000107 /* CoreDataBookStore.swift in Sources */,
+				BR0000012026102100000108 /* BookFileStorage.swift in Sources */,
+				BR0000012026102100000109 /* BookScope.swift in Sources */,
+				BR000001202610210000010A /* LibraryViewModel.swift in Sources */,
+				BR000001202610210000010B /* ReaderViewModel.swift in Sources */,
 				E32C6BBF2ED9C6600093F735 /* NoteMenuViewModel.swift in Sources */,
 				E389732D2D79191200A9A662 /* MeditateSelectViewModel.swift in Sources */,
 				E32C6BBD2ED9C39F0093F735 /* NoteMenu.swift in Sources */,
@@ -1574,6 +1655,14 @@
 				minimumVersion = 5.0.0;
 			};
 		};
+		ZF0000102026102100000003 /* XCRemoteSwiftPackageReference "ZIPFoundation" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/weichsel/ZIPFoundation.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.9.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -1585,6 +1674,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = RC0000102026101300000003 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;
 			productName = RevenueCat;
+		};
+		ZF0000102026102100000002 /* ZIPFoundation */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = ZF0000102026102100000003 /* XCRemoteSwiftPackageReference "ZIPFoundation" */;
+			productName = ZIPFoundation;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

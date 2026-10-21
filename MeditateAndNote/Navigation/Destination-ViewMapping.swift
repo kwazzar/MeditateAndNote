@@ -15,8 +15,6 @@ import SwiftUI
                 NoteEditorView(viewModel: container.makeNoteEditorViewModel(noteId: nil))
             case let .noteDetails(noteId):
                 NoteEditorView(viewModel: container.makeNoteEditorViewModel(noteId: noteId))
-            case .readingView:
-                ReadingView()
             case .meditation(_ : let meditation):
                 MeditationView(viewModel: container.makeMeditationViewModel(for: meditation))
             case let .meditationCompletion(meditation, duration):
@@ -63,6 +61,8 @@ import SwiftUI
                 MeditateSelectView(viewModel: container.makeMeditateSelectViewModel())
             case .fullScreenNote(_):
                 EmptyView()
+            case let .reader(bookId):
+                ReaderView(viewModel: container.makeReaderViewModel(bookId: bookId))
             }}
     }
 }

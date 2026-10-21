@@ -34,7 +34,6 @@ extension Destination: CustomStringConvertible {
 enum PushDestination: Hashable, Sendable, CustomStringConvertible {
     case newNote
     case noteDetails(noteId: NoteID)
-    case readingView
     case meditation(_ meditation: Meditation)
     case meditationCompletion(meditation: Meditation, duration: MeditationDuration)
     case streakDetail
@@ -46,8 +45,6 @@ enum PushDestination: Hashable, Sendable, CustomStringConvertible {
             return ".newNote"
         case let .noteDetails(noteId):
             return ".noteDetails(\(noteId))"
-        case .readingView:
-            return ".readingView"
         case let .meditation(meditation):
             return ".meditation(\(meditation))"
         case let .meditationCompletion(meditation, duration):
@@ -64,6 +61,7 @@ enum TabDestination: String, Hashable {
     case home
     case notes
     case meditations
+    case reading
 }
 
 enum SheetDestination: Hashable, CustomStringConvertible {
@@ -99,6 +97,7 @@ extension SheetDestination: Identifiable {
 enum FullScreenDestination: Hashable {
     case meditationSession(id: MeditationID)
     case fullScreenNote(id: NoteID)
+    case reader(bookId: BookID)
 }
 
 extension FullScreenDestination: CustomStringConvertible {
@@ -108,6 +107,8 @@ extension FullScreenDestination: CustomStringConvertible {
             return ".meditationSession(\(id))"
         case let .fullScreenNote(id):
             return ".fullScreenNote(\(id))"
+        case let .reader(bookId):
+            return ".reader(\(bookId.rawValue.uuidString.prefix(8)))"
         }
     }
 }
@@ -119,6 +120,8 @@ extension FullScreenDestination: Identifiable {
             return "meditationSession_\(id)"
         case let .fullScreenNote(id):
             return "fullScreenNote_\(id)"
+        case let .reader(bookId):
+            return "reader_\(bookId.rawValue)"
         }
     }
 }
