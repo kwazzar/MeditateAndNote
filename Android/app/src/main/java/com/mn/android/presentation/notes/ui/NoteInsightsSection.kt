@@ -24,10 +24,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -53,10 +49,10 @@ internal fun NoteInsightsSection(
     themes: List<String>,
     isLoading: Boolean,
     error: String?,
+    isExpanded: Boolean,
+    onToggle: () -> Unit,
     onRefresh: () -> Unit,
 ) {
-    var isExpanded by remember { mutableStateOf(true) }
-
     if (insights.isEmpty()) {
         if (isLoading) LoadingState() else if (error != null) ErrorState()
         return
@@ -73,7 +69,7 @@ internal fun NoteInsightsSection(
         InsightsHeader(
             isExpanded = isExpanded,
             isLoading = isLoading,
-            onToggle = { isExpanded = !isExpanded },
+            onToggle = onToggle,
             onRefresh = onRefresh,
         )
         if (error != null) {
@@ -99,14 +95,20 @@ private fun InsightsHeader(
     onToggle: () -> Unit,
     onRefresh: () -> Unit,
 ) {
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+    // The whole header toggles — the chevron is the affordance the user taps,
+    // so it cannot be the one part of the row without a click handler. The
+    // refresh button keeps its own click.
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onToggle),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         Text(
             stringResource(R.string.note_insights_title),
             fontWeight = FontWeight.SemiBold,
             color = MnTheme.textPrimary,
-            modifier = Modifier
-                .weight(1f)
-                .clickable(onClick = onToggle),
+            modifier = Modifier.weight(1f),
         )
         if (isLoading) {
             CircularProgressIndicator(

@@ -74,6 +74,9 @@ fun NoteMenuScreen(
     val insightsViewModel: NoteInsightsViewModel = viewModel()
     val insightsState by insightsViewModel.state.collectAsStateWithLifecycle()
     var query by remember { mutableStateOf("") }
+    // Collapsed every time the screen is entered; kept while scrolling the list
+    // because it lives here and not in the lazy item.
+    var insightsExpanded by remember { mutableStateOf(false) }
     var notes by remember { mutableStateOf<List<NoteMenuSource.NoteRecord>>(emptyList()) }
     val listState = rememberLazyListState()
     var isScrolling by remember { mutableStateOf(false) }
@@ -129,6 +132,8 @@ fun NoteMenuScreen(
                             themes = insightsViewModel.topThemes,
                             isLoading = insightsState.isLoading || insightsState.isRefreshing,
                             error = insightsState.error,
+                            isExpanded = insightsExpanded,
+                            onToggle = { insightsExpanded = !insightsExpanded },
                             onRefresh = { insightsViewModel.refresh() },
                         )
                     }
