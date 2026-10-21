@@ -20,6 +20,10 @@ public struct PaginatedBook: Sendable {
     public struct Page: Hashable, Sendable {
         /// Wrapped lines ready to render verbatim.
         public let lines: [String]
+        /// Logical position of each line, parallel to `lines`. A highlight
+        /// points at a line, not at a page, so the reader needs the exact
+        /// offset of the marked line.
+        public let linePositions: [ReadingPosition]
         /// Logical position of the first character on this page.
         public let origin: ReadingPosition
         /// Logical position just past the last character on this page.
@@ -54,6 +58,7 @@ public struct PaginationEngine: Sendable {
 
         var pages: [PaginatedBook.Page] = []
         var currentLines: [String] = []
+        var currentLinePositions: [ReadingPosition] = []
         // (position, global offset) of the first character on the open page.
         var currentOrigin: (position: ReadingPosition, globalOffset: Int)?
 
@@ -65,12 +70,14 @@ public struct PaginationEngine: Sendable {
             pages.append(
                 PaginatedBook.Page(
                     lines: currentLines,
+                    linePositions: currentLinePositions,
                     origin: origin.position,
                     end: end,
                     startGlobalOffset: origin.globalOffset
                 )
             )
             currentLines = []
+            currentLinePositions = []
             currentOrigin = nil
         }
 
@@ -125,6 +132,13 @@ public struct PaginationEngine: Sendable {
                         )
                     }
                     currentLines.append(line)
+                    currentLinePositions.append(
+                        ReadingPosition(
+                            chapterIndex: chapterIndex,
+                            blockIndex: blockIndex,
+                            characterOffset: lineStart
+                        )
+                    )
                     lineStart += line.count + 1
                 }
 
@@ -142,6 +156,7 @@ public struct PaginationEngine: Sendable {
             pages.append(
                 PaginatedBook.Page(
                     lines: [],
+                    linePositions: [],
                     origin: ReadingPosition(),
                     end: ReadingPosition(),
                     startGlobalOffset: 0

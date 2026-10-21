@@ -36,7 +36,7 @@ final class AppContainer: @unchecked Sendable {
     private lazy var meditation = MeditationScope()
     private lazy var search = SearchScope()
     private lazy var settings = SettingsScope()
-    private lazy var books = BookScope()
+    private lazy var books = BookScope(noteWriter: notes.manager)
     @MainActor private lazy var subscription = SubscriptionScope(eventBus: eventBus)
 
     /// Shared paywall presentation flag. Gated surfaces call `present()`;
@@ -166,7 +166,11 @@ final class AppContainer: @unchecked Sendable {
 
     @MainActor
     func makeReaderViewModel(bookId: BookID) -> ReaderViewModel {
-        ReaderViewModel(bookID: bookId, manager: books.manager)
+        ReaderViewModel(
+            bookID: bookId,
+            manager: books.manager,
+            bookmarks: books.bookmarkManager
+        )
     }
 
     @MainActor

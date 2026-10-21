@@ -84,6 +84,7 @@ import com.mn.android.presentation.meditate.ui.BreathingScreen
 import com.mn.android.presentation.meditate.ui.MeditateSelectScreen
 import com.mn.android.presentation.notes.ui.NoteEditorScreen
 import com.mn.android.data.BookBlobStore
+import com.mn.android.data.BookmarkBlobStore
 import com.mn.android.data.ReaderSettingsStore
 import com.mn.android.presentation.notes.ui.NoteMenuScreen
 import com.mn.android.presentation.reading.ui.LibraryScreen
@@ -155,6 +156,7 @@ private fun MnNav() {
     AIDraftSessionStorage.configure(LocalContext.current)
     NoteInsightBlobStore.configure(LocalContext.current)
     SessionBlobStore.configure(LocalContext.current)
+    BookmarkBlobStore.configure(LocalContext.current)
     SharedPrefsReminderSettingsStore.configure(LocalContext.current)
     MeditationSelection.configure(LocalContext.current)
     SoundSettings.configure(LocalContext.current)

@@ -31,6 +31,7 @@ public func Java_com_mn_android_debug_NativeProbe_bookStoreProbe(
 
     do {
         let book = Book(
+            id: BookID(),
             title: "Probe Book",
             author: "Probe Author",
             format: .fb2,
@@ -39,9 +40,11 @@ public func Java_com_mn_android_debug_NativeProbe_bookStoreProbe(
         try store.saveSync(book)
         results[0] = 1
 
-        let all = try store.librarySync()
-        results[1] = Int64(all.count)
-        results[2] = all.first?.title == "Probe Book" ? 1 : 0
+        // Scoped to the probe's own book: the store may hold the user's
+        // imported books, and a count check would fail on their data.
+        let mine = try store.librarySync().first { $0.id == book.id }
+        results[1] = mine == nil ? 0 : 1
+        results[2] = mine?.title == "Probe Book" ? 1 : 0
 
         let position = ReadingPosition(chapterIndex: 2, blockIndex: 3, characterOffset: 40)
         try store.saveReadingPositionSync(position, for: book.id)
@@ -55,10 +58,10 @@ public func Java_com_mn_android_debug_NativeProbe_bookStoreProbe(
         var updated = book
         updated.title = "Renamed"
         try store.saveSync(updated)
-        results[5] = try store.librarySync().first?.title == "Renamed" ? 1 : 0
+        results[5] = try store.librarySync().first { $0.id == book.id }?.title == "Renamed" ? 1 : 0
 
         try store.deleteSync(book.id)
-        results[6] = try store.librarySync().isEmpty ? 1 : 0
+        results[6] = try store.librarySync().first { $0.id == book.id } == nil ? 1 : 0
 
         // File import: write a source file, copy it through Kotlin, read back.
         let src = URL(fileURLWithPath: NSTemporaryDirectory())

@@ -121,7 +121,9 @@ private fun MetricsScreen() {
             .getOrElse { "book store probe failed: ${it.javaClass.simpleName}: ${it.message}" }
         val bookPagination = runCatching { PaginationProbe.roundTrip(context) }
             .getOrElse { "pagination probe failed: ${it.javaClass.simpleName}: ${it.message}" }
-        reverseStatus = "reverse jni: $reverse\n$store\n$notes\n$streak\n$streakHeader\n$streakDetail\n$sessions\n$streakInsights\n$reminderSchedule\n$bookStore\n$bookPagination"
+        val bookmarks = runCatching { BookmarkStoreProbe.roundTrip(context) }
+            .getOrElse { "bookmark probe failed: ${it.javaClass.simpleName}: ${it.message}" }
+        reverseStatus = "reverse jni: $reverse\n$store\n$notes\n$streak\n$streakHeader\n$streakDetail\n$sessions\n$streakInsights\n$reminderSchedule\n$bookStore\n$bookPagination\n$bookmarks"
     }
 
     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
