@@ -9,7 +9,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -45,6 +47,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mn.android.R
+import com.mn.android.data.ReaderSettingsStore
 import com.mn.android.data.ReaderSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -90,8 +93,15 @@ fun ReaderScreen(
     onBack: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
-    var paper by rememberSaveable { mutableStateOf(ReaderPaper.SEPIA) }
-    var fontSize by rememberSaveable { mutableFloatStateOf(18f) }
+    val context = LocalContext.current
+    var paper by rememberSaveable {
+        mutableStateOf(
+            ReaderSettingsStore.paper().let { name ->
+                ReaderPaper.entries.firstOrNull { it.name == name } ?: ReaderPaper.SEPIA
+            }
+        )
+    }
+    var fontSize by rememberSaveable { mutableFloatStateOf(ReaderSettingsStore.fontSize()) }
     var showSettings by remember { mutableStateOf(false) }
     var showChrome by remember { mutableStateOf(true) }
 
@@ -190,9 +200,11 @@ fun ReaderScreen(
         }
 
         // Tap zones over the page: left = back, center = chrome, right = forward.
+        // The top and bottom bars are excluded so their buttons stay clickable.
         Box(
             Modifier
                 .fillMaxSize()
+                .padding(top = 56.dp, bottom = 56.dp)
                 .pointerInput(pageCount) {
                     detectTapGestures { offset ->
                         val third = size.width / 3f
@@ -209,6 +221,7 @@ fun ReaderScreen(
             Row(
                 Modifier
                     .fillMaxWidth()
+                    .statusBarsPadding()
                     .padding(horizontal = 8.dp, vertical = 4.dp)
                     .align(Alignment.TopCenter),
                 verticalAlignment = Alignment.CenterVertically,
@@ -232,6 +245,7 @@ fun ReaderScreen(
             Row(
                 Modifier
                     .fillMaxWidth()
+                    .navigationBarsPadding()
                     .padding(16.dp)
                     .align(Alignment.BottomCenter),
             ) {
@@ -260,6 +274,7 @@ fun ReaderScreen(
                         value = fontSize,
                         onValueChange = { fontSize = it },
                         onValueChangeFinished = {
+                            ReaderSettingsStore.setFontSize(fontSize)
                             scope.launch {
                                 val result = runCatching {
                                     withContext(Dispatchers.IO) {
@@ -281,7 +296,10 @@ fun ReaderScreen(
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     ReaderPaper.entries.forEach { candidate ->
                         Button(
-                            onClick = { paper = candidate },
+                            onClick = {
+                                paper = candidate
+                                ReaderSettingsStore.setPaper(candidate.name)
+                            },
                             colors = androidx.compose.material3.ButtonDefaults.buttonColors(
                                 containerColor = candidate.background,
                                 contentColor = candidate.text,

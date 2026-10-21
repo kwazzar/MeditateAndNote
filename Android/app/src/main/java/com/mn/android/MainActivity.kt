@@ -78,6 +78,7 @@ import com.mn.android.presentation.meditate.ui.BreathingScreen
 import com.mn.android.presentation.meditate.ui.MeditateSelectScreen
 import com.mn.android.presentation.notes.ui.NoteEditorScreen
 import com.mn.android.data.BookBlobStore
+import com.mn.android.data.ReaderSettingsStore
 import com.mn.android.presentation.notes.ui.NoteMenuScreen
 import com.mn.android.presentation.reading.ui.LibraryScreen
 import com.mn.android.presentation.reading.ui.ReaderScreen
@@ -264,6 +265,7 @@ private fun MnNav() {
             }
             composable("reader/{bookId}") { backStackEntry ->
                 val id = backStackEntry.arguments?.getString("bookId") ?: ""
+                ReaderSettingsStore.configure(LocalContext.current)
                 ReaderScreen(
                     bookId = id,
                     onBack = { navController.popBackStack() },
