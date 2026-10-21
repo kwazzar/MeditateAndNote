@@ -148,3 +148,4 @@ MeditateAndNote/Config/*.local.xcconfig
 
 # Vercel CLI project link (created when the server folder was linked)
 .vercel/
+Scripts/.icons-cache/
