@@ -32,6 +32,8 @@ final class LibraryViewModel {
             await load()
         } catch BookImportError.unsupportedFile {
             importErrorMessage = "Unsupported format. Use .fb2, .epub or .txt"
+        } catch BookImportError.unreadable {
+            importErrorMessage = "Could not read this file. It is not a valid book."
         } catch {
             importErrorMessage = "Import failed. Try another file."
         }

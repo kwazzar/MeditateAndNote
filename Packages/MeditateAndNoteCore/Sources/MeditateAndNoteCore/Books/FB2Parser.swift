@@ -42,6 +42,12 @@ private final class Delegate: NSObject, XMLParserDelegate {
     var coverHref: String?
     var binaries: [String: String] = [:]
 
+    /// FB2 carries the translation title in `title-info` and the original
+    /// language title in `src-title-info`. The first one is the book's title;
+    /// the second would otherwise overwrite it.
+    private var didCaptureTitle = false
+    private var didCaptureAuthor = false
+
     private var elementStack: [String] = []
     private var chapters: [BookChapter] = []
     private var currentChapter: BookChapter?
@@ -78,7 +84,7 @@ private final class Delegate: NSObject, XMLParserDelegate {
             break
         case "first-name", "last-name":
             buffer = ""
-            if elementStack.contains("author") {
+            if !didCaptureAuthor, elementStack.contains("author") {
                 captureTarget = .authorName
             }
         case "book-title":
@@ -119,9 +125,14 @@ private final class Delegate: NSObject, XMLParserDelegate {
         elementStack.removeLast()
 
         switch name {
+        case "author":
+            didCaptureAuthor = true
         case "book-title":
             if captureTarget == .bookTitle {
-                title = buffer.collapsedWhitespace()
+                if !didCaptureTitle {
+                    title = buffer.collapsedWhitespace()
+                    didCaptureTitle = true
+                }
                 captureTarget = nil
             }
         case "first-name", "last-name":

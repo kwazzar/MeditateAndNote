@@ -67,6 +67,32 @@ final class BookParserTests: XCTestCase {
         XCTAssertThrowsError(try FB2Parser().parse(Data("<not-fb2/>".utf8)))
     }
 
+    /// `src-title-info` holds the original-language title and author; the
+    /// translation's own title wins.
+    private let fb2WithSourceTitleInfo = """
+    <?xml version="1.0" encoding="utf-8"?>
+    <FictionBook xmlns="http://www.gribuser.ru/xml/fictionbook/2.0" xmlns:l="http://www.w3.org/1999/xlink">
+      <description>
+        <title-info>
+          <book-title>Наодинці з собою</book-title>
+          <author><first-name>Марк</first-name><last-name>Аврелій</last-name></author>
+        </title-info>
+        <src-title-info>
+          <book-title>Εἰς ἑαυτόν</book-title>
+          <author><first-name>Marcus</first-name><last-name>Aurelius</last-name></author>
+        </src-title-info>
+      </description>
+      <body><section><p>Text.</p></section></body>
+    </FictionBook>
+    """
+
+    func testFB2_prefersMainTitleAndAuthorOverSourceTitleInfo() throws {
+        let result = try FB2Parser().parse(Data(fb2WithSourceTitleInfo.utf8))
+
+        XCTAssertEqual(result.content.title, "Наодинці з собою")
+        XCTAssertEqual(result.content.author, "Марк Аврелій")
+    }
+
     // MARK: - TXT
 
     func testTXT_blankLineSeparatesParagraphs() {

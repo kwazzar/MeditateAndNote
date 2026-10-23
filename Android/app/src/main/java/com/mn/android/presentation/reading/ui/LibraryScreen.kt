@@ -104,20 +104,7 @@ fun LibraryScreen(
         scope.launch {
             val result = runCatching {
                 withContext(Dispatchers.IO) {
-                    val ext = (context.contentResolver.getType(uri) ?: uri.toString())
-                        .substringAfterLast('.', "")
-                        .substringAfterLast('/')
-                        .lowercase()
-                    val temp = java.io.File(context.cacheDir, "import.${ext}")
-                    context.contentResolver.openInputStream(uri)?.use { input ->
-                        temp.outputStream().use { output -> input.copyTo(output) }
-                    } ?: error("cannot read picked file")
-                    val format = when (ext) {
-                        "epub" -> "epub"
-                        "txt" -> "txt"
-                        else -> "fb2"
-                    }
-                    BookSource.import(temp.absolutePath, format)
+                    BookSource.importDocument(context, uri)
                 }
             }
             if (result.isSuccess) {

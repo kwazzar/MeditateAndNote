@@ -103,15 +103,18 @@ final actor BookManager: BookProvidable, BookManageable {
 
         // Extract metadata + cover eagerly so the library shows them;
         // full parse happens lazily when the reader opens the book.
-        if let parsed = try? Self.parseContent(for: book, fileStorage: fileStorage) {
-            if let title = parsed.content.title, !title.isEmpty { book.title = title }
-            book.author = parsed.content.author
-            try await store.save(book)
-            if let cover = parsed.coverData {
-                try? await store.saveCoverData(cover, for: bookID)
-            }
+        // A file that does not parse is a dead book: it shows up in the library
+        // and then fails to open. Reject the import instead of storing it.
+        guard let parsed = try? Self.parseContent(for: book, fileStorage: fileStorage) else {
+            fileStorage.deleteBook(book)
+            throw BookImportError.unreadable("could not parse \(format.rawValue) file")
         }
+        if let title = parsed.content.title, !title.isEmpty { book.title = title }
+        book.author = parsed.content.author
         try await store.save(book)
+        if let cover = parsed.coverData {
+            try? await store.saveCoverData(cover, for: bookID)
+        }
         await refresh()
         return book
     }

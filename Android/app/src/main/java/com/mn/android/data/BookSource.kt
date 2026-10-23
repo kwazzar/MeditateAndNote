@@ -1,5 +1,10 @@
 package com.mn.android.data
 
+import android.content.Context
+import android.net.Uri
+import android.provider.OpenableColumns
+import java.io.File
+import java.io.InputStream
 import org.json.JSONObject
 
 /**
@@ -47,6 +52,66 @@ object BookSource {
         return obj.getString("id")
     }
 
+    /**
+     * The stored format for a file name, or null when the format is not
+     * supported. The extension decides — a MIME type ("text/plain") has none,
+     * and guessing from it imported every text book as FB2.
+     *
+     * The same rule lives in the domain (`BookFormat`, used by the iOS
+     * importer); Kotlin cannot call into the Core package directly, so it
+     * repeats it here for the JNI call.
+     */
+    private fun detectFormat(fileName: String): String? {
+        return when (fileName.substringAfterLast('.', "").lowercase()) {
+            "fb2" -> "fb2"
+            "epub" -> "epub"
+            "txt", "md", "markdown" -> "txt"
+            else -> null
+        }
+    }
+
+    /**
+     * Copies a picked document into the library and returns the new book id.
+     * Used by the in-app importer and by the file-manager "open with" path.
+     */
+    fun importDocument(context: Context, uri: Uri): String {
+        val name = displayName(context, uri)
+        val format = detectFormat(name) ?: error("unsupported format")
+        val temp = File(context.cacheDir, name.asFileName())
+        openStream(context, uri)?.use { input ->
+            temp.outputStream().use { output -> input.copyTo(output) }
+        } ?: error("cannot read picked file")
+        try {
+            // The temp file carries the original name: the title is derived
+            // from it on the Swift side.
+            return import(temp.absolutePath, format)
+        } finally {
+            temp.delete()
+        }
+    }
+
+    /** The document's real name — the MIME type carries no extension. */
+    private fun displayName(context: Context, uri: Uri): String {
+        if (uri.scheme != "file") {
+            context.contentResolver
+                .query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
+                ?.use { cursor ->
+                    val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                    if (index >= 0 && cursor.moveToFirst()) {
+                        return cursor.getString(index) ?: "book"
+                    }
+                }
+        }
+        return uri.lastPathSegment ?: "book"
+    }
+
+    private fun openStream(context: Context, uri: Uri): InputStream? =
+        if (uri.scheme == "file") {
+            uri.path?.let { File(it).inputStream() }
+        } else {
+            context.contentResolver.openInputStream(uri)
+        }
+
     fun delete(id: String) {
         deleteNative(id)
     }
@@ -80,7 +145,8 @@ object ReaderSource {
         height: Double,
         widthScale: Double,
     ): OpenedBook {
-        val obj = JSONObject(openNative(id, fontSize, width, height, widthScale))
+        // The native side answers null when the file cannot be parsed.
+        val obj = JSONObject(openNative(id, fontSize, width, height, widthScale) ?: error("book could not be opened"))
         return OpenedBook(
             title = obj.getString("title"),
             pageCount = obj.getInt("pageCount"),
@@ -140,3 +206,7 @@ object ReaderSource {
     private external fun pageNative(index: Int): String
     private external fun savePositionNative(id: String, page: Int)
 }
+
+/** A safe cache file name that keeps letters (Cyrillic included). */
+private fun String.asFileName(): String =
+    replace(Regex("[^\\p{L}\\p{N}._ -]"), "_").take(120).ifBlank { "book" }

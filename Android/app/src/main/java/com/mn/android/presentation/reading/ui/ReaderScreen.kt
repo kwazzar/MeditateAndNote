@@ -3,16 +3,21 @@ package com.mn.android.presentation.reading.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -134,8 +139,20 @@ fun ReaderScreen(
     val configuration = androidx.compose.ui.platform.LocalConfiguration.current
     val localDensity = androidx.compose.ui.platform.LocalDensity.current
     val density = localDensity.density
+    // The window is edge-to-edge (targetSdk 36), so screenWidthDp/screenHeightDp
+    // include the system bars. The chrome buttons sit inside those bars, so the
+    // text box has to leave room for status bar + icon row at the top and
+    // navigation bar + page counter at the bottom — otherwise the icons end up
+    // on top of the first lines and the last lines hide behind the gesture bar.
+    val insetTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val insetBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    val topBarHeight = 56.dp // 4 + 48 (IconButton) + 4
+    val bottomBarHeight = 32.dp // 8 + counter line + 8
+    val contentTop = insetTop + topBarHeight
+    val contentBottom = insetBottom + bottomBarHeight
     val pageWidth = (configuration.screenWidthDp - 40.0) * density
-    val pageHeight = (configuration.screenHeightDp - 140.0) * density
+    val pageHeight =
+        ((configuration.screenHeightDp - contentTop.value - contentBottom.value) * density).toDouble()
     // sp -> px through the Compose density: it carries the system font scale,
     // which the engine's Paint metrics must match or every line wraps early.
     val fontSizePx = with(localDensity) { fontSize.sp.toPx() }
@@ -254,7 +271,7 @@ fun ReaderScreen(
                     },
                     onLongPress = { offset ->
                         val lineHeightPx = with(density) { (fontSize * 1.45f).sp.toPx() }
-                        val topPaddingPx = with(density) { 56.dp.toPx() }
+                        val topPaddingPx = with(density) { contentTop.toPx() }
                         if (lineHeightPx > 0 && lines.isNotEmpty()) {
                             val index = ((offset.y + scrollState.value - topPaddingPx) / lineHeightPx)
                                 .toInt()
@@ -264,12 +281,34 @@ fun ReaderScreen(
                     },
                 )
             }
+            // Swipe left / right turns the page, like the iOS reader. The
+            // scrollable text column keeps the vertical drags, so the two
+            // never fight: horizontal movement is unclaimed by it.
+            .pointerInput(pageCount) {
+                var dragX = 0f
+                detectHorizontalDragGestures(
+                    onDragStart = { dragX = 0f },
+                    onHorizontalDrag = { _, delta -> dragX += delta },
+                    onDragEnd = {
+                        val threshold = 48.dp.toPx()
+                        when {
+                            dragX < -threshold -> showPage(page + 1)
+                            dragX > threshold -> showPage(page - 1)
+                        }
+                    },
+                )
+            }
     ) {
         Column(
             Modifier
                 .fillMaxSize()
                 .verticalScroll(scrollState)
-                .padding(horizontal = 20.dp, vertical = 56.dp),
+                .padding(
+                    start = 20.dp,
+                    end = 20.dp,
+                    top = contentTop,
+                    bottom = contentBottom,
+                ),
         ) {
             lines.forEach { line ->
                 Text(
@@ -300,10 +339,16 @@ fun ReaderScreen(
                     )
                 }
                 Spacer(Modifier.weight(1f))
-                IconButton(onClick = { showSettings = true }) {
+                // Same order as the iOS chrome: contents, marks, settings.
+                IconButton(onClick = {
+                    showContents = true
+                    scope.launch {
+                        chapters = withContext(Dispatchers.IO) { BookmarksSource.readChapters(bookId) }
+                    }
+                }) {
                     Icon(
-                        Icons.Filled.FormatSize,
-                        contentDescription = stringResource(R.string.reader_font_size),
+                        Icons.Filled.List,
+                        contentDescription = stringResource(R.string.reader_contents),
                         tint = paper.text,
                     )
                 }
@@ -319,15 +364,10 @@ fun ReaderScreen(
                         tint = paper.text,
                     )
                 }
-                IconButton(onClick = {
-                    showContents = true
-                    scope.launch {
-                        chapters = withContext(Dispatchers.IO) { BookmarksSource.readChapters(bookId) }
-                    }
-                }) {
+                IconButton(onClick = { showSettings = true }) {
                     Icon(
-                        Icons.Filled.List,
-                        contentDescription = stringResource(R.string.reader_contents),
+                        Icons.Filled.FormatSize,
+                        contentDescription = stringResource(R.string.reader_font_size),
                         tint = paper.text,
                     )
                 }
@@ -336,7 +376,9 @@ fun ReaderScreen(
                 Modifier
                     .fillMaxWidth()
                     .navigationBarsPadding()
-                    .padding(16.dp)
+                    // 8.dp vertical keeps the bar at bottomBarHeight, so the
+                    // counter lines up with the space reserved for them.
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
                     .align(Alignment.BottomCenter),
             ) {
                 Text(

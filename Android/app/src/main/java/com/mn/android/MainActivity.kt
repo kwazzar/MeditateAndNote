@@ -1,5 +1,6 @@
 package com.mn.android
 
+import android.app.Activity
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
@@ -62,6 +63,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import com.mn.android.R
 import com.mn.android.infrastructure.persistence.local.settings.AnimationSettings
 import com.mn.android.infrastructure.persistence.local.meditation.MeditationSelection
@@ -85,6 +88,7 @@ import com.mn.android.presentation.meditate.ui.MeditateSelectScreen
 import com.mn.android.presentation.notes.ui.NoteEditorScreen
 import com.mn.android.data.BookBlobStore
 import com.mn.android.data.BookmarkBlobStore
+import com.mn.android.data.BookSource
 import com.mn.android.data.ReaderSettingsStore
 import com.mn.android.presentation.notes.ui.NoteMenuScreen
 import com.mn.android.presentation.reading.ui.LibraryScreen
@@ -169,6 +173,20 @@ private fun MnNav() {
     val navController = rememberNavController()
     val startDestination =
         if (OnboardingStore.hasCompletedOnboarding) "home" else "onboarding"
+
+    // A book file opened from the file manager (transferred over USB, then
+    // tapped): import it into the library and open it in the reader.
+    val context = LocalContext.current
+    BookBlobStore.configure(context)
+    LaunchedEffect(context) {
+        val uri = (context as? Activity)?.intent?.data ?: return@LaunchedEffect
+        val id = withContext(Dispatchers.IO) {
+            runCatching { BookSource.importDocument(context, uri) }.getOrNull()
+        }
+        if (id != null) {
+            navController.navigate("reader/$id")
+        }
+    }
 
     // Launch loader: shown over onboarding/tabs for 1800 ms, then fades out —
     // mirrors `RootContainer.scheduleLaunchDismissal` on iOS.

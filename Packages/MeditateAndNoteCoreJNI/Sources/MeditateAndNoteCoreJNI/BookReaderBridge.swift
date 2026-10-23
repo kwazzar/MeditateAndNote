@@ -135,12 +135,16 @@ public func Java_com_mn_android_data_BookSource_importNative(
             format: format,
             fileName: storedPath
         )
-        if let parsed = try? BookContentParsing.parse(book) {
-            if let title = parsed.content.title, !title.isEmpty { book.title = title }
-            book.author = parsed.content.author
-            if let cover = parsed.coverData {
-                try? store.saveCoverSync(cover, for: bookID)
-            }
+        // A file that does not parse is a dead book: it shows up in the library
+        // and then fails to open. Reject the import instead of storing it.
+        guard let parsed = try? BookContentParsing.parse(book) else {
+            BookFileBridge.deleteFile(path: storedPath)
+            return jwire(["error": "could not parse \(formatRaw) file"], in: environment)
+        }
+        if let title = parsed.content.title, !title.isEmpty { book.title = title }
+        book.author = parsed.content.author
+        if let cover = parsed.coverData {
+            try? store.saveCoverSync(cover, for: bookID)
         }
         try store.saveSync(book)
         return jwire(["id": bookID.rawValue.uuidString], in: environment)

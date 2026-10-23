@@ -28,6 +28,32 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- Book files opened from the file manager (transfer over USB,
+                 then tap the file). Without this filter the app never
+                 launches for a .fb2/.epub/.txt/.md file. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="file" />
+                <data android:scheme="content" />
+                <data android:mimeType="*/*" />
+                <data android:pathPattern=".*\\.fb2" />
+                <data android:pathPattern=".*\\.epub" />
+                <data android:pathPattern=".*\\.txt" />
+                <data android:pathPattern=".*\\.md" />
+            </intent-filter>
+            <!-- The same, for senders that report a book MIME type instead of
+                 a path that ends in the extension. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="file" />
+                <data android:scheme="content" />
+                <data android:mimeType="application/x-fictionbook+zip" />
+                <data android:mimeType="application/epub+zip" />
+            </intent-filter>
         </activity>
         <!-- Kept exported but without a LAUNCHER filter: the device probes start
              it explicitly with `adb shell am start -n com.mn.android/.debug.MetricsActivity`,
