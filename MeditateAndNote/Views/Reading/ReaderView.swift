@@ -83,7 +83,7 @@ struct ReaderView: View {
         GeometryReader { proxy in
             ZStack {
                 pageContent(paginated.pages[min(viewModel.currentPage, paginated.pages.count - 1)])
-                    .frame(width: proxy.size.width - 48)
+                    .frame(width: proxy.size.width - 40)
                     .position(x: proxy.size.width / 2, y: proxy.size.height / 2)
 
             }
@@ -200,10 +200,17 @@ struct ReaderView: View {
 
             Spacer()
 
-            HStack {
+            HStack(spacing: 12) {
                 Text("\(viewModel.currentPage + 1) / \(viewModel.pageCount)")
-                Spacer()
-                Text("\(Int(viewModel.progress * 100))%")
+                // FBReader-style footer: a thin progress bar between the page
+                // counter and the clock.
+                ProgressView(value: viewModel.progress)
+                    .progressViewStyle(.linear)
+                    .tint(readerSecondary)
+                    .frame(maxWidth: .infinity)
+                TimelineView(.everyMinute) { context in
+                    Text(context.date, style: .time)
+                }
             }
             .font(.caption.monospacedDigit())
             .foregroundStyle(readerSecondary)

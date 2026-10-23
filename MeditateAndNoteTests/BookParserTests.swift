@@ -205,4 +205,14 @@ final class BookParserTests: XCTestCase {
     func testEPUB_missingContainer_throws() {
         XCTAssertThrowsError(try EPUBParser().parse(fileAccessor: { _ in nil }))
     }
+
+    // MARK: - Import fallback titles
+
+    func testHumanizeFileName() {
+        XCTAssertEqual(BookManager.humanizeFileName("import."), "Import")
+        XCTAssertEqual(BookManager.humanizeFileName("Marcus_Aurelius"), "Marcus Aurelius")
+        XCTAssertEqual(BookManager.humanizeFileName("very-long_book-name.txt"), "Very long book name")
+        XCTAssertEqual(BookManager.humanizeFileName("Marc  Aurelius .epub"), "Marc Aurelius")
+        XCTAssertEqual(BookManager.humanizeFileName(""), "Book")
+    }
 }
