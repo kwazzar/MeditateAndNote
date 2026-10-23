@@ -25,6 +25,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Slider
@@ -100,6 +101,10 @@ private enum class ReaderPaper(
     ),
 }
 
+private fun clockText(): String =
+    java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
+        .format(java.util.Date())
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalTextApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun ReaderScreen(
@@ -117,7 +122,10 @@ fun ReaderScreen(
     }
     var fontSize by rememberSaveable { mutableFloatStateOf(ReaderSettingsStore.fontSize()) }
     var showSettings by remember { mutableStateOf(false) }
-    var showChrome by remember { mutableStateOf(true) }
+    // Immersive by default, like the FBReader reference: chrome appears on a
+    // center tap and hides again on the next one. Pagination reserves the same
+    // bands either way, so toggling never rewraps the page.
+    var showChrome by remember { mutableStateOf(false) }
 
     var title by remember { mutableStateOf("") }
     var pageCount by remember { mutableIntStateOf(0) }
@@ -126,6 +134,7 @@ fun ReaderScreen(
     var linePositions by remember { mutableStateOf<List<ReaderSource.LinePosition>>(emptyList()) }
     var progress by remember { mutableFloatStateOf(0f) }
     var loadFailed by remember { mutableStateOf(false) }
+    var clock by remember { mutableStateOf(clockText()) }
 
     var chapters by remember { mutableStateOf<List<BookmarksSource.Chapter>>(emptyList()) }
     var marks by remember { mutableStateOf<List<BookmarksSource.Mark>>(emptyList()) }
@@ -172,10 +181,12 @@ fun ReaderScreen(
             "own breath and lets each thought pass like a",
             "ill1 O0 0123456789 — narrow: Wm",
         )
-        // Floor of 1.10: even when the probes measure a smaller drift, the
-        // engine keeps wrapping ~10% early, so no line can ever be too wide
-        // for the renderer. The right edge stays ragged, like a paper book.
-        var worst = 1.10
+        // Floor of 1.02: the engine must wrap at almost exactly the renderer
+        // width, so page lines fill the column edge to edge (like the FBReader
+        // reference) instead of leaving a ragged right edge. The remaining 2%
+        // guards the per-probe measurement drift that the worst-probe ratio
+        // may still miss.
+        var worst = 1.02
         for (probe in probes) {
             val composeWidth = textMeasurer.measure(
                 text = probe,
@@ -211,9 +222,19 @@ fun ReaderScreen(
         }
     }
 
+    // The clock sits in the footer; refresh it while the reader is open even
+    // when the user is staring at one page for minutes at a time.
+    LaunchedEffect(Unit) {
+        while (true) {
+            kotlinx.coroutines.delay(60_000)
+            clock = clockText()
+        }
+    }
+
     fun showPage(index: Int) {
         val clamped = index.coerceIn(0, (pageCount - 1).coerceAtLeast(0))
         page = clamped
+        clock = clockText()
         scope.launch {
             val (pageLines, pagePositions, pageProgress) = runCatching {
                 withContext(Dispatchers.IO) { ReaderSource.page(clamped) }
@@ -380,15 +401,23 @@ fun ReaderScreen(
                     // counter lines up with the space reserved for them.
                     .padding(horizontal = 16.dp, vertical = 8.dp)
                     .align(Alignment.BottomCenter),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
                     stringResource(R.string.reader_page_format, page + 1, pageCount),
                     color = paper.secondary,
                     style = MaterialTheme.typography.labelMedium,
                 )
-                Spacer(Modifier.weight(1f))
+                LinearProgressIndicator(
+                    progress = { progress },
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 12.dp),
+                    trackColor = paper.secondary.copy(alpha = 0.18f),
+                    color = paper.secondary,
+                )
                 Text(
-                    stringResource(R.string.percent_format, (progress * 100).toInt()),
+                    clock,
                     color = paper.secondary,
                     style = MaterialTheme.typography.labelMedium,
                 )
@@ -515,10 +544,19 @@ fun ReaderScreen(
                 Text(stringResource(R.string.reader_paper), fontWeight = FontWeight.Medium)
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     ReaderPaper.entries.forEach { candidate ->
+                        val selected = paper == candidate
                         Button(
                             onClick = {
                                 paper = candidate
                                 ReaderSettingsStore.setPaper(candidate.name)
+                            },
+                            border = if (selected) {
+                                androidx.compose.foundation.BorderStroke(
+                                    2.dp,
+                                    MaterialTheme.colorScheme.primary,
+                                )
+                            } else {
+                                null
                             },
                             colors = androidx.compose.material3.ButtonDefaults.buttonColors(
                                 containerColor = candidate.background,
