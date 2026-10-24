@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -110,6 +111,12 @@ private fun clockText(): String =
 private val chromeBackground = Color(0xFF3A3A40)
 private val chromeContent = Color(0xFFF2F2F2)
 
+private tailrec fun android.content.Context.findActivity(): android.app.Activity? = when (this) {
+    is android.app.Activity -> this
+    is android.content.ContextWrapper -> baseContext.findActivity()
+    else -> null
+}
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalTextApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun ReaderScreen(
@@ -141,6 +148,31 @@ fun ReaderScreen(
     var loadFailed by remember { mutableStateOf(false) }
     var clock by remember { mutableStateOf(clockText()) }
 
+    // Full-screen reading: system bars follow the chrome — hidden while reading,
+    // back together with the gray bands so the status icons line up above them.
+    val view = androidx.compose.ui.platform.LocalView.current
+    LaunchedEffect(showChrome) {
+        val window = view.context.findActivity()?.window ?: return@LaunchedEffect
+        val controller = androidx.core.view.WindowCompat.getInsetsController(window, view)
+        controller.systemBarsBehavior =
+            androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        if (showChrome) {
+            controller.show(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+        } else {
+            controller.hide(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+        }
+    }
+    // Leaving the reader must restore the app chrome for the screens behind it.
+    DisposableEffect(Unit) {
+        onDispose {
+            val window = view.context.findActivity()?.window
+            if (window != null) {
+                androidx.core.view.WindowCompat.getInsetsController(window, view)
+                    .show(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+            }
+        }
+    }
+
     var chapters by remember { mutableStateOf<List<BookmarksSource.Chapter>>(emptyList()) }
     var marks by remember { mutableStateOf<List<BookmarksSource.Mark>>(emptyList()) }
     var showContents by remember { mutableStateOf(false) }
@@ -153,17 +185,13 @@ fun ReaderScreen(
     val configuration = androidx.compose.ui.platform.LocalConfiguration.current
     val localDensity = androidx.compose.ui.platform.LocalDensity.current
     val density = localDensity.density
-    // The window is edge-to-edge (targetSdk 36), so screenWidthDp/screenHeightDp
-    // include the system bars. The chrome buttons sit inside those bars, so the
-    // text box has to leave room for status bar + icon row at the top and
-    // navigation bar + page counter at the bottom — otherwise the icons end up
-    // on top of the first lines and the last lines hide behind the gesture bar.
-    val insetTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-    val insetBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     // Text uses the full column: the chrome bars float over it as gray bands
-    // when invoked, so no band is reserved while reading.
-    val contentTop = insetTop + 12.dp
-    val contentBottom = insetBottom + 12.dp
+    // when invoked, so no band is reserved while reading. The system bars are
+    // hidden while the chrome is hidden (full-screen like the FBReader
+    // reference), so the page starts right below the cutout.
+    val cutoutTop = WindowInsets.displayCutout.asPaddingValues().calculateTopPadding()
+    val contentTop = maxOf(12.dp, cutoutTop)
+    val contentBottom = 12.dp
     val pageWidth = (configuration.screenWidthDp - 40.0) * density
     val pageHeight =
         ((configuration.screenHeightDp - contentTop.value - contentBottom.value) * density).toDouble()
