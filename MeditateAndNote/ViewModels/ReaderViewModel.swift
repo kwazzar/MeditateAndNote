@@ -49,6 +49,11 @@ final class ReaderViewModel {
         set { settings.theme = newValue }
     }
 
+    var scrollMode: Bool {
+        get { settings.scrollMode }
+        set { settings.scrollMode = newValue }
+    }
+
     // MARK: - Table of contents
 
     /// A chapter and the page it starts on.

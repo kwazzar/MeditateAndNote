@@ -57,6 +57,7 @@ final class ReaderSettings {
 
     static let fontSizeKey = "readerFontSize"
     static let themeKey = "readerTheme"
+    static let scrollModeKey = "readerScrollMode"
     static let defaultFontSize: CGFloat = 18
     static let fontSizeRange: ClosedRange<CGFloat> = 12...32
 
@@ -70,11 +71,16 @@ final class ReaderSettings {
         didSet { defaults.set(theme.rawValue, forKey: Self.themeKey) }
     }
 
+    var scrollMode: Bool {
+        didSet { defaults.set(scrollMode, forKey: Self.scrollModeKey) }
+    }
+
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         let storedSize = defaults.object(forKey: Self.fontSizeKey) as? CGFloat
         self.fontSize = storedSize.map { min(max($0, Self.fontSizeRange.lowerBound), Self.fontSizeRange.upperBound) }
             ?? Self.defaultFontSize
         self.theme = ReaderTheme(rawValue: defaults.string(forKey: Self.themeKey) ?? "") ?? .sepia
+        self.scrollMode = defaults.bool(forKey: Self.scrollModeKey)
     }
 }

@@ -80,51 +80,73 @@ struct ReaderView: View {
     // MARK: - Pages
 
     private func pages(_ paginated: PaginatedBook) -> some View {
-        GeometryReader { proxy in
-            ZStack(alignment: .top) {
-                pageContent(paginated.pages[min(viewModel.currentPage, paginated.pages.count - 1)])
-                    .frame(width: proxy.size.width - 40, alignment: .leading)
-                    .padding(.top, 8)
-                    .frame(maxWidth: .infinity, alignment: .center)
-            }
-            .contentShape(Rectangle())
-            // One handler for the whole page: a tap in the left/right third
-            // turns the page, a tap in the center toggles the chrome. A
-            // separate overlay would swallow the long press that opens the
-            // line actions, so the zones live in this handler instead.
-            .onTapGesture(count: 1, coordinateSpace: .local) { location in
-                let third = proxy.size.width / 3
-                if location.x < third {
-                    viewModel.goToPreviousPage()
-                } else if location.x > third * 2 {
-                    viewModel.goToNextPage()
-                } else {
+        Group {
+            if viewModel.scrollMode {
+                ScrollView {
+                    LazyVStack(spacing: 32) {
+                        ForEach(Array(paginated.pages.enumerated()), id: \.offset) { pageIndex, page in
+                            VStack(alignment: .leading, spacing: 0) {
+                                ForEach(Array(page.lines.enumerated()), id: \.offset) { index, line in
+                                    Text(line)
+                                        .font(.system(size: viewModel.fontSize, design: .serif))
+                                        .lineLimit(1)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                }
+                            }
+                            .frame(width: max(UIScreen.main.bounds.width - 40, 200), alignment: .leading)
+                            .id(pageIndex)
+                        }
+                    }
+                    .padding(.top, 12)
+                    .padding(.bottom, 12)
+                    .frame(maxWidth: .infinity)
+                }
+                .onTapGesture {
                     showsChrome.toggle()
                 }
-            }
-            .onChange(of: proxy.size) { _, newSize in
-                // Re-paginate when the usable area changes (rotation).
-                if lastSizeClass == nil {
-                    lastSizeClass = proxy.size.height > proxy.size.width ? .regular : .compact
-                } else {
-                    let vertical = newSize.height > newSize.width
-                    let sizeClass: UserInterfaceSizeClass? = vertical ? .regular : .compact
-                    if sizeClass != lastSizeClass {
-                        lastSizeClass = sizeClass
-                        viewModel.repaginateKeepingPosition()
+            } else {
+                GeometryReader { proxy in
+                    ZStack(alignment: .top) {
+                        pageContent(paginated.pages[min(viewModel.currentPage, paginated.pages.count - 1)])
+                            .frame(width: proxy.size.width - 40, alignment: .leading)
+                            .padding(.top, 8)
+                            .frame(maxWidth: .infinity, alignment: .center)
+                    }
+                    .contentShape(Rectangle())
+                    .onTapGesture(count: 1, coordinateSpace: .local) { location in
+                        let third = proxy.size.width / 3
+                        if location.x < third {
+                            viewModel.goToPreviousPage()
+                        } else if location.x > third * 2 {
+                            viewModel.goToNextPage()
+                        } else {
+                            showsChrome.toggle()
+                        }
+                    }
+                    .onChange(of: proxy.size) { _, newSize in
+                        if lastSizeClass == nil {
+                            lastSizeClass = proxy.size.height > proxy.size.width ? .regular : .compact
+                        } else {
+                            let vertical = newSize.height > newSize.width
+                            let sizeClass: UserInterfaceSizeClass? = vertical ? .regular : .compact
+                            if sizeClass != lastSizeClass {
+                                lastSizeClass = sizeClass
+                                viewModel.repaginateKeepingPosition()
+                            }
+                        }
                     }
                 }
+                .gesture(
+                    DragGesture(minimumDistance: 40).onEnded { value in
+                        if value.translation.width < -40 {
+                            viewModel.goToNextPage()
+                        } else if value.translation.width > 40 {
+                            viewModel.goToPreviousPage()
+                        }
+                    }
+                )
             }
         }
-        .gesture(
-            DragGesture(minimumDistance: 40).onEnded { value in
-                if value.translation.width < -40 {
-                    viewModel.goToNextPage()
-                } else if value.translation.width > 40 {
-                    viewModel.goToPreviousPage()
-                }
-            }
-        )
     }
 
     private func pageContent(_ page: PaginatedBook.Page) -> some View {
