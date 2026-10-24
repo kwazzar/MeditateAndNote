@@ -33,7 +33,8 @@ final class PaginationEngineTests: XCTestCase {
         let result = makeEngine().paginate(content, pageSize: PageSize(width: 100, height: 10))
 
         XCTAssertEqual(result.pages.count, 1)
-        XCTAssertEqual(result.pages[0].lines, ["hello"])
+        // Paragraphs open with a 4-space first-line indent.
+        XCTAssertEqual(result.pages[0].lines, ["    hello"])
         XCTAssertEqual(result.totalCharacters, 5)
     }
 
@@ -52,7 +53,7 @@ final class PaginationEngineTests: XCTestCase {
         let result = makeEngine().paginate(content, pageSize: PageSize(width: 100, height: 100))
 
         let joined = result.pages.flatMap { $0.lines }.joined()
-        XCTAssertEqual(joined, text)
+        XCTAssertEqual(joined, "    " + text)
         XCTAssertTrue(result.pages.flatMap { $0.lines }.allSatisfy { $0.count <= 10 })
     }
 
@@ -113,7 +114,9 @@ final class PaginationEngineTests: XCTestCase {
         guard paginated.pages.count >= 2 else { return XCTFail("expected multi-page") }
 
         // Position inside the last block, far offset → resolves to last page.
-        let position = ReadingPosition(chapterIndex: 0, blockIndex: 0, characterOffset: text.count - 5)
+        // The offset counts from the indented first line, so stay comfortably
+        // past the last page's origin.
+        let position = ReadingPosition(chapterIndex: 0, blockIndex: 0, characterOffset: text.count + 5)
         XCTAssertEqual(engine.page(of: position, in: paginated), paginated.pages.count - 1)
     }
 
