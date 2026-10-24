@@ -34,7 +34,7 @@ public class NoteBlobStore: JavaObject {}
 /// threads and racing the out-param.
 public struct KotlinNoteDataSource: NoteDataSource {
 
-    private static let logger = Logger(subsystem: "com.mn.core", category: "NoteDataSource")
+    static let logger = Logger(subsystem: "com.mn.core", category: "NoteDataSource")
 
     public init() {}
 
@@ -303,14 +303,17 @@ public func Java_com_mn_android_data_NoteEditorSource_load(
 /// value object applies the rule, and the normalised title comes back so the
 /// editor field matches what was persisted. The date of an existing note is
 /// preserved (matches NoteEditorViewModel.saveExisting); a new note is
-/// stamped Date(). Returns "" on failure.
-@_cdecl("Java_com_mn_android_data_NoteEditorSource_save")
-public func Java_com_mn_android_data_NoteEditorSource_save(
+/// stamped Date(). A new note also fills the streak day it was written on —
+/// Android has no DomainEventBus, so the note save is where the note and the
+/// streak meet (iOS does it through `.noteCreated`). Returns "" on failure.
+@_cdecl("Java_com_mn_android_data_NoteEditorSource_saveWithOffset")
+public func Java_com_mn_android_data_NoteEditorSource_saveWithOffset(
     environment: UnsafeMutablePointer<JNIEnv?>!,
     thisClass: jclass,
     jId: jstring?,
     jTitle: jstring?,
-    jContent: jstring?
+    jContent: jstring?,
+    jTzOffsetMinutes: jint
 ) -> jstring? {
     let id = String(fromJNI: jId, in: environment)
     let title = NoteTitle(String(fromJNI: jTitle, in: environment))
@@ -329,7 +332,34 @@ public func Java_com_mn_android_data_NoteEditorSource_save(
     guard (try? store.saveSync(note)) != nil else {
         return "".getJNILocalRefValue(in: environment)
     }
+    // Only a new note fills the day, same as iOS: `.noteCreated` marks the
+    // streak, `.noteUpdated` does not.
+    if existing == nil {
+        markStreakNoteWritten(note.date, tzOffsetMinutes: Int(jTzOffsetMinutes))
+    }
     return title.rawValue.getJNILocalRefValue(in: environment)
+}
+
+/// Best effort, same rule as the session recorder: the note is already
+/// persisted, so a streak-write failure only delays the streak header.
+private func markStreakNoteWritten(_ noteDate: Date, tzOffsetMinutes: Int) {
+    do {
+        // Swift-on-Android resolves TimeZone.current to UTC (no tzdata), so
+        // the caller passes the JVM's current offset — same rule as
+        // SessionRecorder.record.
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: tzOffsetMinutes * 60) ?? .current
+        let streak = KotlinStreakActivityStore()
+        let marked = streakMarkNote(
+            streak.load()
+                ?? StreakSnapshot(activities: [], currentStreak: 0, longestStreak: 0, lastCountedDay: nil),
+            noteDate: noteDate,
+            calendar: calendar
+        )
+        try streak.saveSync(marked)
+    } catch {
+        KotlinNoteDataSource.logger.warning("NoteEditorSource: streak update failed: \(error)")
+    }
 }
 
 @_cdecl("Java_com_mn_android_data_NoteEditorSource_delete")

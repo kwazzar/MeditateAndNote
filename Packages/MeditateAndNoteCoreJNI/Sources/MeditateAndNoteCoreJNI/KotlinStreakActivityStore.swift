@@ -94,6 +94,96 @@ public struct KotlinStreakActivityStore: StreakActivityStore {
     }
 }
 
+// MARK: - Streak activity marking
+
+/// Which half of a day an activity fills.
+enum StreakActivityKind {
+    case meditation
+    case note
+
+    func mark(_ activity: inout DailyActivity, at date: Date) {
+        switch self {
+        case .meditation: activity.markMeditation(at: date)
+        case .note: activity.markNote(at: date)
+        }
+    }
+}
+
+/// Marks an activity on its calendar day and recounts the streak.
+///
+/// Android has no DomainEventBus, so the streak is marked where the activity
+/// happens: a meditation when the session ends, a note when the note is saved.
+/// Both paths share this function, so a day counts under the same rule as iOS:
+/// only a day holding BOTH a meditation and a note counts, and it counts once.
+func streakMarkActivity(
+    _ snapshot: StreakSnapshot,
+    kind: StreakActivityKind,
+    at date: Date,
+    calendar: Calendar = .current
+) -> StreakSnapshot {
+    let key = calendar.startOfDay(for: date)
+    var activities = snapshot.activities
+
+    if let index = activities.firstIndex(where: { calendar.isDate($0.date, inSameDayAs: key) }) {
+        kind.mark(&activities[index], at: date)
+    } else {
+        var activity = DailyActivity(date: key, hasMeditation: false, hasNote: false)
+        kind.mark(&activity, at: date)
+        activities.append(activity)
+    }
+
+    guard let today = activities.first(where: { calendar.isDate($0.date, inSameDayAs: key) }),
+          today.isComplete,
+          snapshot.lastCountedDay.map({ !calendar.isDate($0, inSameDayAs: key) }) ?? true
+    else {
+        return StreakSnapshot(
+            activities: activities,
+            currentStreak: snapshot.currentStreak,
+            longestStreak: snapshot.longestStreak,
+            lastCountedDay: snapshot.lastCountedDay
+        )
+    }
+
+    guard let yesterday = calendar.date(byAdding: .day, value: -1, to: key) else {
+        return StreakSnapshot(
+            activities: activities,
+            currentStreak: snapshot.currentStreak,
+            longestStreak: snapshot.longestStreak,
+            lastCountedDay: snapshot.lastCountedDay
+        )
+    }
+    let yesterdayComplete = activities.first { calendar.isDate($0.date, inSameDayAs: yesterday) }?
+        .isComplete ?? false
+    let streak = (yesterdayComplete && snapshot.currentStreak > 0) ? snapshot.currentStreak + 1 : 1
+    return StreakSnapshot(
+        activities: activities,
+        currentStreak: streak,
+        longestStreak: max(snapshot.longestStreak, streak),
+        lastCountedDay: key
+    )
+}
+
+/// Marks a completed meditation — the Android counterpart of
+/// `StreakEngine.markMeditationCompleted`.
+func streakMarkMeditation(
+    _ snapshot: StreakSnapshot,
+    completedAt: Date,
+    calendar: Calendar = .current
+) -> StreakSnapshot {
+    streakMarkActivity(snapshot, kind: .meditation, at: completedAt, calendar: calendar)
+}
+
+/// Marks a written note — the Android counterpart of
+/// `StreakEngine.markNoteCreated`. Without it a note never fills the day, so
+/// the streak could never complete.
+func streakMarkNote(
+    _ snapshot: StreakSnapshot,
+    noteDate: Date,
+    calendar: Calendar = .current
+) -> StreakSnapshot {
+    streakMarkActivity(snapshot, kind: .note, at: noteDate, calendar: calendar)
+}
+
 // MARK: - Kotlin entry point
 
 /// Slots in the probe buffer, in order.

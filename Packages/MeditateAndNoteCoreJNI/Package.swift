@@ -39,6 +39,16 @@ let package = Package(
                 "CZlib",
             ],
             swiftSettings: [.swiftLanguageMode(.v5)]
+        ),
+        // Host-side tests for the pure streak bookkeeping: the JNI package
+        // builds for macOS too, so the invariant can be checked without a
+        // device. Device-level wiring is covered by the Android probes.
+        .testTarget(
+            name: "MeditateAndNoteCoreJNITests",
+            dependencies: [
+                "MeditateAndNoteCoreJNI",
+                .product(name: "MeditateAndNoteCore", package: "MeditateAndNoteCore"),
+            ]
         )
     ]
 )
