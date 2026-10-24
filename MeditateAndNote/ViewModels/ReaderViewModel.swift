@@ -227,12 +227,13 @@ final class ReaderViewModel {
         }
     }
 
-    /// Usable text area: full screen minus vertical padding and the status/home areas.
+    /// Usable text area: full screen minus the notch/home areas and a small
+    /// margin, so the page fills the screen like the FBReader reference.
     private static func pageSize() async -> PageSize {
         await MainActor.run {
             let screen = UIScreen.main.bounds
-            let width = screen.width - 48
-            let height = screen.height - 160
+            let width = screen.width - 40
+            let height = screen.height - 112
             return PageSize(width: Double(width), height: Double(height))
         }
     }

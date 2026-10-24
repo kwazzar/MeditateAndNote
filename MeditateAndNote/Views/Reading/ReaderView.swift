@@ -81,11 +81,11 @@ struct ReaderView: View {
 
     private func pages(_ paginated: PaginatedBook) -> some View {
         GeometryReader { proxy in
-            ZStack {
+            ZStack(alignment: .top) {
                 pageContent(paginated.pages[min(viewModel.currentPage, paginated.pages.count - 1)])
-                    .frame(width: proxy.size.width - 40)
-                    .position(x: proxy.size.width / 2, y: proxy.size.height / 2)
-
+                    .frame(width: proxy.size.width - 40, alignment: .leading)
+                    .padding(.top, 8)
+                    .frame(maxWidth: .infinity, alignment: .center)
             }
             .contentShape(Rectangle())
             // One handler for the whole page: a tap in the left/right third
@@ -165,8 +165,14 @@ struct ReaderView: View {
 
     // MARK: - Chrome
 
+    // Chrome bars, like the FBReader menu: neutral gray bands over the page,
+    // identical in every paper theme.
+    private var chromeBackground: Color {
+        Color(red: 0.23, green: 0.23, blue: 0.25).opacity(0.95)
+    }
+
     private var chrome: some View {
-        VStack {
+        VStack(spacing: 0) {
             HStack {
                 Button {
                     dismiss()
@@ -196,7 +202,8 @@ struct ReaderView: View {
                 }
             }
             .padding()
-            .foregroundStyle(readerText)
+            .foregroundStyle(Color.white)
+            .background(chromeBackground.ignoresSafeArea(edges: .top))
 
             Spacer()
 
@@ -206,15 +213,16 @@ struct ReaderView: View {
                 // counter and the clock.
                 ProgressView(value: viewModel.progress)
                     .progressViewStyle(.linear)
-                    .tint(readerSecondary)
+                    .tint(.white)
                     .frame(maxWidth: .infinity)
                 TimelineView(.everyMinute) { context in
                     Text(context.date, style: .time)
                 }
             }
             .font(.caption.monospacedDigit())
-            .foregroundStyle(readerSecondary)
+            .foregroundStyle(Color.white.opacity(0.85))
             .padding()
+            .background(chromeBackground.ignoresSafeArea(edges: .bottom))
         }
     }
 
@@ -242,9 +250,5 @@ struct ReaderView: View {
 
     private var readerText: Color {
         viewModel.theme.text
-    }
-
-    private var readerSecondary: Color {
-        viewModel.theme.secondaryText
     }
 }

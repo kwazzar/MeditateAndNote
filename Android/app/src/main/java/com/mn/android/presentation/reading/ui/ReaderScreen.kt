@@ -105,6 +105,11 @@ private fun clockText(): String =
     java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
         .format(java.util.Date())
 
+// Chrome bars, like the FBReader menu: neutral gray bands over the page,
+// identical in every paper theme (the page color never tints them).
+private val chromeBackground = Color(0xFF3A3A40)
+private val chromeContent = Color(0xFFF2F2F2)
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalTextApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun ReaderScreen(
@@ -155,16 +160,21 @@ fun ReaderScreen(
     // on top of the first lines and the last lines hide behind the gesture bar.
     val insetTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val insetBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-    val topBarHeight = 56.dp // 4 + 48 (IconButton) + 4
-    val bottomBarHeight = 32.dp // 8 + counter line + 8
-    val contentTop = insetTop + topBarHeight
-    val contentBottom = insetBottom + bottomBarHeight
+    // Text uses the full column: the chrome bars float over it as gray bands
+    // when invoked, so no band is reserved while reading.
+    val contentTop = insetTop + 12.dp
+    val contentBottom = insetBottom + 12.dp
     val pageWidth = (configuration.screenWidthDp - 40.0) * density
     val pageHeight =
         ((configuration.screenHeightDp - contentTop.value - contentBottom.value) * density).toDouble()
     // sp -> px through the Compose density: it carries the system font scale,
     // which the engine's Paint metrics must match or every line wraps early.
     val fontSizePx = with(localDensity) { fontSize.sp.toPx() }
+    // The engine lays lines out with Paint metrics ((descent - ascent) * 1.45),
+    // which is taller than Compose's fontSize * 1.45. Render every line at the
+    // engine's advance, or the page ends short of the bottom edge.
+    val lineHeightPx = remember(fontSizePx) { TextMetrics.lineHeight(fontSizePx.toDouble()).toFloat() }
+    val lineHeightSp = with(localDensity) { lineHeightPx.toSp() }
 
     // The engine wraps with Paint metrics, the page renders with Compose
     // metrics, and the two differ by 5-10% on some devices. Measure one probe
@@ -291,7 +301,6 @@ fun ReaderScreen(
                         }
                     },
                     onLongPress = { offset ->
-                        val lineHeightPx = with(density) { (fontSize * 1.45f).sp.toPx() }
                         val topPaddingPx = with(density) { contentTop.toPx() }
                         if (lineHeightPx > 0 && lines.isNotEmpty()) {
                             val index = ((offset.y + scrollState.value - topPaddingPx) / lineHeightPx)
@@ -337,7 +346,7 @@ fun ReaderScreen(
                     color = paper.text,
                     fontSize = fontSize.sp,
                     fontFamily = FontFamily.Serif,
-                    lineHeight = (fontSize * 1.45f).sp,
+                    lineHeight = lineHeightSp,
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
@@ -347,6 +356,7 @@ fun ReaderScreen(
             Row(
                 Modifier
                     .fillMaxWidth()
+                    .background(chromeBackground)
                     .statusBarsPadding()
                     .padding(horizontal = 8.dp, vertical = 4.dp)
                     .align(Alignment.TopCenter),
@@ -356,7 +366,7 @@ fun ReaderScreen(
                     Icon(
                         Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = stringResource(R.string.back),
-                        tint = paper.text,
+                        tint = chromeContent,
                     )
                 }
                 Spacer(Modifier.weight(1f))
@@ -370,7 +380,7 @@ fun ReaderScreen(
                     Icon(
                         Icons.Filled.List,
                         contentDescription = stringResource(R.string.reader_contents),
-                        tint = paper.text,
+                        tint = chromeContent,
                     )
                 }
                 IconButton(onClick = {
@@ -382,30 +392,29 @@ fun ReaderScreen(
                     Icon(
                         Icons.Filled.Bookmark,
                         contentDescription = stringResource(R.string.reader_bookmarks),
-                        tint = paper.text,
+                        tint = chromeContent,
                     )
                 }
                 IconButton(onClick = { showSettings = true }) {
                     Icon(
                         Icons.Filled.FormatSize,
                         contentDescription = stringResource(R.string.reader_font_size),
-                        tint = paper.text,
+                        tint = chromeContent,
                     )
                 }
             }
             Row(
                 Modifier
                     .fillMaxWidth()
+                    .background(chromeBackground)
                     .navigationBarsPadding()
-                    // 8.dp vertical keeps the bar at bottomBarHeight, so the
-                    // counter lines up with the space reserved for them.
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .padding(horizontal = 16.dp, vertical = 10.dp)
                     .align(Alignment.BottomCenter),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
                     stringResource(R.string.reader_page_format, page + 1, pageCount),
-                    color = paper.secondary,
+                    color = chromeContent.copy(alpha = 0.85f),
                     style = MaterialTheme.typography.labelMedium,
                 )
                 LinearProgressIndicator(
@@ -413,12 +422,12 @@ fun ReaderScreen(
                     modifier = Modifier
                         .weight(1f)
                         .padding(horizontal = 12.dp),
-                    trackColor = paper.secondary.copy(alpha = 0.18f),
-                    color = paper.secondary,
+                    trackColor = chromeContent.copy(alpha = 0.24f),
+                    color = chromeContent,
                 )
                 Text(
                     clock,
-                    color = paper.secondary,
+                    color = chromeContent.copy(alpha = 0.85f),
                     style = MaterialTheme.typography.labelMedium,
                 )
             }
