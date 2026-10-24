@@ -21,8 +21,12 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -45,6 +49,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.mn.android.R
 import com.mn.android.data.BookSource
+import com.mn.android.presentation.theme.ui.MnBackground
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -115,11 +120,10 @@ fun LibraryScreen(
         }
     }
 
-    Box(
-        Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-    ) {
+    Box(Modifier.fillMaxSize()) {
+        // Same themed background as the tab-bar screens; a plain Material
+        // color made the library visibly mismatch the bar behind it.
+        MnBackground()
         if (books.isEmpty()) {
             Column(
                 Modifier
@@ -172,8 +176,12 @@ fun LibraryScreen(
                 color = MaterialTheme.colorScheme.onBackground,
             )
             Spacer(Modifier.weight(1f))
-            Button(onClick = { importer.launch(arrayOf("*/*")) }) {
-                Text("+")
+            IconButton(onClick = { importer.launch(arrayOf("*/*")) }) {
+                Icon(
+                    Icons.Filled.Add,
+                    contentDescription = stringResource(R.string.import_book),
+                    tint = Color.White,
+                )
             }
         }
     }
