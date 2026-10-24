@@ -1,6 +1,13 @@
 package com.mn.android.presentation.reading.ui
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
@@ -28,6 +35,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -196,8 +204,9 @@ fun ReaderScreen(
     var marks by remember { mutableStateOf<List<BookmarksSource.Mark>>(emptyList()) }
     var showContents by remember { mutableStateOf(false) }
     var showMarks by remember { mutableStateOf(false) }
+    var showGotoPage by remember { mutableStateOf(false) }
+    var gotoInput by remember { mutableStateOf("") }
     var actionLine by remember { mutableStateOf<Int?>(null) }
-    val scrollState = rememberScrollState()
     // Scroll mode renders the whole book lazily: one item per paginated page,
     // cached by index so scroll-back never re-queries the engine.
     val pageCache = remember { mutableStateMapOf<Int, PageLines>() }
@@ -319,6 +328,15 @@ fun ReaderScreen(
             pageCache[clamped] = PageLines(pageLines, pagePositions)
             progress = pageProgress.toFloat()
             withContext(Dispatchers.IO) { ReaderSource.savePosition(bookId, clamped) }
+            // Neighbour pages are what the slide animation renders next;
+            // loading them now keeps the turn instant instead of flashing
+            // the old page mid-animation.
+            for (neighbour in intArrayOf(clamped - 1, clamped + 1)) {
+                if (neighbour in 0 until pageCount && pageCache[neighbour] == null) {
+                    runCatching { withContext(Dispatchers.IO) { ReaderSource.page(neighbour) } }
+                        .onSuccess { pageCache[neighbour] = PageLines(it.first, it.second) }
+                }
+            }
         }
     }
 
@@ -378,6 +396,26 @@ fun ReaderScreen(
         return
     }
 
+    // Opening a book paginates the whole text; show a loading state until the
+    // first page is ready instead of a blank paper.
+    if (pageCount == 0) {
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(paper.background),
+            contentAlignment = Alignment.Center,
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                CircularProgressIndicator(color = paper.text)
+                Text(stringResource(R.string.reader_loading), color = paper.secondary)
+            }
+        }
+        return
+    }
+
     Box(
         Modifier
             .fillMaxSize()
@@ -415,7 +453,7 @@ fun ReaderScreen(
                         } else {
                             val topPaddingPx = with(density) { contentTop.toPx() }
                             if (lineHeightPx > 0 && lines.isNotEmpty()) {
-                                val index = ((offset.y + scrollState.value - topPaddingPx) / lineHeightPx)
+                                val index = ((offset.y - topPaddingPx) / lineHeightPx)
                                     .toInt()
                                     .coerceIn(0, lines.lastIndex)
                                 actionLine = index
@@ -477,19 +515,39 @@ fun ReaderScreen(
                 }
             }
         } else {
-            Column(
-                Modifier
-                    .fillMaxSize()
-                    .verticalScroll(scrollState)
-                    .padding(
-                        start = 20.dp,
-                        end = 20.dp,
-                        top = contentTop,
-                        bottom = contentBottom,
-                    ),
-            ) {
-                lines.forEach { line ->
-                    ReadLine(line, paper.text, fontSize.sp, lineHeightSp)
+            // Page turns slide like a book: forward pages enter from the
+            // right, backward pages from the left. The cache holds the page
+            // being animated to (showPage prefetches neighbours), so the
+            // animation shows the right text from the first frame.
+            AnimatedContent(
+                targetState = page,
+                modifier = Modifier.fillMaxSize(),
+                transitionSpec = {
+                    if (targetState > initialState) {
+                        (slideInHorizontally { it } + fadeIn()) togetherWith
+                            (slideOutHorizontally { -it } + fadeOut())
+                    } else {
+                        (slideInHorizontally { -it } + fadeIn()) togetherWith
+                            (slideOutHorizontally { it } + fadeOut())
+                    }
+                },
+                label = "page",
+            ) { targetPage ->
+                val pageLines = pageCache[targetPage]?.lines ?: lines
+                Column(
+                    Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(
+                            start = 20.dp,
+                            end = 20.dp,
+                            top = contentTop,
+                            bottom = contentBottom,
+                        ),
+                ) {
+                    pageLines.forEach { line ->
+                        ReadLine(line, paper.text, fontSize.sp, lineHeightSp)
+                    }
                 }
             }
         }
@@ -558,6 +616,10 @@ fun ReaderScreen(
                     stringResource(R.string.reader_page_format, page + 1, pageCount),
                     color = chromeContent.copy(alpha = 0.85f),
                     style = MaterialTheme.typography.labelMedium,
+                    modifier = Modifier.clickable {
+                        gotoInput = (page + 1).toString()
+                        showGotoPage = true
+                    }
                 )
                 LinearProgressIndicator(
                     progress = { progress },
@@ -574,6 +636,41 @@ fun ReaderScreen(
                 )
             }
         }
+    }
+
+    if (showGotoPage) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showGotoPage = false },
+            title = { Text(stringResource(R.string.reader_go_to_page)) },
+            text = {
+                androidx.compose.material3.OutlinedTextField(
+                    value = gotoInput,
+                    onValueChange = { gotoInput = it },
+                    singleLine = true,
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
+                    )
+                )
+            },
+            confirmButton = {
+                androidx.compose.material3.Button(
+                    onClick = {
+                        val target = gotoInput.toIntOrNull()
+                        if (target != null) {
+                            showPage(target - 1)
+                        }
+                        showGotoPage = false
+                    }
+                ) {
+                    Text(stringResource(R.string.go))
+                }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(onClick = { showGotoPage = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 
     if (showContents) {

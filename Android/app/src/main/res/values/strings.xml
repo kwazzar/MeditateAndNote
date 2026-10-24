@@ -183,4 +183,7 @@
     <string name="reader_bookmark_page">Bookmark this page</string>
     <string name="reader_delete_mark_title">Delete mark?</string>
     <string name="reader_delete_mark_body">This cannot be undone.</string>
+    <string name="reader_loading">Opening book…</string>
+    <string name="reader_go_to_page">Go to page</string>
+    <string name="go">Go</string>
 </resources>

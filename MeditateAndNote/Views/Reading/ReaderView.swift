@@ -111,6 +111,12 @@ struct ReaderView: View {
                             .frame(width: proxy.size.width - 40, alignment: .leading)
                             .padding(.top, 8)
                             .frame(maxWidth: .infinity, alignment: .center)
+                            .transition(.asymmetric(
+                                insertion: .move(edge: .trailing).combined(with: .opacity),
+                                removal: .move(edge: .leading).combined(with: .opacity)
+                            ))
+                            .id(viewModel.currentPage)
+                            .animation(.easeInOut(duration: 0.25), value: viewModel.currentPage)
                     }
                     .contentShape(Rectangle())
                     .onTapGesture(count: 1, coordinateSpace: .local) { location in
