@@ -164,6 +164,9 @@
     <string name="reader_open_failed">Could not open the book</string>
     <string name="reader_font_size">Font size</string>
     <string name="reader_paper">Paper</string>
+    <string name="reader_mode">Reading mode</string>
+    <string name="reader_mode_pages">Pages</string>
+    <string name="reader_mode_scroll">Scroll</string>
     <string name="reader_paper_light">Light</string>
     <string name="reader_paper_sepia">Sepia</string>
     <string name="reader_paper_dark">Dark</string>

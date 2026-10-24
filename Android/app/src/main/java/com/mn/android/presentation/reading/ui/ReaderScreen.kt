@@ -15,14 +15,19 @@ import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -42,11 +47,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -56,9 +63,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import com.mn.android.R
 import com.mn.android.data.BookmarksSource
@@ -66,6 +75,7 @@ import com.mn.android.data.ReaderSettingsStore
 import com.mn.android.data.TextMetrics
 import com.mn.android.data.ReaderSource
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -101,6 +111,11 @@ private enum class ReaderPaper(
         secondary = Color(0xFF999795),
     ),
 }
+
+private class PageLines(
+    val lines: List<String>,
+    val positions: List<ReaderSource.LinePosition>,
+)
 
 private fun clockText(): String =
     java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
@@ -138,6 +153,10 @@ fun ReaderScreen(
     // center tap and hides again on the next one. Pagination reserves the same
     // bands either way, so toggling never rewraps the page.
     var showChrome by remember { mutableStateOf(false) }
+
+    // Two reading modes: page-by-page (FBReader-style boxes) or one continuous
+    // column of the whole book that the reader scrolls vertically.
+    var scrollMode by rememberSaveable { mutableStateOf(ReaderSettingsStore.scrollMode()) }
 
     var title by remember { mutableStateOf("") }
     var pageCount by remember { mutableIntStateOf(0) }
@@ -179,6 +198,10 @@ fun ReaderScreen(
     var showMarks by remember { mutableStateOf(false) }
     var actionLine by remember { mutableStateOf<Int?>(null) }
     val scrollState = rememberScrollState()
+    // Scroll mode renders the whole book lazily: one item per paginated page,
+    // cached by index so scroll-back never re-queries the engine.
+    val pageCache = remember { mutableStateMapOf<Int, PageLines>() }
+    val listState = rememberLazyListState()
 
     // Swift paginates in pixels (Android Paint metrics), so the page box and
     // the font size are converted to px — dp would wrap every line far too early.
@@ -241,11 +264,15 @@ fun ReaderScreen(
     suspend fun openBook() = withContext(Dispatchers.IO) {
         val opened = ReaderSource.open(bookId, fontSizePx.toDouble(), pageWidth, pageHeight, widthScale)
         title = opened.title
-        pageCount = opened.pageCount
+        // Page before pageCount: the scroll-mode effect is keyed on pageCount,
+        // and it jumps the list to `page` — write the page first or the jump
+        // races a recomposition and lands on item 0.
         page = opened.page
+        pageCount = opened.pageCount
         val (pageLines, pagePositions, pageProgress) = ReaderSource.page(opened.page)
         lines = pageLines
         linePositions = pagePositions
+        pageCache[opened.page] = PageLines(pageLines, pagePositions)
         progress = pageProgress.toFloat()
     }
 
@@ -273,15 +300,53 @@ fun ReaderScreen(
         val clamped = index.coerceIn(0, (pageCount - 1).coerceAtLeast(0))
         page = clamped
         clock = clockText()
+        if (scrollMode) {
+            // The list position is the page: jump there and let the tracker
+            // update the footer as the scroll settles.
+            scope.launch {
+                listState.scrollToItem(clamped)
+                progress = if (pageCount > 1) clamped.toFloat() / (pageCount - 1) else 0f
+                withContext(Dispatchers.IO) { ReaderSource.savePosition(bookId, clamped) }
+            }
+            return
+        }
         scope.launch {
             val (pageLines, pagePositions, pageProgress) = runCatching {
                 withContext(Dispatchers.IO) { ReaderSource.page(clamped) }
             }.getOrNull() ?: Triple(emptyList<String>(), emptyList<ReaderSource.LinePosition>(), 0.0)
             lines = pageLines
             linePositions = pagePositions
+            pageCache[clamped] = PageLines(pageLines, pagePositions)
             progress = pageProgress.toFloat()
             withContext(Dispatchers.IO) { ReaderSource.savePosition(bookId, clamped) }
         }
+    }
+
+    // Scroll mode: the first visible page drives the footer and the saved
+    // position, and switching into the mode lands on the page being read.
+    LaunchedEffect(scrollMode, pageCount) {
+        if (!scrollMode || pageCount == 0) return@LaunchedEffect
+        listState.scrollToItem(page.coerceIn(0, pageCount - 1))
+        snapshotFlow { listState.firstVisibleItemIndex }
+            .distinctUntilChanged()
+            .collect { index ->
+                page = index
+                progress = if (pageCount > 1) index.toFloat() / (pageCount - 1) else 0f
+                clock = clockText()
+            }
+    }
+    LaunchedEffect(scrollMode) {
+        if (!scrollMode) return@LaunchedEffect
+        snapshotFlow { listState.isScrollInProgress }
+            .distinctUntilChanged()
+            .collect { scrolling ->
+                if (!scrolling) {
+                    // Read the list itself: the `page` state is filled by the
+                    // sibling flow and can still be one index behind here.
+                    val index = listState.firstVisibleItemIndex
+                    withContext(Dispatchers.IO) { ReaderSource.savePosition(bookId, index) }
+                }
+            }
     }
 
     DisposableEffect(Unit) {
@@ -289,7 +354,10 @@ fun ReaderScreen(
             // Position is saved on every page turn; the dispose hook only
             // covers a reader closed without turning a page.
             if (pageCount > 0) {
-                ReaderSource.savePosition(bookId, page)
+                ReaderSource.savePosition(
+                    bookId,
+                    if (scrollMode) listState.firstVisibleItemIndex else page,
+                )
             }
         }
     }
@@ -318,7 +386,7 @@ fun ReaderScreen(
             // right thirds) or toggles the chrome (center), a long press opens
             // the actions for the line under the finger. Separate overlays
             // would swallow the long press before the text sees it.
-            .pointerInput(pageCount) {
+            .pointerInput(pageCount, scrollMode) {
                 detectTapGestures(
                     onTap = { offset ->
                         val third = size.width / 3f
@@ -329,12 +397,29 @@ fun ReaderScreen(
                         }
                     },
                     onLongPress = { offset ->
-                        val topPaddingPx = with(density) { contentTop.toPx() }
-                        if (lineHeightPx > 0 && lines.isNotEmpty()) {
-                            val index = ((offset.y + scrollState.value - topPaddingPx) / lineHeightPx)
-                                .toInt()
-                                .coerceIn(0, lines.lastIndex)
-                            actionLine = index
+                        if (scrollMode) {
+                            // The list owns the vertical offsets: find the page
+                            // under the finger, then the line inside it.
+                            val item = listState.layoutInfo.visibleItemsInfo.firstOrNull { info ->
+                                offset.y.toInt() in info.offset..(info.offset + info.size)
+                            }
+                            val cached = item?.let { pageCache[it.index] }
+                            if (item != null && cached != null && cached.lines.isNotEmpty()) {
+                                val line = ((offset.y - item.offset) / lineHeightPx)
+                                    .toInt()
+                                    .coerceIn(0, cached.lines.lastIndex)
+                                lines = cached.lines
+                                linePositions = cached.positions
+                                actionLine = line
+                            }
+                        } else {
+                            val topPaddingPx = with(density) { contentTop.toPx() }
+                            if (lineHeightPx > 0 && lines.isNotEmpty()) {
+                                val index = ((offset.y + scrollState.value - topPaddingPx) / lineHeightPx)
+                                    .toInt()
+                                    .coerceIn(0, lines.lastIndex)
+                                actionLine = index
+                            }
                         }
                     },
                 )
@@ -357,26 +442,55 @@ fun ReaderScreen(
                 )
             }
     ) {
-        Column(
-            Modifier
-                .fillMaxSize()
-                .verticalScroll(scrollState)
-                .padding(
+        if (scrollMode) {
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(
                     start = 20.dp,
                     end = 20.dp,
                     top = contentTop,
                     bottom = contentBottom,
                 ),
-        ) {
-            lines.forEach { line ->
-                Text(
-                    line,
-                    color = paper.text,
-                    fontSize = fontSize.sp,
-                    fontFamily = FontFamily.Serif,
-                    lineHeight = lineHeightSp,
-                    modifier = Modifier.fillMaxWidth(),
-                )
+            ) {
+                items(pageCount) { index ->
+                    val cached = pageCache[index]
+                    if (cached == null) {
+                        // Reserve the page's height while it loads, so the
+                        // scrollbar and the current page do not jump.
+                        LaunchedEffect(index) {
+                            val loaded = withContext(Dispatchers.IO) {
+                                runCatching { ReaderSource.page(index) }.getOrNull()
+                            }
+                            if (loaded != null) {
+                                pageCache[index] = PageLines(loaded.first, loaded.second)
+                            }
+                        }
+                        Spacer(Modifier.height((pageHeight / density).dp))
+                    } else {
+                        Column {
+                            cached.lines.forEach { line ->
+                                ReadLine(line, paper.text, fontSize.sp, lineHeightSp)
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
+            Column(
+                Modifier
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
+                    .padding(
+                        start = 20.dp,
+                        end = 20.dp,
+                        top = contentTop,
+                        bottom = contentBottom,
+                    ),
+            ) {
+                lines.forEach { line ->
+                    ReadLine(line, paper.text, fontSize.sp, lineHeightSp)
+                }
             }
         }
 
@@ -553,6 +667,34 @@ fun ReaderScreen(
     if (showSettings) {
         ModalBottomSheet(onDismissRequest = { showSettings = false }) {
             Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Text(stringResource(R.string.reader_mode), fontWeight = FontWeight.Medium)
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    listOf(
+                        false to R.string.reader_mode_pages,
+                        true to R.string.reader_mode_scroll,
+                    ).forEach { (enabled, label) ->
+                        val selected = scrollMode == enabled
+                        Button(
+                            onClick = {
+                                scrollMode = enabled
+                                ReaderSettingsStore.setScrollMode(enabled)
+                                showPage(page)
+                            },
+                            // A border is invisible on a filled button here, so the
+                            // selected mode is the filled one and the other is flat.
+                            colors = if (selected) {
+                                ButtonDefaults.buttonColors()
+                            } else {
+                                ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            },
+                        ) {
+                            Text(stringResource(label))
+                        }
+                    }
+                }
                 Text(stringResource(R.string.reader_font_size), fontWeight = FontWeight.Medium)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("A", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface)
@@ -568,6 +710,10 @@ fun ReaderScreen(
                                     }
                                 }.getOrNull()
                                 if (result != null) {
+                                    // The cache holds lines from the previous
+                                    // layout: every entry would wrap at the old
+                                    // width and drift the scroll list.
+                                    pageCache.clear()
                                     pageCount = result.first
                                     showPage(result.second)
                                 }
@@ -613,4 +759,26 @@ fun ReaderScreen(
             }
         }
     }
+}
+
+/**
+ * One engine line, drawn exactly as paginated.
+ *
+ * `softWrap = false` is deliberate: the engine already chose the break with the
+ * same width, and letting Compose re-wrap pushed one orphan word onto a second
+ * visual line, which made every page taller than the engine's estimate — the
+ * scroll list then drifted and page breaks stopped lining up with the layout.
+ */
+@Composable
+private fun ReadLine(text: String, color: Color, size: TextUnit, height: TextUnit) {
+    Text(
+        text = text,
+        color = color,
+        fontSize = size,
+        fontFamily = FontFamily.Serif,
+        lineHeight = height,
+        softWrap = false,
+        overflow = TextOverflow.Visible,
+        modifier = Modifier.fillMaxWidth(),
+    )
 }
