@@ -80,51 +80,79 @@ struct ReaderView: View {
     // MARK: - Pages
 
     private func pages(_ paginated: PaginatedBook) -> some View {
-        GeometryReader { proxy in
-            ZStack {
-                pageContent(paginated.pages[min(viewModel.currentPage, paginated.pages.count - 1)])
-                    .frame(width: proxy.size.width - 48)
-                    .position(x: proxy.size.width / 2, y: proxy.size.height / 2)
-
-            }
-            .contentShape(Rectangle())
-            // One handler for the whole page: a tap in the left/right third
-            // turns the page, a tap in the center toggles the chrome. A
-            // separate overlay would swallow the long press that opens the
-            // line actions, so the zones live in this handler instead.
-            .onTapGesture(count: 1, coordinateSpace: .local) { location in
-                let third = proxy.size.width / 3
-                if location.x < third {
-                    viewModel.goToPreviousPage()
-                } else if location.x > third * 2 {
-                    viewModel.goToNextPage()
-                } else {
+        Group {
+            if viewModel.scrollMode {
+                ScrollView {
+                    LazyVStack(spacing: 32) {
+                        ForEach(Array(paginated.pages.enumerated()), id: \.offset) { pageIndex, page in
+                            VStack(alignment: .leading, spacing: 0) {
+                                ForEach(Array(page.lines.enumerated()), id: \.offset) { index, line in
+                                    Text(line)
+                                        .font(.system(size: viewModel.fontSize, design: .serif))
+                                        .lineLimit(1)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                }
+                            }
+                            .frame(width: max(UIScreen.main.bounds.width - 40, 200), alignment: .leading)
+                            .id(pageIndex)
+                        }
+                    }
+                    .padding(.top, 12)
+                    .padding(.bottom, 12)
+                    .frame(maxWidth: .infinity)
+                }
+                .onTapGesture {
                     showsChrome.toggle()
                 }
-            }
-            .onChange(of: proxy.size) { _, newSize in
-                // Re-paginate when the usable area changes (rotation).
-                if lastSizeClass == nil {
-                    lastSizeClass = proxy.size.height > proxy.size.width ? .regular : .compact
-                } else {
-                    let vertical = newSize.height > newSize.width
-                    let sizeClass: UserInterfaceSizeClass? = vertical ? .regular : .compact
-                    if sizeClass != lastSizeClass {
-                        lastSizeClass = sizeClass
-                        viewModel.repaginateKeepingPosition()
+            } else {
+                GeometryReader { proxy in
+                    ZStack(alignment: .top) {
+                        pageContent(paginated.pages[min(viewModel.currentPage, paginated.pages.count - 1)])
+                            .frame(width: proxy.size.width - 40, alignment: .leading)
+                            .padding(.top, 8)
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .transition(.asymmetric(
+                                insertion: .move(edge: .trailing).combined(with: .opacity),
+                                removal: .move(edge: .leading).combined(with: .opacity)
+                            ))
+                            .id(viewModel.currentPage)
+                            .animation(.easeInOut(duration: 0.25), value: viewModel.currentPage)
+                    }
+                    .contentShape(Rectangle())
+                    .onTapGesture(count: 1, coordinateSpace: .local) { location in
+                        let third = proxy.size.width / 3
+                        if location.x < third {
+                            viewModel.goToPreviousPage()
+                        } else if location.x > third * 2 {
+                            viewModel.goToNextPage()
+                        } else {
+                            showsChrome.toggle()
+                        }
+                    }
+                    .onChange(of: proxy.size) { _, newSize in
+                        if lastSizeClass == nil {
+                            lastSizeClass = proxy.size.height > proxy.size.width ? .regular : .compact
+                        } else {
+                            let vertical = newSize.height > newSize.width
+                            let sizeClass: UserInterfaceSizeClass? = vertical ? .regular : .compact
+                            if sizeClass != lastSizeClass {
+                                lastSizeClass = sizeClass
+                                viewModel.repaginateKeepingPosition()
+                            }
+                        }
                     }
                 }
+                .gesture(
+                    DragGesture(minimumDistance: 40).onEnded { value in
+                        if value.translation.width < -40 {
+                            viewModel.goToNextPage()
+                        } else if value.translation.width > 40 {
+                            viewModel.goToPreviousPage()
+                        }
+                    }
+                )
             }
         }
-        .gesture(
-            DragGesture(minimumDistance: 40).onEnded { value in
-                if value.translation.width < -40 {
-                    viewModel.goToNextPage()
-                } else if value.translation.width > 40 {
-                    viewModel.goToPreviousPage()
-                }
-            }
-        )
     }
 
     private func pageContent(_ page: PaginatedBook.Page) -> some View {
@@ -165,8 +193,14 @@ struct ReaderView: View {
 
     // MARK: - Chrome
 
+    // Chrome bars, like the FBReader menu: neutral gray bands over the page,
+    // identical in every paper theme.
+    private var chromeBackground: Color {
+        Color(red: 0.23, green: 0.23, blue: 0.25).opacity(0.95)
+    }
+
     private var chrome: some View {
-        VStack {
+        VStack(spacing: 0) {
             HStack {
                 Button {
                     dismiss()
@@ -196,18 +230,27 @@ struct ReaderView: View {
                 }
             }
             .padding()
-            .foregroundStyle(readerText)
+            .foregroundStyle(Color.white)
+            .background(chromeBackground.ignoresSafeArea(edges: .top))
 
             Spacer()
 
-            HStack {
+            HStack(spacing: 12) {
                 Text("\(viewModel.currentPage + 1) / \(viewModel.pageCount)")
-                Spacer()
-                Text("\(Int(viewModel.progress * 100))%")
+                // FBReader-style footer: a thin progress bar between the page
+                // counter and the clock.
+                ProgressView(value: viewModel.progress)
+                    .progressViewStyle(.linear)
+                    .tint(.white)
+                    .frame(maxWidth: .infinity)
+                TimelineView(.everyMinute) { context in
+                    Text(context.date, style: .time)
+                }
             }
             .font(.caption.monospacedDigit())
-            .foregroundStyle(readerSecondary)
+            .foregroundStyle(Color.white.opacity(0.85))
             .padding()
+            .background(chromeBackground.ignoresSafeArea(edges: .bottom))
         }
     }
 
@@ -235,9 +278,5 @@ struct ReaderView: View {
 
     private var readerText: Color {
         viewModel.theme.text
-    }
-
-    private var readerSecondary: Color {
-        viewModel.theme.secondaryText
     }
 }

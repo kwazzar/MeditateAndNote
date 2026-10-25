@@ -72,7 +72,7 @@ final class BookManagerIntegrationTests: XCTestCase {
     func testImportAndLoad_txt() async throws {
         let source = try writeSample("book.txt", Data("Para one.\n\nPara two.".utf8))
         let book = try await manager.importBook(from: source)
-        XCTAssertEqual(book.title, "book")
+        XCTAssertEqual(book.title, "Book")
 
         let (_, content, _) = try await manager.loadContent(for: book.id)
         XCTAssertEqual(content.chapters[0].blocks.count, 2)

@@ -13,6 +13,31 @@ struct ReaderSettingsSheet: View {
     var body: some View {
         VStack(spacing: 24) {
             VStack(alignment: .leading, spacing: 8) {
+                Text("Reading mode")
+                    .font(.subheadline.weight(.medium))
+                HStack(spacing: 12) {
+                    ForEach([false, true], id: \.self) { mode in
+                        Button {
+                            viewModel.scrollMode = mode
+                        } label: {
+                            Text(mode ? "Scroll" : "Pages")
+                                .font(.subheadline.weight(.medium))
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .background(
+                                    viewModel.scrollMode == mode
+                                        ? Color.accentColor
+                                        : Color.secondary.opacity(0.15)
+                                )
+                                .foregroundColor(viewModel.scrollMode == mode ? .white : .primary)
+                                .cornerRadius(8)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+
+            VStack(alignment: .leading, spacing: 8) {
                 Text("Font size")
                     .font(.subheadline.weight(.medium))
                 HStack(spacing: 16) {

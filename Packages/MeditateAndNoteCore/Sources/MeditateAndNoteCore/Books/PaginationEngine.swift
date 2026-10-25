@@ -108,7 +108,11 @@ public struct PaginationEngine: Sendable {
                     )
                 }
 
-                let lines = wrap(text, maxWidth: pageSize.width)
+                // Paragraphs open with a first-line indent. The indent rides
+                // through the wrapper (glued to the first word), so the line
+                // width accounting includes it and nothing overflows.
+                let indent = block.style == .paragraph && !text.hasPrefix("    ") ? "    " : ""
+                let lines = wrap(text, maxWidth: pageSize.width, indent: indent)
                 var lineStart = 0
 
                 for line in lines {
@@ -196,16 +200,23 @@ public struct PaginationEngine: Sendable {
 
     // MARK: - Wrapping
 
-    private func wrap(_ text: String, maxWidth: Double) -> [String] {
+    private func wrap(_ text: String, maxWidth: Double, indent: String = "") -> [String] {
         var lines: [String] = []
         for paragraphLine in text.components(separatedBy: "\n") {
-            lines.append(contentsOf: wrapLine(paragraphLine, maxWidth: maxWidth))
+            lines.append(
+                contentsOf: wrapLine(paragraphLine, maxWidth: maxWidth, indent: lines.isEmpty ? indent : "")
+            )
         }
         return lines
     }
 
-    private func wrapLine(_ line: String, maxWidth: Double) -> [String] {
-        let words = line.split(separator: " ", omittingEmptySubsequences: true).map(String.init)
+    private func wrapLine(_ line: String, maxWidth: Double, indent: String = "") -> [String] {
+        var words = line.split(separator: " ", omittingEmptySubsequences: true).map(String.init)
+        // The indent joins the first word so the width budget covers it;
+        // plain concatenation would be lost to the space split above.
+        if !indent.isEmpty, let first = words.first {
+            words[0] = indent + first
+        }
         guard !words.isEmpty else { return [""] }
 
         var lines: [String] = []

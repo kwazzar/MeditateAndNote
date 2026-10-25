@@ -36,13 +36,20 @@ object BookSource {
             val obj = books.getJSONObject(i)
             BookRecord(
                 id = obj.getString("id"),
-                title = obj.getString("title"),
+                title = displayTitle(obj.getString("title")),
                 author = obj.optString("author", ""),
                 format = obj.getString("format"),
                 progressPerMille = obj.getInt("progress"),
             )
         }
     }
+
+    /**
+     * Books imported without an internal title carry the file name, which can
+     * still look like a raw path segment ("Marcus_Aurelius", "import."). Humanize
+     * it for display: split on separators, drop stray dots/case noise.
+     */
+    internal fun displayTitle(raw: String): String = displayTitleForLibrary(raw)
 
     /** Returns the new book id, or throws on failure. */
     fun import(srcPath: String, format: String): String {
@@ -210,3 +217,28 @@ object ReaderSource {
 /** A safe cache file name that keeps letters (Cyrillic included). */
 private fun String.asFileName(): String =
     replace(Regex("[^\\p{L}\\p{N}._ -]"), "_").take(120).ifBlank { "book" }
+
+/// File-name stems get humanized for display; these extensions are stripped first.
+private val knownExtensions = setOf("fb2", "epub", "txt", "md", "markdown")
+
+/**
+ * Books imported without an internal title carry the file name, which can still
+ * look like a raw path segment ("Marcus_Aurelius", "import."). Humanize it for
+ * display: split on separators, drop stray dots/case noise.
+ *
+ * Top level on purpose: `BookSource`'s init touches JNI classes, which are not
+ * available in plain JVM unit tests.
+ */
+internal fun displayTitleForLibrary(raw: String): String {
+    val stem = if (raw.substringAfterLast('.', "") in knownExtensions) {
+        raw.substringBeforeLast('.')
+    } else {
+        raw
+    }
+    return stem.replace(Regex("[._]+"), " ")
+        .replace(Regex("[-_]+"), " ")
+        .replace(Regex("\\s+"), " ")
+        .trim()
+        .replaceFirstChar { it.uppercaseChar() }
+        .ifBlank { "Book" }
+}

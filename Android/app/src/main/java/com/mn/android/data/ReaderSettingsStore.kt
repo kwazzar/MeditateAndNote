@@ -14,6 +14,7 @@ object ReaderSettingsStore {
     private const val PREFS = "reader_settings"
     private const val KEY_FONT_SIZE = "fontSize"
     private const val KEY_PAPER = "paper"
+    private const val KEY_SCROLL = "scrollMode"
 
     @Volatile
     private var prefs: android.content.SharedPreferences? = null
@@ -46,5 +47,12 @@ object ReaderSettingsStore {
 
     fun setPaper(name: String) {
         prefs?.edit()?.putString(KEY_PAPER, name)?.apply()
+    }
+
+    /** True = continuous vertical scrolling, false = page-by-page. */
+    fun scrollMode(): Boolean = prefs?.getBoolean(KEY_SCROLL, false) ?: false
+
+    fun setScrollMode(enabled: Boolean) {
+        prefs?.edit()?.putBoolean(KEY_SCROLL, enabled)?.apply()
     }
 }

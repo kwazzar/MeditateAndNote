@@ -96,7 +96,7 @@ final actor BookManager: BookProvidable, BookManageable {
 
         var book = Book(
             id: bookID,
-            title: url.deletingPathExtension().lastPathComponent,
+            title: Self.humanizeFileName(url.deletingPathExtension().lastPathComponent),
             format: format,
             fileName: fileName
         )
@@ -159,6 +159,25 @@ final actor BookManager: BookProvidable, BookManageable {
 
     static func detectFormat(url: URL) -> BookFormat? {
         BookFormat(rawValue: url.pathExtension.lowercased())
+    }
+
+    /// Fallback title derived from a file name: books without an internal
+    /// title would otherwise show raw path segments ("Marcus_Aurelius",
+    /// "import."). Splits on separators, drops the known extension, tidies
+    /// trailing dots/case. Mirrors Kotlin `displayTitleForLibrary`.
+    static func humanizeFileName(_ raw: String) -> String {
+        let known = ["fb2", "epub", "txt", "md", "markdown"]
+        let nsRaw = raw as NSString
+        let stem = known.contains(nsRaw.pathExtension.lowercased())
+            ? nsRaw.deletingPathExtension
+            : raw
+        let spaced = stem
+            .replacingOccurrences(of: "[.]+", with: " ", options: String.CompareOptions.regularExpression)
+            .replacingOccurrences(of: "[-]+", with: " ", options: String.CompareOptions.regularExpression)
+            .replacingOccurrences(of: "[_]+", with: " ", options: String.CompareOptions.regularExpression)
+            .replacingOccurrences(of: " +", with: " ", options: String.CompareOptions.regularExpression)
+            .trimmingCharacters(in: CharacterSet.whitespaces)
+        return spaced.isEmpty ? "Book" : spaced.prefix(1).uppercased() + spaced.dropFirst()
     }
 
     private static func parseContent(for book: Book, fileStorage: BookFileStorage) throws -> (content: BookContent, coverData: Data?) {

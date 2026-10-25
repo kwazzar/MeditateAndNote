@@ -164,6 +164,9 @@
     <string name="reader_open_failed">Could not open the book</string>
     <string name="reader_font_size">Font size</string>
     <string name="reader_paper">Paper</string>
+    <string name="reader_mode">Reading mode</string>
+    <string name="reader_mode_pages">Pages</string>
+    <string name="reader_mode_scroll">Scroll</string>
     <string name="reader_paper_light">Light</string>
     <string name="reader_paper_sepia">Sepia</string>
     <string name="reader_paper_dark">Dark</string>
@@ -180,4 +183,7 @@
     <string name="reader_bookmark_page">Bookmark this page</string>
     <string name="reader_delete_mark_title">Delete mark?</string>
     <string name="reader_delete_mark_body">This cannot be undone.</string>
+    <string name="reader_loading">Opening book…</string>
+    <string name="reader_go_to_page">Go to page</string>
+    <string name="go">Go</string>
 </resources>

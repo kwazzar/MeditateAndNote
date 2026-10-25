@@ -206,13 +206,14 @@ private fun MnNav() {
         // routes must not reserve it a second time — otherwise the content
         // keeps a 34 dp gap above a bar that already floats above the gesture
         // area. The pushed screens keep the inset: nothing else is there to
-        // hold their content off the gesture area.
-        contentWindowInsets = if (currentRoute in TabBarRoutes) {
-            WindowInsets.systemBars.only(
+        // hold their content off the gesture area. The reader is the exception:
+        // it is full-bleed by design and manages the system bars itself.
+        contentWindowInsets = when {
+            currentRoute in TabBarRoutes -> WindowInsets.systemBars.only(
                 WindowInsetsSides.Top + WindowInsetsSides.Horizontal,
             )
-        } else {
-            WindowInsets.systemBars
+            currentRoute?.startsWith("reader") == true -> WindowInsets(0)
+            else -> WindowInsets.systemBars
         },
         bottomBar = {
             if (currentRoute in TabBarRoutes) {
