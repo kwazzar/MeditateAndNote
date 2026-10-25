@@ -13,13 +13,20 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.RemoveCircle
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -139,21 +146,37 @@ private fun SessionContent(
     onTransfer: () -> Unit,
 ) {
     val pending = session.pending
-    if (pending.isNotEmpty()) {
+    var collapsed by rememberSaveable { mutableStateOf(false) }
+
+    Row(verticalAlignment = Alignment.CenterVertically) {
         SectionLabel(
             stringResource(
                 if (session.grounded) R.string.ai_draft_proposals else R.string.ai_draft_questions,
             ),
         )
-        pending.forEach { suggestion ->
-            SuggestionRow(suggestion, accepted = false, onAccept = onAccept, onRemove = onRemove)
+        Spacer(Modifier.weight(1f))
+        IconButton(onClick = { collapsed = !collapsed }, modifier = Modifier.size(28.dp)) {
+            Icon(
+                if (collapsed) Icons.Filled.KeyboardArrowDown else Icons.Filled.KeyboardArrowUp,
+                contentDescription = stringResource(
+                    if (collapsed) R.string.ai_draft_expand else R.string.ai_draft_collapse,
+                ),
+                tint = MnTheme.textSecondary,
+                modifier = Modifier.size(18.dp),
+            )
         }
     }
 
-    if (session.accepted.isNotEmpty()) {
-        SectionLabel(stringResource(R.string.ai_draft_accepted))
-        session.accepted.forEach { suggestion ->
-            SuggestionRow(suggestion, accepted = true, onAccept = onAccept, onRemove = onRemove)
+    if (!collapsed) {
+        pending.forEach { suggestion ->
+            SuggestionRow(suggestion, accepted = false, onAccept = onAccept, onRemove = onRemove)
+        }
+
+        if (session.accepted.isNotEmpty()) {
+            SectionLabel(stringResource(R.string.ai_draft_accepted))
+            session.accepted.forEach { suggestion ->
+                SuggestionRow(suggestion, accepted = true, onAccept = onAccept, onRemove = onRemove)
+            }
         }
     }
 

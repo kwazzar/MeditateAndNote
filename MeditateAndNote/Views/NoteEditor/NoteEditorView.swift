@@ -14,6 +14,7 @@ struct NoteEditorView: View {
 
     @FocusState private var isEditorFocused: Bool
     @State private var isKeyboardVisible = false
+    @State private var areSuggestionsCollapsed = false
     @State private var showDeleteConfirmation = false
     @State private var showRemoteConsent = false
     @State private var safeInsets: UIEdgeInsets = .zero
@@ -114,29 +115,27 @@ private extension NoteEditorView {
                 }
                 .frame(maxWidth: .infinity)
             } else if !vm.sessions.isEmpty {
-                ForEach(vm.sessions) { session in
-                    let acceptedIDs = Set(vm.acceptedSuggestions.map { $0.id })
-                    let pending = session.suggestions.filter { !acceptedIDs.contains($0.id) }
-                    if !pending.isEmpty {
-                        Text(vm.canAccept ? "Proposals" : "Questions")
-                            .font(.caption2.weight(.semibold))
-                            .foregroundStyle(themeManager.current.textSecondary)
-                            .padding(.horizontal, 4)
+                suggestionsToggle(vm)
+
+                if !areSuggestionsCollapsed {
+                    ForEach(vm.sessions) { session in
+                        let acceptedIDs = Set(vm.acceptedSuggestions.map { $0.id })
+                        let pending = session.suggestions.filter { !acceptedIDs.contains($0.id) }
                         ForEach(pending) { suggestion in
                             inlineSuggestionRow(suggestion, vm: vm, state: .pending)
                         }
-                    }
 
-                    let accepted = vm.acceptedSuggestions.filter { accepted in
-                        session.suggestions.contains(where: { $0.id == accepted.id })
-                    }
-                    if !accepted.isEmpty {
-                        Text("Accepted")
-                            .font(.caption2.weight(.semibold))
-                            .foregroundStyle(themeManager.current.textSecondary)
-                            .padding(.horizontal, 4)
-                        ForEach(accepted) { suggestion in
-                            inlineSuggestionRow(suggestion, vm: vm, state: .accepted)
+                        let accepted = vm.acceptedSuggestions.filter { accepted in
+                            session.suggestions.contains(where: { $0.id == accepted.id })
+                        }
+                        if !accepted.isEmpty {
+                            Text("Accepted")
+                                .font(.caption2.weight(.semibold))
+                                .foregroundStyle(themeManager.current.textSecondary)
+                                .padding(.horizontal, 4)
+                            ForEach(accepted) { suggestion in
+                                inlineSuggestionRow(suggestion, vm: vm, state: .accepted)
+                            }
                         }
                     }
                 }
@@ -193,6 +192,32 @@ private extension NoteEditorView {
                     .padding(.vertical, 6)
                     .background(themeManager.current.streakActiveMeditation, in: Capsule())
             }
+        }
+        .padding(.horizontal, 4)
+    }
+
+    /// Collapsible header: a long suggestion list used to push the editor
+    /// off-screen, so tapping the title folds the rows away.
+    func suggestionsToggle(_ vm: NoteAIDraftViewModel) -> some View {
+        HStack(spacing: 6) {
+            Text(vm.canAccept ? "Proposals" : "Questions")
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(themeManager.current.textSecondary)
+            Spacer()
+            Button {
+                withAnimation(.snappy(duration: 0.2)) {
+                    areSuggestionsCollapsed.toggle()
+                }
+            } label: {
+                Image(systemName: areSuggestionsCollapsed ? "chevron.down" : "chevron.up")
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(themeManager.current.textSecondary)
+                    .frame(width: 28, height: 28)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(areSuggestionsCollapsed ? "Expand suggestions" : "Collapse suggestions")
+            .accessibilityIdentifier("aiDraftSuggestionsToggle")
         }
         .padding(.horizontal, 4)
     }

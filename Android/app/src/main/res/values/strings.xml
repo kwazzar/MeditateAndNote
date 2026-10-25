@@ -57,6 +57,8 @@
     <string name="ai_draft_proposals">Proposals</string>
     <string name="ai_draft_questions">Questions</string>
     <string name="ai_draft_accepted">Accepted</string>
+    <string name="ai_draft_collapse">Collapse suggestions</string>
+    <string name="ai_draft_expand">Expand suggestions</string>
     <string name="ai_draft_accept">Accept</string>
     <string name="ai_draft_remove">Remove</string>
     <string name="ai_draft_accept_all">Accept All</string>
