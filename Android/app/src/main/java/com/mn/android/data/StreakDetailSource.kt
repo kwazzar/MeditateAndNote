@@ -1,7 +1,6 @@
 package com.mn.android.data
 
 import java.time.LocalDate
-import java.time.ZoneId
 
 /**
  * Kotlin side of the streak detail read (stats header + month grid).
@@ -54,7 +53,7 @@ object StreakDetailSource {
     }
 
     fun readDetail(anchor: LocalDate = LocalDate.now()): Detail {
-        val zone = ZoneId.systemDefault()
+        val offsetMillis = currentUtcOffsetMillis()
         val monthStart = anchor.withDayOfMonth(1)
         // iOS calendar grid: gregorian, en_US, Sunday first, so the leading
         // offset is dayOfWeek with Sunday as 0. java.time is ISO (Monday = 1),
@@ -68,7 +67,7 @@ object StreakDetailSource {
         val offset = monthStart.dayOfWeek.value % 7
         val dayStarts = LongArray(dates.size)
         repeat(dates.size) { i ->
-            dayStarts[i] = dates[i].atStartOfDay(zone).toInstant().toEpochMilli()
+            dayStarts[i] = localDayStartMillis(dates[i], offsetMillis)
         }
 
         val med = LongArray(dates.size)

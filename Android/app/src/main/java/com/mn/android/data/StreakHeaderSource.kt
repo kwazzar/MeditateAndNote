@@ -1,7 +1,6 @@
 package com.mn.android.data
 
 import java.time.LocalDate
-import java.time.ZoneId
 
 /**
  * Kotlin side of the streak header read.
@@ -39,10 +38,10 @@ object StreakHeaderSource {
 
     /** 7 day-start millis for the local zone, oldest first, today last. */
     fun last7DayStartMillis(): LongArray {
-        val zone = ZoneId.systemDefault()
         val today = LocalDate.now()
+        val offsetMillis = currentUtcOffsetMillis()
         return LongArray(7) { offset ->
-            today.minusDays(6L - offset).atStartOfDay(zone).toInstant().toEpochMilli()
+            localDayStartMillis(today.minusDays(6L - offset), offsetMillis)
         }
     }
 
@@ -62,8 +61,7 @@ object StreakHeaderSource {
         val note = LongArray(7)
         // Swift-on-Android resolves TimeZone.current to UTC (no tzdata), so the
         // JVM passes its current offset — same rule as ReminderScheduleSource.
-        val tzOffsetMinutes =
-            java.util.TimeZone.getDefault().getOffset(System.currentTimeMillis()) / 60_000
+        val tzOffsetMinutes = (currentUtcOffsetMillis() / 60_000).toInt()
         val streak = read(last7DayStartMillis(), med, note, tzOffsetMinutes)
         return Header(
             currentStreak = streak.toInt(),
@@ -71,3 +69,23 @@ object StreakHeaderSource {
         )
     }
 }
+
+/** Offset the JNI bridge expects: the JVM's offset right now, not at midnight. */
+internal fun currentUtcOffsetMillis(): Long =
+    java.util.TimeZone.getDefault().getOffset(System.currentTimeMillis()).toLong()
+
+/**
+ * Start-of-day millis for [date], bucketed with a fixed [offsetMillis].
+ *
+ * Swift-on-Android has no tzdata and resolves `TimeZone.current` to UTC, so
+ * every streak JNI call passes the JVM's *current* offset instead. Kotlin must
+ * use that same fixed offset here: `ZoneId` rules would pick the offset in
+ * force at midnight, which on a DST-transition day is one hour off and drops
+ * today's mark into the neighbouring cell.
+ *
+ * ponytail: fixed offset, so a day split by a DST change can bucket an
+ * activity written before the change into the adjacent cell. Pass a real zone
+ * id (or ship tzdata to Swift) if that matters.
+ */
+internal fun localDayStartMillis(date: LocalDate, offsetMillis: Long): Long =
+    date.toEpochDay() * 86_400_000L - offsetMillis
