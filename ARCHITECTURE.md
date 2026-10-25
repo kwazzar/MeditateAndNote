@@ -71,7 +71,7 @@ Fresh `init()`s are only for previews/tests isolation.
 **Event routing.** Cross-cutting side effects are wired through lazy
 *Scopes* — one per bounded context (`NoteScope`, `StreakScope`,
 `MeditationScope`, `SearchScope`, `AIDraftScope`, `SettingsScope`,
-`SubscriptionScope`), each conforming to `DomainEventRouting`
+`SubscriptionScope`, `BookScope`), each conforming to `DomainEventRouting`
 (`static handles(_:)` + `handle(_:)`). A single `EventLoopCoordinator` owns
 the one stored `Task { for await }` over `DomainEventBus.shared`'s
 `AsyncStream` and, per event, asks the container's `handlers` closure which
@@ -94,6 +94,8 @@ Factored ViewModel constructors:
 - `makeInsightsViewModel()` → `InsightsViewModel(StreakInsightManager)`
 - `makeSubscriptionViewModel()` → `SubscriptionViewModel(providable/manageable: SubscriptionScope.manager)`
 - `makePaywallViewModel()` → `PaywallViewModel(...)`
+- `makeLibraryViewModel()` → `LibraryViewModel(...)`
+- `makeReaderViewModel(bookId:)` → `ReaderViewModel(...)`
 
 Domain entities, value objects, engines and `DomainEvent` live in the local
 Swift package `Packages/MeditateAndNoteCore` — plain Swift, no
@@ -142,7 +144,7 @@ Swift package `Packages/MeditateAndNoteCore` — plain Swift, no
   `.subscriptionChanged(SubscriptionStatus)`.
 - **Infrastructure:** `RevenueCatPurchasesService` (wraps RevenueCat SDK,
   configured in `SubscriptionScope` with `Config.revenueCatAPIKey` from
-  `Info.plist` ← `Config/*.xcconfig` and the `premium` entitlement ID),
+  `Info.plist` ← `MeditateAndNote/Config/*.xcconfig` and the `premium` entitlement ID),
   `UserDefaultsSubscriptionCache`.
 - **Gating:** free surfaces stay open; premium ones route a locked tap to
   the paywall via the shared `PaywallPresenter` (`RootContainer` hosts the
@@ -176,6 +178,28 @@ Swift package `Packages/MeditateAndNoteCore` — plain Swift, no
 - End-to-end guard: XCUITest target `MeditateAndNoteUITests`
   (`testKeywordSearchFiltersWithoutSemanticFallback` etc.).
 
+### Books / Reader (FB2 · EPUB · TXT)
+
+Bounded context added with the `reading-view` feature (Library + Reader,
+bookmarks, highlights-to-notes, progress).
+
+- **Domain:** `Book`, `BookContent`, `Bookmark`, `ReadingPosition` in
+  `Packages/MeditateAndNoteCore/Books/`; closed contracts `BookStore` /
+  `BookmarkStore` (fetchAll/fetch/save/delete/deleteAll + reading position +
+  cover). Parsers: `FB2Parser`, `EPUBParser`, `TXTParser`; `PaginationEngine`;
+  `TextMeasurer` (UITextMeasurer on iOS / TextMetrics on Android).
+- **Application:** `BookManager` (actor; `BookProvidable`/`BookManageable`,
+  `BookOperationError`) + `BookmarkManager` (actor; `BookmarkProvidable`/
+  `BookmarkManageable`; converts highlights into notes via `NoteManageable`).
+  `ReaderSettings` (font size, paper theme, continuous scroll).
+- **Infrastructure:** `CoreDataBookStore` (`BookStore`), `CoreDataBookmarkStore`
+  (`BookmarkStore`), `BookFileStorage` (on-disk book files); in-memory impls for tests.
+- **Presentation:** `LibraryViewModel` + `LibraryView` (Library tab, file import);
+  `ReaderViewModel` + `ReaderView` (`.reader(bookId:)` fullScreen; tap zones → page
+  turn, center tap → chrome; TOC/sheets via `ReaderSheets`/`ReaderSettingsSheet`).
+- **Navigation:** 4th tab `.reading` → `LibraryView`; `.reader(bookId:)`
+  fullScreen → `ReaderView`.
+
 ## Root & Navigation
 
 ```mermaid
@@ -193,18 +217,20 @@ graph TB
     RootView -->|"Tab: .home"| NavHome
     RootView -->|"Tab: .notes"| NavNotes
     RootView -->|"Tab: .meditations"| NavMeditations
+    RootView -->|"Tab: .reading"| NavReading
 
     subgraph Tabs["Tab Navigation"]
         NavHome["NavigationContainer<br/>childRouter(home)"]
         NavNotes["NavigationContainer<br/>childRouter(notes)"]
         NavMeditations["NavigationContainer<br/>childRouter(meditations)"]
+        NavReading["NavigationContainer<br/>childRouter(reading)"]
     end
 
     subgraph Nav["Navigation Model"]
         Dest["Destination<br/>tab / push / sheet / fullScreen"]
-        Push["PushDestination<br/>newNote, noteDetails, readingView,<br/>meditation, meditationCompletion,<br/>streakDetail, settings"]
+        Push["PushDestination<br/>newNote, noteDetails, meditation,<br/>meditationCompletion, streakDetail, settings"]
         Sheet["SheetDestination<br/>newNote (stub), meditationSettings<br/>(stub), timeMeditation"]
-        Full["FullScreenDestination<br/>meditationSession, fullScreenNote"]
+        Full["FullScreenDestination<br/>meditationSession, fullScreenNote,<br/>reader(bookId)"]
         Deep["DeepLinkParser<br/>myScheme://..."]
     end
 
@@ -226,8 +252,9 @@ graph TB
   reads), and `NavigationContainer` owns its child router in `@State`, wrapping
   it in a local `@Bindable` for `NavigationStack`/sheet bindings.
 - `Destination` wraps `PushDestination`/`SheetDestination`/`FullScreenDestination`.
-  Since the last update `.settings`, `.meditationCompletion` pushes and the
-  `.meditationSession` full screen were added; `newNote`/`meditationSettings`
+  Current pushes: `.settings`, `.meditationCompletion` and the
+  `.meditationSession` full screen were added; `.reader(bookId:)` is the full
+  screen for the book reader; `newNote`/`meditationSettings`
   sheet cases are currently mapped to `EmptyView()` stubs.
 - `NavigationContainer` wraps each tab in a `NavigationStack` bound to its
   router, and maps destinations to concrete views via
@@ -246,7 +273,8 @@ graph TB
         NoteEditor["NoteEditorView<br/>Note Editor"]
         MeditationView["MeditationView<br/>Active Session"]
         MeditationCompletion["MeditationCompletionView"]
-        ReadingView["ReadingView<br/>Post-Meditation"]
+        LibraryView["LibraryView<br/>Reading Tab (Library + Import)"]
+        ReaderView["ReaderView<br/>FB Reader (fullScreen)"]
         StreakDetail["StreakDetailView<br/>InsightsSection, WeekdayHeatmap,
 <br/>LifetimePatternsSection, StreakDayDetailSheet"]
         SettingsView["SettingsView<br/>Reminder / Animation / Theme / Sound"]
@@ -262,6 +290,8 @@ graph TB
         MeditateSelectVM["MeditateSelectViewModel<br/>@Observable<br/>loadState"]
         MeditationVM["MeditationViewModel<br/>@MainActor @Observable<br/>wraps MeditationSessionEngine"]
         InsightsVM["InsightsViewModel<br/>@Observable<br/>range + lifetime"]
+        LibraryVM["LibraryViewModel<br/>@Observable<br/>books + bookmarks"]
+        ReaderVM["ReaderViewModel<br/>@Observable<br/>book + reading position"]
         OnboardingVM["OnboardingViewModel<br/>@MainActor @Observable"]
     end
 
@@ -271,6 +301,8 @@ graph TB
     MeditateSelect --> MeditateSelectVM
     MeditationView --> MeditationVM
     StreakDetail --> InsightsVM
+    LibraryView --> LibraryVM
+    ReaderView --> ReaderVM
     OnboardingView --> OnboardingVM
 
     MainVM -->|uses| MeditSvc["MeditationService"]
@@ -315,6 +347,12 @@ graph LR
         Search["SearchQuery / NoteFilter"]
         MainTheme["MainTheme<br/>liquidGlass, breathing, softDawn,<br/>darkZen, obsidian"]
         SubVO["SubscriptionStatus / Entitlement /<br/>SubscriptionOffering / SubscriptionPackage /<br/>AIDraftQuota (free limit 5)"]
+        Book["Book<br/>id, metadata, format"]
+        BookContent["BookContent<br/>text + pagination"]
+        Bookmark["Bookmark<br/>bookId, position, text"]
+        ReadingPosition["ReadingPosition<br/>bookId, fraction"]
+        Pagination["PaginationEngine<br/>pure"]
+        TextMeas["TextMeasurer<br/>(UITextMeasurer / TextMetrics)"]
     end
 
     Meditation --> BreathingStyle
@@ -328,6 +366,9 @@ graph LR
     DayDetail --> DayState
     StreakEngine --> DailyAct
     Note -- aggregate --> NoteBook
+    Book --> BookContent
+    Pagination --> BookContent
+    Bookmark --> ReadingPosition
 ```
 
 Domain invariants live in the Value Objects / aggregate / engines:
@@ -355,6 +396,10 @@ Domain invariants live in the Value Objects / aggregate / engines:
   (pure) + `StreakInsightManager` (cached) derive range-aware insights and
   lifetime patterns (distribution, resilience, break heatmap) from a
   `StreakSnapshot`.
+- Books: parsers (`FB2Parser` / `EPUBParser` / `TXTParser`) validate content
+  before it enters `BookContent`; `PaginationEngine` is the pure page math;
+  bookmarks require position + text; typed `BookOperationError` covers
+  import/load/save/delete.
 
 ## Application / Services Layer
 
@@ -373,6 +418,14 @@ graph TB
         Sound["SoundPlayer<br/>SoundPlaying protocol"]
         Bus["DomainEventBus<br/>DomainEventPublisher<br/>.shared"]
 
+        BookMgr["BookManager<br/>actor<br/>BookProvidable & BookManageable"]
+        BookmarkMgr["BookmarkManager<br/>actor<br/>BookmarkProvidable &<br/>BookmarkManageable"]
+
+        BookProv["BookProvidable<br/>books, refresh, progress, covers"]
+        BookMan["BookManageable<br/>import, delete, savePosition, markOpened"]
+        BookmarkProv["BookmarkProvidable<br/>bookmarks(for:)"]
+        BookmarkMan["BookmarkManageable<br/>save, delete, createHighlight"]
+
         NoteProv["NoteProvidable<br/>currentNotes, note(with:),<br/>notes(matching:), refresh"]
         NoteMan["NoteManageable<br/>add, update, delete"]
         InsightProv["StreakInsightProvidable<br/>insights(for:), recommendations(for:),<br/>weeklyBreakdown, streakLengthDistribution,<br/>resilience, weekdayBreakPattern,<br/>weekdayBreakHeatmap"]
@@ -385,6 +438,10 @@ graph TB
     NM --- NoteProv
     NM --- NoteMan
     NM --> Bus
+    BookMgr --- BookProv
+    BookMgr --- BookMan
+    BookmarkMgr --- BookmarkProv
+    BookmarkMgr --- BookmarkMan
     StreakTracker ---- InsightMgr
     InsightMgr --- InsightProv
     ReminderMgr --- RemindProv
@@ -398,14 +455,16 @@ graph TB
     Bus --> Evt
 ```
 
-`Services/` is grouped by domain folder rather than flat: `Notes/`
-(`NoteManager`, `NotesRepository`), `Meditation/`
-(`MeditationService`), `Events/` (`DomainEvents`), `Reminders/`
+`Services/` is grouped by domain folder rather than flat: `AI/`
+(`AIDraftManager`, `NoteInsightManager`, `SemanticSearchManager`, ...),
+`Books/` (`BookManager`, `BookmarkManager`, `ReaderSettings`),
+`Notes/` (`NoteManager`, `NotesRepository`), `Reminders/`
 (`ReminderManager`, `NotificationScheduling`), `Settings/`
-(`AnimationSettings`), `Onboarding/` (`OnboardingStore`), `Theme/`
-(`ThemeManager`), `Subscriptions/` (`SubscriptionManager`,
+(`AnimationSettings`), `Theme/` (`ThemeManager`),
+`Subscriptions/` (`SubscriptionManager`,
 `RevenueCatPurchasesService`), plus `Sound/` (`SoundPlayer`, `SoundSettings`)
 and `Streak/` (`StreakTracker`, `StreakInsightEngine`, `StreakInsightManager`).
+Meditation domain services live in the Core package (`Meditation/`).
 
 - **`NoteManager`** (actor) is the application service for notes. It exposes
   two protocols: `NoteProvidable` (read) and `NoteManageable` (write), plus a
@@ -441,18 +500,24 @@ graph TB
         CDNote["CoreDataNoteDataSource<br/>conforms NoteDataSource"]
         CDStreak["CoreDataStreakStore<br/>conforms StreakActivityStore"]
         CDSession["CoreDataSessionStore<br/>conforms MeditationSessionStore<br/>@Observable"]
+        CDBook["CoreDataBookStore<br/>conforms BookStore"]
+        CDBookmark["CoreDataBookmarkStore<br/>conforms BookmarkStore"]
 
-        CDEvent["CDNote / CDMeditationSession /<br/>CDDailyActivity / CDStreakMeta<br/>NSManagedObject entities"]
+        CDEvent["CDNote / CDMeditationSession /<br/>CDDailyActivity / CDStreakMeta /<br/>CDNoteInsight / CDNoteEmbedding /<br/>CDBook / CDBookmark<br/>NSManagedObject entities"]
     end
 
     subgraph Contracts["Persistence Protocols (Domain)"]
         ND["NoteDataSource<br/>fetchAll / fetch(id:) / save /<br/>delete(id:) / deleteAll"]
         SA["StreakActivityStore<br/>load / save snapshot"]
         RS["ReminderSettingsStore<br/>load / save ReminderSettings"]
-        NS["NotificationScheduling<br/>isAuthorized / requestAuthorization /<br/>scheduleNotification / removeAllPending"]
-        OS["OnboardingStore<br/>hasCompletedOnboarding /<br/>markOnboardingCompleted"]
+        NS["NotificationScheduling<br/>isAuthorized / requestAuthorization / scheduleNotification / removeAllPending"]
+        OS["OnboardingStore<br/>hasCompletedOnboarding / markOnboardingCompleted"]
         MS["MeditationSessionStore<br/>save / sessions<br/>(domain ACL, Core package)"]
+        BS["BookStore<br/>fetchAll / fetch / save / delete /<br/>deleteAll + readingPosition / cover"]
+        Bm["BookmarkStore<br/>fetchAll(bookID) / fetch / save /<br/>delete / deleteAll(bookID)"]
         IM["InMemoryNoteDataSource<br/>actor · conforms NoteDataSource<br/>(tests & previews)"]
+        IMBook["InMemoryBookStore<br/>actor · conforms BookStore<br/>(tests & previews)"]
+        IMBookmark["InMemoryBookmarkStore<br/>actor · conforms BookmarkStore<br/>(tests & previews)"]
         UDS["UserDefaultsStreakStore<br/>conforms StreakActivityStore<br/>+ legacy migration"]
         UDReminder["UserDefaultsReminderSettingsStore<br/>conforms ReminderSettingsStore"]
         SysSched["SystemNotificationScheduler<br/>conforms NotificationScheduling<br/>(UNUserNotificationCenter)"]
@@ -464,15 +529,23 @@ graph TB
     CDStreak -.-> SA
     UDS -.-> SA
     CDSession -.-> MS
+    CDBook -.-> BS
+    IMBook -.-> BS
+    CDBookmark -.-> Bm
+    IMBookmark -.-> Bm
     UDReminder -.-> RS
     SysSched -.-> NS
     UDOnb -.-> OS
     CDNote --> CDM
     CDStreak --> CDM
     CDSession --> CDM
+    CDBook --> CDM
+    CDBookmark --> CDM
     CDNote --> CDEvent
     CDStreak --> CDEvent
     CDSession --> CDEvent
+    CDBook --> CDEvent
+    CDBookmark --> CDEvent
 ```
 
 - `CoreDataManager` owns the `NSPersistentContainer` and builds the model
@@ -490,6 +563,10 @@ graph TB
   actor. These live in `Persistence/` plus `Services/` (streak/reminder store
   protocols and their UserDefaults impls keep the Domain free of framework
   imports).
+
+- Books persistence follows the same shape: `CoreDataBookStore: BookStore` and
+  `CoreDataBookmarkStore: BookmarkStore` (contracts in the Core package), book
+  files on disk via `BookFileStorage`.
 
 ## Data Flow
 
@@ -544,7 +621,6 @@ stateDiagram-v2
     Meditations --> Meditation: Push .meditation(meditation)
 
     Meditation --> TimePicker: Sheet .timeMeditation
-    Meditation --> Reading: Push .readingView (after finish)
     Meditation --> Completion: Push .meditationCompletion (after finish)
     Meditation --> Home: Close
 

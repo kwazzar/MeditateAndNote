@@ -165,8 +165,10 @@ while fixing them. The deltas that mattered are listed below.
 
 - **Paywall / Pro locks** — no in-app purchase on Android; the entry points and lock
   badges are absent rather than dead.
-- **AI draft bar** — iOS suggestions come from Foundation Models; the only provider
-  Android could use is `DisabledAIDraftService`, so the sparkle entry point is hidden.
+- **AI draft bar** — resolved: the remote provider path landed on Android
+  (`AIDraftSource`/`AIDraftProvider` + hosted Vercel proxy + live QA on
+  SM-A245F, 2026-10-20). Android runs the remote LLM through the hosted proxy;
+  iOS Foundation Models on-device stays the reference.
 - **Note insights** — ported: the same panel, the same state holder
   (`NoteInsightsViewModel`), the same prompt and parsing rules (Core's
   `NoteInsightRemoteProtocol`, which iOS' on-device analyzer also reads). The

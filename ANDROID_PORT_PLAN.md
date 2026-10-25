@@ -7,7 +7,7 @@
 > Рекомендація KMP у попередній редакції документа **скасована**: її єдиним аргументом був `@Observable`, який на той час вважався непідтримуваним. Експеримент 2026-10-02 це спростував (див. «Перевірено експериментом»).
 
 > Додано: 2026-09-30, на основі аналізу структури проєкту (Models/, Services/, Persistence/)
-> Редакція: 2026-10-06 — Фази 2.1 (перший Store), 2.2 (контракти Store в Core), 2.3 (`NoteDataSource` blob-таблиця), 2.4 (`StreakActivityStore`), 2.5 (`MeditationSessionStore`), Фаза 4: медитаційний список у Compose + вибір моделі стану
+> Редакція: 2026-10-21 — додано статус Book reader/Library (Фаза 6, branch `fb2-reading-view`: FB2/EPUB/TXT імпорт, Reader + Library, JNI stores, TOC/bookmarks/highlights-to-notes); AI-драфт хостинг (Vercel/Groq) перевірен end-to-end (2026-10-20)
 
 ## Принцип
 

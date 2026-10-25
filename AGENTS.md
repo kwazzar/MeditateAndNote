@@ -22,7 +22,7 @@ Goal: generated code follows DDD principles (per Scott Wlaschin) and matches the
 
 - SwiftUI, CoreData, `@Observable` (Observation framework throughout — state is injected via `.environment(...)` / `@Environment(Type.self)`; no `ObservableObject`/`@EnvironmentObject` remains)
 - Domain core shared as local Swift package: `Packages/MeditateAndNoteCore` (entities, engines, domain events) — Android consumes the same package through `Packages/MeditateAndNoteCoreJNI`
-- Subscriptions: RevenueCat (`purchases-ios-spm`, the only external SPM dependency); key injected via `Config/*.xcconfig` → `Info.plist`
+- Subscriptions: RevenueCat (`purchases-ios-spm`, the only external SPM dependency); key injected via `MeditateAndNote/Config/*.xcconfig` → `Info.plist`
 - Navigation: custom Router-based approach (NOT `NavigationStack` with logic directly in the View)
 - Theming: custom `ThemeManager`
 
@@ -52,11 +52,12 @@ Hard rules:
 - **Concrete implementations** live in `Persistence/` and are named `CoreData<X>DataSource` / `CoreData<X>Store` (e.g. `CoreDataNoteDataSource`, `CoreDataSessionStore`, `CoreDataStreakStore`). Alternate implementations exist for tests/previews/simple storage: `InMemory<X>DataSource` (e.g. `InMemoryNoteDataSource`), `UserDefaults<X>Store` (e.g. `UserDefaultsStreakStore`).
 - **Mapping** between `NSManagedObject` and the domain model stays inside the concrete DataSource/Store (`.toNote()`, `.apply()`, `.findOrCreate()` on `CoreDataNoteDataSource`) — never in the Manager or ViewModel.
 - **`<X>Manager`** (e.g. `NoteManager`) — orchestrates over a DataSource/Store, exposes read/write split into two protocols: **`<X>Providable`** (read, e.g. `NoteProvidable`) and **`<X>Manageable`** (write, e.g. `NoteManageable`). This is what ViewModels depend on — never on the concrete Manager type directly.
+- **Books context** — `BookManager` (BookProvidable/BookManageable, `BookOperationError`) + `BookmarkManager` (BookmarkProvidable/BookmarkManageable; highlights→notes) over `BookStore`/`BookmarkStore` contracts from `Packages/MeditateAndNoteCore/Books/`, implemented by `CoreDataBookStore`/`CoreDataBookmarkStore` in `MeditateAndNote/Persistence/`. Library + Reader (FB2/EPUB/TXT, pagination, TOC, bookmarks, progress) are the current feature surface; `ReaderSettings` (font/theme/scroll) lives in `Services/Books/`.
 - **`<X>OperationError`** — a typed error enum per domain (e.g. `NoteOperationError` with `.loadFailed` / `.saveFailed` / `.deleteFailed`). New Managers should follow this convention instead of throwing generic `Error`.
 - **`CoreDataManager`** — owns the `NSPersistentContainer` stack (`.newBackgroundContext()`, `.buildModel()`). DataSources/Stores use it for contexts; nothing else touches it directly.
-- **`AppContainer`** — the DI root, but implemented as **factory methods**, not a registration container: `.makeMainViewModel()`, `.makeNoteEditorViewModel()`, `.makeMeditateSelectViewModel()`, etc. New ViewModels get a `make<X>ViewModel()` factory here, wiring up the right Manager(s).
+- **`AppContainer`** — the DI root, but implemented as **factory methods**, not a registration container: `.makeMainViewModel()`, `.makeNoteEditorViewModel()`, `.makeMeditateSelectViewModel()`, `.makeLibraryViewModel()`, `.makeReaderViewModel(bookId:)`, etc. New ViewModels get a `make<X>ViewModel()` factory here, wiring up the right Manager(s).
 
-**No known exceptions.** Every persistence contract is a protocol now: `CoreDataSessionStore` conforms to `MeditationSessionStore` (`Packages/MeditateAndNoteCore/Sources/MeditateAndNoteCore/Sessions/MeditationSessionStore.swift`) as of 2026-10-06, closing the last case where a store was used as a concrete type with no abstraction. Each has at least one Android implementation in `MeditateAndNoteCoreJNI` + `Android/`, driven from device probes in `Android/app/src/main/java/com/mn/android/*Probe.kt` — see `ANDROID_PORT_PLAN.md` section 2.x for the pattern and the measured JNI constraints before writing another.
+**No known exceptions.** Every persistence contract is a protocol now: `CoreDataSessionStore` conforms to `MeditationSessionStore` (`Packages/MeditateAndNoteCore/Sources/MeditateAndNoteCore/Sessions/MeditationSessionStore.swift`), `CoreDataBookStore` to `BookStore` and `CoreDataBookmarkStore` to `BookmarkStore` (`Packages/MeditateAndNoteCore/Sources/MeditateAndNoteCore/Books/`) — closing the last cases where a store was used as a concrete type with no abstraction. Each has at least one Android implementation in `MeditateAndNoteCoreJNI` + `Android/`, driven from device probes in `Android/app/src/main/java/com/mn/android/*Probe.kt` — see `ANDROID_PORT_PLAN.md` section 2.x for the pattern and the measured JNI constraints before writing another.
 
 **Domain Events:** there's an existing `DomainEvent` type (in Core: `Packages/MeditateAndNoteCore/Sources/MeditateAndNoteCore/Events/DomainEvents.swift`, 8 cases incl. `.subscriptionChanged`) — routing goes through `EventLoopCoordinator` + per-domain `DomainEventRouting` scopes in `AppContainer/`; `CoreDataSessionStore.handle()` persists `.meditationCompleted` via `MeditationScope`. New cross-cutting side effects (an action that needs to update state in more than one Store/Manager) should go through this mechanism rather than being wired manually across call sites.
 
@@ -128,25 +129,3 @@ For Android-only tasks (`Android/`, Kotlin), skip steps 2-4 (Xcode-specific); st
 - `new-aggregate` — recipe for adding a new domain type in the project's actual style (`<X>DataSource`/`<X>Store` protocol + `CoreData`/`InMemory`/`UserDefaults` implementation + `<X>Manager` with `<X>Providable`/`<X>Manageable`). Invoke when adding a new domain entity.
 - `android-jetpack-compose-m3` — Material 3 / Jetpack Compose UI. Load ONLY when editing Android code (`Android/`, Kotlin, Compose). Never for SwiftUI/iOS tasks.
 - `port-ios-screen-to-android` — port a SwiftUI screen to Compose/M3. Invoke when asked to port/migrate/recreate an iOS screen on Android.
-
----
-
-## Multi-session setup (git worktrees)
-
-Working on this project in parallel sessions is done with git worktrees. **One session = one worktree — never open two sessions on the same worktree.**
-
-Current layout (`git worktree list`):
-- `/Users/nazar/Swift/MeditateAndNote` → branch `main` (the only worktree right now; `checkout -b task3` etc. there, or add a new worktree per task)
-
-Create a new worktree for a task:
-```bash
-git worktree add /Users/nazar/Swift/<task> -b <task>
-```
-
-Rules that keep this working:
-
-- Every shared file is tracked in git (e.g. the scheme in `xcshareddata/xcschemes/`) — untracked/ignored files are NOT copied into new worktrees. New worktree ⇒ re-open its Xcode project once; auto-created schemes are per-worktree.
-- Per-worktree DerivedData is configured via `project.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings` (`IDECustomDerivedDataLocation`) and `.xcodebuildmcp/config.yaml` in each worktree → point each worktree at its own `~/Library/Developer/Xcode/DerivedData/<name>`. Parallel builds don't collide. Never point two worktrees at the same path.
-- `.git` is shared by all worktrees: commit/merge from any of them works, writes just serialize on the `.git` lock.
-- Run the app from only one worktree at a time per simulator device — use a different simulator or sequential runs.
-- One task = one short-lived branch in its worktree. Merge often: `git merge main` in the task tree, `git merge <task>` (or cherry-pick) in the main tree. Delete the branch + worktree after merge: `git worktree remove <path>` then `git branch -d <task>`.

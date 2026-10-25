@@ -4,6 +4,11 @@
 > ThemeManager) vs what already exists on Android. Companion to `ANDROID_PORT_PLAN.md`.
 > Analysis date: 2026-10-09.
 
+> **Update (2026-10-21):** snapshot predates the `reading-view` merge — Book
+> reader / Library / Reader ports (FB2/EPUB/TXT, JNI stores, ReaderSheets) landed
+> after this analysis; AI draft remote path and note-insights parity were verified
+> later (2026-10-20). Re-run this analysis before larger UI sweeps.
+
 ## 1. Screens
 
 | Screen (iOS View) | ViewModel | Managers/Stores | Android JNI impl | Ported |

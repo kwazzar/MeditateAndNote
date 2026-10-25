@@ -6,6 +6,7 @@ Native iOS (SwiftUI) app for guided meditation with breathing visuals and a shor
 
 - **Guided meditations** — 6 built-in meditations across 5 categories (mindfulness, breathing, sleep, focus, relaxation), animated breathing UI (4-7-8, Box, 4-8, custom), sound cues, duration picker.
 - **Journaling** — searchable notes list, rich note editor with floating toolbar.
+- **Book reader** — import FB2/EPUB/TXT books, paginated reader + continuous-scroll mode, TOC, bookmarks, highlights that convert into notes, per-book reading position/progress. Reading tab (Library + Reader) on iOS and Android.
 - **Daily streak** — meditate **and** write a note on the same day to complete it. Insights engine surfaces weak days, break-risk, time-of-day patterns, weekday heatmap, milestones and more.
 - **AI-assisted writing (iOS 26+, on-device)** — "Help me write" drafts and per-note AI summaries.
 - **Premium (RevenueCat)** — "Pro" subscription gates 3 of 5 themes, the `rings` animation style, unlimited AI drafts (free tier: 5 lifetime) and note insights; paywall presented from a single shared presenter, `.subscriptionChanged` domain event re-evaluates entitlements at runtime (revoked → clamped back to free defaults).
@@ -21,9 +22,9 @@ Apple platform with one external dependency — RevenueCat (`purchases-ios-spm`,
 - CoreData (programmatic model, no `.xcdatamodeld`)
 - AVFoundation (sounds), UserNotifications (reminders), Security (Keychain)
 - FoundationModels / Apple Intelligence on-device LLM (iOS 26+, optional)
-- RevenueCat Purchases SDK (subscriptions; key injected via `Config/*.xcconfig` → `Info.plist`)
+- RevenueCat Purchases SDK (subscriptions; key injected via `MeditateAndNote/Config/*.xcconfig` → `Info.plist`)
 
-Shared domain logic lives in the local Swift package `Packages/MeditateAndNoteCore` (entities, value objects, engines, domain events) — it is also compiled for Android (`Packages/MeditateAndNoteCoreJNI` → Kotlin/Compose UI).
+Shared domain logic lives in the local Swift package `Packages/MeditateAndNoteCore` (entities, value objects, engines, book parsers FB2/EPUB/TXT, pagination, text measurement, domain events) — it is also compiled for Android (`Packages/MeditateAndNoteCoreJNI` → Kotlin/Compose UI).
 
 ## Architecture
 
@@ -51,32 +52,25 @@ open MeditateAndNote.xcodeproj
 
 To replay onboarding during development, add the `-showOnboarding` launch argument.
 
-RevenueCat key comes from `Config/*.xcconfig` (`REVENUECAT_API_KEY`) → `Info.plist`; commit only the placeholder configs and keep `*.local.xcconfig` overrides out of git.
+RevenueCat key comes from `MeditateAndNote/Config/*.xcconfig` (`REVENUECAT_API_KEY`) → `Info.plist`; commit only the placeholder configs and keep `*.local.xcconfig` overrides out of git.
 
 ## Project layout
 
 ```
-MeditateAndNote/
-├── AppContainer/     DI root: lazy event Scopes + make<X>ViewModel() factories
-├── Config/           xcconfig (RevenueCat key, build settings)
-├── Navigation/       Router, destinations, deep links, onboarding, Config
-├── Views/            SwiftUI views (Paywall, Settings, Theme, ...)
-├── ViewModels/       @Observable view models
-├── Services/         Domain services (notes, streak, meditation, AI, subscriptions, ...)
-├── Persistence/      CoreData/UserDefaults data sources & stores
-├── Extensions/
+MeditateAndNote/           iOS app sources (AppContainer/, Config/, Navigation/, Views/, ViewModels/, Services/, Persistence/, Extensions/)
 Packages/
-├── MeditateAndNoteCore/       Shared Swift package: domain, engines, events
+├── MeditateAndNoteCore/       Shared Swift package: domain, engines, book parsers, events
 ├── MeditateAndNoteCoreJNI/    swift-java wrappers for the Android build
 Android/                        Kotlin/Compose UI over the shared Core (see ANDROID_PORT_PLAN.md)
 server/                         Vercel function: the hosted AI provider (Groq behind an OpenAI-compatible proxy)
+Scripts/                        Build / icon helper scripts
 MeditateAndNoteTests/          Unit tests
 MeditateAndNoteUITests/        UI tests
 ```
 
 ## Android
 
-Port runs Swift Core + Kotlin/Compose UI (Swift SDK for Android + `swift-java` JNI). Progress, phases and measured JNI constraints: [ANDROID_PORT_PLAN.md](ANDROID_PORT_PLAN.md), status analysis: [ANDROID_PORT_ANALYSIS.md](ANDROID_PORT_ANALYSIS.md). Android-side knowledge graph lives in `Android/graphify-out/`.
+Port runs Swift Core + Kotlin/Compose UI (Swift SDK for Android + `swift-java` JNI). Progress, phases and measured JNI constraints: [ANDROID_PORT_PLAN.md](ANDROID_PORT_PLAN.md), status analysis: [ANDROID_PORT_ANALYSIS.md](ANDROID_PORT_ANALYSIS.md). Android-side knowledge graph lives in `Android/graphify-out/`. Reading feature ported end-to-end: Library screen, paginated Reader, ReaderSheets, bookmarks via JNI stores.
 
 ## AI provider
 
@@ -84,7 +78,7 @@ The apps speak the OpenAI chat-completions dialect (the wire protocol lives in t
 
 ## Tests
 
-46 test files (44 unit + 2 UI) covering pure engines, managers, data sources, view models, navigation, AI and subscription services. Run from Xcode (`Cmd+U`) or:
+52 test files (50 unit + 2 UI) covering pure engines, managers, data sources, view models, navigation, AI and subscription services. Run from Xcode (`Cmd+U`) or:
 
 ```bash
 xcodebuild test -project MeditateAndNote.xcodeproj -scheme MeditateAndNote -destination 'platform=iOS Simulator,name=iPhone 16'
