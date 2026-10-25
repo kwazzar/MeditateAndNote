@@ -46,7 +46,7 @@ struct CustomTabBar: View {
             }
             .foregroundColor(isSelected ? themeManager.current.accentColor : themeManager.current.textSecondary)
             .padding(.vertical, 6)
-            .padding(.horizontal)
+            .padding(.horizontal, 8)
             .frame(maxWidth: .infinity)
             .background(
                 RoundedRectangle(cornerRadius: 10)
