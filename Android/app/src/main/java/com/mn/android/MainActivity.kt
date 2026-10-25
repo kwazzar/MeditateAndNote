@@ -380,8 +380,8 @@ private fun MnTabBar(currentRoute: String?, onSelect: (TabItem) -> Unit) {
                 .then(if (landscape) Modifier.width(480.dp).align(Alignment.Center) else Modifier)
                 .shadow(8.dp, CircleShape)
                 .background(MnTheme.toolbarBackground, CircleShape)
-                .padding(horizontal = 16.dp, vertical = 6.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                .padding(horizontal = 8.dp, vertical = 6.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             TabBarItems.forEach { tab ->
                 val selected = currentRoute == tab.route
@@ -395,7 +395,7 @@ private fun MnTabBar(currentRoute: String?, onSelect: (TabItem) -> Unit) {
                             else Color.Transparent
                         )
                         .clickable { onSelect(tab) }
-                        .padding(vertical = 6.dp, horizontal = 16.dp),
+                        .padding(vertical = 6.dp, horizontal = 8.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
