@@ -26,8 +26,30 @@ object NoteEditorSource {
     /** "" = note not found. */
     external fun load(id: String): String
 
-    /** Returns the normalised title, "" on failure. */
-    external fun save(id: String, title: String, content: String): String
+    /**
+     * Returns the normalised title, "" on failure.
+     *
+     * The offset decides which calendar day the note fills in the streak:
+     * Swift-on-Android resolves [java.util.TimeZone] to UTC (no tzdata), so
+     * the JVM's own offset is passed down. Kept as a separate native method
+     * name because a JVM overload of "save" would make the short JNI symbol
+     * ambiguous.
+     */
+    external fun saveWithOffset(
+        id: String,
+        title: String,
+        content: String,
+        tzOffsetMinutes: Int,
+    ): String
+
+    /** [saveWithOffset] with the device's current UTC offset. */
+    fun save(id: String, title: String, content: String): String =
+        saveWithOffset(
+            id,
+            title,
+            content,
+            java.util.TimeZone.getDefault().getOffset(System.currentTimeMillis()) / 60_000,
+        )
 
     external fun delete(id: String)
 
