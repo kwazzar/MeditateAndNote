@@ -46,11 +46,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.mn.android.R
 import com.mn.android.data.NoteMenuSource
+import com.mn.android.domain.events.DomainEvent
+import com.mn.android.domain.events.DomainEventBus
 import com.mn.android.presentation.notes.viewmodel.NoteInsightsViewModel
 import com.mn.android.presentation.theme.ui.MnBackground
 import com.mn.android.presentation.theme.ui.MnTheme
@@ -63,8 +64,9 @@ import java.util.Locale
  *
  * The insights live in `NoteInsightsViewModel`: it survives the tab switches,
  * so the section does not re-analyze every time the user comes back to the
- * notes tab. The note list itself still reloads on every entry — the manual
- * fallback for the DomainEventBus that is not ported yet.
+ * notes tab. The note list reads once when the screen appears and re-reads
+ * when a note event arrives — the Android counterpart of the iOS note-menu
+ * subscription.
  */
 @Composable
 fun NoteMenuScreen(
@@ -84,15 +86,19 @@ fun NoteMenuScreen(
         isScrolling = listState.isScrollInProgress
     }
 
-    // Manual reload fallback: reloads every time this screen resumes —
-    // covers both tab switches and popping back from the pushed note editor
-    // (the editor destination stays composed under neither; without this the
-    // stale list would render after a save). Replaced by DomainEventBus wiring
-    // when it lands.
-    LifecycleResumeEffect(Unit) {
+    // The list reads once here and again on every note event, so a save in
+    // the editor shows up in the list without leaving the tab.
+    LaunchedEffect(Unit) {
         notes = NoteMenuSource.readMenu().notes
         insightsViewModel.load()
-        onPauseOrDispose { }
+        DomainEventBus.events.collect { event ->
+            if (event is DomainEvent.NoteCreated ||
+                event is DomainEvent.NoteUpdated ||
+                event is DomainEvent.NoteDeleted
+            ) {
+                notes = NoteMenuSource.readMenu().notes
+            }
+        }
     }
 
     val shown = remember(notes, query) {

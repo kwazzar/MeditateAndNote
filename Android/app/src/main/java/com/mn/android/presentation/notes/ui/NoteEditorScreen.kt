@@ -48,6 +48,8 @@ import com.mn.android.R
 import com.mn.android.data.AIDraftSettingsStore
 import com.mn.android.data.AIDraftSource
 import com.mn.android.data.NoteEditorSource
+import com.mn.android.domain.events.DomainEvent
+import com.mn.android.domain.events.DomainEventBus
 import com.mn.android.infrastructure.persistence.local.ai.AIDraftMetrics
 import com.mn.android.presentation.theme.ui.MnBackground
 import com.mn.android.presentation.theme.ui.MnBackButton
@@ -139,8 +141,15 @@ fun NoteEditorScreen(
         // A blank new note is a mis-tap, never an intent (iOS: same rule).
         if (isNewNote && !hasContentNow(title, body)) return
         if (!isDirtyNow(title, body)) return
+        // First successful save is .noteCreated on iOS, every later one
+        // .noteUpdated — same split here, decided by whether the note had
+        // been persisted before this write.
+        val wasNew = persisted == null
         val normalizedTitle = NoteEditorSource.save(editingId, title, body)
         if (normalizedTitle.isEmpty()) return
+        DomainEventBus.publish(
+            if (wasNew) DomainEvent.NoteCreated(editingId) else DomainEvent.NoteUpdated(editingId)
+        )
         if (normalizedTitle != title) title = normalizedTitle
         persisted = NoteEditorSource.EditorNote(editingId, normalizedTitle, body, persisted?.dateMillis ?: 0L)
     }
@@ -303,6 +312,7 @@ fun NoteEditorScreen(
                     onClick = {
                         showDeleteConfirmation = false
                         NoteEditorSource.delete(editingId)
+                        DomainEventBus.publish(DomainEvent.NoteDeleted(editingId))
                         onBack()
                     },
                 ) {

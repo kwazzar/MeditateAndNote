@@ -30,8 +30,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -50,6 +53,8 @@ import androidx.compose.ui.unit.sp
 import com.mn.android.R
 import com.mn.android.data.StreakHeaderSource
 import com.mn.android.data.StreakHeaderSource.DayFlags
+import com.mn.android.domain.events.DomainEvent
+import com.mn.android.domain.events.DomainEventBus
 import com.mn.android.presentation.streak.ui.DayCellView
 import com.mn.android.presentation.theme.ui.MnBackground
 import com.mn.android.presentation.theme.ui.MnTheme
@@ -75,7 +80,21 @@ fun HomeScreen(
 ) {
     Box(Modifier.fillMaxSize()) {
         MnBackground()
-        val header = remember { StreakHeaderSource.readHeader() }
+        // The streak header is a snapshot: it is read once and again after
+        // every note or meditation event, the same way the iOS home tab
+        // refreshes on the domain events.
+        var header by remember { mutableStateOf(StreakHeaderSource.readHeader()) }
+        LaunchedEffect(Unit) {
+            DomainEventBus.events.collect { event ->
+                if (event is DomainEvent.NoteCreated ||
+                    event is DomainEvent.NoteUpdated ||
+                    event is DomainEvent.NoteDeleted ||
+                    event is DomainEvent.MeditationCompleted
+                ) {
+                    header = StreakHeaderSource.readHeader()
+                }
+            }
+        }
         val isLandscape = LocalConfiguration.current.orientation ==
             android.content.res.Configuration.ORIENTATION_LANDSCAPE
         Column(

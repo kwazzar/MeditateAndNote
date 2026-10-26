@@ -29,11 +29,15 @@
 | ReadingView | none (placeholder) | — | — | ✗ |
 | LoadingScreenView / RootContainer / CustomTabBar | none | Router | nav graph exists; tab shell ✗ | ✗ |
 
-**Key gap:** `DomainEventBus` has generated Java (`Core/.generated/java/com/mn/core/DomainEventBus.java`)
-with `native $publish/$subscribe`, but **no Swift thunk** in `MeditateAndNoteCoreJNI/Generated/`
-→ bus not actually callable from Kotlin yet. Every event-driven screen (NoteMenu,
-NoteInsights, completion) is blocked on this. (Serialization protocol was proven on
-device per plan §5; just not wired into build.)
+**Bus gap (resolved on the Kotlin side):** the Core `DomainEventBus` cannot
+cross JNI — `jextract` cannot express its `AsyncStream` nor the `DomainEvent`
+enum with payloads, and `Scripts/build-android.sh` drops those bindings on
+purpose. Android therefore runs its own transport, `domain/events/DomainEventBus.kt`
+(a Kotlin `SharedFlow`): the editor and the session recorder publish, the
+notes list, the insights and the streak screens subscribe. The domain rules
+and the side effects (the streak marking) stay in Swift; the bus only carries
+the fact that something changed. Core-bus parity over JNI stays optional and
+unimplemented.
 
 ## 2. Component mapping (SwiftUI → Compose/M3)
 
@@ -102,7 +106,8 @@ Do **not** invent iOS Router hierarchy in Compose.
 
 1. **Tab shell** `RootContainer`/`CustomTabBar` → `NavigationBar`+nested `NavHost` (no JNI)
 2. **MainView** streak header (StreakActivityStore ✓)
-3. **NoteMenu** (NoteDataSource ✓) — *needs DomainEventBus wiring, else manual reload fallback*
+3. **NoteMenu** (NoteDataSource ✓) — *bus wiring done: the Kotlin `DomainEventBus`
+   replaced the manual reload fallback*
 4. **NoteEditor** (NoteManager ✓; AI features degrade to `AIDraftManagerStub`)
 5. **TimeMeditationSheet** + **MeditationCompletion** (Core-only)
 6. **Settings** (ReminderSettings ✓; theme picker + sound/animation prefs)
@@ -112,8 +117,10 @@ Do **not** invent iOS Router hierarchy in Compose.
 
 ## 6. Risks
 
-- **DomainEventBus not wired across JNI** (java gen, no Swift thunk) → blocks
-  NoteMenu/NoteInsights/completion until fixed; verify with `.so` symbol load.
+- **Core `DomainEventBus` is not callable from Kotlin** (jextract drops the
+  `AsyncStream` API and the `DomainEvent` enum) → the Android screens use the
+  Kotlin transport in `domain/events/DomainEventBus.kt`; the Core bus stays
+  iOS-only unless someone pays for the JNI-safe rewrite.
 - **iOS-only APIs:** `UIImpactFeedbackGenerator` (haptics), `verticalSizeClass`
   landscape branches, `NavigationStack` sizing.
 - **Custom drawing:** `DarkZenStarfield` (Canvas, stars stable via `onAppear` — mirror
