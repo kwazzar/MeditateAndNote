@@ -9,6 +9,8 @@ import androidx.lifecycle.ViewModel
 import com.mn.android.infrastructure.persistence.local.meditation.MeditationCatalog
 import com.mn.android.infrastructure.persistence.local.meditation.MeditationSelection
 import com.mn.android.data.SessionRecorder
+import com.mn.android.domain.events.DomainEvent
+import com.mn.android.domain.events.DomainEventBus
 import com.mn.android.infrastructure.platform.sound.MeditationSound
 import com.mn.android.infrastructure.platform.sound.SoundPlayer
 import com.mn.core.BreathingPattern
@@ -139,11 +141,16 @@ class BreathingSessionViewModel(private val savedStateHandle: SavedStateHandle) 
       SoundPlayer.play(MeditationSound.FINISHED)
       // mirrors iOS `.completed` event handler: publish session once, with the
       // full selected duration (iOS passes the same value down the event).
-      SessionRecorder.record(
+      // `record` returns 1 only when the session was persisted, so the event
+      // follows the write instead of the intent.
+      val saved = SessionRecorder.record(
           meditationId,
           totalSeconds,
           java.util.TimeZone.getDefault().getOffset(System.currentTimeMillis()) / 60_000,
       )
+      if (saved == 1L) {
+        DomainEventBus.publish(DomainEvent.MeditationCompleted)
+      }
     }
   }
 

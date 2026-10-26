@@ -1278,6 +1278,7 @@ protocol StructuredAIWritingService: AIWritingService {
 - [x] Breathing-анімації: `Canvas`/`TimelineView`/`trim(from:to:)` → Compose `Canvas` + `Animatable`/`rememberInfiniteTransition`
 - [x] Router: адаптувати кастомну Router-навігацію під Navigation Compose, зберігаючи ті самі destinations/deep links на рівні контракту
 - [x] Тема: `ThemeManager` живе у Swift-шарі й не портується — визначити, як Compose-тема синхронізується з нею (спільні токени, згенеровані з Swift, чи дублювання)
+- [x] Доменні події на Android (2026-10-25): Core-шина не перекладається через JNI (`jextract` не вміє `AsyncStream` і `DomainEvent` enum з payload — `build-android.sh` видаляє ці біндінги), тож Android має власний транспорт `domain/events/DomainEventBus.kt` (`SharedFlow`). Публікатори: `NoteEditorScreen` (noteCreated/noteUpdated/noteDeleted) і `BreathingSessionViewModel` (meditationCompleted). Споживачі: список нотаток, insights, streak header + streak detail. Доменні правила й side-effects (streak) лишаються в Swift — шина лише інформує «дані змінилися». Ручні `LifecycleResumeEffect`-фолбеки прибрано.
 
 ---
 

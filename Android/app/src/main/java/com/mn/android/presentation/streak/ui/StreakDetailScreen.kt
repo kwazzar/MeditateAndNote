@@ -53,10 +53,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.mn.android.R
 import com.mn.android.data.StreakDetailSource
 import com.mn.android.data.StreakInsightsSource
+import com.mn.android.domain.events.DomainEvent
+import com.mn.android.domain.events.DomainEventBus
 import com.mn.android.presentation.theme.ui.MnDoneButton
 import com.mn.android.presentation.theme.ui.MnBackground
 import com.mn.android.presentation.theme.ui.MnTheme
@@ -87,13 +88,20 @@ fun StreakDetailScreen(
     LaunchedEffect(range) {
         insights = StreakInsightsSource.load(range)
     }
-    // The sheet's CTA navigates away, and today's flags change when the user
-    // comes back from that flow — reload on resume until DomainEventBus lands
-    // (same fallback as NoteMenuScreen).
-    LifecycleResumeEffect(Unit) {
-        detail = StreakDetailSource.readDetail()
-        insights = StreakInsightsSource.load(range)
-        onPauseOrDispose { }
+    // Today's flags change when a note is written or a meditation ends — the
+    // detail is re-read on those events, the same way the iOS streak screen
+    // follows the domain events.
+    LaunchedEffect(Unit) {
+        DomainEventBus.events.collect { event ->
+            if (event is DomainEvent.NoteCreated ||
+                event is DomainEvent.NoteUpdated ||
+                event is DomainEvent.NoteDeleted ||
+                event is DomainEvent.MeditationCompleted
+            ) {
+                detail = StreakDetailSource.readDetail()
+                insights = StreakInsightsSource.load(range)
+            }
+        }
     }
     var selected by remember { mutableStateOf<StreakDetailSource.Day?>(null) }
 

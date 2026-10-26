@@ -3,8 +3,11 @@ package com.mn.android.presentation.notes.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mn.android.data.NoteInsightsSource
+import com.mn.android.domain.events.DomainEvent
+import com.mn.android.domain.events.DomainEventBus
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -28,7 +31,23 @@ class NoteInsightsViewModel(
     private val loadHeuristic: suspend () -> List<NoteInsightsSource.Insight> = { NoteInsightsSource.load() },
     private val runAnalysis: suspend () -> NoteInsightsSource.Analysis = { NoteInsightsSource.analyzeInsights() },
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val events: Flow<DomainEvent> = DomainEventBus.events,
 ) : ViewModel() {
+
+    init {
+        // The iOS ViewModel listens for the same events: a note change makes
+        // the stored insights stale, so they are read again.
+        viewModelScope.launch {
+            events.collect { event ->
+                if (event is DomainEvent.NoteCreated ||
+                    event is DomainEvent.NoteUpdated ||
+                    event is DomainEvent.NoteDeleted
+                ) {
+                    load()
+                }
+            }
+        }
+    }
 
     data class UiState(
         val insights: List<NoteInsightsSource.Insight> = emptyList(),
