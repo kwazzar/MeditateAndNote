@@ -7,7 +7,7 @@
 > Рекомендація KMP у попередній редакції документа **скасована**: її єдиним аргументом був `@Observable`, який на той час вважався непідтримуваним. Експеримент 2026-10-02 це спростував (див. «Перевірено експериментом»).
 
 > Додано: 2026-09-30, на основі аналізу структури проєкту (Models/, Services/, Persistence/)
-> Редакція: 2026-10-21 — додано статус Book reader/Library (Фаза 6, branch `fb2-reading-view`: FB2/EPUB/TXT імпорт, Reader + Library, JNI stores, TOC/bookmarks/highlights-to-notes); AI-драфт хостинг (Vercel/Groq) перевірен end-to-end (2026-10-20)
+> Редакція: 2026-10-26 — синхронізація статусів із кодом: закрито пункти Фаз -1/0/2/3/5, які вже реалізовані; on-device AI — єдиний відкритий AI-пункт. Попередня редакція 2026-10-21 — Book reader/Library (Фаза 6, branch `fb2-reading-view`: FB2/EPUB/TXT імпорт, Reader + Library, JNI stores, TOC/bookmarks/highlights-to-notes); AI-драфт хостинг (Vercel/Groq) перевірен end-to-end (2026-10-20)
 
 ## Принцип
 
@@ -32,6 +32,8 @@ Domain-шар платформо-незалежний за визначення�
 **Рекомендація:** рухатись з обраним шляхом (Swift Core). Абстрактний шар над Observation **не потрібен** — це була б абстракція заради абстракції.
 
 ### 2. AI-стратегія — pivot обов'язковий
+
+> **Оновлено 2026-10-20:** обраний шлях — **remote OpenAI-сумісний провайдер** (Vercel/Groq) через наявний Core `AIDraftService` + `AIDraftBridge`. On-device (AICore/ML Kit) не реалізовано й не перевірено; див. 3.0 і Фазу 5.
 
 `FoundationModels` (iOS 26+) не має аналога на Android. `NLEmbedding` (NaturalLanguage framework) — теж iOS-only.
 
@@ -120,12 +122,12 @@ export ANDROID_NDK_HOME="<ndk-r30>"
 
 Отже, **Foundation + Observation + Codable + Sendable + async/throws + протоколи працюють під Android.**
 
-### Що лишається неперевіреним ⚠️
+### Що лишалося неперевіреним на 2026-10-02 — усе закрито ✅
 
 - ~~Перелік непідтримуваних `jextract` типів~~ → **виміряно**, див. «Обмеження JNI-межі».
-- `Observation` **компілюється**, але `Compose` не спостерігає за Swift-об'єктами — bridge стану не спроєктовано.
-- **Жодного коду застосунку ще не компільовано** під Android — тільки синтетичні проби.
-- **Нічого ще не запущено на пристрої** — лише компіляція. Рантайм JNI (хто викликає `CompletableFuture`, з якого потоку) не перевірено.
+- ~~`Observation` компілюється, але `Compose` не спостерігає за Swift-об'єктами~~ → **вирішено**: Kotlin state holder (`remember`/`mutableStateOf`, `ViewModel` там, де стан переживає композицію).
+- ~~Жодного коду застосунку не компільовано під Android~~ → **закрито**: Core + JNI + Compose збираються, `assembleDebug` зелений.
+- ~~Нічого не запущено на пристрої~~ → **закрито**: sync/async JNI, `CompletableFuture`, підписка й 1600/1600 concurrency перевірені на Samsung A24/A245F.
 
 ### Три ловушки налаштування
 
@@ -373,13 +375,13 @@ public final class DomainEventBus {
 
 ---
 
-## Чек-лист: що перевірити далі
+## Чек-лист перевірок — статуси
 
-Відсортовано за тим, наскільки невідома відповідь блокує наступний крок. Позиції 1–4 **не** робляться без Android-пристрою або без зміни коду.
+Історичний чек-лист: усі пункти 1–6 закриті. Відкриті пункти зведені в розділі «Ризики й відкриті питання».
 
-### 1. Рантайм JNI на пристрої — найбільший невідомий
+### 1. Рантайм JNI на пристрої — ✅ закрито
 
-**Стан:** Tier 1 (Swift runtime) ✅ і Tier 2 sync (JNI bridge) ✅ **підтверджено на пристрої** (Samsung A24, Android 16, API 36, arm64-v8a). Залишилося: `async` → `CompletableFuture` і протокол- підписка.
+**Стан:** Tier 1 (Swift runtime) ✅, Tier 2 sync (JNI bridge) ✅, `async` → `CompletableFuture` ✅ і протокол- підписка ✅ — усе **підтверджено на пристрої** (Samsung A24/A245F, Android 16, arm64-v8a).
 
 #### Tier 2 — що встановлено (2026-10-03)
 
@@ -695,7 +697,7 @@ Dispatch навмисно **поза** замком: підписник має �
 - AAB + per-device split — але ICU все одно в кожному split
 - окремий «легкий» Core без часових шарів Foundation
 
-Час старту **не виміряно** — потрібен реальний APK. Планується разом із Фазою 1.
+Час старту **виміряно** на probe APK (2026-10-03): `am start -W` → `WaitTime: 609 ms` (unstripped) / `1071 ms` (stripped); сам probe з dlopen 78 MB + JNI + publish → `elapsedMs=446`/`671`. Це не повний app launch, але реальний APK, не синтетика.
 
 ### Вже закрито — не перевіряти заново
 
@@ -734,7 +736,7 @@ Dispatch навмисно **поза** замком: підписник має �
 - [x] ~~Для кожної знайденої залежності вирішити: абстрагувати чи визнати платформо-специфічною~~ — **вирішено, див. «Приховані залежності»**
 - [x] ~~Створити локальний SPM-пакет `Packages/MeditateAndNoteCore`~~ — **зроблено 2026-10-03**, ітерований у `project.pbxproj` як `XCLocalSwiftPackageReference`
 - [x] ~~Перенести `Models/` у пакет першими~~ — **зроблено**: 25 файлів, 59 публічних типів
-- [ ] Перенести `Services/` (Managers) — складніша частина, більше протокольних меж
+- [x] ~~Перенести `Services/` (Managers)~~ — **закрито**: портативні engine/protocol/store винесені (див. «перша хвиля» нижче); application-managers (`NoteManager`, `StreakTracker`, `ReminderManager`, …) лишились у app як composition root — за поточною DDD-архітектурою їм не місце в Core.
 
 #### Каскад `public`: що реально довелось зробити
 
@@ -837,15 +839,16 @@ corelibs декларує `weekdaySymbols` як неопціональний `[S
 має `[String]?`. Ціна за єдиний вислів, який компілюється на обох платформах.
 
 `SearchState` і `OnboardingPage` **не** переносилися в Core: `SearchState` — `@Observable` стан презентації, `OnboardingPage` містить SF Symbol-и. Обидва лишаються в застосунку, але вже не всередині `Views/`, щоб ViewModel не залежав від View-шару. Для Android UI дублюється — їм у Core не місце.
-- [ ] Перенести `Services/` (Managers) — складніша частина, більше протокольних меж
-- [ ] ~~Усунути виняток `CoreDataSessionStore`~~ — **не робити.** Це задокументований прийнятий виняток (див. архітектурні правила): `CoreDataSessionStore` свідомо працює без Store-протоколу. Для Android-порту це означає лише «зроби окремий адаптер», а не «перероби існуючий тип».
+
+- [x] ~~Перенести `Services/` (Managers)~~ — **закрито**: портативні engine/protocol/store винесені (перша хвиля вище); application-managers (`NoteManager`, `StreakTracker`, `ReminderManager`, …) лишились у app як composition root — за поточною DDD-архітектурою їм не місце в Core.
+- [x] ~~Усунути виняток `CoreDataSessionStore`~~ — **зроблено 2026-10-06**: протокол `MeditationSessionStore`, конформність перевіряється збіркою (див. 2.5).
 - [x] ~~Прогнати `jextract` на пробному наборі~~ — **зроблено 2026-10-02**: 12 проб, перелік підтримуваних/непідтримуваних типів у розділі «Обмеження JNI-межі»
 - [x] ~~Знайти розв'язок для `AsyncStream` і клоузур~~ — **зроблено**: протокол- підписка, перевірена end-to-end (Java + thunk під Android)
-- [ ] **Вирішити, коли робити каскад `public`** для 58 типів `Models/` — тільки після створення SPM-пакета, інакше двічі
-- [ ] Зберегти семантику «послідовно, у порядку публікації» в новій шині (черга під замком), бо `AsyncStream` давав її кожному споживачеві
-- [ ] Перевірити рантайм JNI на пристрої: **async** — хто завершує `CompletableFuture` і з якого потоку приходить Kotlin-об'єкт (sync-шлях ✅)
-- [ ] Зафіксувати `swift-java` як версіоновану залежність Core-пакета (thunk без неї не компілюється)
-- [ ] Зафіксувати фактичний % переносного коду (замість оцінки "90-95% на око") і звірити з рештою плану — за потреби скоригувати Фази 0-5 нижче
+- [x] **Каскад `public`** — зроблено 2026-10-03: 0 помилок і 0 warnings на macOS та Android (розділ вище).
+- [x] **Семантика шини** — перевірено 2026-10-03 (розділ 4). Android-шина `DomainEventBus.kt` окрема: порядок на підписника зберігається, але під сплеском drop-oldest — свідомо, бо споживачі перечитують store.
+- [x] **Async JNI на пристрої** — перевірено: `CompletableFuture` завершується з `Thread-2`/`Thread-3`, 1600/1600 concurrency (розділ 1).
+- [ ] **Відкрито:** зафіксувати `swift-java` версіонованою залежністю. Зараз `Package.swift` тримає path dependency (`~/Developer/swift-java`, override `SWIFT_JAVA_PATH`).
+- [ ] **Відкрито (низький пріоритет):** зафіксувати фактичний % переносного коду замість оцінки.
 
 **Результат фази:** підтверджена (не гіпотетична) межа Core/Infrastructure **і** межа JNI-межі, на які спираються всі наступні фази.
 
@@ -855,23 +858,23 @@ corelibs декларує `weekdaySymbols` як неопціональний `[S
 
 Конкретні ризики, виявлені в наявному коді — враховані вище у Рекомендаціях та Фазі -1, зафіксовані тут для довідки.
 
-- **Доведений патерн градуйованої AI-доступності.** `AIDraftService` вже має три реалізації (`FoundationModelsAIDraftService` iOS 26+, `RemoteLLMDraftService` fallback, `DisabledAIDraftService`); `NoteAnalyzer` — дві (`HeuristicNoteAnalyzer` завжди, `FoundationModelsNoteAnalyzer` iOS 26+). Android-реалізація (`AICoreAIDraftService`) додається як ще один варіант за тим самим контрактом — не новий концепт, а розширення існуючого патерну.
-- **`CoreDataSessionStore` без протоколу** — єдиний Infrastructure-компонент без абстракції; без фіксу немає куди підставити Android-реалізацію.
+- **Доведений патерн градуйованої AI-доступності.** `AIDraftService` має `FoundationModelsAIDraftService` (iOS 26+), `RemoteLLMDraftService` fallback і `DisabledAIDraftService`; `NoteAnalyzer` — `HeuristicNoteAnalyzer` + `FoundationModelsNoteAnalyzer` (iOS 26+). Android використовує remote шлях (`AIDraftBridge` + `AIDraftProvider`); on-device `AICoreAIDraftService` — єдиний нереалізований варіант.
+- **`CoreDataSessionStore` без протоколу** — закрито 2026-10-06: `MeditationSessionStore` у Core, Android-реалізація `SessionBlobStore.kt`.
 - **`@MainActor`/актори/`AsyncStream`** — базуються на Swift Concurrency, теоретично портовані через мову, але `@MainActor` як концепція головного UI-потоку потребує окремої перевірки рантайм-поведінки на Android (не лише компільованості).
 - **`@Observable` в Application-шарі, не лише Presentation** — `StreakTracker`, `ReminderManager`, `ThemeManager` використовують Observation framework поза ViewModels. ~~Перевірити явно, чи Observation валідований для Swift SDK~~ → **перевірено 2026-10-02: `Observation` компілюється під Android.** Залишається окреме питання — як Compose отримує стан (див. Фазу 4).
 - **`Codable`-серіалізація** (`SessionDuration` та інші) — теоретично портована через Foundation, але варто протестувати на Android-компільованій збірці окремо, не покладаючись на припущення сумісності.
 - **`Calendar`/`Date`-математика** в `ReminderScheduleBuilder` — "чиста" логіка, але залежить від поведінки `Calendar`/`TimeZone` у swift-corelibs-foundation; потрібні edge-case тести (DST-перехід, локалі) саме на Android-збірці.
 - **Legacy-міграція в `UserDefaultsStreakStore`** — існує історія форматів даних, яку Android-еквівалент (SharedPreferences/DataStore) не успадковує автоматично; потрібне свідоме рішення — портувати міграцію чи почати з чистого стану.
-- **`DomainEventBus` публікує "on the emitter's thread"** — на Android потоки виклику з AICore SDK (JNI callback) можуть відрізнятись від Swift-таскового пулу; перевірити передбачуваність потоку публікації подій.
+- **`DomainEventBus` публікує "on the emitter's thread"** — перевірено на пристрої: async-контекст піднімає власний потік (`Thread-2`/`Thread-3`), тому Android-підписник сам маршалить на main (`DomainEventBus.kt` — `SharedFlow`, UI збирає в composition).
 
 ---
 
 ## Фаза 0 — Підготовка контрактів (робиться на iOS, до будь-якого Android-коду)
 
-- [ ] Аудит усіх `<X>DataSource`/`<X>Store` протоколів — переконатись, що жоден не "протікає" Apple-типами (`NSManagedObject`, `UIImage` тощо) у публічний контракт
-- [ ] Винести `AIWritingService` (рівень 1, платформонезалежний) окремо від `StructuredAIWritingService` (рівень 2, Apple-специфічний structured output)
-- [ ] Ввести `AICapabilityLevel` (`.unavailable` / `.basicText` / `.structuredOutput`) замість бінарного `isAvailable`
-- [ ] Переконатись, що `NoteManager`, `StreakTracker`, `InsightManager` залежать лише від протоколів рівня 1, ніколи від `StructuredAIWritingService` напряму
+- [x] Аудит усіх `<X>DataSource`/`<X>Store` протоколів — **зроблено 2026-10-26**: Core не імпортує `CoreData`/`SwiftUI`/`UIKit`/`Combine`; у протоколах немає `NSManagedObject`/`UIImage`.
+- [x] ~~Винести `AIWritingService` окремо від `StructuredAIWritingService`~~ — **застаріло**: окремий контракт не заводили; використовується наявний `AIDraftService` + `AIDraftBridge` (див. 3.0).
+- [x] ~~Ввести `AICapabilityLevel`~~ — **застаріло**: замінено наявним `AIDraftService` + `RemoteDraftConsent`; on-device рівень лишається відкритим окремо.
+- [x] Менеджери залежать від своїх протоколів (`NoteDataSource`, `StreakSnapshotProvidable`, `NoteAnalyzer`); `FoundationModels` ізольований в app-реалізаціях (`AIDraftServiceFactory`), не в Core-контрактах.
 
 **Результат фази:** Domain + Application шари готові приймати підміну реалізацій без змін коду.
 
@@ -953,10 +956,10 @@ corelibs декларує `weekdaySymbols` як неопціональний `[S
 - [x] `NoteDataSource` — **blob-таблиця, Room відкинуто** (див. 2.3)
 - [x] `StreakActivityStore` — SharedPreferences з опаким JSON (див. 2.4)
 - [x] `MeditationSessionStore` — контракт у Core, останній відомий виняток закрито (див. 2.5)
-- [ ] Keystore-based `SecureStore`
-- [ ] ExoPlayer-based sound service
-- [ ] AlarmManager-based reminder service (враховуючи 7-денний notification horizon)
-- [ ] AI-сервіс — див. Фазу 3 окремо, найскладніша частина
+- [x] Keystore-based `SecureStore` — **закрито вбудовано**: `AIDraftSettingsStore.kt` шифрує API key AES-GCM, ключ живе в Android Keystore. Окремого generic `SecureStore` немає — споживач один.
+- [x] Sound — **SoundPool**, не ExoPlayer: `infrastructure/platform/sound/SoundPlayer.kt`, сім `res/raw` cues (див. `docs/ui-parity/README.md`).
+- [x] Reminder — **AlarmManager** + `NotificationManager`: `ReminderReceiver.kt`, 7-денний horizon з Core.
+- [x] AI — **remote OpenAI-сумісний** шлях закритий (Vercel/Groq + `AIDraftBridge`); on-device див. Фазу 5.
 
 ### 2.1 Перший Store: `ReminderSettingsStore` ✅ (2026-10-05)
 
@@ -1112,7 +1115,7 @@ session blob PASS: dayOneOk=true dayTwoOk=true unrelatedOk=true distinctDaysOk=t
 
 iOS: build зелений, **478 тестів** зелені (без нових — конформнія перевіряється збіркою, а поведінку вже покриває `CoreDataSessionStoreTests`).
 
-**Стан Фази 2:** чотири Store-и закриті. Решта в списку (`SecureStore`, `SoundPlaying`, AlarmManager) споживача на Android поки не має.
+**Стан Фази 2:** усі пункти закриті. Store-и: Note/Streak/Session/Reminder/Book/Bookmark; platform: Keystore, SoundPool, AlarmManager; AI — remote. On-device AI — єдиний відкритий пункт Фаз 3/5.
 
 ---
 
@@ -1242,9 +1245,11 @@ protocol AIWritingService {
 }
 ```
 
-- [ ] Apple-реалізація: обгортка над `FoundationModels`, вільний текстовий режим
-- [ ] Android-реалізація A: `AICoreService` — через AICore SDK (`generateContentStream`), з ручним парсингом там, де потрібна структура
-- [ ] Android-реалізація B (простіший старт): `MLKitGenAIService` — готові Rewriting/Summarization API замість власного prompt engineering
+> **Застаріло (2026-10-26):** цей контракт не заводився. У Core вже є `AIDraftService`; iOS — `FoundationModelsAIDraftService` + remote fallback, Android — remote `AIDraftBridge`/`AIDraftProvider`. On-device Android лишається відкритим. Пункти нижче — історичні.
+
+- [x] ~~Apple-реалізація: обгортка над `FoundationModels`~~ — вже є `FoundationModelsAIDraftService`.
+- [ ] **Відкрито:** Android on-device — `AICoreService` (AICore SDK) або `MLKitGenAIService`.
+- [x] ~~Android-реалізація B (простіший старт)~~ — не обрано; remote провайдер закрив v1.
 
 ### 3.2 Розширений контракт (рівень 2, опційний)
 
@@ -1254,15 +1259,15 @@ protocol StructuredAIWritingService: AIWritingService {
 }
 ```
 
-- [ ] Apple: пряма реалізація через `@Generable`
-- [ ] Android: або не реалізовувати (фічі, що залежать від structured output, автоматично деградують до рівня 1), або емулювати через "return strict JSON" prompt + ручний `Decodable`-парсинг
+- [x] ~~Apple: пряма реалізація через `@Generable`~~ — не використовується.
+- [x] ~~Android: `@Generable` або JSON-емуляція~~ — закрито remote-шляхом: `AIDraftRemoteProtocol` + ручний JSON-парсинг.
 
 > **Увага, JNI:** generic-метод `<T: Generable>` і макрос `@Generable` не мають шляху через JNI — generic-спеціалізація не перекладається в Java. Цей контракт **не має бути в публічному API ядра**; якщо Android їх потребує, доведеться заводити не-generic варіант (окремий метод під конкретний тип відповіді).
 
 ### 3.3 UI-адаптація під градуйовану доступність
 
-- [ ] `AIWritingViewModel` реагує на `AICapabilityLevel`, а не на бінарний прапорець
-- [ ] Визначити UX для кожного рівня: `.unavailable` → кнопка прихована, `.basicText` → "Help me write" доступний без гарантії формату, `.structuredOutput` → повний функціонал
+- [x] ~~`AIWritingViewModel` реагує на `AICapabilityLevel`~~ — не застосовується: Android `AIDraftBar` працює через `AIDraftSource`.
+- [x] ~~UX для кожного рівня~~ — замінено: remote provider + `RemoteDraftConsent` + квота. UX для on-device визначити разом з AICore, коли з'явиться пристрій.
 
 ---
 
@@ -1284,31 +1289,32 @@ protocol StructuredAIWritingService: AIWritingService {
 
 ## Фаза 5 — Тести та валідація
 
-- [x] Портувати pure-engine тести (partial - MeditationEngine ported, StreakInsightEngine blocked on JNI) (streak-логіка, insights) — мають пройти без змін, якщо Domain дійсно чистий
-- [x] Contract-тести для кожного нового `Store`/`Service` — та сама тестова сюїта, що й для CoreData/InMemory, прогнана проти Android-реалізацій
-- [x] Окремі device-матриця тести для AI-фіч — **remote-шлях закритий 2026-10-20 на Samsung SM-A245F (Android 16, API 36, arm64-v8a)**: 42/42 інструментованих тестів + повний флоу чернетки (підказки → Accept → Transfer → телеметрія в базі); провайдер — mock на хості через `adb reverse`. On-device шлях (ML Kit GenAI) **не перевірено**: на пристрої немає Google AI Services / AICore, RAM 6 GB (Gemini Nano потребує 12 GB+) — потрібен пристрій з 12 GB+ RAM і встановленим AI-модулем. Пристрій без AICore — це і SM-A245F, і емулятор: обидва мають `com.google.android.gms` без AI-модуля
+- [x] Портувати pure-engine тести — `MeditationEngine` і `StreakInsightEngine` доступні через JNI (`StreakInsightsBridge` → `StreakInsightsSource`), контрактні тести зелені.
+- [x] Contract-тести для кожного нового `Store`/`Service` — та сама тестова сюїта, що й для CoreData/InMemory, прогнана проти Android-реалізацій.
+- [x] Device-матриця для AI-фіч — **remote-шлях закритий 2026-10-20 на Samsung SM-A245F (Android 16, API 36, arm64-v8a)**: 42/42 інструментованих тестів + повний флоу чернетки (підказки → Accept → Transfer → телеметрія в базі); провайдер — mock на хості через `adb reverse`.
+- [ ] **Відкрито:** on-device AI (AICore / ML Kit GenAI) — не реалізовано й не перевірено. Потрібен пристрій з 12 GB+ RAM і встановленим AI-модулем; SM-A245F і емулятор мають `com.google.android.gms` без AI-модуля.
+
+---
+
+## Фаза 6 — Book reader / Library ✅ (2026-10-21)
+
+FB2/EPUB/TXT імпорт, Library + пагінований Reader, TOC, bookmarks, highlights→notes — на обох платформах. Core: парсери, `PaginationEngine`, `BookStore`/`BookmarkStore`; JNI: `BookBlobStore`, `BookmarkBlobStore`, `ReaderSettingsStore`; Compose: `LibraryScreen`, `ReaderScreen`, `ReaderSheets`. Відкритих пунктів немає.
 
 ---
 
 ## Ризики й відкриті питання
 
-**Неперекладне вирішено.** `AsyncStream` і клоузури замінюються протоколом- підпискою — перевірено end-to-end (генерація Java + компіляція thunk під Android). Generic-методів у домені немає взагалі. Див. «Розв'язок, перевірений end-to-end».
+**Закрито:** `AsyncStream`/клоузури → протокол- підписка; async JNI (`CompletableFuture`) перевірено на пристрої; каскад `public` завершено; семантика порядку подій перевірена тестами; `Compose` стан обрано (Kotlin state holder); реальний код збирається під Android.
 
-**Головний ризик, що лишився — `jextract` мовчки пропускає непідтримувані методи.** `exit 0`, warning у лозі, методу немає. Помилка виявиться лише під час компіляції Kotlin. Тому перевірка логу `jextract` — обов'язковий крок CI, інакше «зелений» тулчейн систематично приховує діри в API.
+**Відкриті ризики:**
 
-**Другий — семантика потоку зміниться.** `DomainEventBus` зараз публікує «on the emitter's thread», а `AsyncStream` давав кожному споживачеві власний послідовний потік. Протокол- підписка не дає цього без додаткової роботи: щоб зберегти «послідовно, у порядку публікації» для `EventLoopCoordinator`, потрібна черга з `NSLock`/актором усередині шини. Без неї три споживачі оброблятимуть події в довільному порядку — зміниться поведінка, яку тримають 3 ViewModel-и.
-
-**Третій — каскад `public` торкається 58 типів.** Працює, але великий diff у найбільшому шарі.
-
-- **Нічого ще не запущено на пристрої** — усі висновки з виводу генератора; рантайм JNI (хто завершує `CompletableFuture`, з якого потоку приходить Kotlin-об'єкт) не перевірено
-- **Жодного коду застосунку не скомпільовано** під Android — лише синтетичні проби; реальний `Models/`/`Services/` ще не пройшов перевірку
-- **Core-пакет залежатиме від `SwiftJava`** — згенеровані thunk не компілюються без рантайм-бібліотеки `swift-java`. Це зовнішня залежність у Cargo-стилі SwiftPM, її треба зафіксувати версією
-- **Розсинхрон `.so` зі Swift-кодом** — поки крок компіляції Swift не вбудований у Gradle, `lib*.so` буде розходитись із джерелом
-- **Повний двоплатформний CI** — iOS-збірка й Android-збірка мають перевірятися разом, інакше Domain-зміни зламають одну платформу непомітно
-- **`Compose` не бачить Swift-стан** — модель стану для Android ще не обрана
-- ML Kit GenAI APIs у статусі Beta — можливі breaking changes до GA
-- AICore не дає function calling / structured output "з коробки" — рівень 2 контракту на Android завжди буде емуляцією, не гарантією
-- CoreData → Room міграція даних існуючих користувачів (якщо застосунок вже в проді) окремо не покрита цим планом — потребує стратегії міграції/експорту
+- **`jextract` мовчки пропускає непідтримувані методи.** `exit 0`, warning у лозі, методу немає; помилка виявиться лише під час компіляції Kotlin. Перевірка логу `jextract` — обов'язковий крок CI.
+- **`swift-java` не зафіксований версією** — `Package.swift` тримає path dependency (`~/Developer/swift-java`), thunk без неї не компілюється.
+- **Розсинхрон `.so` зі Swift-кодом** — поки крок компіляції Swift не вбудований у Gradle, `lib*.so` може розходитись із джерелом.
+- **Повний двоплатформний CI** — iOS і Android мають перевірятися разом, інакше Domain-зміни зламають одну платформу непомітно.
+- **On-device AI** — AICore/ML Kit не реалізовано, немає пристрою з AI-модулем і 12 GB+ RAM. Remote провайдер покриває v1.
+- **Android billing/RevenueCat** — не робився; paywall/Pro locks відсутні (див. `docs/ui-parity/README.md:166`).
+- **CoreData → Room міграція існуючих користувачів** — окремо не покрита; потрібна стратегія міграції/експорту.
 
 ---
 
@@ -1326,3 +1332,13 @@ protocol StructuredAIWritingService: AIWritingService {
 8. **Фаза 4** більше не припускає, що `@Observable` мапиться на Compose.
 9. **Рекомендація 2 (AI) і Фази 0, 2, 3, 5** залишені без змін — експеримент їх не зачіпає.
 10. **Tier 1 на пристрої.** Swift-екзешутер `NRuntime` на Samsung A24 (Android 16, API 36, arm64-v8a): UUID, String, struct round-trip, 1000 ітерацій — PASS. Рантайм Swift на Android підтверджено.
+
+## Що змінилося в редакції 2026-10-26
+
+1. **Фаза -1:** `Services/`/`public`/async JNI/bus ordering позначені закритими; відкритими лишились версіонування `swift-java` і % переносного коду.
+2. **Фаза 0:** аудит протоколів закрито; `AIWritingService`/`AICapabilityLevel` позначені як застарілі — їх замінив наявний `AIDraftService`.
+3. **Фаза 2:** Keystore, SoundPool, AlarmManager, remote AI закриті; прибрано хибне «споживача немає».
+4. **Фаза 3:** 3.1–3.3 позначені історичними; єдиний відкритий AI-пункт — on-device AICore/ML Kit.
+5. **Фаза 5:** `StreakInsightEngine` JNI більше не blocked; remote AI закритий, on-device винесений окремим відкритим пунктом.
+6. **Додано Фазу 6** (Book reader / Library) зі статусом ✅.
+7. **Ризики:** прибрано твердження, які вже спростовані кодом (нічого не запущено, код не компілюється, стан Compose не обрано); відкриті ризики зведені в один список.
