@@ -50,6 +50,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.mn.android.R
 import com.mn.android.infrastructure.persistence.local.settings.AnimationSettings
@@ -107,6 +109,10 @@ fun BreathingScreen(
     val vm: BreathingSessionViewModel = viewModel(key = "breath_$meditationId")
     var sheetOpen by rememberSaveable { mutableStateOf(true) }
     var selectedDuration by remember { mutableStateOf(meditationDurations[1]) }
+
+    // Mirrors iOS `willResignActive` → pause: the session must not keep
+    // counting (and finish) while the app is in the background.
+    LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) { vm.pause() }
 
     Box(Modifier.fillMaxSize()) {
         MnBackground()

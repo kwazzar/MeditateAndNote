@@ -105,6 +105,7 @@ private extension MeditationView {
             HStack {
                 Spacer()
                 Button(action: {
+                    viewModel.stop()
                     router.navigationStackPath = []
                 }) {
                     Image(systemName: "xmark")

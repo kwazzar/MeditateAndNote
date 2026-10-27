@@ -72,6 +72,11 @@ class BreathingSessionViewModel(private val savedStateHandle: SavedStateHandle) 
   fun resume() { engine.resume(Date.fromInstant(Instant.now(), arena), arena); snapshot() }
   fun stop() { ticker?.cancel(); ticker = null; engine.stop(arena); snapshot() }
 
+  // Nav pop (system back/gesture) clears the store without calling `stop()`.
+  // The ticker's runnable holds this VM, so without this it keeps ticking and
+  // records a session the user walked away from.
+  override fun onCleared() { stop() }
+
   fun done() {
     ticker?.cancel(); ticker = null
     val active = engine.getActiveDuration(arena)
