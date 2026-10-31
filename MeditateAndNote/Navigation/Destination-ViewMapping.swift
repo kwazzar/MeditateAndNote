@@ -32,6 +32,7 @@ import SwiftUI
                 )
             }
         }
+        .analyticsScreen(destination.analyticsScreenName)
         .navigationBarBackButtonHidden(true)
     }
 }
@@ -48,6 +49,7 @@ import SwiftUI
                 EmptyView()
             }
         }
+        .analyticsScreen(destination.analyticsScreenName)
         .navigationBarTitleDisplayMode(.inline)
         //    .presentationDetents([.medium, .large])
     }
@@ -64,5 +66,6 @@ import SwiftUI
             case let .reader(bookId):
                 ReaderView(viewModel: container.makeReaderViewModel(bookId: bookId))
             }}
+        .analyticsScreen(destination.analyticsScreenName)
     }
 }

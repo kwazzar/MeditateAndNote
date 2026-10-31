@@ -39,6 +39,10 @@ final class AppContainer: @unchecked Sendable {
     private lazy var books = BookScope(noteWriter: notes.manager)
     @MainActor private lazy var subscription = SubscriptionScope(eventBus: eventBus)
 
+    /// Cross-cutting analytics adapter. Firebase lives behind `AnalyticsTracking`.
+    let analyticsTracker: any AnalyticsTracking = FirebaseAnalyticsTracker()
+    private lazy var analytics = AnalyticsScope(tracker: analyticsTracker)
+
     /// Shared paywall presentation flag. Gated surfaces call `present()`;
     /// `RootContainer` hosts the single full-screen cover.
     @MainActor lazy var paywallPresenter = PaywallPresenter()
@@ -110,6 +114,7 @@ final class AppContainer: @unchecked Sendable {
         if AIDraftScope.handles(event) { result.append(aiDraft) }
         if MeditationScope.handles(event) { result.append(meditation) }
         if SearchScope.handles(event) { result.append(search) }
+        if AnalyticsScope.handles(event) { result.append(analytics) }
         return result
     }
 
