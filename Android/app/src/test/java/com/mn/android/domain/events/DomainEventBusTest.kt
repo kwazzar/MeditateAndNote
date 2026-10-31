@@ -39,13 +39,13 @@ class DomainEventBusTest {
 
         DomainEventBus.publish(DomainEvent.NoteCreated("a"))
         DomainEventBus.publish(DomainEvent.NoteUpdated("a"))
-        DomainEventBus.publish(DomainEvent.MeditationCompleted)
+        DomainEventBus.publish(DomainEvent.MeditationCompleted("breathing-4-7-8", 305))
 
         assertEquals(
             listOf(
                 DomainEvent.NoteCreated("a"),
                 DomainEvent.NoteUpdated("a"),
-                DomainEvent.MeditationCompleted,
+                DomainEvent.MeditationCompleted("breathing-4-7-8", 305),
             ),
             received.await(),
         )

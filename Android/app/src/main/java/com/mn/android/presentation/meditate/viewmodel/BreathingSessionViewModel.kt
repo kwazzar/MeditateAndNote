@@ -154,7 +154,12 @@ class BreathingSessionViewModel(private val savedStateHandle: SavedStateHandle) 
           java.util.TimeZone.getDefault().getOffset(System.currentTimeMillis()) / 60_000,
       )
       if (saved == 1L) {
-        DomainEventBus.publish(DomainEvent.MeditationCompleted)
+        DomainEventBus.publish(
+            DomainEvent.MeditationCompleted(
+                meditationId = meditationId,
+                durationSeconds = Math.round(totalSeconds).toInt(),
+            ),
+        )
       }
     }
   }

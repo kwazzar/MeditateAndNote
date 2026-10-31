@@ -171,6 +171,7 @@ fun NoteEditorScreen(
     fun applyDraftResult(result: AIDraftSource.Result) {
         result.metric?.let { metric ->
             scope.launch(Dispatchers.IO) { AIDraftMetrics.record(context, metric) }
+            metric.toDomainEvent()?.let(DomainEventBus::publish)
         }
         if (result.ok && result.session != null) {
             draftDocument = result.document.orEmpty()
@@ -185,12 +186,9 @@ fun NoteEditorScreen(
     fun recordSuggestionEvent(kind: String, suggestion: AIDraftSource.Suggestion) {
         val index = draftSession?.suggestions?.indexOfFirst { it.id == suggestion.id } ?: -1
         if (index < 0) return
-        scope.launch(Dispatchers.IO) {
-            AIDraftMetrics.record(
-                context,
-                AIDraftSource.Metric(kind = kind, suggestionIndex = index.toLong()),
-            )
-        }
+        val metric = AIDraftSource.Metric(kind = kind, suggestionIndex = index.toLong())
+        scope.launch(Dispatchers.IO) { AIDraftMetrics.record(context, metric) }
+        metric.toDomainEvent()?.let(DomainEventBus::publish)
     }
 
     fun startDraft() {
@@ -204,14 +202,19 @@ fun NoteEditorScreen(
             draftError = null
             val warm = !hasGenerated
             hasGenerated = true
-            scope.launch(Dispatchers.IO) {
-                AIDraftMetrics.record(context, AIDraftSource.Metric(kind = "generationStarted", warmCold = warm))
-            }
+            val started = AIDraftSource.Metric(kind = "generationStarted", warmCold = warm)
+            scope.launch(Dispatchers.IO) { AIDraftMetrics.record(context, started) }
+            started.toDomainEvent()?.let(DomainEventBus::publish)
             val result = withContext(Dispatchers.IO) {
                 AIDraftSource.start(noteId = editingId, instruction = "", context = body)
             }
             isDrafting = false
             applyDraftResult(result)
+            // iOS `publishGenerated`: once per successful generation, never on
+            // accept/reject transitions (their results carry a session too).
+            if (result.ok && result.session != null) {
+                DomainEventBus.publish(DomainEvent.AiDraftGenerated)
+            }
         }
     }
 
@@ -488,6 +491,21 @@ private fun BodyField(
  */
 private fun normalizedTitle(raw: String): String =
     raw.trim().ifEmpty { "Untitled" }
+
+/**
+ * The bridge's flat metric -> typed [DomainEvent.AiDraftMetric]. The kinds are
+ * fixed by `AIDraftBridge.swift`; unknown kinds (future bridge versions) are
+ * dropped rather than guessed at.
+ */
+private fun AIDraftSource.Metric.toDomainEvent(): DomainEvent.AiDraftMetric? = when (kind) {
+    "generationStarted" -> warmCold?.let(DomainEvent.AiDraftMetric::GenerationStarted)
+    "generationCompleted" ->
+        latencyMs?.let { ms -> suggestionCount?.let { DomainEvent.AiDraftMetric.GenerationCompleted(ms.toInt(), it.toInt()) } }
+    "generationFailed" -> errorKind?.let(DomainEvent.AiDraftMetric::GenerationFailed)
+    "suggestionInserted" -> suggestionIndex?.let { DomainEvent.AiDraftMetric.SuggestionInserted(it.toInt()) }
+    "suggestionRejected" -> suggestionIndex?.let { DomainEvent.AiDraftMetric.SuggestionRejected(it.toInt()) }
+    else -> null
+}
 
 // MARK: - Preview
 
