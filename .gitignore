@@ -149,3 +149,7 @@ MeditateAndNote/Config/*.local.xcconfig
 # Vercel CLI project link (created when the server folder was linked)
 .vercel/
 Scripts/.icons-cache/
+
+# Firebase runtime config: real project IDs/keys stay local on this public repo.
+MeditateAndNote/Resources/GoogleService-Info.plist
+Android/app/google-services.json

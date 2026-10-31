@@ -16,13 +16,14 @@ Native iOS (SwiftUI) app for guided meditation with breathing visuals and a shor
 
 ## Tech stack
 
-Apple platform with one external dependency — RevenueCat (`purchases-ios-spm`, SPM):
+Apple platform with SPM dependencies — RevenueCat (`purchases-ios-spm`), Firebase Analytics and ZIPFoundation:
 
 - SwiftUI + `@Observable` (Observation framework), iOS 17.6+
 - CoreData (programmatic model, no `.xcdatamodeld`)
 - AVFoundation (sounds), UserNotifications (reminders), Security (Keychain)
 - FoundationModels / Apple Intelligence on-device LLM (iOS 26+, optional)
 - RevenueCat Purchases SDK (subscriptions; key injected via `MeditateAndNote/Config/*.xcconfig` → `Info.plist`)
+- Firebase Analytics (`firebase-ios-sdk`; config file kept local, see below)
 
 Shared domain logic lives in the local Swift package `Packages/MeditateAndNoteCore` (entities, value objects, engines, book parsers FB2/EPUB/TXT, pagination, text measurement, domain events) — it is also compiled for Android (`Packages/MeditateAndNoteCoreJNI` → Kotlin/Compose UI).
 
@@ -53,6 +54,13 @@ open MeditateAndNote.xcodeproj
 To replay onboarding during development, add the `-showOnboarding` launch argument.
 
 RevenueCat key comes from `MeditateAndNote/Config/*.xcconfig` (`REVENUECAT_API_KEY`) → `Info.plist`; commit only the placeholder configs and keep `*.local.xcconfig` overrides out of git.
+
+Firebase config is gitignored because this repo is public. Create a Firebase project, add both apps, then place the downloaded files locally:
+
+- iOS: `MeditateAndNote/Resources/GoogleService-Info.plist`
+- Android: `Android/app/google-services.json`
+
+Without them the apps still build/launch; analytics stays disabled/no-op. Enable Google Analytics for the Firebase project and use DebugView (`-FIRAnalyticsDebugEnabled` launch argument on iOS, `adb shell setprop debug.firebase.analytics.app com.mn.android` on Android) to verify events.
 
 ## Project layout
 

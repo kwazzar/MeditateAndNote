@@ -26,18 +26,18 @@ final class EventRoutingTableTests: XCTestCase {
     /// in the order `AppContainer.handlers(for:)` appends them.
     private var routingTable: [(event: DomainEvent, scopes: [String])] {
         [
-            (.noteCreated(note), ["streak", "notes"]),
-            (.noteUpdated(note), ["streak", "notes"]),
-            (.noteDeleted(note.id), ["streak", "notes", "aiDraft", "search"]),
-            (.meditationCompleted(session), ["streak", "meditation"]),
-            (.aiDraftGenerated(noteID: note.id, sessionID: UUID()), []),
-            (.aiDraftMetric(event: .generationStarted(warmCold: true)), ["aiDraft"]),
+            (.noteCreated(note), ["streak", "notes", "analytics"]),
+            (.noteUpdated(note), ["streak", "notes", "analytics"]),
+            (.noteDeleted(note.id), ["streak", "notes", "aiDraft", "search", "analytics"]),
+            (.meditationCompleted(session), ["streak", "meditation", "analytics"]),
+            (.aiDraftGenerated(noteID: note.id, sessionID: UUID()), ["analytics"]),
+            (.aiDraftMetric(event: .generationStarted(warmCold: true)), ["aiDraft", "analytics"]),
             // Published BY NoteInsightManager, consumed only by
             // NoteInsightsViewModel's own bus subscription. No scope mutates.
             (.noteInsightsUpdated([note.id]), []),
-            // Published by SubscriptionManager; observed via the injected
-            // manager, not via a container scope. No scope reacts.
-            (.subscriptionChanged(.none), []),
+            // Published by SubscriptionManager; analytics records the new
+            // entitlement state, no state-changing scope reacts.
+            (.subscriptionChanged(.none), ["analytics"]),
         ]
     }
 
@@ -48,6 +48,7 @@ final class EventRoutingTableTests: XCTestCase {
         if AIDraftScope.handles(event) { result.append("aiDraft") }
         if MeditationScope.handles(event) { result.append("meditation") }
         if SearchScope.handles(event) { result.append("search") }
+        if AnalyticsScope.handles(event) { result.append("analytics") }
         return result
     }
 

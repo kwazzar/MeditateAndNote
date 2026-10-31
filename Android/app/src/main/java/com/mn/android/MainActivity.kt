@@ -78,6 +78,7 @@ import com.mn.android.infrastructure.persistence.local.settings.OnboardingStore
 import com.mn.android.data.SharedPrefsReminderSettingsStore
 import com.mn.android.infrastructure.persistence.local.settings.SoundSettings
 import com.mn.android.data.StreakSnapshotStore
+import com.mn.android.infrastructure.analytics.AppAnalytics
 import com.mn.android.infrastructure.platform.notifications.ReminderScheduler
 import com.mn.android.infrastructure.platform.sound.SoundPlayer
 import com.mn.android.presentation.home.ui.HomeScreen
@@ -198,6 +199,10 @@ private fun MnNav() {
 
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
+
+    LaunchedEffect(currentRoute) {
+        currentRoute?.let { AppAnalytics.screen(analyticsScreenName(it)) }
+    }
 
     Box(Modifier.fillMaxSize()) {
         Scaffold(
@@ -349,6 +354,14 @@ private val TabBarItems = listOf(
 
 /** Tab roots only: pushed screens (settings, breathing, editor) go full-screen. */
 private val TabBarRoutes = TabBarItems.map { it.route }.toSet()
+
+/** Stable screen names; never include note/book IDs. */
+private fun analyticsScreenName(route: String): String = when {
+    route.startsWith("noteDetails/") -> "note_details"
+    route.startsWith("reader/") -> "reader"
+    route.startsWith("breathing/") -> "breathing"
+    else -> route
+}
 
 /**
  * Port of the iOS `CustomTabBar`: a floating capsule inset from the screen edges,

@@ -47,6 +47,7 @@ struct RootContainer: View {
                     if let onboardingViewModel {
                         OnboardingView(viewModel: onboardingViewModel)
                             .environment(themeManager)
+                            .analyticsScreen("onboarding")
                             .transition(.opacity)
                     } else {
                         Color.clear
@@ -54,6 +55,11 @@ struct RootContainer: View {
                 case .tabs:
                     mainTabBar
                         .transition(.opacity)
+                        .onAppear {
+                            container.analyticsTracker.trackScreen(
+                                (router.selectedTab ?? .home).analyticsScreenName
+                            )
+                        }
                 }
             }
             .animation(.easeInOut(duration: 0.35), value: startupFlow)
@@ -74,8 +80,15 @@ struct RootContainer: View {
         )) {
             PaywallView(container: container)
                 .environment(themeManager)
+                .analyticsScreen("paywall")
         }
         .onAppear(perform: scheduleLaunchDismissal)
+        .onChange(of: router.selectedTab) { _, tab in
+            // A `TabView` keeps every tab alive, so its `onAppear` fires once
+            // for the whole app lifetime. Tab switches are tracked here.
+            guard let tab else { return }
+            container.analyticsTracker.trackScreen(tab.analyticsScreenName)
+        }
         .task(priority: .background) {
             await container.subscriptionManager.refresh()
         }
