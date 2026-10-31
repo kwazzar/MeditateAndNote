@@ -48,7 +48,7 @@ class NoteInsightsViewModelEventsTest {
         var loads = 0
         viewModel(loads = { loads++ })
 
-        events.emit(DomainEvent.MeditationCompleted)
+        events.emit(DomainEvent.MeditationCompleted("breathing-4-7-8", 305))
 
         assertEquals(0, loads)
     }

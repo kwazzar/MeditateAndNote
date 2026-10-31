@@ -13,5 +13,26 @@ sealed interface DomainEvent {
     data class NoteCreated(val noteId: String) : DomainEvent
     data class NoteUpdated(val noteId: String) : DomainEvent
     data class NoteDeleted(val noteId: String) : DomainEvent
-    data object MeditationCompleted : DomainEvent
+
+    /** Parameters mirror the iOS analytics payload: built-in id + duration. */
+    data class MeditationCompleted(
+        val meditationId: String,
+        val durationSeconds: Int,
+    ) : DomainEvent
+
+    /** One successful draft generation - published once, not per suggestion. */
+    data object AiDraftGenerated : DomainEvent
+
+    /**
+     * Mirror of Core `AIDraftMetric`: counts, latency and a typed kind - never
+     * prompt text or the model's answer. Published next to the Room telemetry
+     * row, which stays the on-device debug source.
+     */
+    sealed interface AiDraftMetric : DomainEvent {
+        data class GenerationStarted(val warmCold: Boolean) : AiDraftMetric
+        data class GenerationCompleted(val latencyMs: Int, val suggestionCount: Int) : AiDraftMetric
+        data class GenerationFailed(val errorKind: String) : AiDraftMetric
+        data class SuggestionInserted(val index: Int) : AiDraftMetric
+        data class SuggestionRejected(val index: Int) : AiDraftMetric
+    }
 }

@@ -60,7 +60,17 @@ Firebase config is gitignored because this repo is public. Create a Firebase pro
 - iOS: `MeditateAndNote/Resources/GoogleService-Info.plist`
 - Android: `Android/app/google-services.json`
 
-Without them the apps still build/launch; analytics stays disabled/no-op. Enable Google Analytics for the Firebase project and use DebugView (`-FIRAnalyticsDebugEnabled` launch argument on iOS, `adb shell setprop debug.firebase.analytics.app com.mn.android` on Android) to verify events.
+Without them the apps still build/launch; analytics stays disabled/no-op. Enable Google Analytics for the Firebase project and use DebugView (`-FIRDebugEnabled` on iOS, `adb shell setprop debug.firebase.analytics.app com.mn.android` on Android) to verify events.
+
+### BigQuery export
+
+For cohort analysis (meditation duration vs. note creation, the AI draft funnel, `generation_failed` kinds):
+
+1. Firebase Console → Project Settings → Integrations → BigQuery → enable the export (daily batch is enough; streaming costs extra and is not needed).
+2. In the linked GA4 property, raise data retention from the 2-month default to 14 months — otherwise meditation cohorts age out.
+3. Build the funnels in Looker Studio on top of `events_*` instead of hand-written SQL.
+
+Privacy boundary holds there too: events never carry note content, note/book IDs, prompts or model answers (see `AnalyticsEventMapper` on both platforms).
 
 ## Project layout
 
