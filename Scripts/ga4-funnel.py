@@ -17,6 +17,7 @@ Or pass a short-lived token from OAuth Playground (scope: analytics):
 
 Usage:
     Scripts/ga4-funnel.py 561496928 [--days 28] [--token ya29...]
+    Scripts/ga4-funnel.py 561496928 --events   # every ai_draft_metric outcome
 """
 
 import json
@@ -102,11 +103,33 @@ def main() -> int:
     if "--days" in sys.argv:
         days = int(sys.argv[sys.argv.index("--days") + 1])
 
+    date_range = {
+        "startDate": (date.today() - timedelta(days=days)).isoformat(),
+        "endDate": date.today().isoformat(),
+    }
+    if "--events" in sys.argv:
+        return run(
+            f"{API}/properties/{property_id}:runReport",
+            {
+                "dateRanges": [date_range],
+                "dimensions": [
+                    {"name": "eventName"},
+                    {"name": "customEvent:metric_type"},
+                    {"name": "customEvent:error_kind"},
+                    {"name": "customEvent:warm_cold"},
+                ],
+                "metrics": [{"name": "eventCount"}, {"name": "totalUsers"}],
+                "dimensionFilter": {"filter": {
+                    "fieldName": "eventName",
+                    "stringFilter": {"matchType": "EXACT", "value": "ai_draft_metric"},
+                }},
+                "orderBys": [{"metric": {"metricName": "eventCount"}, "desc": True}],
+                "limit": 100,
+            },
+        )
+
     body = {
-        "dateRanges": [{
-            "startDate": (date.today() - timedelta(days=days)).isoformat(),
-            "endDate": date.today().isoformat(),
-        }],
+        "dateRanges": [date_range],
         "funnel": {
             "isOpenFunnel": False,
             "steps": [
@@ -121,8 +144,18 @@ def main() -> int:
         "funnelVisualizationType": "STANDARD_FUNNEL",
     }
 
-    req = request.Request(
+    return run(
         f"{API}/properties/{property_id}:runFunnelReport",
+        body,
+        table_key="funnelTable",
+        empty="no funnel data yet (events need 24-48h to appear, or the custom "
+              "dimension was registered after the events were collected)",
+    )
+
+
+def run(url: str, body: dict, table_key: str = "", empty: str = "no rows") -> int:
+    req = request.Request(
+        url,
         data=json.dumps(body).encode(),
         headers={"Authorization": f"Bearer {token()}",
                  "Content-Type": "application/json"},
@@ -148,14 +181,13 @@ def main() -> int:
             )
         return 1
 
-    table = payload.get("funnelTable", {})
+    table = payload.get(table_key, payload)
     dims = [h.get("name") for h in table.get("dimensionHeaders", [])]
     metrics = [h.get("name") for h in table.get("metricHeaders", [])]
     rows = table.get("rows", [])
 
     if not rows:
-        print("no funnel data yet (events need 24-48h to appear, or the custom "
-              "dimension was registered after the events were collected)")
+        print(empty)
         return 0
 
     print("\t".join(dims + metrics))
