@@ -206,13 +206,77 @@ Debug-збірка з `aiDraftEndpoint=https://meditate-and-note-ai.vercel.app/a
 
 **Автотести:** `connectedDebugAndroidTest` — 50/50 PASS (4 нові в `NoteInsightsContractTest`: провайдер, евристичний fallback, персистентність, порожній стор; 4 нові в `NoteInsightsViewModelTest`: stored → load, евристика, refresh, помилка). iOS: 69 тестів (інсайти + чернетки) — 0 failures.
 
+## Прохід Android Paywall / IAP (дата: 2026-10-20, середовище: Samsung SM-A245F, Android 16, API 36, arm64-v8a; RevenueCat-ключ ще не заданий)
+
+| # | Крок | Очікування | Pass/Fail | Лог/примітка |
+|---|------|-----------|-----------|--------------|
+| 1 | Settings | картка «Upgrade to Pro» + рядок «Unlock all features» | PASS | «One-time and auto-renewing subscriptions» під ним, шеврон праворуч |
+| 2 | Секція «Meditation Animation» | преміум-стиль замикнений | PASS | підпис «Rings 🔒», тап веде на paywall |
+| 3 | Секція «App Theme» | замок біля преміум-тем | PASS | 🔒 біля Liquid Glass / Soft Dawn / Obsidian; Dark Zen — галочка |
+| 4 | Тап «Unlock all features» | відкривається paywall | PASS | маршрут `paywall` у NavHost |
+| 5 | Paywall | та сама структура, що на iOS | PASS | іконка, «Meditate & Note Pro», підзаголовок, 4 бенефіти, Subscribe / Restore / Terms / Privacy / Close |
+| 6 | Без RC-ключа | plans відсутні, явна помилка | PASS | «Subscriptions are unavailable right now.», кнопка Subscribe неактивна, крашів у logcat немає |
+| 7 | Тап «Close» | повернення в Settings | PASS | back-stack popped |
+| 8 | Тап на преміум-тему (Liquid Glass) | paywall, тема НЕ застосовується | PASS | тема лишилась Dark Zen — замок працює |
+| 9 | Регресія: чернетки | квота як раніше | PASS | `AIDraftContractTest` зелений: ентітлемент читається з Kotlin через JNI, free-рівень = 5 генерацій |
+
+**Автотести:** `connectedDebugAndroidTest` — 67/67 PASS (17 нових: 9 у `SubscriptionManagerTest` — cache-first, refresh, publish-on-change, purchase/cancel, restore, forged cache не дає pro, не сконфігурований провайдер не дає pro; 8 у `PaywallViewModelTest` — пакети, unavailable, load failed, purchase granted/cancelled/failed, restore failed, вибір пакета). `assembleDebug` — BUILD SUCCESSFUL.
+
+**Що не перевірено:** реальна покупка (потрібні RC-проєкт, Android-ключ, білд на Play internal testing + license tester — Play Billing не працює для неопублікованих додатків).
+
+## Прохід Android Paywall — пісочниця без Play Console (дата: 2026-10-20, середовище: Android emulator `emulator-5554` / Medium_Phone_API_37.0, API 37, arm64; RC-ключ порожній → debug-пісочниця)
+
+| # | Крок | Очікування | Pass/Fail | Лог/примітка |
+|---|------|-----------|-----------|--------------|
+| 1 | Settings | «Upgrade to Pro» + «Rings 🔒» | PASS | гейти на місці, пісочниця ще не куплена |
+| 2 | Тап «Unlock all features» | paywall | PASS | картка пакета «Premium Lifetime (sandbox)» + «8.99 US$» |
+| 3 | Кнопка Subscribe | активна, з ціною | PASS | «Subscribe 8.99 US$» |
+| 4 | Тап Subscribe | покупка → paywall закривається сам | PASS | `isPremium` → true → `onClose()` ✅ |
+| 5 | Settings після покупки | «Pro Active» | PASS | «Manage your subscription in Google Play» під заголовком |
+| 6 | «Rings 🔒» | замок знято | PASS | підпис «Rings» без замка ✅ |
+| 7 | Теми | замків на преміум-темах немає | PASS | Liquid Glass / Soft Dawn / Obsidian — без 🔒 ✅ |
+
+**Автотести:** `connectedDebugAndroidTest` — 73/73 PASS (5 нових у `SandboxSubscriptionServiceTest`: пакет, покупка дає pro, restore дає pro, статус живий через кеш після рестарту, до покупки нічого не видано; 1 новий у `AIDraftContractTest`: pro-користувач генерує чернетку після вичерпання безкоштовної квоти — ентітлемент іде JNI-мостом у Core-правило).
+
+**Межа пісочниці:** реальний лист Google Play не показується — це заміна провайдера, а не заглушка UI. Справжній платіжний лист перевіряється лише з RC-ключем і Play-треком.
+
+## Прохід Android Paywall — RevenueCat Test Store, справжній RC (дата: 2026-10-20, середовище: Android emulator `emulator-5554` / Medium_Phone_API_37.0, API 37; RC-ключ Test Store `test_…` → справжній RevenueCat SDK)
+
+| # | Крок | Очікування | Pass/Fail | Лог/примітка |
+|---|------|-----------|-----------|--------------|
+| 1 | Старт | SDK сконфігурований RC | PASS | logcat: «Using a Test Store API key», «SimulatedStoreBillingAbstract», offerings 200 |
+| 2 | Settings (чистий стан) | «Upgrade to Pro» + «Rings 🔒» | PASS | новий RC-користувач (`$RCAnonymousID`), гейти на місці |
+| 3 | Тап «Unlock all features» | paywall з продуктом RC | PASS | «Premium Lifetime» / «$8.99» / «Subscribe $8.99» (offering `default`, пакет `$rc_lifetime`, продукт `premium_lifetime`) |
+| 4 | Тап Subscribe | діалог RC Test Store | PASS | «Test Store Purchase» + TEST VALID PURCHASE / TEST FAILED PURCHASE / CANCEL |
+| 5 | TEST VALID PURCHASE | покупка прийнята RC | PASS | `POST /v1/receipts 200`, `verification_result: VERIFIED`, store `test_store` |
+| 6 | Після покупки | paywall закривається сам | PASS | повернення в Settings, «Pro Active» ✅ |
+| 7 | Settings | «Pro Active» + «Manage your subscription in Google Play» | PASS | кеш `subscription.status.v1` = `{"activeEntitlements":["pro"],"productIdentifier":"premium_lifetime"}` |
+| 8 | «Rings 🔒» | замок знято | PASS | підпис «Rings» без замка ✅ |
+| 9 | Теми | преміум-тема обирається | PASS | Liquid Glass ✓ (раніше з pro не знімали замок) |
+
+**Знайдений і виправлений баг:** ентітлемент у RC-проєкті називається **`premium`**, а провайдер шукав `pro` → покупка проходила, але pro не видавався і paywall не закривався. Виправлено: `RevenueCatPurchasesService.PREMIUM_ENTITLEMENT_ID = "premium"` (дзеркалить iOS `Config.proEntitlementID`), доменний `Entitlement.PRO` лишився внутрішньою ідентичністю.
+
+**Автотести:** `connectedDebugAndroidTest` — 73/73 PASS (без RC-ключа → debug-пісочниця).
+
+**Межа Test Store:** не перевіряє справжній Play Billing (реальний платіжний лист, подоврення, grace period, billing retry) — це потребує Play Console ($25), internal testing і license tester. У release-збірці SDK з Test Store-ключем падає навмисно.
+
+## Прохід Android — debug-перемикач «Pro без покупки» (дата: 2026-10-20, середовище: Android emulator `emulator-5554`)
+
+| # | Крок | Очікування | Pass/Fail | Лог/примітка |
+|---|------|-----------|-----------|--------------|
+| 1 | Settings, кінець | dev-картка + тумблер «Pro without purchase» | PASS | рядок у debug-секції, підказка «DEBUG only — skips the paywall» |
+| 2 | Тумблер ON | «Pro Active», замки знято | PASS | «Rings» без 🔒, «Pro Active», преміум-тема Liquid Glass обирається ✓ |
+| 3 | Тумблер OFF | відкат до free + clamp | PASS | «Upgrade to Pro», «Rings 🔒», тема reverted на Dark Zen, замки на преміум-темах назад |
+
+**Автотести:** Android `connectedDebugAndroidTest` — 74/74 PASS (новий `debugBypass_grantsPro_withoutPurchase`: bypass дає `pro`, кеш лишається без підробленого ентітлемента). iOS `SubscriptionManagerTests` — 4/4 PASS (`test_debugBypassGrantsProWithoutPurchase`), `xcodebuild ... -configuration Debug build` — BUILD SUCCEEDED.
+
 ## Історія прогонів
 
 | Прохід | Дата | Результат | Нотатки |
 |--------|------|-----------|----------|
 | 1 | 2026-09-23 | 20 PASS (усі, п.14 та 17–20 закриті 2026-09-25) | QA спринту 4D завершено |
 | 2 | 2026-10-20 | 10 PASS (Android AI Insights) | v1 інсайтів на Android, без LLM |
-| 3 | 2026-10-20 | 12 PASS (Android AI Draft) | v2 чернетки: remote-провайдер, парітет з iOS |
+| 3 | 2026-10-20 | 12 PASS (Android AI Draft) | v2 чернетки: remote-провайдер, паритет з iOS |
 | 4 | 2026-10-20 | 8 PASS (сесія + метрики) | v3: чернетка переживає закриття редактора, телеметрія як в iOS |
 | 5 | 2026-10-20 | 11 PASS (реальний пристрій SM-A245F) | матриця: 42/42 тестів + повний флоу чернетки на справжньому Android |
 | 6 | 2026-10-20 | 8 PASS (проксі Groq) | власний провайдер: проксі на Vercel, ключ у середовищі, ланцюг перевірено end-to-end |
@@ -222,3 +286,6 @@ Debug-збірка з `aiDraftEndpoint=https://meditate-and-note-ai.vercel.app/a
 | 10 | 2026-10-20 | 11 PASS (iOS на проксі + стійкий лічильник) | iOS за замовчуванням на наш проксі (світч + endpoint з xcconfig, ліміт 50), алерт «провайдер не на девайсі», лічильник у Vercel KV переживає деплой |
 | 11 | 2026-10-20 | 5 PASS (Android на реальному девайсі) | SM-A245F через USB: світч увімкнено, endpoint наш, 2 генерації × 5 пропозицій, лічильник у KV зріз: 11 → 12 |
 | 12 | 2026-10-20 | 9 PASS (Android AI Insights, LLM) | інсайти з провайдера + персистентність: refresh → LLM-відповідь, рестарт → збережені інсайти, стан у VM |
+| 13 | 2026-10-20 | 9 PASS (Android Paywall / IAP) | RevenueCat + Play Billing: paywall, гейт тем/анимації, квота чернеток; реальна покупка — без RC-ключа й Play-треку |
+| 14 | 2026-10-20 | 7 PASS (Android Paywall, пісочниця) | безкоштовний тест без Play Console: debug-пісочниця дає pro після «покупки», замки знято, paywall закривається сам |
+| 15 | 2026-10-20 | 9 PASS (Android Paywall, RC Test Store) | справжній RevenueCat без Play Console: Test Store-ключ, діалог RC, покупка → pro → paywall закрився; знайдено баг з ідентифікатором ентітлемента (`premium` ≠ `pro`) |

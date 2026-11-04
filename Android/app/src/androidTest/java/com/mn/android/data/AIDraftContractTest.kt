@@ -2,6 +2,8 @@ package com.mn.android.data
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import com.mn.android.application.subscription.EntitlementSource
+import com.mn.android.application.subscription.SubscriptionScope
 import com.mn.android.infrastructure.persistence.local.ai.AIDraftMetrics
 import com.mn.android.infrastructure.persistence.local.ai.MeditateDatabase
 import java.util.UUID
@@ -52,6 +54,9 @@ class AIDraftContractTest {
     fun tearDown() {
         AIDraftProvider.transport = originalTransport
         AIDraftQuotaCounter.reset()
+        // A pro entitlement from the quota test must not leak into the next
+        // one - the free allowance has to start from zero again.
+        SubscriptionScope.reset(InstrumentationRegistry.getInstrumentation().targetContext)
     }
 
     @Test
@@ -134,6 +139,29 @@ class AIDraftContractTest {
 
         assertFalse(result.ok)
         assertEquals("freeQuotaExhausted", result.error)
+    }
+
+    @Test
+    fun start_succeeds_afterTheFreeAllowance_whenTheUserIsPro() = runBlocking {
+        // The rule stays in Core (`AIDraftQuota.allowsDraft`); the entitlement
+        // is Kotlin's state and reaches the bridge through
+        // `EntitlementSource` - the same division of labour as the counter.
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        EntitlementSource.configure(context)
+        val manager = SubscriptionScope.manager(context)
+        val product = manager.offerings().first().packages.first()
+        manager.purchase(product)
+
+        repeat(FREE_LIMIT) {
+            val result = AIDraftSource.start(UUID.randomUUID().toString(), "", "a calm morning")
+            assertTrue(result.error ?: "", result.ok)
+        }
+
+        // The allowance is used up, but a pro user is not limited.
+        val result = AIDraftSource.start(UUID.randomUUID().toString(), "", "a calm morning")
+
+        assertTrue(result.error ?: "", result.ok)
+        assertNull(result.error)
     }
 
     @Test

@@ -12,6 +12,12 @@ plugins {
 // gradle.properties (or -PaiDraftEndpoint=...) after the proxy is deployed.
 val aiDraftEndpoint = (project.findProperty("aiDraftEndpoint") as String?)?.trim().orEmpty()
 
+// RevenueCat public SDK key. Not a secret (the same key ships inside the
+// app), but it is per-project, so it stays in gradle.properties and can be
+// overridden with -PrevenueCatApiKey=... An empty key leaves the SDK
+// unconfigured: the paywall then reports "unavailable" instead of crashing.
+val revenueCatApiKey = (project.findProperty("revenueCatApiKey") as String?)?.trim().orEmpty()
+
 android {
     namespace = "com.mn.android"
     compileSdk = 36
@@ -30,6 +36,7 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField("String", "AI_DRAFT_ENDPOINT", "\"$aiDraftEndpoint\"")
+        buildConfigField("String", "REVENUECAT_API_KEY", "\"$revenueCatApiKey\"")
     }
 
     compileOptions {
@@ -126,6 +133,11 @@ dependencies {
     implementation("androidx.room:room-runtime:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
     ksp("androidx.room:room-compiler:2.6.1")
+    // RevenueCat wraps Google Play Billing, so the Play Billing client
+    // itself is not a separate dependency. purchases-ui is deliberately not
+    // added: the paywall is our own Compose screen, not a RevenueCat-hosted
+    // one (same decision as iOS, which uses a custom SwiftUI paywall).
+    implementation("com.revenuecat.purchases:purchases:10.15.1")
     // Testing dependencies
     androidTestImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test:core:1.5.0")

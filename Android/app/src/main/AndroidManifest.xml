@@ -11,6 +11,9 @@
     <!-- The AI draft provider is a remote OpenAI-compatible endpoint the user
          configures; the request goes out over the network. -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Google Play Billing. Without it the Play Console refuses to create
+         in-app products, and the billing client reports BILLING_UNAVAILABLE. -->
+    <uses-permission android:name="com.android.vending.BILLING" />
 
     <application
         android:allowBackup="false"

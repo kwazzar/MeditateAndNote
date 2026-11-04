@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.mn.android.application.subscription.SubscriptionScope
 import com.mn.android.domain.theme.model.MainTheme
 import com.mn.android.infrastructure.persistence.local.settings.MnThemeStore
 import kotlin.random.Random
@@ -34,11 +35,26 @@ val LocalMnThemeManager = staticCompositionLocalOf<MnThemeManager> {
 
 /** Holds the selected [MainTheme]; mirrors iOS `ThemeManager`. */
 @Stable
-class MnThemeManager(initial: MainTheme) {
+class MnThemeManager(
+    initial: MainTheme,
+    /** Whether the `pro` entitlement is active. No provider → nothing is locked. */
+    private val isPro: () -> Boolean = { true },
+) {
     var theme: MainTheme by mutableStateOf(initial)
         private set
 
+    /**
+     * True when the theme needs premium and the entitlement isn't active.
+     * Mirrors iOS `ThemeManager.isLocked`.
+     */
+    fun isLocked(theme: MainTheme): Boolean = theme.isPremium && !isPro()
+
+    /**
+     * The only sanctioned mutation path: locked themes are refused (the UI
+     * routes the tap to the paywall instead).
+     */
     fun select(theme: MainTheme) {
+        if (isLocked(theme)) return
         this.theme = theme
         MnThemeStore.selected = theme
     }
@@ -49,7 +65,9 @@ fun rememberMnThemeManager(): MnThemeManager {
     val context = LocalContext.current
     return remember {
         MnThemeStore.configure(context)
-        MnThemeManager(MnThemeStore.selected)
+        MnThemeManager(MnThemeStore.selected) {
+            SubscriptionScope.manager(context).isPro
+        }
     }
 }
 
