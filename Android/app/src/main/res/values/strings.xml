@@ -154,6 +154,7 @@
     <string name="number_format">%1$d</string>
     <string name="load_failed">Failed: %1$s</string>
 
+<<<<<<< HEAD
     <!-- Reading tab + reader -->
     <string name="reading">Reading</string>
     <string name="library">Library</string>
@@ -188,4 +189,34 @@
     <string name="reader_loading">Opening book…</string>
     <string name="reader_go_to_page">Go to page</string>
     <string name="go">Go</string>
+=======
+    <!-- Paywall (PaywallView) -->
+    <string name="paywall_title">Meditate &amp; Note Pro</string>
+    <string name="paywall_subtitle">Unlock everything on your journey</string>
+    <string name="paywall_benefit_themes">All premium themes</string>
+    <string name="paywall_benefit_ai">AI writing support</string>
+    <string name="paywall_benefit_insights">Detailed progress insights</string>
+    <string name="paywall_benefit_storage">Unlimited note storage</string>
+    <string name="paywall_subscribe">Subscribe</string>
+    <string name="paywall_subscribe_price">Subscribe %1$s</string>
+    <string name="paywall_restore">Restore Purchase</string>
+    <string name="paywall_terms">Terms</string>
+    <string name="paywall_privacy">Privacy Policy</string>
+    <string name="paywall_close">Close</string>
+    <string name="paywall_error_unavailable">Subscriptions are unavailable right now.</string>
+    <string name="paywall_error_load">Couldn\'t load plans. Please try again.</string>
+    <string name="paywall_error_purchase">Purchase failed. Please try again.</string>
+    <string name="paywall_error_restore">Restore failed. Please try again.</string>
+
+    <!-- Settings subscription section (SubscriptionSection) -->
+    <string name="subscription_upgrade">Upgrade to Pro</string>
+    <string name="subscription_pro_active">Pro Active</string>
+    <string name="subscription_unlock_all">Unlock all features</string>
+    <string name="subscription_plans_hint">One-time and auto-renewing subscriptions</string>
+    <string name="subscription_manage_hint">Manage your subscription in Google Play</string>
+
+    <!-- Debug-only paywall bypass (debug builds only) -->
+    <string name="paywall_bypass">Pro without purchase</string>
+    <string name="paywall_bypass_hint">DEBUG only — skips the paywall</string>
+>>>>>>> feature-paywall-iap-android
 </resources>

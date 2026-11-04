@@ -199,10 +199,18 @@ Two groups. No RevenueCat in the test target — everything drives the mock
 
 - Existing routing tests updated for the new `DomainEvent` case.
 
-## Android follow-up (documented only)
+## Android follow-up (implemented 2026-10-20)
 
-- Same entitlement id `pro`; Kotlin `purchases-android` adapter mirroring the
-  Domain protocol shape. Not built in this phase.
+- Same entitlement id `pro`; the Kotlin `purchases-android` adapter mirrors the
+  Domain protocol shape. Built: `com.mn.android.domain.subscription` (1:1 mirror
+  of Core's `Subscriptions`), `data/RevenueCatPurchasesService` (the only file
+  importing the SDK), `application/subscription/SubscriptionManager`,
+  `presentation/paywall` (Compose paywall) and the Settings "Upgrade to Pro"
+  card. The subscription domain is a Kotlin mirror, not a JNI port: Kotlin
+  cannot implement a Swift protocol, and Core's `Subscription*` silhouette is
+  deliberately excluded from the jextract bindings
+  (`Scripts/build-android.sh`). The shared parts are the entitlement id and
+  Core's `AIDraftQuota.allowsDraft` rule. See `ANDROID_PORT_PLAN.md` §3.4.
 
 ## Risks / open items
 

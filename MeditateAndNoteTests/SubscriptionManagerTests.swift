@@ -54,4 +54,22 @@ final class SubscriptionManagerTests: XCTestCase {
 
         XCTAssertFalse(manager.isPremium)
     }
+
+    func test_debugBypassGrantsProWithoutPurchase() async {
+        let service = MockSubscriptionService()
+        service.nextStatus = .none
+        let cache = MemorySubscriptionCache(.none)
+        let manager = SubscriptionManager(service: service, cache: cache, eventBus: DomainEventBus())
+
+        XCTAssertFalse(manager.isPremium)
+
+        manager.setDebugBypassPro(true)
+        XCTAssertTrue(manager.isPremium)
+        XCTAssertTrue(manager.isActive(.pro))
+        // The forged entitlement never reaches the cache.
+        XCTAssertEqual(cache.load(), .none)
+
+        manager.setDebugBypassPro(false)
+        XCTAssertFalse(manager.isPremium)
+    }
 }

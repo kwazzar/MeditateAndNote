@@ -25,6 +25,15 @@ enum class MainTheme(
 
     val isDark: Boolean get() = this == DARK_ZEN || this == OBSIDIAN
 
+    /**
+     * `MainTheme.isPremium` on iOS: `darkZen` (default) and `breathing` are
+     * free; the rest need the `pro` entitlement. The rule lives in the app
+     * layer on both platforms - iOS keeps it in `MainTheme.swift`, here in
+     * the mirror of the same file.
+     */
+    val isPremium: Boolean
+        get() = this == LIQUID_GLASS || this == SOFT_DAWN || this == OBSIDIAN
+
     companion object {
         /** `ThemeManager` key is `selectedMainTheme`; unknown values fall back to darkZen. */
         fun fromStorageKey(key: String?): MainTheme =

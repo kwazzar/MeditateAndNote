@@ -8,22 +8,27 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Air
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material.icons.filled.VolumeDown
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material.icons.filled.Waves
 import androidx.compose.material.icons.filled.WbTwilight
+import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -53,10 +58,76 @@ import com.mn.android.presentation.theme.ui.LocalMnThemeManager
 import com.mn.android.presentation.theme.ui.MnTheme
 import com.mn.android.presentation.theme.ui.MnVolumeSlider
 
+// MARK: - Subscription — iOS SubscriptionSection.
+
+/**
+ * The "Upgrade to Pro" card, the way in to the paywall.
+ *
+ * Mirrors iOS `SubscriptionSection`: a header that says whether the
+ * entitlement is active, and - while it is not - a row that opens the
+ * paywall.
+ */
+@Composable
+internal fun SubscriptionSection(isPro: Boolean, onShowPaywall: () -> Unit) {
+    SectionCard {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                if (isPro) Icons.Filled.Verified else Icons.Filled.WorkspacePremium,
+                contentDescription = null,
+                tint = MnTheme.streakActiveMeditation,
+                modifier = Modifier.size(15.dp),
+            )
+            Spacer(Modifier.width(8.dp))
+            Text(
+                stringResource(
+                    if (isPro) R.string.subscription_pro_active else R.string.subscription_upgrade
+                ),
+                color = MnTheme.textPrimary,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+            )
+        }
+
+        if (!isPro) {
+            Spacer(Modifier.height(8.dp))
+            Row(
+                Modifier.fillMaxWidth().clickable(onClick = onShowPaywall),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        stringResource(R.string.subscription_unlock_all),
+                        color = MnTheme.textPrimary,
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                    Text(
+                        stringResource(R.string.subscription_plans_hint),
+                        color = MnTheme.textSecondary,
+                        style = MaterialTheme.typography.labelSmall,
+                    )
+                }
+                Icon(
+                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = MnTheme.textSecondary,
+                    modifier = Modifier.size(16.dp),
+                )
+            }
+        } else {
+            Spacer(Modifier.height(4.dp))
+            Text(
+                stringResource(R.string.subscription_manage_hint),
+                color = MnTheme.textSecondary,
+                style = MaterialTheme.typography.labelSmall,
+            )
+        }
+    }
+}
+
 // MARK: - Meditation Animation — iOS animationSection: segmented Rings/Path.
 
 @Composable
-internal fun AnimationSection() {
+internal fun AnimationSection(isPro: Boolean, onShowPaywall: () -> Unit) {
     SectionCard {
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
             SectionHeader(stringResource(R.string.meditation_animation), Icons.Filled.Waves)
@@ -70,8 +141,15 @@ internal fun AnimationSection() {
                 listOf(AnimationSettings.RINGS to R.string.animation_rings,
                        AnimationSettings.PATH to R.string.animation_path).forEach { (option, label) ->
                     val selected = option == animationStyle
+                    // iOS: a locked style is labelled with a lock and routes
+                    // the tap to the paywall instead of selecting it.
+                    val locked = AnimationSettings.isPremium(option) && !isPro
                     Text(
-                        stringResource(label),
+                        if (locked) {
+                            stringResource(label) + LOCK_MARK
+                        } else {
+                            stringResource(label)
+                        },
                         color = if (selected) MnTheme.buttonText else MnTheme.textSecondary,
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.SemiBold,
@@ -83,8 +161,12 @@ internal fun AnimationSection() {
                                 RoundedCornerShape(6.dp),
                             )
                             .clickable {
-                                animationStyle = option
-                                AnimationSettings.style = option
+                                if (locked) {
+                                    onShowPaywall()
+                                } else {
+                                    animationStyle = option
+                                    AnimationSettings.style = option
+                                }
                             }
                             .padding(vertical = 6.dp),
                     )
@@ -97,17 +179,20 @@ internal fun AnimationSection() {
 // MARK: - App Theme — iOS themeSection: one row per MainTheme.
 
 @Composable
-internal fun ThemeSection() {
+internal fun ThemeSection(isPro: Boolean, onShowPaywall: () -> Unit) {
     SectionCard {
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             SectionHeader(stringResource(R.string.app_theme), Icons.Filled.Palette)
             val themeManager = LocalMnThemeManager.current
             MainTheme.entries.forEach { theme ->
                 val selected = theme == themeManager.theme
+                val locked = theme.isPremium && !isPro
                 Row(
                     Modifier
                         .fillMaxWidth()
-                        .clickable { themeManager.select(theme) }
+                        .clickable {
+                            if (locked) onShowPaywall() else themeManager.select(theme)
+                        }
                         .padding(vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -134,12 +219,22 @@ internal fun ThemeSection() {
                             tint = MnTheme.streakActiveMeditation,
                             modifier = Modifier.size(14.dp),
                         )
+                    } else if (locked) {
+                        Icon(
+                            Icons.Filled.Lock,
+                            contentDescription = null,
+                            tint = MnTheme.textSecondary,
+                            modifier = Modifier.size(12.dp),
+                        )
                     }
                 }
             }
         }
     }
 }
+
+/** The lock the iOS picker puts in front of a premium animation style. */
+private const val LOCK_MARK = " 🔒"
 
 // MARK: - Meditation Sound Volume — iOS volumeSection.
 

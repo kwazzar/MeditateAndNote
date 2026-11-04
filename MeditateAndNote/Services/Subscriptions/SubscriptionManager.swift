@@ -23,13 +23,24 @@ final class SubscriptionManager: SubscriptionProvidable, SubscriptionManageable 
 
     private(set) var status: SubscriptionStatus
 
+    /// What the provider last reported, without the debug bypass.
+    private var providerStatus: SubscriptionStatus
+
+    #if DEBUG
+    /// Debug-only switch: the app behaves as if `pro` were active, without a
+    /// purchase. Never compiled into a release build.
+    private(set) var isDebugBypassPro = false
+    #endif
+
     var isPremium: Bool { isActive(.pro) }
 
     init(service: any SubscriptionManaging, cache: any SubscriptionCache, eventBus: any DomainEventPublisher) {
         self.service = service
         self.cache = cache
         self.eventBus = eventBus
-        self.status = service.isConfigured ? (cache.load() ?? .none) : .none
+        let initial = service.isConfigured ? (cache.load() ?? .none) : .none
+        self.providerStatus = initial
+        self.status = initial
     }
 
     func isActive(_ entitlement: Entitlement) -> Bool {
@@ -70,9 +81,37 @@ final class SubscriptionManager: SubscriptionProvidable, SubscriptionManageable 
     }
 
     private func apply(_ newStatus: SubscriptionStatus) {
-        guard newStatus != status else { return }
-        status = newStatus
+        guard newStatus != providerStatus else { return }
+        providerStatus = newStatus
         cache.save(newStatus)
+        publish()
         eventBus.publish(.subscriptionChanged(newStatus))
     }
+
+    /// The status the app sees: the provider's, plus `pro` while the debug
+    /// bypass is on. The cache only ever holds the provider's status, so a
+    /// debug session never leaves a forged entitlement behind.
+    private func publish() {
+        #if DEBUG
+        if isDebugBypassPro {
+            status = SubscriptionStatus(
+                activeEntitlements: providerStatus.activeEntitlements.union([.pro]),
+                expirationDate: providerStatus.expirationDate,
+                willRenew: providerStatus.willRenew,
+                productIdentifier: providerStatus.productIdentifier
+            )
+            return
+        }
+        #endif
+        status = providerStatus
+    }
+
+    #if DEBUG
+    /// Debug-only: treat the user as pro without a purchase.
+    func setDebugBypassPro(_ enabled: Bool) {
+        guard enabled != isDebugBypassPro else { return }
+        isDebugBypassPro = enabled
+        publish()
+    }
+    #endif
 }

@@ -23,7 +23,7 @@ while fixing them. The deltas that mattered are listed below.
 | 08 | Notes list | `08-notes.png` | `08-notes.png` | re-shot — the old Android capture was the launcher; the Add Note capsule now sits right above the tab bar |
 | 09 | Streak detail | `09-streak-detail.png` … `09d-streak-detail-bottom.png` | `09-streak-detail.png`, `09b`…`09d` | |
 | 10 | Streak day sheet | `10-streak-day-sheet.png` | `10-streak-day-sheet.png` | |
-| 11 | Paywall | `11-paywall.png` | — | no IAP on Android |
+| 11 | Paywall | `11-paywall.png` | `21-paywall.png` | same layout, same offer text; the Android shot runs against the real RevenueCat SDK with a Test Store key, so the package is the RC product "Premium Lifetime" at "$8.99" |
 | 12 | Onboarding 1–3 | `12-onboarding-{1,2,3}.png` | `12-onboarding-{1,2,3}.png` | |
 | 13 | Sound sheet | `13-sound-sheet.png` | `13-sound-sheet.png` | visual only, see gaps |
 | 14 | Notes list — AI insights | — | `14-notes-insights.png` | the same section as iOS: top themes plus the three freshest per-note summaries. The analysis runs through the hosted provider on a refresh, the heuristic analyzer is the fallback |
@@ -163,12 +163,36 @@ while fixing them. The deltas that mattered are listed below.
 
 ## Known gaps
 
+<<<<<<< HEAD
 - **Paywall / Pro locks** — no in-app purchase on Android; the entry points and lock
   badges are absent rather than dead.
 - **AI draft bar** — resolved: the remote provider path landed on Android
   (`AIDraftSource`/`AIDraftProvider` + hosted Vercel proxy + live QA on
   SM-A245F, 2026-10-20). Android runs the remote LLM through the hosted proxy;
   iOS Foundation Models on-device stays the reference.
+=======
+- **Paywall / Pro locks** — ported: the paywall is a Compose screen mirroring the iOS
+  one, the entitlement comes from RevenueCat (which wraps Play Billing), and the
+  Pro locks (premium themes, the Rings animation style, the free AI-draft
+  allowance) are in place. Verified end-to-end against the real RevenueCat SDK
+  with a Test Store key (no Play Console account): the paywall shows the RC
+  product, RC's test dialog simulates the purchase, and the gates open. A debug
+  build without a RevenueCat key runs a local sandbox provider instead, so the
+  whole flow (paywall → buy → gates open) can be tested with no accounts at all.
+  What still needs a Play Console account ($25, internal testing, license
+  tester) is the real Play Billing sheet: renewals, grace periods and billing
+  retries.   Note the dashboard entitlement is `premium`, mapped onto the domain's
+  `Entitlement.PRO` by `RevenueCatPurchasesService.PREMIUM_ENTITLEMENT_ID`
+  (iOS reads the same id from `Config.proEntitlementID`).
+  Both platforms end their Settings screen with a debug-only switch, "Pro
+  without purchase": it opens the paid gates without a purchase so the pro
+  features can be checked without buying anything. It lives in the
+  application layer (`SubscriptionManager.setDebugBypassPro`), the provider
+  stays the authority, the cache never holds the forged entitlement, and the
+  code is compiled out of release builds (`#if DEBUG` / `BuildConfig.DEBUG`).
+- **AI draft bar** — iOS suggestions come from Foundation Models; the only provider
+  Android could use is `DisabledAIDraftService`, so the sparkle entry point is hidden.
+>>>>>>> feature-paywall-iap-android
 - **Note insights** — ported: the same panel, the same state holder
   (`NoteInsightsViewModel`), the same prompt and parsing rules (Core's
   `NoteInsightRemoteProtocol`, which iOS' on-device analyzer also reads). The

@@ -202,6 +202,28 @@ private extension SettingsView {
                 .padding(.vertical, 8)
             }
             .buttonStyle(PlainButtonStyle())
+
+            Divider()
+                .background(themeManager.current.dividerColor)
+
+            Toggle(isOn: Binding(
+                get: { container.subscriptionManager.isDebugBypassPro },
+                set: { container.subscriptionManager.setDebugBypassPro($0) }
+            )) {
+                HStack(spacing: 12) {
+                    Image(systemName: "crown.fill")
+                        .foregroundColor(themeManager.current.streakActiveMeditation)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Pro without purchase")
+                            .font(.body)
+                            .foregroundColor(themeManager.current.textPrimary)
+                        Text("DEBUG only — skips the paywall")
+                            .font(.caption)
+                            .foregroundColor(themeManager.current.textSecondary)
+                    }
+                }
+            }
+            .tint(themeManager.current.streakActiveMeditation)
         }
         .padding(20)
         .background(themeManager.current.editorBackground)

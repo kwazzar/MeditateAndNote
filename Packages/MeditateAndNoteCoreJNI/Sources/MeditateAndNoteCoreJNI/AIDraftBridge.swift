@@ -25,6 +25,10 @@ import SwiftJavaJNICore
 @JavaClass("com.mn.android.data.AIDraftProvider")
 public class AIDraftProvider: JavaObject {}
 
+/// Kotlin's subscription state: the `pro` entitlement.
+@JavaClass("com.mn.android.application.subscription.EntitlementSource")
+public class EntitlementSource: JavaObject {}
+
 private let draftLogger = Logger(subsystem: "com.mn.core", category: "AIDraft")
 
 // MARK: - Commands
@@ -153,8 +157,10 @@ public func Java_com_mn_android_data_AIDraftSource_discardSession(
 
 /// The generation pipeline: prompt, quota gate, provider call, parse, fulfil.
 ///
-/// Android has no entitlement yet, so every user is on the free tier and the
-/// lifetime allowance applies — the same rule Core keeps for iOS.
+/// The quota gate is Core's rule (`AIDraftQuota.allowsDraft`); the
+/// entitlement it needs is Kotlin's state, read through
+/// `EntitlementSource` - the same division of labour as the quota counter
+/// below: Kotlin owns the state, Core owns the rule.
 private func startDraft(instruction: String, context: String, noteId: String) -> String {
     guard let uuid = UUID(uuidString: noteId) else {
         return failure(.noContext)
@@ -175,7 +181,7 @@ private func startDraft(instruction: String, context: String, noteId: String) ->
         )
         : prompt
 
-    guard AIDraftQuota.allowsDraft(isPremium: false, used: quota.used()) else {
+    guard AIDraftQuota.allowsDraft(isPremium: isPremium(), used: quota.used()) else {
         draftLogger.info("free draft quota exhausted")
         return failure(.freeQuotaExhausted)
     }
@@ -284,6 +290,17 @@ private func mutateSession(
 }
 
 // MARK: - Kotlin calls
+
+/// Whether the user holds the `pro` entitlement.
+///
+/// Kotlin owns the subscription state, so it answers the question. The
+/// value crosses as a string ("true" / "false") - the JNI bridge exchanges
+/// strings, so nothing has to be mapped across the boundary.
+private func isPremium() -> Bool {
+    let value = (try? JavaClass<EntitlementSource>()
+        .dynamicJavaStaticMethodCall(methodName: "isPro", resultType: String.self)) ?? "false"
+    return value == "true"
+}
 
 // Internal, not private: the insights bridge talks to the same provider
 // through the same two helpers.

@@ -1139,7 +1139,7 @@ iOS: build зелений, **478 тестів** зелені (без нових 
 | Аспект | iOS | Android v1 | Чому |
 |---|---|---|---|
 | Збереження | `NoteInsightStore` (CoreData) | без збереження, перерахунок на demand | iOS-аналізатор — LLM (дорого), Android — keyword-лічильник (дешево) |
-| Premium-гейт | `isEntitled` (`.pro`) | без гейту | на Android немає billing/RevenueCat — гейт технічно неможливий |
+| Premium-гейт | `isEntitled` (`.pro`) | гейт є (з 2026-10-20, RevenueCat) | див. 3.4 |
 | Дебаунс | 30 с / throttle 60 с | без дебаунсу | перерахунок лише на resume + refresh |
 
 **Перевірено**: `assembleDebug` зелений; 31 інструментований тест зелений (3 нові); ручний QA на `emulator-5554` (Medium_Phone_API_37.0) — секція рендериться, refresh працює, collapse працює; iOS `NoteInsightTests` — 14 зелених (2 нові на `analyzeSync`).
@@ -1176,7 +1176,7 @@ iOS: build зелений, **478 тестів** зелені (без нових 
 |---|---|---|---|
 | Провайдер | on-device FoundationModels + remote fallback | лише remote | on-device на Android = ML Kit/AICore, недоступний на емуляторі й без реального пристрою |
 | Ключ | Keychain | Android Keystore (AES-GCM) | платформний аналог Keychain |
-| Premium | `.pro` → необмежено | усі на free-рівні (5 генерацій) | на Android ще немає billing — гейт технічно неможливий |
+| Premium | `.pro` → необмежено | безліміт для pro, 5 для free | гейт на RevenueCat (3.4) |
 | Сесія | персиститься | живе в редакторі | сесія не переживає закриття екрана; персистентність — окрема задача |
 | Денний ліміт | `dailyGenerationLimit` (5/день) | відсутній | ключ належить користувачеві, витрачає він сам; денний ліміт — це захист бюджету застосунку, а не користувача |
 | Метрики | `DomainEvent` → `AIDraftMetricStore` | лише лічильник квоти | `DomainEvent` на Android ще не портований |
@@ -1269,7 +1269,32 @@ protocol StructuredAIWritingService: AIWritingService {
 - [x] ~~`AIWritingViewModel` реагує на `AICapabilityLevel`~~ — не застосовується: Android `AIDraftBar` працює через `AIDraftSource`.
 - [x] ~~UX для кожного рівня~~ — замінено: remote provider + `RemoteDraftConsent` + квота. UX для on-device визначити разом з AICore, коли з'явиться пристрій.
 
+### 3.4 Paywall / IAP: RevenueCat + Play Billing ✅ (2026-10-20)
+
+**D1 — домен підписки на Android — Kotlin-дзеркало Core, а не JNI.** Kotlin не може реалізувати Swift-протокол, а весь силует `Subscription*` вирізаний з jextract-біндінгів (`Scripts/build-android.sh`: параметр `package` — Java-keyword, `@MainActor`-методи, `async throws`). Тому `com.mn.android.domain.subscription` дзеркалить `Core/Subscriptions` 1:1: `Entitlement`, `SubscriptionStatus`, `SubscriptionOffering`/`SubscriptionPackage`, `SubscriptionManaging`, `SubscriptionOperationError`, `SubscriptionCache`. Спільними лишаються **правило** `AIDraftQuota.allowsDraft` (живе в Core) та id ентітлемента `pro`. Єдине правило, продубльоване в Kotlin, — «Rings платний» (`AnimationSettings.isPremium`): jextract не генерує getter для обчислюваної властивості enum-у (`BreathingAnimationStyle.isPremium` у Core), тож значення дзеркалиться в Android-шарі з посиланням на Core.
+
+**D2 — RevenueCat Android SDK 10.15.1** (`com.revenuecat.purchases:purchases`) — він же обгортає Play Billing, окремий `billing-ktx` не потрібен. `purchases-ui` не додано: paywall свій (Compose), як на iOS. Ключ — публічний SDK-ключ у `Android/gradle.properties` (`revenueCatApiKey=`) → `BuildConfig.REVENUECAT_API_KEY`; порожній ключ = SDK не сконфігурований → paywall показує «subscriptions unavailable», застосунок лишається на free-рівні (без краша).
+
+**D3 — шари.** `domain/subscription` (VOs + контракт) → `data/RevenueCatPurchasesService` (єдиний файл з `import com.revenuecat.purchases`; мапить `CustomerInfo`/`Offering`/`Package` у VO) + `data/SharedPrefsSubscriptionCache` (кеш — UX fast-path, не авторитет) → `application/subscription/SubscriptionManager` (`StateFlow` статусу, `isPro`, cache-first, publish-on-change) → `presentation/paywall` (`PaywallScreen` + `PaywallViewModel`) + `SubscriptionSection` у Settings + маршрут `paywall` у NavHost.
+
+**D4 — гейти (паритет з iOS).** Преміум-теми (Liquid Glass / Soft Dawn / Obsidian) і анімація Rings — замкнені: тап веде на paywall, у рядку замок (`Rings 🔒`, іконка замка біля теми). Втрата ентітлемента повертає Dark Zen / Path — як `clampCurrentIfLocked` на iOS. Для pro AI-чернетки безлімітні: правило лишається в Core, а ентітлемент іде в Swift-міст через `EntitlementSource` (Swift → Kotlin, та сама схема, що й лічильник квоти).
+
+**D5 — що лишилось на потім.** Реальна покупка перевіряється тільки з RC-проектом, Android-ключем і білдом на Play internal testing + license tester: Play Billing не працює для неопублікованих додатків, а на емуляторі без Play-акаунта — `BILLING_UNAVAILABLE`.
+
+**D5a — безкоштовний шлях через RevenueCat Test Store (ПЕРЕВІРЕНО).** Test Store живе на рівні проєкту і не потребує підключення жодного стора («without connecting to any app store or payment provider»), тому реальний Google Play app config з package name + service credentials тут **не потрібен**. Працює так: у RC-проєкті вже є Test Store-продукт `premium_lifetime` («Premium Lifetime», $8.99) в offering `default`, пакет `$rc_lifetime`. Ключ Test Store — рядок з префіксом `test_...` (один ключ на проєкт, окремий `goog_...`/`appl_...` не потрібні). Вставляється через `-PrevenueCatApiKey=test_...` (або в `Android/gradle.properties`), далі перевстановлення → paywall показує «Premium Lifetime $8.99» → Subscribe → RC показує локальний діалог «Test Store Purchase» з кнопками TEST VALID PURCHASE / TEST FAILED PURCHASE / CANCEL → успішна покупка → paywall закривається сам, Settings показує «Pro Active», замки знімаються. Код міняти не треба; наш SDK 10.15.1 ≥ мінімум 9.9.0. Важливо: у release-збірці SDK з Test Store-ключем **падає навмисно** → ключ лише для debug (тоді локальна пісочниця D6 не потрібна).
+
+**D5a-1 — ентітлемент у дашборді називається `premium`, а не `pro`.** Це коштувало один неочевидний баг: покупка проходила (receipt 200), але `pro` не видавався, бо провайдер шукав `entitlements.active["pro"]`, а в RC-проєкті ентітлемент `premium`. Доменний тип лишається `Entitlement.PRO` (id `pro` — внутрішня ідентичність, з нею працює кеш), а ідентифікатор провайдера винесено в `RevenueCatPurchasesService.PREMIUM_ENTITLEMENT_ID = "premium"` — дзеркалить iOS `Config.proEntitlementID = "premium"`. Якщо ентітлемент у RC перейменувати — треба міняти обидва місця одразу.
+
+**D5a-2 — спільний Test Store на обох платформах.** Ключ Test Store проєктний (`test_...`), тож одна й та сама RC-проєкт обслуговує iOS і Android: Android через `-PrevenueCatApiKey=test_...`, iOS через `MeditateAndNote/Config/Debug.local.xcconfig` (gitignored, підхоплюється `#include?` у `Debug.xcconfig`). Перевірено 2026-10-20: iOS-збірка (`xcodebuild ... -configuration Debug`) БІЛД СУЦІДНИЙ, ключ у `Info.plist` підставився, на симуляторі SDK логує «Using a Test Store API key», `CustomerInfo` приходить із того самого проєкту. Тобто обидві платформи беруть один продукт (`premium_lifetime`) і один ентітлемент (`premium`) — паритет на рівні RC-проєкту.
+
+**D5b — коли з'явиться Play-акаунт.** Додавання саме *Google Play* app config у RC вимагає App name + **Package name** (`com.mn.android`) + Service Credentials, і RC валідує package name через Google Play Developer API — тобто потрібен Play Console з хоча б одним завантаженим білдом, інакше «RevenueCat can't find your package name». Тільки після цього — реальні Play-продукти, `goog_...`-ключ, license tester, internal testing. Межа Test Store: не перевіряє справжній Play Billing (реальний платіж, подовження, grace period, billing retry).
+
+**D6 — безкоштовний тест без Play Console.** Debug-збірка без RC-ключа підминяє провайдера на `SandboxSubscriptionService` (`data/SandboxSubscriptionService.kt`): одна фейкова пакет-«покупка» («Premium Lifetime (sandbox)», 8.99 US$), покупка одразу дає `pro`, restore теж. Статус живе в тому самому кеші, що й справжня покупка. Тобто весь app-флоу (paywall → покупка → paywall закривається → замки знято → квота чернеток безлімітна) перевіряється безкоштовно, без акаунта Play за $25 і без RC-проекту. У release-збірці пісочниці немає: без ключа там paywall пише «subscriptions unavailable» — реальний продукт ніколи не видається безкоштовно. Провайдера обирає `SubscriptionScope.service(context)`.
+
+**D7 — debug-перемикач «Pro без покупки»** (обидві платформи, лише в debug-збірках; у кінці Settings, у dev-секції). Рахується в application-шарі, у `SubscriptionManager`: провайдер лишається єдиним авторитетом, підміняється лише **публікований** статус (кеш ніколи не зберігає підроблений `pro`). Стан — тільки в пам'яті, після перезапуску вимкнений. iOS: `#if DEBUG` + `SubscriptionManager.setDebugBypassPro(_:)` + `Toggle` у `SettingsView.devSection`; Android: `SubscriptionManager.setDebugBypassPro(enabled)` + `Switch` у debug-картці `SettingsScreen`. Ефект: «Pro Active», замки знято, преміум-теми й Rings доступні, квота чернеток безлімітна; вимкнення — відкат до free і clamp теми на Dark Zen.
+
 ---
+
 
 ## Фаза 4 — Presentation: Compose з нуля
 

@@ -25,6 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.WorkspacePremium
 
 import androidx.compose.material.icons.filled.Notifications
 
@@ -36,6 +37,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
@@ -49,6 +51,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -63,7 +66,9 @@ import androidx.core.content.ContextCompat
 
 import com.mn.android.R
 
+import com.mn.android.application.subscription.SubscriptionScope
 import com.mn.android.data.SharedPrefsReminderSettingsStore
+import com.mn.android.domain.subscription.Entitlement
 
 import com.mn.android.infrastructure.platform.notifications.ReminderScheduler
 import com.mn.android.presentation.theme.ui.MnBackButton
@@ -80,8 +85,16 @@ private val weekdaySymbols = listOf("Su", "Mo", "Tu", "We", "Th", "Fr", "Sa")
 fun SettingsScreen(
     onBack: () -> Unit,
     onShowOnboarding: () -> Unit,
+    onShowPaywall: () -> Unit,
 ) {
     val context = LocalContext.current
+
+    // The entitlement decides which themes and animation styles are locked,
+    // so the settings screen has to re-read it when it changes.
+    val subscriptionManager = remember(context) { SubscriptionScope.manager(context) }
+    val status by subscriptionManager.status.collectAsStateWithLifecycle()
+    val isPro = status.isActive(Entitlement.PRO)
+    val bypassPro by subscriptionManager.debugBypassPro.collectAsStateWithLifecycle()
 
     val initial = remember { SharedPrefsReminderSettingsStore.load() }
     var enabled by remember { mutableStateOf(initial[0] == 1L) }
@@ -211,8 +224,9 @@ fun SettingsScreen(
                 }
             }
 
-            AnimationSection()
-            ThemeSection()
+            SubscriptionSection(isPro = isPro, onShowPaywall = onShowPaywall)
+            AnimationSection(isPro = isPro, onShowPaywall = onShowPaywall)
+            ThemeSection(isPro = isPro, onShowPaywall = onShowPaywall)
             VolumeSection()
             AIDraftSettingsSection()
 
@@ -239,6 +253,41 @@ fun SettingsScreen(
                             contentDescription = null,
                             tint = MnTheme.textSecondary,
                             modifier = Modifier.size(16.dp),
+                        )
+                    }
+
+                    Spacer(Modifier.height(12.dp))
+                    HorizontalDivider(color = MnTheme.divider)
+                    Spacer(Modifier.height(12.dp))
+
+                    // Debug-only: pro without a purchase, so the paid features
+                    // can be checked without buying anything.
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Filled.WorkspacePremium,
+                            contentDescription = null,
+                            tint = MnTheme.streakActiveMeditation,
+                        )
+                        Spacer(Modifier.width(12.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(
+                                stringResource(R.string.paywall_bypass),
+                                color = MnTheme.textPrimary,
+                                style = MaterialTheme.typography.bodyLarge,
+                            )
+                            Text(
+                                stringResource(R.string.paywall_bypass_hint),
+                                color = MnTheme.textSecondary,
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                        }
+                        Switch(
+                            checked = bypassPro,
+                            onCheckedChange = { subscriptionManager.setDebugBypassPro(it) },
+                            colors = SwitchDefaults.colors(
+                                checkedTrackColor = MnTheme.streakActiveMeditation,
+                                checkedThumbColor = MnTheme.buttonText,
+                            ),
                         )
                     }
                 }

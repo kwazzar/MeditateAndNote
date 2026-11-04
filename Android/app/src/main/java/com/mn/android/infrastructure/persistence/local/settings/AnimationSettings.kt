@@ -36,4 +36,14 @@ object AnimationSettings {
         set(value) {
             prefs?.edit()?.putString(KEY, value)?.apply()
         }
+
+    /**
+     * `BreathingAnimationStyle.isPremium` on iOS: `path` is the free default,
+     * `rings` needs the `pro` entitlement.
+     *
+     * The rule itself lives in Core (`BreathingAnimationStyle.swift`), but
+     * jextract does not generate a getter for a computed property of an enum,
+     * so the value is mirrored here. Keep it in sync with Core.
+     */
+    fun isPremium(style: String): Boolean = style == RINGS
 }

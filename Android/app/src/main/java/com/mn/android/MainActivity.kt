@@ -57,6 +57,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -66,6 +67,10 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import com.mn.android.R
+import com.mn.android.application.subscription.EntitlementSource
+import com.mn.android.application.subscription.SubscriptionScope
+import com.mn.android.domain.subscription.Entitlement
+import com.mn.android.domain.theme.model.MainTheme
 import com.mn.android.infrastructure.persistence.local.settings.AnimationSettings
 import com.mn.android.infrastructure.persistence.local.meditation.MeditationSelection
 import com.mn.android.data.AIDraftQuotaCounter
@@ -80,6 +85,7 @@ import com.mn.android.infrastructure.persistence.local.settings.SoundSettings
 import com.mn.android.data.StreakSnapshotStore
 import com.mn.android.infrastructure.analytics.AppAnalytics
 import com.mn.android.infrastructure.platform.notifications.ReminderScheduler
+import com.mn.android.infrastructure.platform.billing.BillingActivity
 import com.mn.android.infrastructure.platform.sound.SoundPlayer
 import com.mn.android.presentation.home.ui.HomeScreen
 import com.mn.android.presentation.launch.ui.LoadingScreen
@@ -95,6 +101,7 @@ import com.mn.android.presentation.notes.ui.NoteMenuScreen
 import com.mn.android.presentation.reading.ui.LibraryScreen
 import com.mn.android.presentation.reading.ui.ReaderScreen
 import com.mn.android.presentation.onboarding.ui.OnboardingScreen
+import com.mn.android.presentation.paywall.ui.PaywallScreen
 import com.mn.android.presentation.streak.ui.StreakDetailScreen
 import com.mn.android.presentation.theme.ui.MnThemeProvider
 import com.mn.android.presentation.theme.ui.MnTheme
@@ -118,9 +125,28 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // The Play billing sheet needs a foreground activity.
+        BillingActivity.current = this
 
         setContent {
             val themeManager = rememberMnThemeManager()
+            val context = LocalContext.current
+            val subscriptionManager = remember(context) { SubscriptionScope.manager(context) }
+            val status by subscriptionManager.status.collectAsStateWithLifecycle()
+            val isPro = status.isActive(Entitlement.PRO)
+
+            // A revoked entitlement takes the premium theme and the premium
+            // animation style with it - the same clamp iOS does in
+            // `ThemeManager` / `AnimationSettings` when the status changes.
+            LaunchedEffect(isPro) {
+                if (!isPro) {
+                    if (themeManager.theme.isPremium) themeManager.select(MainTheme.DARK_ZEN)
+                    if (AnimationSettings.isPremium(AnimationSettings.style)) {
+                        AnimationSettings.style = AnimationSettings.PATH
+                    }
+                }
+            }
+
             MaterialTheme(
                 colorScheme = if (themeManager.theme.isDark) darkColorScheme() else lightColorScheme(),
             ) {
@@ -139,6 +165,11 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onDestroy() {
+        if (BillingActivity.current === this) BillingActivity.current = null
+        super.onDestroy()
     }
 }
 
@@ -166,6 +197,8 @@ private fun MnNav() {
     MeditationSelection.configure(LocalContext.current)
     SoundSettings.configure(LocalContext.current)
     SoundPlayer.configure(LocalContext.current)
+    // The Swift AI-draft bridge asks for the entitlement through this source.
+    EntitlementSource.configure(LocalContext.current)
     AnimationSettings.configure(LocalContext.current)
     // Re-assert the pending reminder alarms on every launch: idempotent, and
     // covers anything the boot receiver missed (e.g. updated app process).
@@ -195,6 +228,14 @@ private fun MnNav() {
     LaunchedEffect(Unit) {
         delay(1800)
         showsLaunch = false
+    }
+
+    // The entitlement is refreshed once per launch: the cached status is only
+    // a fast path, the billing provider decides. A failure keeps the last
+    // known status - it never grants anything on its own.
+    val subscriptionContext = LocalContext.current
+    LaunchedEffect(Unit) {
+        runCatching { SubscriptionScope.manager(subscriptionContext).refresh() }
     }
 
     val backStackEntry by navController.currentBackStackEntryAsState()
@@ -286,7 +327,11 @@ private fun MnNav() {
                         OnboardingStore.hasCompletedOnboarding = false
                         navController.navigate("onboarding")
                     },
+                    onShowPaywall = { navController.navigate("paywall") },
                 )
+            }
+            composable("paywall") {
+                PaywallScreen(onClose = { navController.popBackStack() })
             }
             composable("newNote") {
                 NoteEditorScreen(
