@@ -11,6 +11,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,7 +28,6 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
@@ -426,20 +426,19 @@ private fun MnTabBar(currentRoute: String?, onSelect: (TabItem) -> Unit) {
     Box(
         Modifier
             .fillMaxWidth()
-            // iOS CustomTabBar: `.padding(.horizontal)` + `.padding(.vertical, 6)`.
             .padding(horizontal = 16.dp, vertical = 6.dp)
-            // The bar floats above the gesture area — iOS keeps the same 34 pt
-            // of clearance under the capsule (the home indicator's safe area).
             .windowInsetsPadding(WindowInsets.navigationBars),
     ) {
         Row(
             Modifier
                 .fillMaxWidth()
                 .then(if (landscape) Modifier.width(480.dp).align(Alignment.Center) else Modifier)
-                .shadow(8.dp, CircleShape)
-                .background(MnTheme.toolbarBackground, CircleShape)
+                .clip(RoundedCornerShape(100.dp))
+                .background(MnTheme.toolbarBackground, RoundedCornerShape(100.dp))
+                .shadow(5.dp, RoundedCornerShape(100.dp), Color.Gray.copy(alpha = 0.3f))
+                .border(1.dp, MnTheme.divider, RoundedCornerShape(100.dp))
                 .padding(horizontal = 8.dp, vertical = 6.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             TabBarItems.forEach { tab ->
                 val selected = currentRoute == tab.route
@@ -453,7 +452,7 @@ private fun MnTabBar(currentRoute: String?, onSelect: (TabItem) -> Unit) {
                             else Color.Transparent
                         )
                         .clickable { onSelect(tab) }
-                        .padding(vertical = 6.dp, horizontal = 8.dp),
+                        .padding(vertical = 6.dp, horizontal = 4.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
