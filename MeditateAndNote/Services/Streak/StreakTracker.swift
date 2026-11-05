@@ -181,14 +181,16 @@ final class StreakTracker: StreakSnapshotProvidable {
 
     private var engine: StreakEngine
     private let store: StreakActivityStore
+    private let eventBus: DomainEventPublisher
 
     convenience init(calendar: Calendar = .current,
                      defaults: UserDefaults = .standard) {
-        self.init(calendar: calendar, store: UserDefaultsStreakStore(defaults: defaults))
+        self.init(calendar: calendar, store: UserDefaultsStreakStore(defaults: defaults), eventBus: DomainEventBus.shared)
     }
 
-    init(calendar: Calendar, store: StreakActivityStore) {
+    init(calendar: Calendar, store: StreakActivityStore, eventBus: DomainEventPublisher = DomainEventBus.shared) {
         self.store = store
+        self.eventBus = eventBus
         self.engine = StreakEngine(calendar: calendar, snapshot: store.load())
         engine.checkStreakBreak()
     }
@@ -241,8 +243,17 @@ final class StreakTracker: StreakSnapshotProvidable {
     // MARK: - Private
 
     private func apply(_ mutation: (inout StreakEngine) -> Void) async {
+        let oldStreak = engine.currentStreak
         var next = engine
         mutation(&next)
+        let newStreak = next.currentStreak
+
+        if newStreak > oldStreak && newStreak > 0 {
+            eventBus.publish(.streakExtended(currentDays: newStreak))
+        } else if oldStreak > 0 && newStreak == 0 {
+            eventBus.publish(.streakBroken(previousDays: oldStreak))
+        }
+
         engine = next
         await persist()
     }
@@ -268,7 +279,7 @@ extension StreakTracker {
         case let .meditationCompleted(session):
             await markMeditationCompleted(date: session.completedAt)
 
-        case .aiDraftGenerated, .aiDraftMetric, .noteInsightsUpdated, .subscriptionChanged:
+        case .meditationStarted, .aiDraftGenerated, .aiDraftMetric, .noteInsightsUpdated, .subscriptionChanged, .bookImported, .readerOpened, .bookmarkCreated, .streakExtended, .streakBroken:
             break
         }
     }

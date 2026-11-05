@@ -1,5 +1,8 @@
 package com.mn.android.application.subscription
 
+import com.mn.android.domain.events.DomainEvent
+import com.mn.android.domain.events.DomainEventBus
+import com.mn.android.domain.events.DomainEventPublisher
 import com.mn.android.domain.subscription.Entitlement
 import com.mn.android.domain.subscription.SubscriptionCache
 import com.mn.android.domain.subscription.SubscriptionManageable
@@ -27,6 +30,7 @@ import kotlinx.coroutines.flow.asStateFlow
 class SubscriptionManager(
     private val service: SubscriptionManaging,
     private val cache: SubscriptionCache,
+    private val eventBus: DomainEventPublisher = DomainEventBus,
 ) : SubscriptionProvidable, SubscriptionManageable {
 
     private var providerStatus: SubscriptionStatus = initialStatus()
@@ -97,6 +101,7 @@ class SubscriptionManager(
         providerStatus = newStatus
         cache.save(newStatus)
         publish()
+        eventBus.publish(DomainEvent.SubscriptionChanged(newStatus.isActive(Entitlement.PRO)))
     }
 
     /**

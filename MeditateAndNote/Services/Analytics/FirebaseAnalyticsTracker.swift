@@ -26,6 +26,11 @@ final class FirebaseAnalyticsTracker: AnalyticsTracking, @unchecked Sendable {
             ]
         )
     }
+
+    func setUserProperty(_ value: String, forName name: String) {
+        guard FirebaseBootstrap.isConfigured else { return }
+        Analytics.setUserProperty(value, forName: name)
+    }
 }
 
 private extension AnalyticsEvent.Value {

@@ -20,8 +20,33 @@ object AnalyticsEventMapper {
                 "duration_seconds" to event.durationSeconds,
             ),
         )
+        is DomainEvent.MeditationStarted -> AnalyticsEvent(
+            "meditation_started",
+            mapOf("meditation_id" to event.meditationId),
+        )
         DomainEvent.AiDraftGenerated -> AnalyticsEvent("ai_draft_generated")
         is DomainEvent.AiDraftMetric -> metricEvent(event)
+        is DomainEvent.SubscriptionChanged -> AnalyticsEvent(
+            "subscription_changed",
+            mapOf("is_premium" to event.isPremium),
+        )
+        is DomainEvent.BookImported -> AnalyticsEvent(
+            "book_imported",
+            mapOf("format" to event.format),
+        )
+        is DomainEvent.ReaderOpened -> AnalyticsEvent("reader_opened")
+        is DomainEvent.BookmarkCreated -> AnalyticsEvent(
+            "bookmark_created",
+            mapOf("type" to event.type),
+        )
+        is DomainEvent.StreakExtended -> AnalyticsEvent(
+            "streak_extended",
+            mapOf("days" to event.currentDays),
+        )
+        is DomainEvent.StreakBroken -> AnalyticsEvent(
+            "streak_broken",
+            mapOf("previous_days" to event.previousDays),
+        )
     }
 
     private fun metricEvent(metric: DomainEvent.AiDraftMetric): AnalyticsEvent = when (metric) {

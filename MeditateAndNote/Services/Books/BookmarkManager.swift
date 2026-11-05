@@ -39,10 +39,12 @@ final actor BookmarkManager: BookmarkProvidable, BookmarkManageable {
     private let logger = Logger(subsystem: Config.bundleID, category: "BookmarkManager")
     private let store: any BookmarkStore
     private let noteWriter: (any NoteManageable)?
+    private let eventBus: DomainEventPublisher
 
-    init(store: any BookmarkStore, noteWriter: (any NoteManageable)? = nil) {
+    init(store: any BookmarkStore, noteWriter: (any NoteManageable)? = nil, eventBus: DomainEventPublisher = DomainEventBus.shared) {
         self.store = store
         self.noteWriter = noteWriter
+        self.eventBus = eventBus
     }
 
     // MARK: - BookmarkProvidable
@@ -59,6 +61,7 @@ final actor BookmarkManager: BookmarkProvidable, BookmarkManageable {
 
     func add(_ bookmark: Bookmark) async throws {
         try await store.save(bookmark)
+        eventBus.publish(.bookmarkCreated(type: bookmark.isHighlight ? .highlight : .page))
     }
 
     func delete(id: BookmarkID) async throws {
@@ -90,6 +93,7 @@ final actor BookmarkManager: BookmarkProvidable, BookmarkManageable {
         }
 
         try await store.save(highlight)
+        eventBus.publish(.bookmarkCreated(type: .highlight))
         return highlight
     }
 }

@@ -27,6 +27,7 @@ final class MeditationViewModel {
     // the main thread.
     @ObservationIgnored nonisolated(unsafe) private var timer: Timer?
     @ObservationIgnored nonisolated(unsafe) private var phaseTimer: Timer?
+    private var hasFiredStarted = false
 
     var meditationTitle: String {
         meditation.title.rawValue
@@ -94,6 +95,7 @@ extension MeditationViewModel {
         phaseTimer?.invalidate()
         timer = nil
         phaseTimer = nil
+        hasFiredStarted = false
 
         apply(engine.start(duration: duration, countdown: countdown))
         if engine.isCountingDown {
@@ -120,6 +122,7 @@ extension MeditationViewModel {
         phaseTimer?.invalidate()
         timer = nil
         phaseTimer = nil
+        hasFiredStarted = false
     }
 
     /// Test seam: drives the engine to completion deterministically without
@@ -143,6 +146,10 @@ private extension MeditationViewModel {
     
     func tickCountdown() {
         apply(engine.tickCountdown())
+        if engine.isActive && !hasFiredStarted {
+            hasFiredStarted = true
+            eventBus.publish(.meditationStarted(meditation.id))
+        }
         if engine.isActive {
             timer?.invalidate()
             phaseTimer?.invalidate()

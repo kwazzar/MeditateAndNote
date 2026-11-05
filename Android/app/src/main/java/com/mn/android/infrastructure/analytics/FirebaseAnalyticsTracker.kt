@@ -32,4 +32,8 @@ class FirebaseAnalyticsTracker(private val analytics: FirebaseAnalytics) {
             )
         )
     }
+
+    fun setUserProperty(value: String, name: String) {
+        analytics.setUserProperty(name, value)
+    }
 }

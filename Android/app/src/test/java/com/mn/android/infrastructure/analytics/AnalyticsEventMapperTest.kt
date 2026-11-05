@@ -24,10 +24,67 @@ class AnalyticsEventMapperTest {
     }
 
     @Test
+    fun `meditation started carries only built-in id`() {
+        val event = AnalyticsEventMapper.from(DomainEvent.MeditationStarted("breathing-4-7-8"))
+        assertEquals("meditation_started", event?.name)
+        assertEquals(mapOf("meditation_id" to "breathing-4-7-8"), event!!.params)
+    }
+
+    @Test
     fun `ai draft generated maps without payload`() {
         val event = AnalyticsEventMapper.from(DomainEvent.AiDraftGenerated)
         assertEquals("ai_draft_generated", event?.name)
         assertTrue(event!!.params.isEmpty())
+    }
+
+    @Test
+    fun `subscription changed maps is_premium`() {
+        val event = AnalyticsEventMapper.from(DomainEvent.SubscriptionChanged(true))
+        assertEquals("subscription_changed", event?.name)
+        assertEquals(mapOf("is_premium" to true), event!!.params)
+
+        val eventFree = AnalyticsEventMapper.from(DomainEvent.SubscriptionChanged(false))
+        assertEquals("subscription_changed", eventFree?.name)
+        assertEquals(mapOf("is_premium" to false), eventFree!!.params)
+    }
+
+    @Test
+    fun `book imported maps format`() {
+        val event = AnalyticsEventMapper.from(DomainEvent.BookImported("epub"))
+        assertEquals("book_imported", event?.name)
+        assertEquals(mapOf("format" to "epub"), event!!.params)
+    }
+
+    @Test
+    fun `reader opened maps without id`() {
+        val event = AnalyticsEventMapper.from(DomainEvent.ReaderOpened("book-123"))
+        assertEquals("reader_opened", event?.name)
+        assertTrue(event!!.params.isEmpty())
+    }
+
+    @Test
+    fun `bookmark created maps type`() {
+        val pageEvent = AnalyticsEventMapper.from(DomainEvent.BookmarkCreated("page"))
+        assertEquals("bookmark_created", pageEvent?.name)
+        assertEquals(mapOf("type" to "page"), pageEvent!!.params)
+
+        val highlightEvent = AnalyticsEventMapper.from(DomainEvent.BookmarkCreated("highlight"))
+        assertEquals("bookmark_created", highlightEvent?.name)
+        assertEquals(mapOf("type" to "highlight"), highlightEvent!!.params)
+    }
+
+    @Test
+    fun `streak extended maps days`() {
+        val event = AnalyticsEventMapper.from(DomainEvent.StreakExtended(7))
+        assertEquals("streak_extended", event?.name)
+        assertEquals(mapOf("days" to 7), event!!.params)
+    }
+
+    @Test
+    fun `streak broken maps previous days`() {
+        val event = AnalyticsEventMapper.from(DomainEvent.StreakBroken(14))
+        assertEquals("streak_broken", event?.name)
+        assertEquals(mapOf("previous_days" to 14), event!!.params)
     }
 
     @Test
@@ -69,6 +126,13 @@ class AnalyticsEventMapperTest {
             DomainEvent.NoteUpdated("note-1"),
             DomainEvent.NoteDeleted("note-1"),
             DomainEvent.MeditationCompleted("breathing-4-7-8", 305),
+            DomainEvent.MeditationStarted("breathing-4-7-8"),
+            DomainEvent.SubscriptionChanged(true),
+            DomainEvent.BookImported("epub"),
+            DomainEvent.ReaderOpened("book-123"),
+            DomainEvent.BookmarkCreated("page"),
+            DomainEvent.StreakExtended(7),
+            DomainEvent.StreakBroken(14),
             DomainEvent.AiDraftGenerated,
             DomainEvent.AiDraftMetric.GenerationStarted(false),
             DomainEvent.AiDraftMetric.GenerationCompleted(721, 2),

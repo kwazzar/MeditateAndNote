@@ -36,7 +36,7 @@ final class AppContainer: @unchecked Sendable {
     private lazy var meditation = MeditationScope()
     private lazy var search = SearchScope()
     private lazy var settings = SettingsScope()
-    private lazy var books = BookScope(noteWriter: notes.manager)
+    private lazy var books = BookScope(noteWriter: notes.manager, eventBus: eventBus)
     @MainActor private lazy var subscription = SubscriptionScope(eventBus: eventBus)
 
     /// Cross-cutting analytics adapter. Firebase lives behind `AnalyticsTracking`.
@@ -91,6 +91,22 @@ final class AppContainer: @unchecked Sendable {
         eventLoop.start(eventBus: eventBus) { [self] event in
             handlers(for: event)
         }
+        Task { @MainActor in
+            setUserProperties()
+        }
+    }
+
+    @MainActor
+    private func setUserProperties() {
+        let onboardingStore = UserDefaultsOnboardingStore()
+        let onboardingDone = onboardingStore.hasCompletedOnboarding
+        analyticsTracker.setUserProperty(onboardingDone ? "true" : "false", forName: "onboarding_completed")
+
+        let isPremium = subscription.manager.isPremium
+        analyticsTracker.setUserProperty(isPremium ? "pro" : "free", forName: "premium_status")
+
+        let streakDays = streak.streakTracker.currentStreak
+        analyticsTracker.setUserProperty(AnalyticsScope.streakBucket(streakDays), forName: "streak_bucket")
     }
 
     /// Sendable premium read for actor-isolated managers (drafts, insights).

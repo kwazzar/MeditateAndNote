@@ -15,9 +15,10 @@ final class BookScope: Sendable {
         store: any BookStore = CoreDataBookStore(),
         bookmarkStore: any BookmarkStore = CoreDataBookmarkStore(),
         fileStorage: BookFileStorage = BookFileStorage(),
-        noteWriter: (any NoteManageable)? = nil
+        noteWriter: (any NoteManageable)? = nil,
+        eventBus: DomainEventPublisher = DomainEventBus.shared
     ) {
-        self.manager = BookManager(store: store, fileStorage: fileStorage)
-        self.bookmarkManager = BookmarkManager(store: bookmarkStore, noteWriter: noteWriter)
+        self.manager = BookManager(store: store, fileStorage: fileStorage, eventBus: eventBus)
+        self.bookmarkManager = BookmarkManager(store: bookmarkStore, noteWriter: noteWriter, eventBus: eventBus)
     }
 }

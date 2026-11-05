@@ -21,7 +21,7 @@ struct SearchScope: DomainEventRouting {
         switch event {
         case .noteDeleted:
             return true
-        case .noteCreated, .noteUpdated, .meditationCompleted, .aiDraftGenerated, .aiDraftMetric, .noteInsightsUpdated, .subscriptionChanged:
+        case .noteCreated, .noteUpdated, .meditationCompleted, .meditationStarted, .aiDraftGenerated, .aiDraftMetric, .noteInsightsUpdated, .subscriptionChanged, .bookImported, .readerOpened, .bookmarkCreated, .streakExtended, .streakBroken:
             return false
         }
     }

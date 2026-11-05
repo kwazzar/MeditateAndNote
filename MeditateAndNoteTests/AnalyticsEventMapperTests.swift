@@ -32,6 +32,14 @@ final class AnalyticsEventMapperTests: XCTestCase {
         XCTAssertEqual(event?.parameters.count, 2)
     }
 
+    func testMeditationStartedCarriesOnlyBuiltInID() {
+        let event = AnalyticsEventMapper.event(for: .meditationStarted(MeditationID(rawValue: "box")))
+
+        XCTAssertEqual(event?.name, "meditation_started")
+        XCTAssertEqual(event?.parameters["meditation_id"], .string("box"))
+        XCTAssertEqual(event?.parameters.count, 1)
+    }
+
     func testAIEvents() {
         XCTAssertEqual(
             AnalyticsEventMapper.event(for: .aiDraftGenerated(noteID: note.id, sessionID: UUID()))?.name,
@@ -65,6 +73,39 @@ final class AnalyticsEventMapperTests: XCTestCase {
         XCTAssertNil(AnalyticsEventMapper.event(for: .noteInsightsUpdated([note.id])))
     }
 
+    func testBookEvents() {
+        // bookImported
+        let imported = AnalyticsEventMapper.event(for: .bookImported(format: .epub))
+        XCTAssertEqual(imported?.name, "book_imported")
+        XCTAssertEqual(imported?.parameters["format"], .string("epub"))
+
+        // readerOpened - no params per privacy
+        let opened = AnalyticsEventMapper.event(for: .readerOpened(bookID: BookID()))
+        XCTAssertEqual(opened?.name, "reader_opened")
+        XCTAssertEqual(opened?.parameters.count, 0)
+
+        // bookmarkCreated
+        let pageMark = AnalyticsEventMapper.event(for: .bookmarkCreated(type: .page))
+        XCTAssertEqual(pageMark?.name, "bookmark_created")
+        XCTAssertEqual(pageMark?.parameters["type"], .string("page"))
+
+        let highlightMark = AnalyticsEventMapper.event(for: .bookmarkCreated(type: .highlight))
+        XCTAssertEqual(highlightMark?.name, "bookmark_created")
+        XCTAssertEqual(highlightMark?.parameters["type"], .string("highlight"))
+    }
+
+    func testStreakEvents() {
+        // streakExtended
+        let extended = AnalyticsEventMapper.event(for: .streakExtended(currentDays: 7))
+        XCTAssertEqual(extended?.name, "streak_extended")
+        XCTAssertEqual(extended?.parameters["days"], .int(7))
+
+        // streakBroken
+        let broken = AnalyticsEventMapper.event(for: .streakBroken(previousDays: 14))
+        XCTAssertEqual(broken?.name, "streak_broken")
+        XCTAssertEqual(broken?.parameters["previous_days"], .int(14))
+    }
+
     func testEventNamesStayWithinFirebaseLimit() {
         let events: [DomainEvent] = [
             .noteCreated(note),
@@ -74,9 +115,15 @@ final class AnalyticsEventMapperTests: XCTestCase {
                 meditationId: MeditationID(rawValue: "box"),
                 duration: SessionDuration(seconds: 60)
             )),
+            .meditationStarted(MeditationID(rawValue: "box")),
             .aiDraftGenerated(noteID: note.id, sessionID: UUID()),
             .aiDraftMetric(event: .generationStarted(warmCold: false)),
             .subscriptionChanged(.none),
+            .bookImported(format: .epub),
+            .readerOpened(bookID: BookID()),
+            .bookmarkCreated(type: .page),
+            .streakExtended(currentDays: 7),
+            .streakBroken(previousDays: 14),
         ]
 
         for event in events {

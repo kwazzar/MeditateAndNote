@@ -20,8 +20,29 @@ sealed interface DomainEvent {
         val durationSeconds: Int,
     ) : DomainEvent
 
+    /** Meditation session transitioned to active (after countdown). */
+    data class MeditationStarted(val meditationId: String) : DomainEvent
+
     /** One successful draft generation - published once, not per suggestion. */
     data object AiDraftGenerated : DomainEvent
+
+    /** Subscription status changed (purchase/restore/expire). */
+    data class SubscriptionChanged(val isPremium: Boolean) : DomainEvent
+
+    /** Book imported into library. */
+    data class BookImported(val format: String) : DomainEvent
+
+    /** Reader screen opened for a book. */
+    data class ReaderOpened(val bookId: String) : DomainEvent
+
+    /** Bookmark or highlight created. */
+    data class BookmarkCreated(val type: String) : DomainEvent
+
+    /** Streak extended to a new length. */
+    data class StreakExtended(val currentDays: Int) : DomainEvent
+
+    /** Streak broken (reset from previous length). */
+    data class StreakBroken(val previousDays: Int) : DomainEvent
 
     /**
      * Mirror of Core `AIDraftMetric`: counts, latency and a typed kind - never

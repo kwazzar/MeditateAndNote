@@ -46,12 +46,14 @@ final actor BookManager: BookProvidable, BookManageable {
     private let logger = Logger(subsystem: Config.bundleID, category: "BookManager")
     private let store: any BookStore
     private let fileStorage: BookFileStorage
+    private let eventBus: DomainEventPublisher
 
     private var library: [Book] = []
 
-    init(store: any BookStore, fileStorage: BookFileStorage = BookFileStorage()) {
+    init(store: any BookStore, fileStorage: BookFileStorage = BookFileStorage(), eventBus: DomainEventPublisher = DomainEventBus.shared) {
         self.store = store
         self.fileStorage = fileStorage
+        self.eventBus = eventBus
     }
 
     // MARK: - BookProvidable
@@ -116,6 +118,7 @@ final actor BookManager: BookProvidable, BookManageable {
             try? await store.saveCoverData(cover, for: bookID)
         }
         await refresh()
+        eventBus.publish(.bookImported(format: format))
         return book
     }
 
@@ -137,6 +140,7 @@ final actor BookManager: BookProvidable, BookManageable {
         book.lastOpenedAt = Date()
         try await store.save(book)
         await refresh()
+        eventBus.publish(.readerOpened(bookID: id))
     }
 
     // MARK: - Content loading (reader support)

@@ -49,6 +49,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.mn.android.R
 import com.mn.android.data.BookSource
+import com.mn.android.domain.events.DomainEvent
+import com.mn.android.domain.events.DomainEventBus
 import com.mn.android.presentation.theme.ui.MnBackground
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -113,6 +115,7 @@ fun LibraryScreen(
                 }
             }
             if (result.isSuccess) {
+                DomainEventBus.publish(DomainEvent.BookImported(result.getOrThrow().format))
                 runCatching { books = reload() }
             } else {
                 importError = true

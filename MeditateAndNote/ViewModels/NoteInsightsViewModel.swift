@@ -103,7 +103,7 @@ private extension NoteInsightsViewModel {
                     await self.load()
                 case .noteCreated, .noteUpdated, .noteDeleted:
                     await self.load()
-                case .meditationCompleted, .aiDraftGenerated, .aiDraftMetric, .subscriptionChanged:
+                case .meditationCompleted, .meditationStarted, .aiDraftGenerated, .aiDraftMetric, .subscriptionChanged, .bookImported, .readerOpened, .bookmarkCreated, .streakExtended, .streakBroken:
                     break
                 }
             }

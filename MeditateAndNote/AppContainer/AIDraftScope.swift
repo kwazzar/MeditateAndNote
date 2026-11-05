@@ -33,7 +33,7 @@ struct AIDraftScope: DomainEventRouting {
         switch event {
         case .noteDeleted, .aiDraftMetric:
             return true
-        case .noteCreated, .noteUpdated, .meditationCompleted, .aiDraftGenerated, .noteInsightsUpdated, .subscriptionChanged:
+        case .noteCreated, .noteUpdated, .meditationCompleted, .meditationStarted, .aiDraftGenerated, .noteInsightsUpdated, .subscriptionChanged, .bookImported, .readerOpened, .bookmarkCreated, .streakExtended, .streakBroken:
             return false
         }
     }

@@ -15,6 +15,7 @@
 		1319DD5B5051A8A4C9C10470 /* ReminderManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA2A9BB90A0B40656AE57601 /* ReminderManager.swift */; };
 		19389A11A223E7916CDE773B /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 6B1B44E0DFD657FF94C80C97 /* FirebaseAnalytics */; };
 		1A7AFC26A1BAB5C9AA2CCD86 /* SubscriptionStatusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1489C105D1E21FC347D63B81 /* SubscriptionStatusTests.swift */; };
+		BA5C0E022026110500000002 /* AnalyticsScopeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA5C0E012026110500000001 /* AnalyticsScopeTests.swift */; };
 		1C94BF41D8074EC99AAD8F36 /* MeditationScope.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6031996A773F475FABDBA7E1 /* MeditationScope.swift */; };
 		1E45318BAFC29880B29712CC /* SubscriptionViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A98B509BBA41C31F67941AF /* SubscriptionViewModelTests.swift */; };
 		1EA3D1F55C2E86F94D05A2AC /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 3833FAABFC35007B89DE29A2 /* FirebaseCore */; };
@@ -243,6 +244,7 @@
 		0FB281AE971D4DB672406825 /* AIDraftManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIDraftManager.swift; sourceTree = "<group>"; };
 		103E1801162647CA91378FED /* MainViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MainViewModelTests.swift; sourceTree = "<group>"; };
 		1489C105D1E21FC347D63B81 /* SubscriptionStatusTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SubscriptionStatusTests.swift; path = MeditateAndNoteTests/SubscriptionStatusTests.swift; sourceTree = SOURCE_ROOT; };
+		BA5C0E012026110500000001 /* AnalyticsScopeTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AnalyticsScopeTests.swift; path = MeditateAndNoteTests/AnalyticsScopeTests.swift; sourceTree = SOURCE_ROOT; };
 		1F8CE807D76747CE94F30DA5 /* SoundPlayerTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SoundPlayerTests.swift; sourceTree = "<group>"; };
 		2191349DA8C57C98F66164B8 /* MeditationViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MeditationViewModelTests.swift; sourceTree = "<group>"; };
 		238C55EFB53F4112BB500657 /* StreakScope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakScope.swift; sourceTree = "<group>"; };
@@ -735,6 +737,7 @@
 				DEADBEEF00000000000000A2 /* DomainEventBusOrderingTests.swift */,
 				0C0F1F1900000000000000C5 /* PremiumAccessTests.swift */,
 				72241AB229890BF1FB93AA7C /* AnalyticsEventMapperTests.swift */,
+				BA5C0E012026110500000001 /* AnalyticsScopeTests.swift */,
 			);
 			path = MeditateAndNoteTests;
 			sourceTree = "<group>";
@@ -1209,6 +1212,7 @@
 				65B28676E72FE36885DAFAE9 /* EventRoutingTableTests.swift in Sources */,
 				DEADBEEF00000000000000A1 /* DomainEventBusOrderingTests.swift in Sources */,
 				1A7AFC26A1BAB5C9AA2CCD86 /* SubscriptionStatusTests.swift in Sources */,
+				BA5C0E022026110500000002 /* AnalyticsScopeTests.swift in Sources */,
 				65152FA4DBF69BE8299A3895 /* UserDefaultsSubscriptionCacheTests.swift in Sources */,
 				0C0F1F1900000000000000C6 /* PremiumAccessTests.swift in Sources */,
 				FF072460A70F1E728A00C5E0 /* SubscriptionMocks.swift in Sources */,

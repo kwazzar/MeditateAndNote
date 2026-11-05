@@ -45,6 +45,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mn.android.R
+import com.mn.android.application.analytics.StreakEvents
 import com.mn.android.data.AIDraftSettingsStore
 import com.mn.android.data.AIDraftSource
 import com.mn.android.data.NoteEditorSource
@@ -150,6 +151,9 @@ fun NoteEditorScreen(
         DomainEventBus.publish(
             if (wasNew) DomainEvent.NoteCreated(editingId) else DomainEvent.NoteUpdated(editingId)
         )
+        // A new note fills the streak day it was written on; only the new-note
+        // path can move the streak, same as iOS.
+        if (wasNew) StreakEvents.sync()
         if (normalizedTitle != title) title = normalizedTitle
         persisted = NoteEditorSource.EditorNote(editingId, normalizedTitle, body, persisted?.dateMillis ?: 0L)
     }

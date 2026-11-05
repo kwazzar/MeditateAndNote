@@ -19,4 +19,8 @@ object AppAnalytics {
     fun screen(name: String) {
         tracker?.trackScreen(name)
     }
+
+    fun setUserProperty(value: String, name: String) {
+        tracker?.setUserProperty(value, name)
+    }
 }

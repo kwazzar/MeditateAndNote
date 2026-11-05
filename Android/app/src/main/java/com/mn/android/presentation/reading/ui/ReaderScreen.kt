@@ -82,6 +82,8 @@ import com.mn.android.data.BookmarksSource
 import com.mn.android.data.ReaderSettingsStore
 import com.mn.android.data.TextMetrics
 import com.mn.android.data.ReaderSource
+import com.mn.android.domain.events.DomainEvent
+import com.mn.android.domain.events.DomainEventBus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
@@ -288,6 +290,7 @@ fun ReaderScreen(
     LaunchedEffect(bookId) {
         runCatching {
             openBook()
+            DomainEventBus.publish(DomainEvent.ReaderOpened(bookId))
             chapters = withContext(Dispatchers.IO) { BookmarksSource.readChapters(bookId) }
             marks = withContext(Dispatchers.IO) { BookmarksSource.readMarks(bookId) }
         }.onFailure {
@@ -726,6 +729,7 @@ fun ReaderScreen(
                             asNote = false,
                         )
                     }
+                    DomainEventBus.publish(DomainEvent.BookmarkCreated("highlight"))
                     marks = withContext(Dispatchers.IO) { BookmarksSource.readMarks(bookId) }
                 }
                 actionLine = null
@@ -744,6 +748,7 @@ fun ReaderScreen(
                             asNote = true,
                         )
                     }
+                    DomainEventBus.publish(DomainEvent.BookmarkCreated("highlight"))
                     marks = withContext(Dispatchers.IO) { BookmarksSource.readMarks(bookId) }
                 }
                 actionLine = null
@@ -753,6 +758,7 @@ fun ReaderScreen(
                     withContext(Dispatchers.IO) {
                         BookmarksSource.addPageBookmark(bookId, 0, 0, 0)
                     }
+                    DomainEventBus.publish(DomainEvent.BookmarkCreated("page"))
                     marks = withContext(Dispatchers.IO) { BookmarksSource.readMarks(bookId) }
                 }
                 actionLine = null

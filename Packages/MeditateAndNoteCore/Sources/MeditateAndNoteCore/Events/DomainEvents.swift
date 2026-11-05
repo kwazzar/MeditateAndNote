@@ -16,10 +16,21 @@ public enum DomainEvent: Sendable {
     case noteUpdated(Note)
     case noteDeleted(NoteID)
     case meditationCompleted(MeditationSession)
+    case meditationStarted(MeditationID)
     case aiDraftGenerated(noteID: NoteID, sessionID: UUID)
     case aiDraftMetric(event: AIDraftMetric)
     case noteInsightsUpdated([NoteID])
     case subscriptionChanged(SubscriptionStatus)
+    case bookImported(format: BookFormat)
+    case readerOpened(bookID: BookID)
+    case bookmarkCreated(type: BookmarkType)
+    case streakExtended(currentDays: Int)
+    case streakBroken(previousDays: Int)
+}
+
+public enum BookmarkType: String, Sendable, Codable {
+    case page
+    case highlight
 }
 
 // MARK: - Publisher Protocol

@@ -11,7 +11,7 @@ struct StreakScope: DomainEventRouting {
     let insightManager: StreakInsightManager
 
     init() {
-        streakTracker = StreakTracker(calendar: .current, store: CoreDataStreakStore())
+        streakTracker = StreakTracker(calendar: .current, store: CoreDataStreakStore(), eventBus: DomainEventBus.shared)
         insightManager = StreakInsightManager(snapshotProvider: streakTracker)
     }
 
@@ -19,7 +19,7 @@ struct StreakScope: DomainEventRouting {
         switch event {
         case .noteCreated, .noteUpdated, .noteDeleted, .meditationCompleted:
             return true
-        case .aiDraftGenerated, .aiDraftMetric, .noteInsightsUpdated, .subscriptionChanged:
+        case .meditationStarted, .aiDraftGenerated, .aiDraftMetric, .noteInsightsUpdated, .subscriptionChanged, .bookImported, .readerOpened, .bookmarkCreated, .streakExtended, .streakBroken:
             return false
         }
     }

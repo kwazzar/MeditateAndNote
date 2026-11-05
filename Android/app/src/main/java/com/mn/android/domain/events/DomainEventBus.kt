@@ -6,6 +6,16 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 
 /**
+ * Publisher contract for [DomainEvent]s. The Android counterpart of the iOS
+ * `DomainEventPublisher` protocol: lets a manager depend on the abstraction
+ * instead of the concrete bus.
+ */
+interface DomainEventPublisher {
+    /** Safe from any thread. */
+    fun publish(event: DomainEvent)
+}
+
+/**
  * In-process fan-out for [DomainEvent]s. The Android counterpart of what
  * `DomainEventBus` + `EventLoopCoordinator` do on iOS: one publisher per
  * mutation, every live screen subscriber sees the same events in publish
@@ -18,7 +28,7 @@ import kotlinx.coroutines.flow.asSharedFlow
  * invalidation-style consumers: they reload from the store, so a dropped
  * older reload collapses into the newest one.
  */
-object DomainEventBus {
+object DomainEventBus : DomainEventPublisher {
 
     private val _events = MutableSharedFlow<DomainEvent>(
         extraBufferCapacity = 64,
@@ -28,7 +38,7 @@ object DomainEventBus {
     val events: SharedFlow<DomainEvent> = _events.asSharedFlow()
 
     /** Safe from any thread; publishers today are main-thread UI callbacks. */
-    fun publish(event: DomainEvent) {
+    override fun publish(event: DomainEvent) {
         _events.tryEmit(event)
     }
 }

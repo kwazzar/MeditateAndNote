@@ -110,7 +110,7 @@ extension CoreDataSessionStore {
         case let .meditationCompleted(session):
             await save(session)
 
-        case .aiDraftGenerated, .aiDraftMetric, .noteInsightsUpdated, .subscriptionChanged:
+        case .meditationStarted, .aiDraftGenerated, .aiDraftMetric, .noteInsightsUpdated, .subscriptionChanged, .bookImported, .readerOpened, .bookmarkCreated, .streakExtended, .streakBroken:
             break
         }
     }

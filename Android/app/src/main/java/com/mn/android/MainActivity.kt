@@ -83,6 +83,8 @@ import com.mn.android.infrastructure.persistence.local.settings.OnboardingStore
 import com.mn.android.data.SharedPrefsReminderSettingsStore
 import com.mn.android.infrastructure.persistence.local.settings.SoundSettings
 import com.mn.android.data.StreakSnapshotStore
+import com.mn.android.domain.events.DomainEvent
+import com.mn.android.domain.events.DomainEventBus
 import com.mn.android.infrastructure.analytics.AppAnalytics
 import com.mn.android.infrastructure.platform.notifications.ReminderScheduler
 import com.mn.android.infrastructure.platform.billing.BillingActivity
@@ -214,11 +216,12 @@ private fun MnNav() {
     BookBlobStore.configure(context)
     LaunchedEffect(context) {
         val uri = (context as? Activity)?.intent?.data ?: return@LaunchedEffect
-        val id = withContext(Dispatchers.IO) {
+        val imported = withContext(Dispatchers.IO) {
             runCatching { BookSource.importDocument(context, uri) }.getOrNull()
         }
-        if (id != null) {
-            navController.navigate("reader/$id")
+        if (imported != null) {
+            DomainEventBus.publish(DomainEvent.BookImported(imported.format))
+            navController.navigate("reader/${imported.id}")
         }
     }
 

@@ -154,7 +154,6 @@
     <string name="number_format">%1$d</string>
     <string name="load_failed">Failed: %1$s</string>
 
-<<<<<<< HEAD
     <!-- Reading tab + reader -->
     <string name="reading">Reading</string>
     <string name="library">Library</string>
@@ -189,7 +188,7 @@
     <string name="reader_loading">Opening book…</string>
     <string name="reader_go_to_page">Go to page</string>
     <string name="go">Go</string>
-=======
+
     <!-- Paywall (PaywallView) -->
     <string name="paywall_title">Meditate &amp; Note Pro</string>
     <string name="paywall_subtitle">Unlock everything on your journey</string>
@@ -218,5 +217,4 @@
     <!-- Debug-only paywall bypass (debug builds only) -->
     <string name="paywall_bypass">Pro without purchase</string>
     <string name="paywall_bypass_hint">DEBUG only — skips the paywall</string>
->>>>>>> feature-paywall-iap-android
 </resources>

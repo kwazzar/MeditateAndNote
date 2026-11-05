@@ -8,6 +8,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import com.mn.android.infrastructure.persistence.local.meditation.MeditationCatalog
 import com.mn.android.infrastructure.persistence.local.meditation.MeditationSelection
+import com.mn.android.application.analytics.StreakEvents
 import com.mn.android.data.SessionRecorder
 import com.mn.android.domain.events.DomainEvent
 import com.mn.android.domain.events.DomainEventBus
@@ -134,6 +135,9 @@ class BreathingSessionViewModel(private val savedStateHandle: SavedStateHandle) 
     }
     if (old !is UiState.Active && new is UiState.Active && !new.paused) {
       SoundPlayer.play(MeditationSound.fromPhase(new.discriminator))
+      // mirrors iOS `MeditationViewModel.tickCountdown()`: the session is
+      // started once the countdown is over, not when it is requested.
+      DomainEventBus.publish(DomainEvent.MeditationStarted(meditationId))
     }
     if (old is UiState.Active && new is UiState.Active) {
       if (new.discriminator != old.discriminator) {
@@ -160,6 +164,7 @@ class BreathingSessionViewModel(private val savedStateHandle: SavedStateHandle) 
                 durationSeconds = Math.round(totalSeconds).toInt(),
             ),
         )
+        StreakEvents.sync()
       }
     }
   }

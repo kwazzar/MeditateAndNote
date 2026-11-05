@@ -28,6 +28,11 @@ enum AnalyticsEventMapper {
                     "duration_seconds": .int(Int(session.duration.seconds.rounded())),
                 ]
             )
+        case let .meditationStarted(id):
+            return AnalyticsEvent(
+                name: "meditation_started",
+                parameters: ["meditation_id": .string(id.rawValue)]
+            )
         case .aiDraftGenerated:
             return AnalyticsEvent(name: "ai_draft_generated")
         case let .aiDraftMetric(metric):
@@ -38,6 +43,28 @@ enum AnalyticsEventMapper {
             return AnalyticsEvent(
                 name: "subscription_changed",
                 parameters: ["is_premium": .bool(status.isActive(.pro))]
+            )
+        case let .bookImported(format):
+            return AnalyticsEvent(
+                name: "book_imported",
+                parameters: ["format": .string(format.rawValue)]
+            )
+        case let .readerOpened(bookID):
+            return AnalyticsEvent(name: "reader_opened")
+        case let .bookmarkCreated(type):
+            return AnalyticsEvent(
+                name: "bookmark_created",
+                parameters: ["type": .string(type.rawValue)]
+            )
+        case let .streakExtended(days):
+            return AnalyticsEvent(
+                name: "streak_extended",
+                parameters: ["days": .int(days)]
+            )
+        case let .streakBroken(previousDays):
+            return AnalyticsEvent(
+                name: "streak_broken",
+                parameters: ["previous_days": .int(previousDays)]
             )
         }
     }

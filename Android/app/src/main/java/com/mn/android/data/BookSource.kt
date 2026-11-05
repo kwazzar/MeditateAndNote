@@ -30,6 +30,9 @@ object BookSource {
         val progressPerMille: Int,
     )
 
+    /** The result of an import: the new book id and the format it came in. */
+    data class ImportedBook(val id: String, val format: String)
+
     fun readLibrary(): List<BookRecord> {
         val books = JSONObject(read()).getJSONArray("books")
         return (0 until books.length()).map { i ->
@@ -78,10 +81,11 @@ object BookSource {
     }
 
     /**
-     * Copies a picked document into the library and returns the new book id.
-     * Used by the in-app importer and by the file-manager "open with" path.
+     * Copies a picked document into the library and returns the new book id
+     * with the format it was imported as. Used by the in-app importer and by
+     * the file-manager "open with" path.
      */
-    fun importDocument(context: Context, uri: Uri): String {
+    fun importDocument(context: Context, uri: Uri): ImportedBook {
         val name = displayName(context, uri)
         val format = detectFormat(name) ?: error("unsupported format")
         val temp = File(context.cacheDir, name.asFileName())
@@ -91,7 +95,7 @@ object BookSource {
         try {
             // The temp file carries the original name: the title is derived
             // from it on the Swift side.
-            return import(temp.absolutePath, format)
+            return ImportedBook(id = import(temp.absolutePath, format), format = format)
         } finally {
             temp.delete()
         }

@@ -29,7 +29,7 @@ struct NoteScope: DomainEventRouting {
         switch event {
         case .noteCreated, .noteUpdated, .noteDeleted:
             return true
-        case .meditationCompleted, .aiDraftGenerated, .aiDraftMetric, .noteInsightsUpdated, .subscriptionChanged:
+        case .meditationCompleted, .meditationStarted, .aiDraftGenerated, .aiDraftMetric, .noteInsightsUpdated, .subscriptionChanged, .bookImported, .readerOpened, .bookmarkCreated, .streakExtended, .streakBroken:
             return false
         }
     }
