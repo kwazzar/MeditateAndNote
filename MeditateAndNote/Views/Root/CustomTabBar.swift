@@ -12,7 +12,7 @@ struct CustomTabBar: View {
     @Binding var selectedTab: TabDestination
     
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 2) {
             tabButton(.notes, systemImage: "note.text", title: "Notes")
             tabButton(.home, systemImage: "house", title: "Home")
             tabButton(.meditations, systemImage: "leaf", title: "Meditations")
@@ -24,7 +24,11 @@ struct CustomTabBar: View {
         .background(
             Capsule()
                 .fill(.ultraThinMaterial)
-                .shadow(radius: 8)
+                .shadow(color: .gray.opacity(0.3), radius: 5)
+        )
+        .overlay(
+            Capsule()
+                .strokeBorder(themeManager.current.dividerColor, lineWidth: 1)
         )
     }
     
@@ -45,8 +49,8 @@ struct CustomTabBar: View {
                     .minimumScaleFactor(0.9)
             }
             .foregroundColor(isSelected ? themeManager.current.accentColor : themeManager.current.textSecondary)
-            .padding(.vertical, 6)
-            .padding(.horizontal, 8)
+            .padding(.vertical, 5)
+            .padding(.horizontal, 4)
             .frame(maxWidth: .infinity)
             .background(
                 RoundedRectangle(cornerRadius: 10)
