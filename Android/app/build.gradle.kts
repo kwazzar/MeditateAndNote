@@ -5,7 +5,13 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
     id("com.google.devtools.ksp")
-    id("com.google.gms.google-services")
+}
+
+// The Firebase config is gitignored: a clone without it still builds and
+// runs, with analytics off. The plugin validates the file and fails the
+// build when it is missing, so it is only applied when the file is there.
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
 }
 
 // The hosted AI provider: the app talks to our own OpenAI-compatible proxy,

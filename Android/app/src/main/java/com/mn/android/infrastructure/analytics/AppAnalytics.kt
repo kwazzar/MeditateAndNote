@@ -8,8 +8,15 @@ object AppAnalytics {
     @Volatile
     private var tracker: FirebaseAnalyticsTracker? = null
 
+    /**
+     * Without a Firebase config the SDK has no default app and
+     * `getInstance` throws, so the tracker stays null and analytics is a
+     * no-op - the app still starts.
+     */
     fun init(context: Context) {
-        tracker = FirebaseAnalyticsTracker(FirebaseAnalytics.getInstance(context))
+        tracker = runCatching {
+            FirebaseAnalyticsTracker(FirebaseAnalytics.getInstance(context))
+        }.getOrNull()
     }
 
     fun log(event: AnalyticsEvent) {

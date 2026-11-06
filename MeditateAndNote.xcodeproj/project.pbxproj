@@ -104,7 +104,6 @@
 		AFAFD191EC0C4D7A9C72D1B0 /* SoundPlayerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8CE807D76747CE94F30DA5 /* SoundPlayerTests.swift */; };
 		B50BA45CEDD14CE39B089DD0 /* FoundationModelsDraftServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF01E6683058484B8508AA5B /* FoundationModelsDraftServiceTests.swift */; };
 		B592643303F6FC673AE41CB0 /* FirebaseBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF86EF2F4B9CEA97EE4F4154 /* FirebaseBootstrap.swift */; };
-		B6F69F195EA1C7DC378F0DED /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 42AD2AAA736052C57869BF20 /* GoogleService-Info.plist */; };
 		B85257FB98900C564E37CE21 /* PaywallViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3831FA841983654315E91BF /* PaywallViewModelTests.swift */; };
 		BAD70D9BC13D443FA7FBDCE4 /* RouterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F309EADEBFC34EA8AEDBC615 /* RouterTests.swift */; };
 		BB00D11120260905000001 /* StreakDayDetailSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB00D11220260905000002 /* StreakDayDetailSheet.swift */; };
@@ -1058,6 +1057,7 @@
 				E36187672D68B221000E326D /* Sources */,
 				E36187682D68B221000E326D /* Frameworks */,
 				E36187692D68B221000E326D /* Resources */,
+				AA0000992026110600000001 /* Copy GoogleService-Info.plist */,
 			);
 			buildRules = (
 			);
@@ -1148,11 +1148,29 @@
 				787880D3303E8744004474C4 /* meditation_finished.wav in Resources */,
 				E36187732D68B223000E326D /* Assets.xcassets in Resources */,
 				3BCCAAAA0000000000000012 /* PrivacyInfo.xcprivacy in Resources */,
-				B6F69F195EA1C7DC378F0DED /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		AA0000992026110600000001 /* Copy GoogleService-Info.plist */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/MeditateAndNote/Resources",
+			);
+			name = "Copy GoogleService-Info.plist";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# The Firebase config is gitignored: a clone without it still builds\nand runs, with analytics off. The file is copied here instead of\nbeing a Resources entry, because a missing Resources input fails the build.\nPLIST=\"$SRCROOT/MeditateAndNote/Resources/GoogleService-Info.plist\"\nif [ -f \"$PLIST\" ]; then\n  cp \"$PLIST\" \"$CODESIGNING_FOLDER_PATH/GoogleService-Info.plist\"\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		AA0000132026090400000001 /* Sources */ = {
@@ -1612,6 +1630,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"MeditateAndNote/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = MeditateAndNote/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -1648,6 +1667,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"MeditateAndNote/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = MeditateAndNote/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;

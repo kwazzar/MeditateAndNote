@@ -60,7 +60,7 @@ Firebase config is gitignored because this repo is public. Create a Firebase pro
 - iOS: `MeditateAndNote/Resources/GoogleService-Info.plist`
 - Android: `Android/app/google-services.json`
 
-Without them the apps still build/launch; analytics stays disabled/no-op. Enable Google Analytics for the Firebase project and use DebugView (`-FIRDebugEnabled` on iOS, `adb shell setprop debug.firebase.analytics.app com.mn.android` on Android) to verify events.
+Without them the apps still build/launch; analytics stays disabled/no-op. The iOS file is copied into the bundle by a build phase (so a missing file does not fail the build), and a file with a wrong API key, app id or bundle id is ignored instead of killing the app at launch. Enable Google Analytics for the Firebase project and use DebugView (`-FIRDebugEnabled` on iOS, `adb shell setprop debug.firebase.analytics.app com.mn.android` on Android) to verify events.
 
 ### BigQuery export
 

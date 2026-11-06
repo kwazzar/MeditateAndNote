@@ -66,6 +66,11 @@ The device probes (`com.mn.android.debug.*Probe`, `MetricsActivity`) live in
 without the probe activity in its manifest. The debug variant keeps them -
 start them with `adb shell am start -n com.mn.android/.debug.MetricsActivity`.
 
+The Firebase config is optional on both platforms: the `google-services`
+plugin is only applied when `Android/app/google-services.json` exists, and
+`AppAnalytics.init` keeps the tracker null when the SDK has no default app.
+A clone without the config builds, starts and runs with analytics off.
+
 ⚠️ Release builds fail on this machine before packaging: `lintVitalRelease`
 cannot start its UAST analysis (`IllegalArgumentException: 25.0.3`) with
 JDK 27 and AGP 8.7.3. The failure is in the toolchain, not in the code -

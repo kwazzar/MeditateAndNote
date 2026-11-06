@@ -66,3 +66,69 @@ final class AnalyticsScopeTests: XCTestCase {
         XCTAssertEqual(AnalyticsScope.streakBucket(15), "15+")
     }
 }
+
+/// Firebase validates the API key and the app id itself, and an invalid
+/// value raises an Objective-C exception that Swift cannot catch - the app
+/// dies at launch. The bootstrap checks first, so a placeholder or a file
+/// from another project leaves analytics off instead of killing the app.
+final class FirebaseBootstrapTests: XCTestCase {
+
+    private let validKey = "AIzaSy" + String(repeating: "x", count: 33)
+    private let validAppID = "1:123456789012:ios:0123456789abcdef0123456789abcdef"
+    private let bundleID = "nazar.MeditateAndNote"
+
+    func testAValidConfigIsAccepted() {
+        XCTAssertTrue(
+            FirebaseBootstrap.isUsable(
+                apiKey: validKey,
+                appID: validAppID,
+                bundleID: bundleID,
+                expectedBundleID: bundleID
+            )
+        )
+    }
+
+    func testAPlaceholderAPIKeyIsRejected() {
+        XCTAssertFalse(
+            FirebaseBootstrap.isUsable(
+                apiKey: "AIzaSyPLACEHOLDER",
+                appID: validAppID,
+                bundleID: bundleID,
+                expectedBundleID: bundleID
+            )
+        )
+    }
+
+    func testAnAPIKeyWithoutThePrefixIsRejected() {
+        XCTAssertFalse(
+            FirebaseBootstrap.isUsable(
+                apiKey: String(repeating: "x", count: 39),
+                appID: validAppID,
+                bundleID: bundleID,
+                expectedBundleID: bundleID
+            )
+        )
+    }
+
+    func testAMalformedAppIDIsRejected() {
+        XCTAssertFalse(
+            FirebaseBootstrap.isUsable(
+                apiKey: validKey,
+                appID: "1:123:ios",
+                bundleID: bundleID,
+                expectedBundleID: bundleID
+            )
+        )
+    }
+
+    func testAConfigFromAnotherAppIsRejected() {
+        XCTAssertFalse(
+            FirebaseBootstrap.isUsable(
+                apiKey: validKey,
+                appID: validAppID,
+                bundleID: "com.somebody.else",
+                expectedBundleID: bundleID
+            )
+        )
+    }
+}
