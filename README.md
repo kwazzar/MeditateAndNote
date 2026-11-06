@@ -147,3 +147,9 @@ The apps speak the OpenAI chat-completions dialect (the wire protocol lives in t
 ```bash
 xcodebuild test -project MeditateAndNote.xcodeproj -scheme MeditateAndNote -destination 'platform=iOS Simulator,name=iPhone 16'
 ```
+
+The Android app builds with `./gradlew :app:assembleDebug` and its tests with
+`./gradlew :app:testDebugUnitTest` and `:app:connectedDebugAndroidTest`. The
+Gradle daemon runs on Java 17 (`Android/gradle/gradle-daemon-jvm.properties`)
+and downloads it when the machine does not have it: the lint that AGP runs for
+the release build cannot start its analysis on a newer JDK.

@@ -71,11 +71,11 @@ plugin is only applied when `Android/app/google-services.json` exists, and
 `AppAnalytics.init` keeps the tracker null when the SDK has no default app.
 A clone without the config builds, starts and runs with analytics off.
 
-⚠️ Release builds fail on this machine before packaging: `lintVitalRelease`
-cannot start its UAST analysis (`IllegalArgumentException: 25.0.3`) with
-JDK 27 and AGP 8.7.3. The failure is in the toolchain, not in the code -
-it reproduces on a clean checkout. Workaround for a local release APK:
-`./gradlew :app:assembleRelease -x lintVitalRelease`.
+The release build works: the Gradle daemon runs on Java 17
+(`Android/gradle/gradle-daemon-jvm.properties`, provisioned on demand),
+because the lint that AGP runs for the release build cannot start its UAST
+analysis on a newer JDK (it failed with `IllegalArgumentException: 25.0.3`
+on JDK 25). `./gradlew :app:assembleRelease` now produces the APK.
 
 Remaining ⚠️ (accepted): the file-extension → book-format mapping is
 written twice — `BookFormat` in the Swift core and `detectBookFormat()` in
