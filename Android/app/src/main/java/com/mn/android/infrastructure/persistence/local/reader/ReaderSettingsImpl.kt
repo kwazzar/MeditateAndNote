@@ -1,15 +1,17 @@
-package com.mn.android.data
+package com.mn.android.infrastructure.persistence.local.reader
 
 import android.content.Context
+import com.mn.android.domain.reader.ReaderSettings
 
 /**
- * Reader appearance preferences (font size, paper theme).
+ * Reader appearance preferences (font size, paper theme, scroll mode) in
+ * SharedPreferences.
  *
  * UI state, not domain state: the paper palette and the type size are
- * presentation choices, so they live in SharedPreferences instead of the
- * Core store. The iOS side keeps the same values in `ReaderSettings`.
+ * presentation choices, so they live in SharedPreferences instead of the Core
+ * store. The iOS side keeps the same values in `ReaderSettings`.
  */
-object ReaderSettingsStore {
+object ReaderSettingsImpl : ReaderSettings {
 
     private const val PREFS = "reader_settings"
     private const val KEY_FONT_SIZE = "fontSize"
@@ -31,28 +33,28 @@ object ReaderSettingsStore {
     }
 
     /** Font size in sp; defaults to the iOS default of 18. */
-    fun fontSize(): Float {
+    override fun fontSize(): Float {
         val stored = prefs?.getFloat(KEY_FONT_SIZE, 18f) ?: 18f
         return stored.coerceIn(12f, 32f)
     }
 
-    fun setFontSize(size: Float) {
+    override fun setFontSize(size: Float) {
         prefs?.edit()?.putFloat(KEY_FONT_SIZE, size.coerceIn(12f, 32f))?.apply()
     }
 
     /** Paper theme name; one of "light", "sepia", "dark". */
-    fun paper(): String {
+    override fun paper(): String {
         return prefs?.getString(KEY_PAPER, "sepia") ?: "sepia"
     }
 
-    fun setPaper(name: String) {
+    override fun setPaper(name: String) {
         prefs?.edit()?.putString(KEY_PAPER, name)?.apply()
     }
 
     /** True = continuous vertical scrolling, false = page-by-page. */
-    fun scrollMode(): Boolean = prefs?.getBoolean(KEY_SCROLL, false) ?: false
+    override fun scrollMode(): Boolean = prefs?.getBoolean(KEY_SCROLL, false) ?: false
 
-    fun setScrollMode(enabled: Boolean) {
+    override fun setScrollMode(enabled: Boolean) {
         prefs?.edit()?.putBoolean(KEY_SCROLL, enabled)?.apply()
     }
 }

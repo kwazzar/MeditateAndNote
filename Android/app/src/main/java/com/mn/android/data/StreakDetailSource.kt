@@ -1,5 +1,7 @@
 package com.mn.android.data
 
+import com.mn.android.domain.streak.Day
+import com.mn.android.domain.streak.Detail
 import java.time.LocalDate
 
 /**
@@ -30,27 +32,6 @@ object StreakDetailSource {
         noteTimeMillis: LongArray,
         statsOut: LongArray,
     )
-
-    /** One day of the grid, `null` for the padding cells that fill a week. */
-    data class Day(
-        val date: LocalDate,
-        val meditationTime: Long?,
-        val noteTime: Long?,
-    ) {
-        val hasMeditation: Boolean get() = meditationTime != null
-        val hasNote: Boolean get() = noteTime != null
-        val isComplete: Boolean get() = hasMeditation && hasNote
-    }
-
-    data class Detail(
-        val currentStreak: Int,
-        val longestStreak: Int,
-        val totalCompleteDays: Int,
-        /** Week rows, Sunday first, `null` cells pad the first and last week. */
-        val weeks: List<List<Day?>>,
-    ) {
-        val today: Day? get() = weeks.flatten().firstOrNull { it?.date == LocalDate.now() }
-    }
 
     fun readDetail(anchor: LocalDate = LocalDate.now()): Detail {
         val offsetMillis = currentUtcOffsetMillis()
@@ -90,8 +71,4 @@ object StreakDetailSource {
             weeks = cells.chunked(7),
         )
     }
-
-    /** iOS `MMMM yyyy` in the en_US locale the iOS screen hardcodes. */
-    fun monthTitle(anchor: LocalDate = LocalDate.now()): String =
-        anchor.format(java.time.format.DateTimeFormatter.ofPattern("MMMM yyyy", java.util.Locale.US))
 }

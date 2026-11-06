@@ -52,6 +52,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
@@ -72,7 +73,9 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import com.mn.android.R
-import com.mn.android.infrastructure.persistence.local.settings.AnimationSettings
+import com.mn.android.application.container.AppContainer
+import com.mn.android.domain.settings.AnimationStyle
+import com.mn.android.domain.settings.AnimationStyleStore
 import com.mn.android.presentation.theme.ui.MnBreathing
 import com.mn.android.presentation.theme.ui.MnTheme
 import com.mn.core.MeditationDuration
@@ -241,6 +244,7 @@ internal fun BreathContent(
     paused: Boolean,
     onPauseResume: () -> Unit,
     onFinished: () -> Unit,
+    animationStyle: AnimationStyleStore = AppContainer.getAnimationStyle(LocalContext.current),
 ) {
     val landscape = LocalConfiguration.current.orientation ==
         android.content.res.Configuration.ORIENTATION_LANDSCAPE
@@ -265,7 +269,7 @@ internal fun BreathContent(
         // Rendered at bottom, like iOS? iOS remaining only in progress+ring center.
         // iOS MeditationView chronology: animation then progress.
         Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-            if (AnimationSettings.style == AnimationSettings.RINGS) {
+            if (animationStyle.style == AnimationStyle.RINGS) {
                 BreathingRings(
                     discriminator = discriminator,
                     phaseIndex = phaseIndex,

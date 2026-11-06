@@ -1,5 +1,12 @@
 package com.mn.android.data
 
+import com.mn.android.domain.aidraft.AIDraftError
+import com.mn.android.domain.aidraft.AIDraftMetric
+import com.mn.android.domain.aidraft.AIDraftResult
+import com.mn.android.domain.aidraft.AIDraftSession
+import com.mn.android.domain.aidraft.AIDraftState
+import com.mn.android.domain.aidraft.AIDraftSuggestion
+import com.mn.android.domain.note.NoteId
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -8,9 +15,11 @@ import org.json.JSONObject
  *
  * Swift owns the domain: the session state machine, the free-quota rule and
  * the parsing of the model's answer live in the core package. Kotlin calls
- * the commands and renders the session it gets back - the session document
- * itself stays opaque here, it is handed back unchanged for the next
- * transition.
+ * the commands and decodes what comes back - the session document itself stays
+ * opaque here, it is handed back unchanged for the next transition.
+ *
+ * The decoding produces the domain value objects: the wire format never
+ * reaches the screens.
  */
 object AIDraftSource {
 
@@ -28,99 +37,59 @@ object AIDraftSource {
     external fun rejectSuggestion(session: String, suggestionId: String): String
     external fun cancel(session: String): String
 
-    data class Suggestion(
-        val id: String,
-        val text: String,
-        val rationale: String,
-    )
-
-    data class Session(
-        val id: String,
-        val noteId: String,
-        /** "idle" | "generating" | "ready" | "cancelled" | "failed" */
-        val state: String,
-        /** The AIDraftError raw value when the state is "failed". */
-        val error: String?,
-        val suggestions: List<Suggestion>,
-        val accepted: List<Suggestion>,
-        /** True when the prompt carried note text - then the model continues. */
-        val grounded: Boolean,
-    ) {
-        val isReady: Boolean get() = state == "ready"
-        val pending: List<Suggestion>
-            get() = suggestions.filter { suggestion -> accepted.none { it.id == suggestion.id } }
-    }
-
-    /** One telemetry event: counts, latency and a typed kind - never content. */
-    data class Metric(
-        val kind: String,
-        val warmCold: Boolean? = null,
-        val latencyMs: Long? = null,
-        val suggestionCount: Long? = null,
-        val errorKind: String? = null,
-        val suggestionIndex: Long? = null,
-    )
-
-    data class Result(
-        val ok: Boolean,
-        /** The session document, handed back unchanged for the next command. */
-        val document: String?,
-        val session: Session?,
-        val error: String?,
-        val metric: Metric? = null,
-    )
-
-    fun start(noteId: String, instruction: String, context: String): Result =
+    fun start(noteId: String, instruction: String, context: String): AIDraftResult =
         parse(startDraft(instruction, context, noteId))
 
     /** The session left behind on this note, if any. */
-    fun stored(noteId: String): Result = parse(session(noteId))
+    fun stored(noteId: String): AIDraftResult = parse(session(noteId))
 
     /** Drops the stored session - the note is gone, so is its draft. */
     fun discard(noteId: String) {
         discardSession(noteId)
     }
 
-    fun accept(session: String, suggestionId: String): Result =
+    fun accept(session: String, suggestionId: String): AIDraftResult =
         parse(acceptSuggestion(session, suggestionId))
 
-    fun acceptAllPending(session: String): Result = parse(acceptAll(session))
+    fun acceptAllPending(session: String): AIDraftResult = parse(acceptAll(session))
 
-    fun reject(session: String, suggestionId: String): Result =
+    fun reject(session: String, suggestionId: String): AIDraftResult =
         parse(rejectSuggestion(session, suggestionId))
 
-    fun cancelDraft(session: String): Result = parse(cancel(session))
+    fun cancelDraft(session: String): AIDraftResult = parse(cancel(session))
 
     // MARK: - Decoding
 
-    private fun parse(json: String): Result {
+    private fun parse(json: String): AIDraftResult {
         return try {
             val root = JSONObject(json)
             val sessionObject = root.optJSONObject("session")
             val metric = root.optJSONObject("metric")?.let { metric(it) }
             if (root.optBoolean("ok")) {
-                Result(
-                    ok = true,
-                    document = sessionObject?.toString(),
+                AIDraftResult(
                     session = sessionObject?.let { session(it) },
-                    error = null,
                     metric = metric,
+                    error = null,
                 )
             } else {
-                Result(
-                    ok = false,
-                    document = null,
+                AIDraftResult(
                     session = null,
-                    error = root.optString("error"),
                     metric = metric,
+                    error = error(root.optString("error")),
                 )
             }
         } catch (error: Exception) {
-            Result(ok = false, document = null, session = null, error = "providerUnavailable")
+            AIDraftResult(session = null, metric = null, error = error("providerUnavailable"))
         }
     }
 
-    private fun metric(json: JSONObject) = Metric(
+    /** The bridge names its failures; the domain names what the user sees. */
+    private fun error(raw: String): AIDraftError = when (raw) {
+        "freeQuotaExhausted" -> AIDraftError.FreeQuotaExhausted()
+        else -> AIDraftError.Failed(raw)
+    }
+
+    private fun metric(json: JSONObject) = AIDraftMetric(
         kind = json.optString("kind"),
         latencyMs = json.optLongOrNull("latencyMs"),
         suggestionCount = json.optLongOrNull("suggestionCount"),
@@ -131,7 +100,7 @@ object AIDraftSource {
     private fun JSONObject.optLongOrNull(key: String): Long? =
         if (isNull(key) || !has(key)) null else getLong(key)
 
-    private fun session(json: JSONObject): Session {
+    private fun session(json: JSONObject): AIDraftSession {
         val prompt = json.optJSONObject("prompt")
         var state = "idle"
         var failure: String? = null
@@ -147,22 +116,23 @@ object AIDraftSource {
             }
         }
 
-        return Session(
+        return AIDraftSession(
             id = json.optString("id"),
-            noteId = json.optString("noteID").ifEmpty { prompt?.optString("noteID").orEmpty() },
-            state = state,
-            error = failure,
+            noteId = NoteId(json.optString("noteID").ifEmpty { prompt?.optString("noteID").orEmpty() }),
+            state = AIDraftState.of(state),
+            error = failure?.let { error(it) },
             suggestions = json.optJSONArray("suggestions").suggestions(),
             accepted = json.optJSONArray("acceptedSuggestions").suggestions(),
             grounded = !prompt?.optString("context").isNullOrBlank(),
+            document = json.toString(),
         )
     }
 
-    private fun JSONArray?.suggestions(): List<Suggestion> {
+    private fun JSONArray?.suggestions(): List<AIDraftSuggestion> {
         if (this == null) return emptyList()
         return (0 until length()).map { index ->
             val obj = getJSONObject(index)
-            Suggestion(
+            AIDraftSuggestion(
                 id = obj.optString("id"),
                 text = obj.optString("text"),
                 rationale = obj.optString("rationale"),

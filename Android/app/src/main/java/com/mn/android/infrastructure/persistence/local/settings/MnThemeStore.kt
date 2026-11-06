@@ -2,6 +2,7 @@ package com.mn.android.infrastructure.persistence.local.settings
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.mn.android.domain.theme.ThemeSelectionStore
 import com.mn.android.domain.theme.model.MainTheme
 
 /**
@@ -12,7 +13,7 @@ import com.mn.android.domain.theme.model.MainTheme
  * stay readable side by side; storage is per-platform (SharedPreferences here,
  * UserDefaults there), nothing shared.
  */
-object MnThemeStore {
+object MnThemeStore : ThemeSelectionStore {
 
     private const val PREFS = "theme"
     private const val KEY = "selectedMainTheme"
@@ -31,7 +32,7 @@ object MnThemeStore {
         }
     }
 
-    var selected: MainTheme
+    override var selected: MainTheme
         get() = MainTheme.fromStorageKey(prefs?.getString(KEY, null))
         set(value) {
             prefs?.edit()?.putString(KEY, value.storageKey)?.apply()

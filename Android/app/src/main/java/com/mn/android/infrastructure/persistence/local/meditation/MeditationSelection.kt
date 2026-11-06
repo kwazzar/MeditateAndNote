@@ -2,6 +2,7 @@ package com.mn.android.infrastructure.persistence.local.meditation
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.mn.android.domain.meditation.MeditationSelectionStore
 
 /**
  * Android side of Core's `MeditationSelectionStore`
@@ -11,7 +12,7 @@ import android.content.SharedPreferences
  * there) — the `OnboardingStore` arrangement. Not a JNI round trip for the same
  * reason: a last-picked id carries no invariant the domain can get wrong.
  */
-object MeditationSelection {
+object MeditationSelection : MeditationSelectionStore {
 
     private const val PREFS = "meditation"
     private const val KEY = "lastSelectedMeditationId"
@@ -30,7 +31,7 @@ object MeditationSelection {
         }
     }
 
-    var lastSelectedId: String?
+    override var lastSelectedId: String?
         get() = prefs?.getString(KEY, null)
         set(value) {
             prefs?.edit()?.putString(KEY, value)?.apply()

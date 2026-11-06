@@ -4,6 +4,8 @@ import android.content.Context
 import android.media.AudioAttributes
 import android.media.SoundPool
 import com.mn.android.R
+import com.mn.android.domain.meditation.SessionCue
+import com.mn.android.domain.meditation.SoundPlayer
 import com.mn.android.infrastructure.persistence.local.settings.SoundSettings
 
 /**
@@ -22,15 +24,15 @@ enum class MeditationSound(val resId: Int) {
     ;
 
     companion object {
-        /**
-         * Maps a Core `BreathingPhaseType` discriminator (the lowercase string
-         * `BreathingSessionViewModel` already reads) to a cue — the same
-         * `SoundPlayer.resourceName(for:)` switch as iOS.
-         */
-        fun fromPhase(discriminator: String): MeditationSound = when (discriminator) {
-            "inhale" -> PHASE_INHALE
-            "exhale" -> PHASE_EXHALE
-            else -> PHASE_HOLD // holdAfterInhale + holdAfterExhale
+        /** The domain cue's Android resource. */
+        fun of(cue: SessionCue): MeditationSound = when (cue) {
+            SessionCue.INHALE -> PHASE_INHALE
+            SessionCue.HOLD -> PHASE_HOLD
+            SessionCue.EXHALE -> PHASE_EXHALE
+            SessionCue.COUNTDOWN_TICK -> COUNTDOWN_TICK
+            SessionCue.PAUSED -> PAUSED
+            SessionCue.RESUMED -> RESUMED
+            SessionCue.FINISHED -> FINISHED
         }
     }
 }
@@ -42,7 +44,7 @@ enum class MeditationSound(val resId: Int) {
  * prepare dance). Loads are async; a cue played before its load completes is
  * dropped, same as iOS drops a missing bundle resource.
  */
-object SoundPlayer {
+object SoundPlayerImpl : SoundPlayer {
 
     @Volatile
     private var appContext: Context? = null
@@ -60,6 +62,8 @@ object SoundPlayer {
             }
         }
     }
+
+    override fun play(cue: SessionCue) = play(MeditationSound.of(cue))
 
     fun play(sound: MeditationSound) {
         val context = appContext ?: return

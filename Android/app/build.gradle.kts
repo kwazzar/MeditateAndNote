@@ -61,6 +61,8 @@ android {
         getByName("main") {
             java.srcDir("../../Packages/MeditateAndNoteCore/.generated/java")
         }
+        getByName("test").java.srcDir("src/sharedTest/java")
+        getByName("androidTest").java.srcDir("src/sharedTest/java")
     }
 }
 
@@ -144,15 +146,42 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics")
     // Testing dependencies
     androidTestImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test:core:1.5.0")
-    androidTestImplementation("androidx.test:runner:1.5.2")
-    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    // The test stack has to know the newest platform: Espresso reaches into
+    // android.hardware.input.InputManager by reflection, and API 37 changed
+    // that method — the old runner fails with NoSuchMethodException there.
+    androidTestImplementation("androidx.test:core:1.7.0")
+    androidTestImplementation("androidx.test:runner:1.7.0")
+    androidTestImplementation("androidx.test.ext:junit:1.3.0")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.8.0-alpha03")
     androidTestImplementation("androidx.room:room-testing:2.6.1")
     androidTestImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+    // Compose UI tests: the reader screen is the most wiring-heavy screen, and
+    // a smoke test catches a broken composition that compiles fine.
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.7.6")
+    debugImplementation("androidx.compose.ui:ui-test-manifest:1.7.6")
+    // Compose UI tests: the reader screen is the most wiring-heavy screen, and
+    // a smoke test catches a broken composition that compiles fine.
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.7.6")
+    debugImplementation("androidx.compose.ui:ui-test-manifest:1.7.6")
+    // Compose UI tests: the reader screen is the most wiring-heavy screen, and
+    // a smoke test catches a broken composition that compiles fine.
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.7.6")
+    debugImplementation("androidx.compose.ui:ui-test-manifest:1.7.6")
+    // Compose UI tests: the reader screen is the most wiring-heavy screen, and
+    // a smoke test catches a broken composition that compiles fine.
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.7.6")
+    debugImplementation("androidx.compose.ui:ui-test-manifest:1.7.6")
     testImplementation("junit:junit:4.13.2")
-    testImplementation("androidx.test:core:1.5.0")
-    testImplementation("androidx.test.ext:junit:1.1.5")
+    testImplementation("androidx.test:core:1.7.0")
+    testImplementation("androidx.test.ext:junit:1.3.0")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+
+    // The Compose UI test (1.7.x) pins concurrent-futures to 1.1.0, the newer
+    // Espresso needs 1.2.0 for the newest platforms. The strict pin wins over
+    // a plain version request, so it has to be forced.
+    configurations.configureEach {
+        resolutionStrategy.force("androidx.concurrent:concurrent-futures:1.2.0")
+    }
 }
 
 /**

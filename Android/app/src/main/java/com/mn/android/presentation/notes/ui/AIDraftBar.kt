@@ -35,7 +35,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mn.android.R
-import com.mn.android.data.AIDraftSource
+import com.mn.android.domain.aidraft.AIDraftError
+import com.mn.android.domain.aidraft.AIDraftSession
+import com.mn.android.domain.aidraft.AIDraftSuggestion
 import com.mn.android.presentation.theme.ui.MnTheme
 
 /**
@@ -48,10 +50,10 @@ import com.mn.android.presentation.theme.ui.MnTheme
 @Composable
 internal fun AIDraftBar(
     isGenerating: Boolean,
-    session: AIDraftSource.Session?,
-    error: String?,
-    onAccept: (AIDraftSource.Suggestion) -> Unit,
-    onRemove: (AIDraftSource.Suggestion) -> Unit,
+    session: AIDraftSession?,
+    error: AIDraftError?,
+    onAccept: (AIDraftSuggestion) -> Unit,
+    onRemove: (AIDraftSuggestion) -> Unit,
     onAcceptAll: () -> Unit,
     onTransfer: () -> Unit,
 ) {
@@ -66,8 +68,8 @@ internal fun AIDraftBar(
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         when {
-            error == "freeQuotaExhausted" -> QuotaRow()
-            error == "noProvider" -> NoProviderRow()
+            error is AIDraftError.FreeQuotaExhausted -> QuotaRow()
+            error is AIDraftError.NoProvider -> NoProviderRow()
             isGenerating -> GeneratingRow()
             session != null -> SessionContent(
                 session = session,
@@ -139,9 +141,9 @@ private fun NoProviderRow() {
 
 @Composable
 private fun SessionContent(
-    session: AIDraftSource.Session,
-    onAccept: (AIDraftSource.Suggestion) -> Unit,
-    onRemove: (AIDraftSource.Suggestion) -> Unit,
+    session: AIDraftSession,
+    onAccept: (AIDraftSuggestion) -> Unit,
+    onRemove: (AIDraftSuggestion) -> Unit,
     onAcceptAll: () -> Unit,
     onTransfer: () -> Unit,
 ) {
@@ -216,10 +218,10 @@ private fun SectionLabel(label: String) {
 
 @Composable
 private fun SuggestionRow(
-    suggestion: AIDraftSource.Suggestion,
+    suggestion: AIDraftSuggestion,
     accepted: Boolean,
-    onAccept: (AIDraftSource.Suggestion) -> Unit,
-    onRemove: (AIDraftSource.Suggestion) -> Unit,
+    onAccept: (AIDraftSuggestion) -> Unit,
+    onRemove: (AIDraftSuggestion) -> Unit,
 ) {
     Row(
         Modifier

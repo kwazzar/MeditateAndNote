@@ -54,24 +54,26 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mn.android.R
-import com.mn.android.data.StreakDetailSource
-import com.mn.android.data.StreakInsightsSource
+import com.mn.android.application.container.AppContainer
 import com.mn.android.domain.events.DomainEvent
 import com.mn.android.domain.events.DomainEventBus
+import com.mn.android.domain.streak.Day
+import com.mn.android.domain.streak.StreakRepository
 import com.mn.android.presentation.theme.ui.MnDoneButton
 import com.mn.android.presentation.theme.ui.MnBackground
 import com.mn.android.presentation.theme.ui.MnTheme
 
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 
 
 
 /**
  * Port of iOS `StreakDetailView`: stats header, today progress, insights +
- * lifetime patterns (from `StreakInsightsSource`, the JNI read over
- * `StreakInsightManager`), and the current-month calendar with its day-detail
- * sheet.
+ * lifetime patterns (the JNI read over `StreakInsightManager`), and the
+ * current-month calendar with its day-detail sheet.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -79,14 +81,15 @@ fun StreakDetailScreen(
     onBack: () -> Unit,
     onStartMeditation: () -> Unit,
     onWriteNote: () -> Unit,
+    repository: StreakRepository = AppContainer.getStreakRepository(),
 ) {
-    var detail by remember { mutableStateOf(StreakDetailSource.readDetail()) }
+    var detail by remember { mutableStateOf(repository.readDetail()) }
     // Insights range + bundle: one JNI read shared by InsightsSection and
     // LifetimePatternsSection (the lifetime cards are range-independent).
     var range by remember { mutableStateOf("last7") }
-    var insights by remember { mutableStateOf(StreakInsightsSource.load(range)) }
+    var insights by remember { mutableStateOf(repository.readInsights(range)) }
     LaunchedEffect(range) {
-        insights = StreakInsightsSource.load(range)
+        insights = repository.readInsights(range)
     }
     // Today's flags change when a note is written or a meditation ends — the
     // detail is re-read on those events, the same way the iOS streak screen
@@ -98,12 +101,12 @@ fun StreakDetailScreen(
                 event is DomainEvent.NoteDeleted ||
                 event is DomainEvent.MeditationCompleted
             ) {
-                detail = StreakDetailSource.readDetail()
-                insights = StreakInsightsSource.load(range)
+                detail = repository.readDetail()
+                insights = repository.readInsights(range)
             }
         }
     }
-    var selected by remember { mutableStateOf<StreakDetailSource.Day?>(null) }
+    var selected by remember { mutableStateOf<Day?>(null) }
 
     Box(Modifier.fillMaxSize()) {
         MnBackground()
@@ -150,7 +153,7 @@ fun StreakDetailScreen(
             )
             LifetimePatternsSection(insights)
             MonthGrid(
-                title = StreakDetailSource.monthTitle(),
+                title = monthTitle(),
                 weeks = detail.weeks,
                 onSelect = { day -> selected = day },
             )
@@ -244,7 +247,7 @@ private enum class PillGlyph { MEDITATION, NOTE }
 
 @Composable
 private fun TodayProgress(
-    today: StreakDetailSource.Day?,
+    today: Day?,
     onStartMeditation: () -> Unit,
     onWriteNote: () -> Unit,
 ) {
@@ -360,11 +363,15 @@ private fun ProgressPill(
 /** iOS `veryShortWeekdaySymbols` for the en_US calendar it hardcodes: Sunday first. */
 private val WeekdaySymbols = listOf("S", "M", "T", "W", "T", "F", "S")
 
+/** iOS `MMMM yyyy` in the en_US locale the iOS screen hardcodes. */
+private fun monthTitle(anchor: LocalDate = LocalDate.now()): String =
+    anchor.format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.US))
+
 @Composable
 private fun MonthGrid(
     title: String,
-    weeks: List<List<StreakDetailSource.Day?>>,
-    onSelect: (StreakDetailSource.Day) -> Unit,
+    weeks: List<List<Day?>>,
+    onSelect: (Day) -> Unit,
 ) {
     MnCard {
         Column(

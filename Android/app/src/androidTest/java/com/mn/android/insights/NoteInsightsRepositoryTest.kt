@@ -1,7 +1,14 @@
-package com.mn.android.data
+package com.mn.android.insights
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import com.mn.android.data.AIDraftProvider
+import com.mn.android.data.AIDraftSettingsStore
+import com.mn.android.data.NoteBlobStore
+import com.mn.android.data.NoteEditorSource
+import com.mn.android.data.NoteInsightBlobStore
+import com.mn.android.data.note.JniNoteInsightsRepository
+import com.mn.android.domain.insights.NoteInsightsRepository
 import java.util.UUID
 import org.json.JSONArray
 import org.json.JSONObject
@@ -13,16 +20,19 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * Contract for the note-insights read: Kotlin decodes what the domain
- * analyzer produced, and the rules themselves stay in Core.
+ * Contract for the note-insights read over the repository port: Kotlin
+ * decodes what the domain analyzer produced, and the rules themselves stay in
+ * Core.
  *
  * The notes are written through `NoteEditorSource.save`, so the store holds
  * the real Swift-encoded note payloads the app writes — not hand-made JSON.
  */
 @RunWith(AndroidJUnit4::class)
-class NoteInsightsContractTest {
+class NoteInsightsRepositoryTest : NoteInsightsRepositoryContract() {
 
     private val originalTransport = AIDraftProvider.transport
+
+    override fun createRepo(): NoteInsightsRepository = JniNoteInsightsRepository()
 
     @Before
     fun setup() {
@@ -49,7 +59,7 @@ class NoteInsightsContractTest {
             content = "calm breathing practice for anxiety before sleep",
         )
 
-        val insights = NoteInsightsSource.load()
+        val insights = JniNoteInsightsRepository().heuristic()
 
         assertTrue("expected at least one insight", insights.isNotEmpty())
         val insight = insights.first()
@@ -65,41 +75,16 @@ class NoteInsightsContractTest {
 
     @Test
     fun load_returnsEmptyList_whenThereAreNoNotes() {
-        val insights = NoteInsightsSource.load()
+        val insights = JniNoteInsightsRepository().heuristic()
 
         assertTrue("expected no insights", insights.isEmpty())
-    }
-
-    @Test
-    fun topThemes_ranksTheMostFrequentLabelsFirst() {
-        val insights = listOf(
-            NoteInsightsSource.Insight(
-                id = "1",
-                summary = "a",
-                tags = listOf("calm"),
-                themes = listOf(
-                    NoteInsightsSource.Theme("calm", 1.0),
-                    NoteInsightsSource.Theme("sleep", 0.5),
-                ),
-            ),
-            NoteInsightsSource.Insight(
-                id = "2",
-                summary = "b",
-                tags = listOf("calm"),
-                themes = listOf(NoteInsightsSource.Theme("calm", 0.8)),
-            ),
-        )
-
-        val themes = NoteInsightsSource.topThemes(insights)
-
-        assertEquals(listOf("calm", "sleep"), themes)
     }
 
     @Test
     fun stored_returnsEmptyList_whenNothingWasAnalyzed() {
         assertTrue(
             "expected no stored insights",
-            NoteInsightsSource.storedInsights().isEmpty(),
+            JniNoteInsightsRepository().stored().isEmpty(),
         )
     }
 
@@ -109,7 +94,7 @@ class NoteInsightsContractTest {
         NoteEditorSource.save(id = id, title = "Evening", content = "calm breathing practice")
         AIDraftProvider.transport = { _, body -> providerAnswer(body) }
 
-        val analysis = NoteInsightsSource.analyzeInsights()
+        val analysis = JniNoteInsightsRepository().analyze()
 
         assertEquals("llm", analysis.source)
         assertTrue("expected insights", analysis.insights.isNotEmpty())
@@ -128,7 +113,7 @@ class NoteInsightsContractTest {
         )
         AIDraftProvider.transport = { _, _ -> throw IllegalStateException("no network") }
 
-        val analysis = NoteInsightsSource.analyzeInsights()
+        val analysis = JniNoteInsightsRepository().analyze()
 
         assertEquals("heuristic", analysis.source)
         assertTrue("expected insights", analysis.insights.isNotEmpty())
@@ -147,8 +132,8 @@ class NoteInsightsContractTest {
         )
         AIDraftProvider.transport = { _, body -> providerAnswer(body) }
 
-        val analysis = NoteInsightsSource.analyzeInsights()
-        val stored = NoteInsightsSource.storedInsights()
+        val analysis = JniNoteInsightsRepository().analyze()
+        val stored = JniNoteInsightsRepository().stored()
 
         assertEquals(analysis.insights.size, stored.size)
         assertEquals(

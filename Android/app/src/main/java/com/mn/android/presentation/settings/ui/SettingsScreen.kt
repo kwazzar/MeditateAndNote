@@ -25,13 +25,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.WorkspacePremium
-
 import androidx.compose.material.icons.filled.Notifications
-
-
-
-
+import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material.icons.filled.WavingHand
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -47,6 +42,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import kotlinx.coroutines.flow.collect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -65,12 +62,14 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 
 import com.mn.android.R
+import com.mn.android.application.container.AppContainer
+import com.mn.android.domain.settings.ReminderSettings
+import com.mn.android.presentation.settings.viewmodel.SettingsViewModel
 
 import com.mn.android.application.subscription.SubscriptionScope
-import com.mn.android.data.SharedPrefsReminderSettingsStore
 import com.mn.android.domain.subscription.Entitlement
+import com.mn.android.domain.subscription.SubscriptionStatus
 
-import com.mn.android.infrastructure.platform.notifications.ReminderScheduler
 import com.mn.android.presentation.theme.ui.MnBackButton
 import com.mn.android.presentation.theme.ui.MnBackground
 import com.mn.android.presentation.theme.ui.MnTheme
@@ -86,6 +85,7 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onShowOnboarding: () -> Unit,
     onShowPaywall: () -> Unit,
+    viewModel: SettingsViewModel = AppContainer.makeSettingsViewModel(LocalContext.current),
 ) {
     val context = LocalContext.current
 
@@ -96,12 +96,16 @@ fun SettingsScreen(
     val isPro = status.isActive(Entitlement.PRO)
     val bypassPro by subscriptionManager.debugBypassPro.collectAsStateWithLifecycle()
 
-    val initial = remember { SharedPrefsReminderSettingsStore.load() }
-    var enabled by remember { mutableStateOf(initial[0] == 1L) }
-    var hour by remember { mutableStateOf(initial.getOrElse(1) { 20L }.toInt()) }
-    var minute by remember { mutableStateOf(initial.getOrElse(2) { 0L }.toInt()) }
-    var weekdays by remember { mutableStateOf(initial.drop(3).map { it.toInt() }.toSet()) }
+    // Observe the VM's state flows
+    val enabled by viewModel.enabled.collectAsStateWithLifecycle()
+    val hour by viewModel.hour.collectAsStateWithLifecycle()
+    val minute by viewModel.minute.collectAsStateWithLifecycle()
+    val weekdays by viewModel.weekdays.collectAsStateWithLifecycle()
+    val volume by viewModel.volume.collectAsStateWithLifecycle()
+    val animationStyle by viewModel.animationStyle.collectAsStateWithLifecycle()
+    val themeSelection by viewModel.themeSelection.collectAsStateWithLifecycle()
     var showTimePicker by remember { mutableStateOf(false) }
+
 
     val hasPermission =
         ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) ==
@@ -113,15 +117,7 @@ fun SettingsScreen(
     ) { }
 
     fun save() {
-        SharedPrefsReminderSettingsStore.save(
-            enabled,
-            hour,
-            minute,
-            weekdays.sorted().map { it.toLong() }.toLongArray(),
-        )
-        // ReminderManager.reschedule() equivalent: cancel + re-arm the
-        // next 7 Core-computed fire dates.
-        ReminderScheduler.reschedule(context)
+        viewModel.setEnabled(enabled)
     }
 
     Box(Modifier.fillMaxSize()) {
@@ -140,159 +136,164 @@ fun SettingsScreen(
                 )
             }
 
-        Column(
-            Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
-        ) {
-            // Reminders — mirror of ReminderSettingsSection. Saves go through
-            // SharedPrefsReminderSettingsStore + ReminderScheduler (AlarmManager),
-            // the Android counterpart of ReminderManager.reschedule().
-            SectionCard {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    SectionHeader(stringResource(R.string.reminders), Icons.Filled.Notifications, Modifier.weight(1f))
-                    Switch(
-                        checked = enabled,
-                        onCheckedChange = { newValue ->
-                            if (newValue && !hasPermission) {
-                                permissionRequested = true
-                                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                            }
-                            enabled = newValue
-                            save()
-                        },
-                        colors = SwitchDefaults.colors(
-                            checkedTrackColor = MnTheme.streakActiveMeditation,
-                            checkedThumbColor = MnTheme.buttonText,
-                        ),
-                    )
-                }
-
-                if (enabled) {
-                    Spacer(Modifier.height(12.dp))
-                    Row(
-                        Modifier.fillMaxWidth().clickable { showTimePicker = true },
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            stringResource(R.string.reminder_time),
-                            color = MnTheme.textSecondary,
-                            style = MaterialTheme.typography.labelLarge,
-                            modifier = Modifier.weight(1f),
-                        )
-                        Text(
-                            String.format("%02d:%02d", hour, minute),
-                            color = MnTheme.textPrimary,
-                            style = MaterialTheme.typography.titleMedium,
-                        )
-                    }
-                    Spacer(Modifier.height(12.dp))
-                    Text(
-                        stringResource(R.string.repeat_on),
-                        color = MnTheme.textSecondary,
-                        style = MaterialTheme.typography.labelLarge,
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        (1..7).forEach { weekday ->
-                            WeekdayChip(
-                                label = weekdaySymbols[weekday - 1],
-                                selected = weekday in weekdays,
-                                onClick = {
-                                    if (weekday in weekdays) {
-                                        if (weekdays.size > 1) weekdays = weekdays - weekday
-                                    } else {
-                                        weekdays = weekdays + weekday
-                                    }
-                                    save()
-                                },
-                                modifier = Modifier.weight(1f),
-                            )
-                        }
-                    }
-                    if (!hasPermission && permissionRequested) {
-                        Spacer(Modifier.height(12.dp))
-                        PermissionBanner(
-                            onAllow = {
-                                if (shouldShowDenied(context)) {
-                                    permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                                } else {
-                                    openAppSettings(context)
-                                }
-                            },
-                        )
-                    }
-                }
-            }
-
-            SubscriptionSection(isPro = isPro, onShowPaywall = onShowPaywall)
-            AnimationSection(isPro = isPro, onShowPaywall = onShowPaywall)
-            ThemeSection(isPro = isPro, onShowPaywall = onShowPaywall)
-            VolumeSection()
-            AIDraftSettingsSection()
-
-            if (isDebuggable(context)) {
+            Column(
+                Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(20.dp),
+            ) {
+                // Reminders
                 SectionCard {
-                    Row(
-                        Modifier.fillMaxWidth().clickable(onClick = onShowOnboarding),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Icon(
-                            Icons.Filled.WavingHand,
-                            contentDescription = null,
-                            tint = MnTheme.streakActiveMeditation,
-                        )
-                        Spacer(Modifier.width(12.dp))
-                        Text(
-                            stringResource(R.string.show_onboarding_again),
-                            color = MnTheme.textPrimary,
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.weight(1f),
-                        )
-                        Icon(
-                            Icons.Filled.Build,
-                            contentDescription = null,
-                            tint = MnTheme.textSecondary,
-                            modifier = Modifier.size(16.dp),
-                        )
-                    }
-
-                    Spacer(Modifier.height(12.dp))
-                    HorizontalDivider(color = MnTheme.divider)
-                    Spacer(Modifier.height(12.dp))
-
-                    // Debug-only: pro without a purchase, so the paid features
-                    // can be checked without buying anything.
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            Icons.Filled.WorkspacePremium,
-                            contentDescription = null,
-                            tint = MnTheme.streakActiveMeditation,
-                        )
-                        Spacer(Modifier.width(12.dp))
-                        Column(Modifier.weight(1f)) {
-                            Text(
-                                stringResource(R.string.paywall_bypass),
-                                color = MnTheme.textPrimary,
-                                style = MaterialTheme.typography.bodyLarge,
-                            )
-                            Text(
-                                stringResource(R.string.paywall_bypass_hint),
-                                color = MnTheme.textSecondary,
-                                style = MaterialTheme.typography.bodySmall,
-                            )
-                        }
+                        SectionHeader(stringResource(R.string.reminders), Icons.Filled.Notifications, Modifier.weight(1f))
                         Switch(
-                            checked = bypassPro,
-                            onCheckedChange = { subscriptionManager.setDebugBypassPro(it) },
+                            checked = enabled,
+                            onCheckedChange = { newValue ->
+                                if (newValue && !hasPermission) {
+                                    permissionRequested = true
+                                    permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                }
+                                viewModel.setEnabled(newValue)
+                            },
                             colors = SwitchDefaults.colors(
                                 checkedTrackColor = MnTheme.streakActiveMeditation,
                                 checkedThumbColor = MnTheme.buttonText,
                             ),
                         )
                     }
+
+                    if (enabled) {
+                        Spacer(Modifier.height(12.dp))
+                        Row(
+                            Modifier.fillMaxWidth().clickable { showTimePicker = true },
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                stringResource(R.string.reminder_time),
+                                color = MnTheme.textSecondary,
+                                style = MaterialTheme.typography.labelLarge,
+                                modifier = Modifier.weight(1f),
+                            )
+                            Text(
+                                String.format("%02d:%02d", hour, minute),
+                                color = MnTheme.textPrimary,
+                                style = MaterialTheme.typography.titleMedium,
+                            )
+                        }
+                        Spacer(Modifier.height(12.dp))
+                        Text(
+                            stringResource(R.string.repeat_on),
+                            color = MnTheme.textSecondary,
+                            style = MaterialTheme.typography.labelLarge,
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            (1..7).forEach { weekday ->
+                                WeekdayChip(
+                                    label = weekdaySymbols[weekday - 1],
+                                    selected = weekday in weekdays,
+                                    onClick = {
+                                        viewModel.toggleWeekday(weekday)
+                                    },
+                                    modifier = Modifier.weight(1f),
+                                )
+                            }
+                        }
+                        if (!hasPermission && permissionRequested) {
+                            Spacer(Modifier.height(12.dp))
+                            PermissionBanner(
+                                onAllow = {
+                                    if (shouldShowDenied(context)) {
+                                        permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                    } else {
+                                        openAppSettings(context)
+                                    }
+                                },
+                            )
+                        }
+                    }
+                }
+
+                SubscriptionSection(isPro = isPro, onShowPaywall = onShowPaywall)
+                AnimationSection(
+                    isPro = isPro,
+                    onShowPaywall = onShowPaywall,
+                    animationStyle = animationStyle,
+                    onAnimationStyleChange = viewModel::setAnimationStyle,
+                )
+                ThemeSection(
+                    isPro = isPro,
+                    onShowPaywall = onShowPaywall,
+                    themeSelection = themeSelection,
+                    onThemeSelectionChange = { viewModel.setThemeSelection(it) },
+                )
+                VolumeSection(
+                    volume = volume,
+                    onVolumeChange = viewModel::setVolume,
+                )
+                AIDraftSettingsSection()
+
+                if (isDebuggable(context)) {
+                    SectionCard {
+                        Row(
+                            Modifier.fillMaxWidth().clickable(onClick = onShowOnboarding),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Icon(
+                                Icons.Filled.WavingHand,
+                                contentDescription = null,
+                                tint = MnTheme.streakActiveMeditation,
+                            )
+                            Spacer(Modifier.width(12.dp))
+                            Text(
+                                stringResource(R.string.show_onboarding_again),
+                                color = MnTheme.textPrimary,
+                                style = MaterialTheme.typography.bodyLarge,
+                                modifier = Modifier.weight(1f),
+                            )
+                            Icon(
+                                Icons.Filled.Build,
+                                contentDescription = null,
+                                tint = MnTheme.textSecondary,
+                                modifier = Modifier.size(16.dp),
+                            )
+                        }
+
+                        Spacer(Modifier.height(12.dp))
+                        HorizontalDivider(color = MnTheme.divider)
+                        Spacer(Modifier.height(12.dp))
+
+                        // Debug-only: pro without a purchase, so the paid features
+                        // can be checked without buying anything.
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Filled.WorkspacePremium,
+                                contentDescription = null,
+                                tint = MnTheme.streakActiveMeditation,
+                            )
+                            Spacer(Modifier.width(12.dp))
+                            Column(Modifier.weight(1f)) {
+                                Text(
+                                    stringResource(R.string.paywall_bypass),
+                                    color = MnTheme.textPrimary,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                )
+                                Text(
+                                    stringResource(R.string.paywall_bypass_hint),
+                                    color = MnTheme.textSecondary,
+                                    style = MaterialTheme.typography.bodySmall,
+                                )
+                            }
+                            Switch(
+                                checked = bypassPro,
+                                onCheckedChange = { subscriptionManager.setDebugBypassPro(it) },
+                                colors = SwitchDefaults.colors(
+                                    checkedTrackColor = MnTheme.streakActiveMeditation,
+                                    checkedThumbColor = MnTheme.buttonText,
+                                ),
+                            )
+                        }
+                    }
                 }
             }
-        }
         }
     }
 
@@ -305,10 +306,8 @@ fun SettingsScreen(
             text = { TimePicker(state = timeState) },
             confirmButton = {
                 TextButton(onClick = {
-                    hour = timeState.hour
-                    minute = timeState.minute
+                    viewModel.setTime(timeState.hour, timeState.minute)
                     showTimePicker = false
-                    save()
                 }) {
                     Text(stringResource(R.string.ok), color = MnTheme.streakActiveMeditation)
                 }
@@ -343,7 +342,7 @@ internal fun SectionHeader(title: String, icon: ImageVector, modifier: Modifier 
 }
 
 @Composable
-private fun WeekdayChip(label: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+internal fun WeekdayChip(label: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Text(
         label,
         color = if (selected) MnTheme.buttonText else MnTheme.textSecondary,
@@ -361,7 +360,7 @@ private fun WeekdayChip(label: String, selected: Boolean, onClick: () -> Unit, m
 }
 
 @Composable
-private fun PermissionBanner(onAllow: () -> Unit) {
+internal fun PermissionBanner(onAllow: () -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Icon(Icons.Filled.Notifications, contentDescription = null, tint = MnTheme.streakIndicator, modifier = Modifier.size(16.dp))
         Spacer(Modifier.width(8.dp))

@@ -4,6 +4,7 @@ import android.content.Context
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
+import com.mn.android.domain.aidraft.AIDraftSettings
 import java.security.KeyStore
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
@@ -20,7 +21,7 @@ import javax.crypto.SecretKey
  * (AIDraftBridge.swift) reads the endpoint and the model; the key stays on
  * this side and is attached to the request here.
  */
-object AIDraftSettingsStore {
+object AIDraftSettingsStore : AIDraftSettings {
 
     private const val PREFS = "ai_draft_settings"
     private const val KEY_ENDPOINT = "endpoint"
@@ -44,39 +45,39 @@ object AIDraftSettingsStore {
      * just the same. The switch is there because the choice of who receives
      * the text is the user's, not the build's.
      */
-    fun useHostedProvider(): Boolean =
+    override fun useHostedProvider(): Boolean =
         prefs()?.getBoolean(KEY_HOSTED, com.mn.android.BuildConfig.AI_DRAFT_ENDPOINT.isNotEmpty())
             ?: false
 
-    fun setUseHostedProvider(value: Boolean) {
+    override fun setUseHostedProvider(value: Boolean) {
         prefs()?.edit()?.putBoolean(KEY_HOSTED, value)?.apply()
     }
 
     /** The hosted endpoint the build points at, empty when there is none. */
-    fun hostedEndpoint(): String = com.mn.android.BuildConfig.AI_DRAFT_ENDPOINT
+    override fun hostedEndpoint(): String = com.mn.android.BuildConfig.AI_DRAFT_ENDPOINT
 
     /** The endpoint the app talks to: the hosted proxy, or the user's own. */
-    fun endpoint(): String = when {
+    override fun endpoint(): String = when {
         useHostedProvider() -> hostedEndpoint()
         else -> prefs()?.getString(KEY_ENDPOINT, "").orEmpty()
     }
 
     /** The user's own endpoint, as typed in Settings. */
-    fun userEndpoint(): String = prefs()?.getString(KEY_ENDPOINT, "").orEmpty()
+    override fun userEndpoint(): String = prefs()?.getString(KEY_ENDPOINT, "").orEmpty()
 
-    fun model(): String = prefs()?.getString(KEY_MODEL, "").orEmpty()
+    override fun model(): String = prefs()?.getString(KEY_MODEL, "").orEmpty()
 
-    fun hasApiKey(): Boolean = !apiKey().isNullOrBlank()
+    override fun hasApiKey(): Boolean = !apiKey().isNullOrBlank()
 
     /**
      * Whether the user pointed the app at a provider. The API key is
      * optional - an endpoint without auth (a local model, a proxy) works
      * without one.
      */
-    fun isConfigured(): Boolean = endpoint().isNotEmpty()
+    override fun isConfigured(): Boolean = endpoint().isNotEmpty()
 
     /** Empty [apiKey] clears the stored key; null leaves it as it is. */
-    fun save(endpoint: String, model: String, apiKey: String?) {
+    override fun save(endpoint: String, model: String, apiKey: String?) {
         val prefs = prefs() ?: return
         prefs.edit()
             .putString(KEY_ENDPOINT, endpoint.trim())
@@ -92,7 +93,7 @@ object AIDraftSettingsStore {
     }
 
     /** The decrypted key, or null when there is none or it cannot be read. */
-    fun apiKey(): String? {
+    override fun apiKey(): String? {
         val prefs = prefs() ?: return null
         val cipherText = prefs.getString(KEY_CIPHER, null) ?: return null
         val ivText = prefs.getString(KEY_IV, null) ?: return null

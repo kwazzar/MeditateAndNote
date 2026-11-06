@@ -34,15 +34,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.mn.android.infrastructure.persistence.local.settings.SoundSettings
-import com.mn.android.infrastructure.platform.sound.MeditationSound
-import com.mn.android.infrastructure.platform.sound.SoundPlayer
+import com.mn.android.application.container.AppContainer
+import com.mn.android.domain.meditation.SessionCue
+import com.mn.android.domain.meditation.SoundPlayer
+import com.mn.android.domain.settings.SoundVolumeStore
 import com.mn.android.presentation.theme.ui.MnCloseButton
 import com.mn.android.presentation.theme.ui.MnTheme
 import com.mn.android.presentation.theme.ui.MnVolumeSlider
@@ -51,17 +53,21 @@ import com.mn.android.R
 
 /**
  * Port of iOS `SoundSettingsSheet`: ~360 pt sheet with a volume slider
- * (persisted through [SoundSettings]) and a sample playback button
- * ([SoundPlayer]).
+ * (persisted through [SoundVolumeStore]) and a sample playback button
+ * ([SoundPlayerImpl]).
  *
  * The volume lives in screen-local Compose state and writes through to
- * `SoundSettings` on every change — the Kotlin mirror of `@Bindable` +
+ * `SoundVolumeStore` on every change — the Kotlin mirror of `@Bindable` +
  * `didSet` persistence on iOS.
  */
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
-fun SoundSettingsSheet(onDismiss: () -> Unit) {
-    var volume by remember { mutableFloatStateOf(SoundSettings.volume) }
+fun SoundSettingsSheet(
+    onDismiss: () -> Unit,
+    soundVolume: SoundVolumeStore = AppContainer.getSoundVolume(LocalContext.current),
+    soundPlayer: SoundPlayer = AppContainer.getSoundPlayer(LocalContext.current),
+) {
+    var volume by remember { mutableFloatStateOf(soundVolume.volume) }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -123,7 +129,7 @@ fun SoundSettingsSheet(onDismiss: () -> Unit) {
                     value = volume,
                     onValueChange = {
                         volume = it
-                        SoundSettings.volume = it
+                        soundVolume.volume = it
                     },
                     knobSize = 22.dp,
                 )
@@ -149,7 +155,7 @@ fun SoundSettingsSheet(onDismiss: () -> Unit) {
             Spacer(Modifier.height(16.dp))
 
             Button(
-                onClick = { SoundPlayer.play(MeditationSound.PHASE_INHALE) },
+                onClick = { soundPlayer.play(SessionCue.INHALE) },
                 colors = ButtonDefaults.buttonColors(containerColor = MnTheme.accentButton),
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth(),

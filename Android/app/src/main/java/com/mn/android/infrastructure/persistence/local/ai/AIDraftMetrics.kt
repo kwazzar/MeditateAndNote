@@ -1,7 +1,8 @@
 package com.mn.android.infrastructure.persistence.local.ai
 
 import android.content.Context
-import com.mn.android.data.AIDraftSource
+import com.mn.android.domain.aidraft.AIDraftMetric
+import com.mn.android.domain.aidraft.AIDraftMetricRecorder
 
 /**
  * Writes the draft telemetry rows.
@@ -11,9 +12,16 @@ import com.mn.android.data.AIDraftSource
  * dropped. This layer only persists it, and the row carries counts, latency
  * and a typed kind: never prompt text, never the model's answer.
  */
-object AIDraftMetrics {
+object AIDraftMetrics : AIDraftMetricRecorder {
 
-    suspend fun record(context: Context, metric: AIDraftSource.Metric) {
+    private var context: Context? = null
+
+    fun configure(context: Context) {
+        this.context = context.applicationContext
+    }
+
+    override suspend fun record(metric: AIDraftMetric) {
+        val context = this.context ?: return
         MeditateDatabase.get(context).aiDraftMetricDao().insert(
             AiDraftMetricEntity(
                 kind = metric.kind,

@@ -1,6 +1,9 @@
 package com.mn.android.presentation.notes
 
-import com.mn.android.data.NoteInsightsSource
+import com.mn.android.domain.insights.NoteInsight
+import com.mn.android.domain.insights.NoteInsightTheme
+import com.mn.android.domain.insights.NoteInsightsAnalysis
+import com.mn.android.insights.FakeNoteInsightsRepository
 import com.mn.android.presentation.notes.viewmodel.NoteInsightsViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -33,10 +36,8 @@ class NoteInsightsViewModelTest {
     @Test
     fun load_showsTheStoredInsights() {
         val stored = insight("stored")
-        val vm = viewModel(
-            loadStored = { listOf(stored) },
-            loadHeuristic = { listOf(insight("heuristic")) },
-        )
+        val repository = FakeNoteInsightsRepository().apply { insights = listOf(stored) }
+        val vm = viewModel(repository)
 
         vm.load()
 
@@ -48,10 +49,8 @@ class NoteInsightsViewModelTest {
     @Test
     fun load_fallsBackToTheHeuristic_whenNothingIsStored() {
         val heuristic = insight("heuristic")
-        val vm = viewModel(
-            loadStored = { emptyList() },
-            loadHeuristic = { listOf(heuristic) },
-        )
+        val repository = FakeNoteInsightsRepository().apply { insights = listOf(heuristic) }
+        val vm = viewModel(repository)
 
         vm.load()
 
@@ -61,10 +60,11 @@ class NoteInsightsViewModelTest {
     @Test
     fun refresh_showsWhatThePassFound() {
         val analyzed = insight("analyzed")
-        val vm = viewModel(
-            loadStored = { listOf(insight("stored")) },
-            runAnalysis = { NoteInsightsSource.Analysis(listOf(analyzed), "llm") },
-        )
+        val repository = FakeNoteInsightsRepository().apply {
+            insights = listOf(insight("stored"))
+            analysis = NoteInsightsAnalysis(listOf(analyzed), "llm")
+        }
+        val vm = viewModel(repository)
 
         vm.refresh()
 
@@ -75,10 +75,11 @@ class NoteInsightsViewModelTest {
     @Test
     fun refresh_keepsTheOldInsights_whenThePassFails() {
         val stored = insight("stored")
-        val vm = viewModel(
-            loadStored = { listOf(stored) },
-            runAnalysis = { NoteInsightsSource.Analysis(emptyList(), "", "providerUnavailable") },
-        )
+        val repository = FakeNoteInsightsRepository().apply {
+            insights = listOf(stored)
+            analysis = NoteInsightsAnalysis(emptyList(), "", "providerUnavailable")
+        }
+        val vm = viewModel(repository)
         vm.load()
 
         vm.refresh()
@@ -87,23 +88,32 @@ class NoteInsightsViewModelTest {
         assertEquals("providerUnavailable", vm.state.value.error)
     }
 
-    private fun viewModel(
-        loadStored: suspend () -> List<NoteInsightsSource.Insight>,
-        loadHeuristic: suspend () -> List<NoteInsightsSource.Insight> = { emptyList() },
-        runAnalysis: suspend () -> NoteInsightsSource.Analysis = {
-            NoteInsightsSource.Analysis(emptyList(), "")
-        },
-    ) = NoteInsightsViewModel(
-        loadStored = loadStored,
-        loadHeuristic = loadHeuristic,
-        runAnalysis = runAnalysis,
+    @Test
+    fun topThemes_ranksTheMostFrequentLabelsFirst() {
+        val repository = FakeNoteInsightsRepository().apply {
+            insights = listOf(
+                insight("a").copy(
+                    themes = listOf(NoteInsightTheme("calm", 1.0), NoteInsightTheme("sleep", 0.5)),
+                ),
+                insight("b").copy(themes = listOf(NoteInsightTheme("calm", 0.8))),
+            )
+        }
+        val vm = viewModel(repository)
+
+        vm.load()
+
+        assertEquals(listOf("calm", "sleep"), vm.topThemes)
+    }
+
+    private fun viewModel(repository: FakeNoteInsightsRepository) = NoteInsightsViewModel(
+        repository = repository,
         ioDispatcher = UnconfinedTestDispatcher(),
     )
 
-    private fun insight(summary: String) = NoteInsightsSource.Insight(
+    private fun insight(summary: String) = NoteInsight(
         id = summary,
         summary = summary,
         tags = listOf("calm"),
-        themes = listOf(NoteInsightsSource.Theme("calm", 1.0)),
+        themes = listOf(NoteInsightTheme("calm", 1.0)),
     )
 }

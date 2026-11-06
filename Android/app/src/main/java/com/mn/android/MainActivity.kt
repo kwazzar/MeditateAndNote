@@ -67,12 +67,11 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import com.mn.android.R
+import com.mn.android.application.container.AppContainer
 import com.mn.android.application.subscription.EntitlementSource
 import com.mn.android.application.subscription.SubscriptionScope
 import com.mn.android.domain.subscription.Entitlement
 import com.mn.android.domain.theme.model.MainTheme
-import com.mn.android.infrastructure.persistence.local.settings.AnimationSettings
-import com.mn.android.infrastructure.persistence.local.meditation.MeditationSelection
 import com.mn.android.data.AIDraftQuotaCounter
 import com.mn.android.data.AIDraftSessionStorage
 import com.mn.android.data.AIDraftSettingsStore
@@ -80,15 +79,12 @@ import com.mn.android.data.NoteBlobStore
 import com.mn.android.data.NoteInsightBlobStore
 import com.mn.android.data.SessionBlobStore
 import com.mn.android.infrastructure.persistence.local.settings.OnboardingStore
-import com.mn.android.data.SharedPrefsReminderSettingsStore
-import com.mn.android.infrastructure.persistence.local.settings.SoundSettings
 import com.mn.android.data.StreakSnapshotStore
 import com.mn.android.domain.events.DomainEvent
+import com.mn.android.domain.settings.AnimationStyle
 import com.mn.android.domain.events.DomainEventBus
 import com.mn.android.infrastructure.analytics.AppAnalytics
-import com.mn.android.infrastructure.platform.notifications.ReminderScheduler
 import com.mn.android.infrastructure.platform.billing.BillingActivity
-import com.mn.android.infrastructure.platform.sound.SoundPlayer
 import com.mn.android.presentation.home.ui.HomeScreen
 import com.mn.android.presentation.launch.ui.LoadingScreen
 import com.mn.android.presentation.settings.ui.SettingsScreen
@@ -97,10 +93,10 @@ import com.mn.android.presentation.meditate.ui.MeditateSelectScreen
 import com.mn.android.presentation.notes.ui.NoteEditorScreen
 import com.mn.android.data.BookBlobStore
 import com.mn.android.data.BookmarkBlobStore
-import com.mn.android.data.BookSource
-import com.mn.android.data.ReaderSettingsStore
+import com.mn.android.infrastructure.persistence.local.reader.ReaderSettingsImpl
 import com.mn.android.presentation.notes.ui.NoteMenuScreen
 import com.mn.android.presentation.reading.ui.LibraryScreen
+import com.mn.android.presentation.reading.ui.documentName
 import com.mn.android.presentation.reading.ui.ReaderScreen
 import com.mn.android.presentation.onboarding.ui.OnboardingScreen
 import com.mn.android.presentation.paywall.ui.PaywallScreen
@@ -143,8 +139,9 @@ class MainActivity : ComponentActivity() {
             LaunchedEffect(isPro) {
                 if (!isPro) {
                     if (themeManager.theme.isPremium) themeManager.select(MainTheme.DARK_ZEN)
-                    if (AnimationSettings.isPremium(AnimationSettings.style)) {
-                        AnimationSettings.style = AnimationSettings.PATH
+                    val animationStyle = AppContainer.getAnimationStyle(context)
+                    if (animationStyle.style.isPremium) {
+                        animationStyle.style = AnimationStyle.PATH
                     }
                 }
             }
@@ -195,16 +192,18 @@ private fun MnNav() {
     NoteInsightBlobStore.configure(LocalContext.current)
     SessionBlobStore.configure(LocalContext.current)
     BookmarkBlobStore.configure(LocalContext.current)
-    SharedPrefsReminderSettingsStore.configure(LocalContext.current)
-    MeditationSelection.configure(LocalContext.current)
-    SoundSettings.configure(LocalContext.current)
-    SoundPlayer.configure(LocalContext.current)
+    // The preference stores the app needs before the first screen asks.
+    AppContainer.getReminderSettings(LocalContext.current)
+    AppContainer.getMeditationSelection(LocalContext.current)
+    AppContainer.getSoundVolume(LocalContext.current)
+    AppContainer.getSoundPlayer(LocalContext.current)
+    AppContainer.getAnimationStyle(LocalContext.current)
+    AppContainer.getThemeSelection(LocalContext.current)
     // The Swift AI-draft bridge asks for the entitlement through this source.
     EntitlementSource.configure(LocalContext.current)
-    AnimationSettings.configure(LocalContext.current)
     // Re-assert the pending reminder alarms on every launch: idempotent, and
     // covers anything the boot receiver missed (e.g. updated app process).
-    ReminderScheduler.reschedule(LocalContext.current)
+    AppContainer.getReminderScheduler(LocalContext.current).reschedule()
 
     val navController = rememberNavController()
     val startDestination =
@@ -214,14 +213,20 @@ private fun MnNav() {
     // tapped): import it into the library and open it in the reader.
     val context = LocalContext.current
     BookBlobStore.configure(context)
+    val bookRepository = AppContainer.getBookRepository(context)
     LaunchedEffect(context) {
         val uri = (context as? Activity)?.intent?.data ?: return@LaunchedEffect
         val imported = withContext(Dispatchers.IO) {
-            runCatching { BookSource.importDocument(context, uri) }.getOrNull()
+            runCatching {
+                val name = documentName(context, uri)
+                val content = context.contentResolver.openInputStream(uri)
+                    ?: error("cannot read picked file")
+                bookRepository.importDocument(name, content).getOrThrow()
+            }.getOrNull()
         }
         if (imported != null) {
             DomainEventBus.publish(DomainEvent.BookImported(imported.format))
-            navController.navigate("reader/${imported.id}")
+            navController.navigate("reader/${imported.id.value}")
         }
     }
 
@@ -301,7 +306,7 @@ private fun MnNav() {
                     onMeditate = {
                         // iOS MainView starts the last-picked meditation directly;
                         // the Meditations tab is where you change it.
-                        val last = MeditationSelection.lastSelectedId
+                        val last = AppContainer.getMeditationSelection(context).lastSelectedId
                         if (last != null) navController.navigate("breathing/$last")
                         else navController.navigate("meditate")
                     },
@@ -357,7 +362,7 @@ private fun MnNav() {
             }
             composable("reader/{bookId}") { backStackEntry ->
                 val id = backStackEntry.arguments?.getString("bookId") ?: ""
-                ReaderSettingsStore.configure(LocalContext.current)
+                ReaderSettingsImpl.configure(LocalContext.current)
                 ReaderScreen(
                     bookId = id,
                     onBack = { navController.popBackStack() },

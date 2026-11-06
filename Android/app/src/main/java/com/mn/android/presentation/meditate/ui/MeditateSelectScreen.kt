@@ -59,13 +59,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.mn.android.R
-import com.mn.android.infrastructure.persistence.local.meditation.MeditationCatalog
-import com.mn.android.infrastructure.persistence.local.meditation.MeditationSelection
+import com.mn.android.application.container.AppContainer
 import com.mn.android.domain.meditation.model.MeditationUi
+import com.mn.android.presentation.meditate.viewmodel.MeditateSelectViewModel
 import com.mn.android.presentation.theme.ui.MnBackground
 import com.mn.android.presentation.theme.ui.MnTheme
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 
 /**
  * Compose counterpart of `MeditateSelectView` + `MeditateSelectViewModel`.
@@ -84,32 +86,23 @@ fun MeditateSelectScreen(
     onStartMeditation: (String) -> Unit = {},
 ) {
     val context = LocalContext.current
-    var items by remember { mutableStateOf<List<MeditationUi>>(emptyList()) }
+    val viewModel: MeditateSelectViewModel = viewModel(
+        factory = androidx.lifecycle.viewmodel.viewModelFactory {
+            initializer { AppContainer.makeMeditateSelectViewModel(context) }
+        }
+    )
     var error by remember { mutableStateOf<String?>(null) }
     var selectedId by remember { mutableStateOf<String?>(null) }
     var infoItem by remember { mutableStateOf<MeditationUi?>(null) }
     var showSoundSettings by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        MeditationSelection.configure(context)
-        runCatching { withContext(Dispatchers.IO) { MeditationCatalog.load() } }
-            .onSuccess { loaded ->
-                items = loaded
-                // Mirror of `MediateSelectViewModel.restoreLastSelectedMeditation`:
-                // stored id if it still exists, else first entry, saved back.
-                val stored = MeditationSelection.lastSelectedId
-                val restored = loaded.firstOrNull { it.id == stored } ?: loaded.firstOrNull()
-                selectedId = restored?.id
-                if (restored != null) {
-                    MeditationSelection.lastSelectedId = restored.id
-                }
-            }
-            .onFailure { failure ->
-                error = "${failure.javaClass.simpleName}: ${failure.message}"
-            }
+        viewModel.loadCatalog()
     }
 
-    val selected = items.firstOrNull { it.id == selectedId }
+    val catalog by viewModel.items.collectAsStateWithLifecycle()
+    LaunchedEffect(viewModel.error) { error = viewModel.error }
+    val selected = catalog.firstOrNull { it.id == selectedId }
 
     Box(Modifier.fillMaxSize()) {
         MnBackground()
@@ -151,7 +144,7 @@ fun MeditateSelectScreen(
                 modifier = Modifier.padding(top = 24.dp),
             )
 
-            items.isEmpty() -> Column(
+            catalog.isEmpty() -> Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
                 modifier = Modifier
@@ -227,13 +220,13 @@ fun MeditateSelectScreen(
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     modifier = Modifier.weight(1f),
                 ) {
-                    items(items, key = { it.id }) { meditation ->
+                    items(catalog, key = { it.id }) { meditation ->
                         MeditationCard(
                             meditation = meditation,
                             isSelected = meditation.id == selectedId,
                             onSelect = {
                                 selectedId = meditation.id
-                                MeditationSelection.lastSelectedId = meditation.id
+                                AppContainer.getMeditationSelection(context).lastSelectedId = meditation.id
                             },
                             onLongPress = { infoItem = meditation },
                         )

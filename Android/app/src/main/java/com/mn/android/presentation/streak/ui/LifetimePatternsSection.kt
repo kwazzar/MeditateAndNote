@@ -32,7 +32,10 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.mn.android.data.StreakInsightsSource.Bundle
+import com.mn.android.domain.streak.Bundle
+import com.mn.android.domain.streak.DistributionBucket
+import com.mn.android.domain.streak.Heatmap
+import com.mn.android.domain.streak.Resilience
 import com.mn.android.presentation.theme.ui.MnTheme
 import androidx.compose.ui.res.stringResource
 import com.mn.android.R
@@ -147,7 +150,7 @@ private fun StreakDistributionCard(bundle: Bundle) {
 private fun distributionSummary(
     totalStreaks: Int,
     median: Int,
-    buckets: List<com.mn.android.data.StreakInsightsSource.DistributionBucket>,
+    buckets: List<DistributionBucket>,
 ): String {
     val largest = buckets.maxByOrNull { it.count }
     if (largest != null && largest.count > 0) {
@@ -160,7 +163,7 @@ private fun distributionSummary(
 // MARK: - Resilience
 
 @Composable
-private fun ResilienceCard(resilience: com.mn.android.data.StreakInsightsSource.Resilience) {
+private fun ResilienceCard(resilience: Resilience) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(
@@ -226,7 +229,7 @@ private fun StatTile(label: String, value: String, unit: String?, modifier: Modi
 // MARK: - Break pattern
 
 @Composable
-private fun BreakPatternCard(heatmap: com.mn.android.data.StreakInsightsSource.Heatmap) {
+private fun BreakPatternCard(heatmap: Heatmap) {
     var appeared by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { appeared = true }
 

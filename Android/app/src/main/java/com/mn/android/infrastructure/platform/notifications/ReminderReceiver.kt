@@ -7,7 +7,8 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import com.mn.android.data.ReminderScheduleSource
-import com.mn.android.data.SharedPrefsReminderSettingsStore
+import com.mn.android.data.reminder.JniReminderSettingsStore
+import com.mn.android.domain.settings.ReminderScheduler
 
 /**
  * Android counterpart of iOS `ReminderManager.reschedule()` +
@@ -19,11 +20,24 @@ import com.mn.android.data.SharedPrefsReminderSettingsStore
  * scheduling (Android 12+ `SCHEDULE_EXACT_ALARM`), it falls back to
  * inexact ones — a late reminder beats none.
  */
-object ReminderScheduler {
+object AndroidReminderScheduler : ReminderScheduler {
 
     /** `ReminderManager.notificationIDPrefix` + index — request codes 1000..1006. */
     private const val REQUEST_CODE_BASE = 1000
     const val HORIZON = 7
+
+    @Volatile
+    private var appContext: Context? = null
+
+    fun configure(context: Context) {
+        appContext = context.applicationContext
+    }
+
+    /** The port's way: the context the app configured at startup. */
+    override fun reschedule() {
+        val context = appContext ?: return
+        reschedule(context)
+    }
 
     fun reschedule(context: Context) {
         val alarmManager = context.getSystemService(AlarmManager::class.java) ?: return
@@ -32,18 +46,15 @@ object ReminderScheduler {
         }
         pending.forEach(alarmManager::cancel)
 
-        val raw = SharedPrefsReminderSettingsStore.load()
-        if (raw.isEmpty() || raw[0] != 1L) return
-        val hour = raw.getOrNull(1)?.toInt() ?: 20
-        val minute = raw.getOrNull(2)?.toInt() ?: 0
-        val weekdays = raw.drop(3).map { it.toInt() }.toSet()
-        if (weekdays.isEmpty()) return
+        val settings = JniReminderSettingsStore(context).load()
+        if (!settings.enabled) return
+        if (settings.weekdays.isEmpty()) return
 
         val fireDates = ReminderScheduleSource.nextFireDates(
-            enabled = true,
-            hour = hour,
-            minute = minute,
-            weekdays = weekdays,
+            enabled = settings.enabled,
+            hour = settings.hour,
+            minute = settings.minute,
+            weekdays = settings.weekdays,
             afterMillis = System.currentTimeMillis(),
             horizon = HORIZON,
         )
@@ -94,13 +105,13 @@ class ReminderReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
-            ReminderScheduler.reschedule(context)
+            AndroidReminderScheduler.reschedule(context)
             return
         }
         if (intent.action != ACTION_REMINDER_FIRE) return
 
         notifyNow(context)
-        ReminderScheduler.reschedule(context)
+        AndroidReminderScheduler.reschedule(context)
     }
 
     private fun notifyNow(context: Context) {

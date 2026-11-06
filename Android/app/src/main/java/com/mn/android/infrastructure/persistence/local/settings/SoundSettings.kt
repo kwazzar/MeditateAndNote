@@ -2,6 +2,7 @@ package com.mn.android.infrastructure.persistence.local.settings
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.mn.android.domain.settings.SoundVolumeStore
 
 /**
  * Android side of iOS `SoundSettings` (`Services/Sound/SoundSettings.swift`):
@@ -9,7 +10,7 @@ import android.content.SharedPreferences
  * to 0...1, default 0.2. Storage stays per-platform (SharedPreferences vs
  * UserDefaults) — the `MeditationSelection` arrangement.
  */
-object SoundSettings {
+object SoundSettings : SoundVolumeStore {
 
     private const val PREFS = "soundSettings"
     private const val KEY = "meditationSoundVolume"
@@ -28,7 +29,7 @@ object SoundSettings {
         }
     }
 
-    var volume: Float
+    override var volume: Float
         get() = (prefs?.getFloat(KEY, 0.2f) ?: 0.2f).coerceIn(0f, 1f)
         set(value) {
             prefs?.edit()?.putFloat(KEY, value.coerceIn(0f, 1f))?.apply()

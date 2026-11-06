@@ -36,6 +36,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
@@ -48,11 +49,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.viewModelFactory
+import androidx.lifecycle.viewmodel.initializer
 import com.mn.android.R
-import com.mn.android.data.NoteMenuSource
-import com.mn.android.domain.events.DomainEvent
-import com.mn.android.domain.events.DomainEventBus
+import com.mn.android.application.container.AppContainer
+import com.mn.android.domain.note.NoteId
+import com.mn.android.domain.note.NoteListItem
 import com.mn.android.presentation.notes.viewmodel.NoteInsightsViewModel
+import com.mn.android.presentation.notes.viewmodel.NoteMenuViewModel
 import com.mn.android.presentation.theme.ui.MnBackground
 import com.mn.android.presentation.theme.ui.MnTheme
 import java.text.SimpleDateFormat
@@ -72,50 +76,44 @@ import java.util.Locale
 fun NoteMenuScreen(
     onOpenNote: (String) -> Unit,
     onAddNote: () -> Unit,
+    /** The list; the tests hand in one built on the fake repository. */
+    noteMenuViewModel: NoteMenuViewModel? = null,
 ) {
-    val insightsViewModel: NoteInsightsViewModel = viewModel()
+    val context = LocalContext.current
+    val menuViewModel: NoteMenuViewModel = noteMenuViewModel ?: viewModel(
+        factory = viewModelFactory {
+            initializer { AppContainer.makeNoteMenuViewModel(context) }
+        }
+    )
+    val menuState by menuViewModel.state.collectAsStateWithLifecycle()
+    val insightsViewModel: NoteInsightsViewModel = viewModel(
+        factory = viewModelFactory {
+            initializer { AppContainer.makeNoteInsightsViewModel() }
+        },
+    )
     val insightsState by insightsViewModel.state.collectAsStateWithLifecycle()
-    var query by remember { mutableStateOf("") }
     // Collapsed every time the screen is entered; kept while scrolling the list
     // because it lives here and not in the lazy item.
     var insightsExpanded by remember { mutableStateOf(false) }
-    var notes by remember { mutableStateOf<List<NoteMenuSource.NoteRecord>>(emptyList()) }
     val listState = rememberLazyListState()
     var isScrolling by remember { mutableStateOf(false) }
     LaunchedEffect(listState.isScrollInProgress) {
         isScrolling = listState.isScrollInProgress
     }
 
-    // The list reads once here and again on every note event, so a save in
-    // the editor shows up in the list without leaving the tab.
+    // The insights read once here; the note list lives in the ViewModel, which
+    // re-reads it on every note event - a save in the editor shows up in the
+    // list without leaving the tab.
     LaunchedEffect(Unit) {
-        notes = NoteMenuSource.readMenu().notes
         insightsViewModel.load()
-        DomainEventBus.events.collect { event ->
-            if (event is DomainEvent.NoteCreated ||
-                event is DomainEvent.NoteUpdated ||
-                event is DomainEvent.NoteDeleted
-            ) {
-                notes = NoteMenuSource.readMenu().notes
-            }
-        }
-    }
-
-    val shown = remember(notes, query) {
-        val q = query.trim()
-        if (q.isEmpty()) notes
-        else notes.filter {
-            it.title.contains(q, ignoreCase = true) ||
-                it.content.contains(q, ignoreCase = true)
-        }
     }
 
     Box(Modifier.fillMaxSize()) {
         MnBackground()
         Column(Modifier.fillMaxSize()) {
             NotesSearchBar(
-                query = query,
-                onQueryChange = { query = it },
+                query = menuState.query,
+                onQueryChange = { menuViewModel.updateQuery(it) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 12.dp),
@@ -144,10 +142,10 @@ fun NoteMenuScreen(
                         )
                     }
                 }
-                items(shown, key = { it.id }) { note ->
+                items(menuState.notes, key = { it.id.value }) { note ->
                     NoteCard(
                         note = note,
-                        onClick = { onOpenNote(note.id) },
+                        onClick = { onOpenNote(note.id.value) },
                     )
                 }
             }
@@ -212,7 +210,7 @@ private fun NotesSearchBar(
 // MARK: - Note card (NoteCard)
 
 @Composable
-private fun NoteCard(note: NoteMenuSource.NoteRecord, onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun NoteCard(note: NoteListItem, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val dateLabel = remember(note.dateMillis) {
         SimpleDateFormat("d MMMM", Locale.getDefault()).format(note.dateMillis)
     }
@@ -305,8 +303,8 @@ private fun AddNoteButton(onClick: () -> Unit, enabled: Boolean = true, modifier
 @Composable
 private fun NoteMenuPreview() {
     val sample = listOf(
-        NoteMenuSource.NoteRecord("1", "Morning pages", "Breathe in, breathe out.\nToday the light came early.", 1_700_000_000_000),
-        NoteMenuSource.NoteRecord("2", "Gratitude", "Warm tea, quiet room.", 1_690_000_000_000),
+        NoteListItem(NoteId("1"), "Morning pages", "Breathe in, breathe out.\nToday the light came early.", 1_700_000_000_000),
+        NoteListItem(NoteId("2"), "Gratitude", "Warm tea, quiet room.", 1_690_000_000_000),
     )
     Column(Modifier.background(MnTheme.background)) {
         NotesSearchBar(query = "", onQueryChange = {})

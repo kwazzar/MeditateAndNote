@@ -2,6 +2,8 @@ package com.mn.android.infrastructure.persistence.local.settings
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.mn.android.domain.settings.AnimationStyle
+import com.mn.android.domain.settings.AnimationStyleStore
 
 /**
  * Android side of iOS `AnimationSettings`
@@ -9,13 +11,10 @@ import android.content.SharedPreferences
  * the same key (`meditationAnimationStyle`), values `rings` / `path` — the
  * `BreathingAnimationStyle` raw values Core owns. Default `path`, like iOS.
  */
-object AnimationSettings {
+object AnimationSettings : AnimationStyleStore {
 
     private const val PREFS = "animationSettings"
     private const val KEY = "meditationAnimationStyle"
-
-    const val RINGS = "rings"
-    const val PATH = "path"
 
     @Volatile
     private var prefs: SharedPreferences? = null
@@ -31,19 +30,9 @@ object AnimationSettings {
         }
     }
 
-    var style: String
-        get() = prefs?.getString(KEY, PATH)?.takeIf { it == RINGS || it == PATH } ?: PATH
+    override var style: AnimationStyle
+        get() = AnimationStyle.of(prefs?.getString(KEY, null))
         set(value) {
-            prefs?.edit()?.putString(KEY, value)?.apply()
+            prefs?.edit()?.putString(KEY, value.raw)?.apply()
         }
-
-    /**
-     * `BreathingAnimationStyle.isPremium` on iOS: `path` is the free default,
-     * `rings` needs the `pro` entitlement.
-     *
-     * The rule itself lives in Core (`BreathingAnimationStyle.swift`), but
-     * jextract does not generate a getter for a computed property of an enum,
-     * so the value is mirrored here. Keep it in sync with Core.
-     */
-    fun isPremium(style: String): Boolean = style == RINGS
 }

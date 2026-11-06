@@ -30,11 +30,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
@@ -45,219 +44,54 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mn.android.R
-import com.mn.android.application.analytics.StreakEvents
-import com.mn.android.data.AIDraftSettingsStore
-import com.mn.android.data.AIDraftSource
-import com.mn.android.data.NoteEditorSource
-import com.mn.android.domain.events.DomainEvent
-import com.mn.android.domain.events.DomainEventBus
-import com.mn.android.infrastructure.persistence.local.ai.AIDraftMetrics
+import com.mn.android.application.container.AppContainer
+import com.mn.android.presentation.notes.viewmodel.NoteEditorViewModel
 import com.mn.android.presentation.theme.ui.MnBackground
 import com.mn.android.presentation.theme.ui.MnBackButton
 import com.mn.android.presentation.theme.ui.MnTheme
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.createSavedStateHandle
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 
 /**
  * Port of the iOS NoteEditor, AI draft bar included.
  *
- * The draft itself is not implemented here: Swift owns the domain (the
- * session, the free-quota rule, the parsing of the model's answer) and
- * Kotlin drives the commands and renders the answer. The provider is a
- * remote OpenAI-compatible endpoint the user configures in Settings.
+ * The screen draws the state and forwards the taps: the rules live in
+ * [NoteEditorViewModel]. The domain itself is not implemented here — Swift
+ * owns it (the session, the free-quota rule, the parsing of the model's
+ * answer) and Kotlin drives the commands and renders the answer. The provider
+ * is a remote OpenAI-compatible endpoint the user configures in Settings.
  *
- * Mirrors the ViewModel's rules exactly as presentation-local state:
+ * The rules the ViewModel keeps:
  * - new note: never persisted while entirely blank (`hasContent`)
  * - autosave debounced 800 ms after the last change, only when dirty
  * - back button saves (when dirty), then pops
  * - delete is offered only for an existing note, behind a confirm dialog
  * - title normalisation (trim / "Untitled") is applied by Swift on save and
  *   the normalised value comes back into the field
- *
- * A new note's id is generated up front (NoteEditorSource.newId) instead of
- * lazily on first save as in EditTarget.new — same observable behaviour, and
- * it keeps every later save a simple upsert.
  */
-@OptIn(FlowPreview::class)
 @Composable
 fun NoteEditorScreen(
     noteId: String?,
     onBack: () -> Unit,
 ) {
-    val editingId = rememberSaveable { noteId ?: NoteEditorSource.newId() }
-    val isNewNote = noteId == null
-    val context = androidx.compose.ui.platform.LocalContext.current
-
-    var title by rememberSaveable { mutableStateOf("") }
-    var body by rememberSaveable { mutableStateOf("") }
-    var persisted by remember { mutableStateOf<NoteEditorSource.EditorNote?>(null) }
+    val context = LocalContext.current
+    val vm: NoteEditorViewModel = viewModel(
+        factory = viewModelFactory {
+            initializer {
+                AppContainer.makeNoteEditorViewModel(
+                    context = context,
+                    savedStateHandle = createSavedStateHandle(),
+                    noteId = noteId,
+                )
+            }
+        }
+    )
+    val state by vm.state.collectAsStateWithLifecycle()
     var showDeleteConfirmation by rememberSaveable { mutableStateOf(false) }
-
-    // AI draft state. Swift owns the domain (the session, the quota rule, the
-    // parsing of the model's answer); Kotlin calls the commands and renders
-    // what comes back.
-    var draftDocument by remember { mutableStateOf("") }
-    var draftSession by remember { mutableStateOf<AIDraftSource.Session?>(null) }
-    var draftError by remember { mutableStateOf<String?>(null) }
-    var isDrafting by remember { mutableStateOf(false) }
-    val scope = rememberCoroutineScope()
-    // Cold or warm start, the way the iOS manager reports it.
-    var hasGenerated by remember { mutableStateOf(false) }
-
-    LaunchedEffect(noteId) {
-        if (noteId != null) {
-            NoteEditorSource.loadNote(noteId)?.let { note ->
-                title = note.title
-                body = note.content
-                persisted = note
-            }
-            // The draft the user left behind comes back with the note - a
-            // new draft would burn another generation of the free allowance.
-            val stored = withContext(Dispatchers.IO) { AIDraftSource.stored(editingId) }
-            if (stored.session != null) {
-                draftDocument = stored.document.orEmpty()
-                draftSession = stored.session
-            }
-        }
-    }
-
-    /** Kotlin mirror of NoteEditorViewModel.isDirty / hasContent. */
-    fun isDirtyNow(currentTitle: String, currentBody: String): Boolean {
-        val stored = persisted
-        return if (stored == null) {
-            currentTitle.isNotEmpty() || currentBody.isNotEmpty()
-        } else {
-            stored.title != normalizedTitle(currentTitle) || stored.content != currentBody
-        }
-    }
-
-    fun hasContentNow(currentTitle: String, currentBody: String): Boolean =
-        currentTitle.isNotBlank() || currentBody.isNotBlank()
-
-    fun performSave() {
-        // A blank new note is a mis-tap, never an intent (iOS: same rule).
-        if (isNewNote && !hasContentNow(title, body)) return
-        if (!isDirtyNow(title, body)) return
-        // First successful save is .noteCreated on iOS, every later one
-        // .noteUpdated — same split here, decided by whether the note had
-        // been persisted before this write.
-        val wasNew = persisted == null
-        val normalizedTitle = NoteEditorSource.save(editingId, title, body)
-        if (normalizedTitle.isEmpty()) return
-        DomainEventBus.publish(
-            if (wasNew) DomainEvent.NoteCreated(editingId) else DomainEvent.NoteUpdated(editingId)
-        )
-        // A new note fills the streak day it was written on; only the new-note
-        // path can move the streak, same as iOS.
-        if (wasNew) StreakEvents.sync()
-        if (normalizedTitle != title) title = normalizedTitle
-        persisted = NoteEditorSource.EditorNote(editingId, normalizedTitle, body, persisted?.dateMillis ?: 0L)
-    }
-
-    // Autosave: debounced, only while dirty — 800 ms like the iOS ViewModel.
-    LaunchedEffect(editingId) {
-        snapshotFlow { title to body }
-            .debounce(800)
-            .collectLatest { (t, b) ->
-                if (isDirtyNow(t, b)) {
-                    // latest text, not the debounced snapshot, goes to disk
-                    performSave()
-                }
-            }
-    }
-
-    // MARK: - AI draft
-
-    fun applyDraftResult(result: AIDraftSource.Result) {
-        result.metric?.let { metric ->
-            scope.launch(Dispatchers.IO) { AIDraftMetrics.record(context, metric) }
-            metric.toDomainEvent()?.let(DomainEventBus::publish)
-        }
-        if (result.ok && result.session != null) {
-            draftDocument = result.document.orEmpty()
-            draftSession = result.session
-            draftError = null
-        } else {
-            draftError = result.error
-        }
-    }
-
-    /** The telemetry event for a suggestion the user took or dropped. */
-    fun recordSuggestionEvent(kind: String, suggestion: AIDraftSource.Suggestion) {
-        val index = draftSession?.suggestions?.indexOfFirst { it.id == suggestion.id } ?: -1
-        if (index < 0) return
-        val metric = AIDraftSource.Metric(kind = kind, suggestionIndex = index.toLong())
-        scope.launch(Dispatchers.IO) { AIDraftMetrics.record(context, metric) }
-        metric.toDomainEvent()?.let(DomainEventBus::publish)
-    }
-
-    fun startDraft() {
-        if (isDrafting) return
-        if (!AIDraftSettingsStore.isConfigured()) {
-            draftError = "noProvider"
-            return
-        }
-        scope.launch {
-            isDrafting = true
-            draftError = null
-            val warm = !hasGenerated
-            hasGenerated = true
-            val started = AIDraftSource.Metric(kind = "generationStarted", warmCold = warm)
-            scope.launch(Dispatchers.IO) { AIDraftMetrics.record(context, started) }
-            started.toDomainEvent()?.let(DomainEventBus::publish)
-            val result = withContext(Dispatchers.IO) {
-                AIDraftSource.start(noteId = editingId, instruction = "", context = body)
-            }
-            isDrafting = false
-            applyDraftResult(result)
-            // iOS `publishGenerated`: once per successful generation, never on
-            // accept/reject transitions (their results carry a session too).
-            if (result.ok && result.session != null) {
-                DomainEventBus.publish(DomainEvent.AiDraftGenerated)
-            }
-        }
-    }
-
-    fun acceptSuggestion(suggestion: AIDraftSource.Suggestion) {
-        val document = draftDocument
-        scope.launch {
-            applyDraftResult(
-                withContext(Dispatchers.IO) { AIDraftSource.accept(document, suggestion.id) },
-            )
-        }
-    }
-
-    fun removeSuggestion(suggestion: AIDraftSource.Suggestion) {
-        val document = draftDocument
-        recordSuggestionEvent("suggestionRejected", suggestion)
-        scope.launch {
-            applyDraftResult(
-                withContext(Dispatchers.IO) { AIDraftSource.reject(document, suggestion.id) },
-            )
-        }
-    }
-
-    fun acceptAllSuggestions() {
-        val document = draftDocument
-        scope.launch {
-            applyDraftResult(
-                withContext(Dispatchers.IO) { AIDraftSource.acceptAllPending(document) },
-            )
-        }
-    }
-
-    /** iOS `applyAcceptedProposals`: the accepted texts, blank line separated. */
-    fun transferAccepted() {
-        val accepted = draftSession?.accepted.orEmpty()
-        if (accepted.isEmpty()) return
-        accepted.forEach { recordSuggestionEvent("suggestionInserted", it) }
-        val addition = accepted.joinToString("\n\n") { it.text.trim('\n', '\r') }
-        body = if (body.isBlank()) addition else "$body\n\n$addition"
-    }
 
     Box(Modifier.fillMaxSize()) {
         MnBackground()
@@ -269,18 +103,18 @@ fun NoteEditorScreen(
                 .imePadding(),
         ) {
             EditorTopBar(
-                showDelete = !isNewNote,
-                isDrafting = isDrafting,
-                onAiDraft = { startDraft() },
+                showDelete = state.canDelete,
+                isDrafting = state.draft.isGenerating,
+                onAiDraft = { vm.startDraft() },
                 onBack = {
-                    performSave()
+                    vm.save()
                     onBack()
                 },
                 onDelete = { showDeleteConfirmation = true },
             )
             TitleField(
-                title = title,
-                onTitleChange = { title = it },
+                title = state.title,
+                onTitleChange = { vm.onTitleChange(it) },
             )
             HorizontalDivider(
                 modifier = Modifier
@@ -289,21 +123,21 @@ fun NoteEditorScreen(
                 color = MnTheme.divider,
             )
             BodyField(
-                body = body,
-                onBodyChange = { body = it },
+                body = state.body,
+                onBodyChange = { vm.onBodyChange(it) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f),
                 autoFocus = true, // iOS: isEditorFocused = true on appear
             )
             AIDraftBar(
-                isGenerating = isDrafting,
-                session = draftSession,
-                error = draftError,
-                onAccept = { acceptSuggestion(it) },
-                onRemove = { removeSuggestion(it) },
-                onAcceptAll = { acceptAllSuggestions() },
-                onTransfer = { transferAccepted() },
+                isGenerating = state.draft.isGenerating,
+                session = state.draft.session,
+                error = state.draft.error,
+                onAccept = { vm.acceptSuggestion(it) },
+                onRemove = { vm.removeSuggestion(it) },
+                onAcceptAll = { vm.acceptAllSuggestions() },
+                onTransfer = { vm.transferAccepted() },
             )
         }
     }
@@ -318,8 +152,7 @@ fun NoteEditorScreen(
                 TextButton(
                     onClick = {
                         showDeleteConfirmation = false
-                        NoteEditorSource.delete(editingId)
-                        DomainEventBus.publish(DomainEvent.NoteDeleted(editingId))
+                        vm.delete()
                         onBack()
                     },
                 ) {
@@ -484,31 +317,6 @@ private fun BodyField(
             .padding(horizontal = 8.dp)
             .then(if (autoFocus) Modifier.focusRequester(focusRequester) else Modifier),
     )
-}
-
-// MARK: - Domain mirrors
-
-/**
- * Kotlin mirror of `NoteTitle.init`: trim, blank -> "Untitled". Used only for
- * the dirty check so an untouched "   " title does not look dirty; the value
- * object on the Swift side stays the single place that normalises for real.
- */
-private fun normalizedTitle(raw: String): String =
-    raw.trim().ifEmpty { "Untitled" }
-
-/**
- * The bridge's flat metric -> typed [DomainEvent.AiDraftMetric]. The kinds are
- * fixed by `AIDraftBridge.swift`; unknown kinds (future bridge versions) are
- * dropped rather than guessed at.
- */
-private fun AIDraftSource.Metric.toDomainEvent(): DomainEvent.AiDraftMetric? = when (kind) {
-    "generationStarted" -> warmCold?.let(DomainEvent.AiDraftMetric::GenerationStarted)
-    "generationCompleted" ->
-        latencyMs?.let { ms -> suggestionCount?.let { DomainEvent.AiDraftMetric.GenerationCompleted(ms.toInt(), it.toInt()) } }
-    "generationFailed" -> errorKind?.let(DomainEvent.AiDraftMetric::GenerationFailed)
-    "suggestionInserted" -> suggestionIndex?.let { DomainEvent.AiDraftMetric.SuggestionInserted(it.toInt()) }
-    "suggestionRejected" -> suggestionIndex?.let { DomainEvent.AiDraftMetric.SuggestionRejected(it.toInt()) }
-    else -> null
 }
 
 // MARK: - Preview

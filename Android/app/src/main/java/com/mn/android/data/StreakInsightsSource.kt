@@ -1,5 +1,18 @@
 package com.mn.android.data
 
+import com.mn.android.domain.streak.BreakPatternPoint
+import com.mn.android.domain.streak.Bundle
+import com.mn.android.domain.streak.Category
+import com.mn.android.domain.streak.Distribution
+import com.mn.android.domain.streak.DistributionBucket
+import com.mn.android.domain.streak.Heatmap
+import com.mn.android.domain.streak.HeatmapDay
+import com.mn.android.domain.streak.Insight
+import com.mn.android.domain.streak.Recommendation
+import com.mn.android.domain.streak.RecommendationAction
+import com.mn.android.domain.streak.Resilience
+import com.mn.android.domain.streak.SurvivalPoint
+import com.mn.android.domain.streak.WeeklyBucket
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -21,80 +34,6 @@ object StreakInsightsSource {
     }
 
     external fun read(range: String): String
-
-    // MARK: - Value objects
-
-    enum class Category { COMPLETION, PATTERN, TREND, RISK }
-
-    enum class RecommendationAction { NAVIGATE_TO_MEDITATION, NAVIGATE_TO_NOTE, SET_REMINDER }
-
-    data class HeatmapDay(
-        val name: String,
-        val shortName: String,
-        val completionRate: Double,
-        val totalDays: Int,
-        val completeDays: Int,
-        val breakRate: Double,
-    )
-
-    data class Heatmap(val days: List<HeatmapDay>)
-
-    data class Insight(
-        val id: String,
-        val category: Category,
-        val title: String,
-        val message: String,
-        val value: Double?,
-        val icon: String,
-        val heatmap: Heatmap?,
-    )
-
-    data class Recommendation(
-        val id: String,
-        val priority: Int,
-        val title: String,
-        val message: String,
-        val icon: String,
-        val action: RecommendationAction?,
-    )
-
-    data class WeeklyBucket(
-        val weekStartMillis: Long,
-        val weekEndMillis: Long,
-        val totalDays: Int,
-        val completeDays: Int,
-        val completionRate: Double,
-    )
-
-    data class DistributionBucket(val label: String, val count: Int)
-
-    data class Distribution(
-        val buckets: List<DistributionBucket>,
-        val totalStreaks: Int,
-        val medianLength: Int,
-    )
-
-    data class SurvivalPoint(val day: Int, val probability: Double)
-
-    data class Resilience(
-        val avgRecoveryDays: Double,
-        val longestRecoveryDays: Int,
-        val totalRecoveries: Int,
-        val survival: List<SurvivalPoint>,
-    )
-
-    data class BreakPatternPoint(val weekday: Int, val rate: Double)
-
-    data class Bundle(
-        val range: String,
-        val insights: List<Insight>,
-        val recommendations: List<Recommendation>,
-        val weekly: List<WeeklyBucket>,
-        val distribution: Distribution,
-        val resilience: Resilience,
-        val breakPattern: List<BreakPatternPoint>,
-        val heatmap: Heatmap,
-    )
 
     // MARK: - Decoding
 

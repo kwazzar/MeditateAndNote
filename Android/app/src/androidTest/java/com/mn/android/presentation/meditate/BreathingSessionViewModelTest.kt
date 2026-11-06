@@ -6,7 +6,10 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import com.mn.android.data.meditation.JniMeditationRepository
+import com.mn.android.infrastructure.persistence.local.meditation.MeditationSelection
 import com.mn.android.presentation.meditate.viewmodel.BreathingSessionViewModel
+import com.mn.android.sound.RecordingSoundPlayer
 import com.mn.core.SessionDuration
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -26,7 +29,14 @@ class BreathingSessionViewModelTest {
 
     @Test
     fun clearingTheViewModel_stopsTheSessionAndItsTicker() {
-        val vm = BreathingSessionViewModel(SavedStateHandle(mapOf("meditationId" to "3")))
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        MeditationSelection.configure(context)
+        val vm = BreathingSessionViewModel(
+            savedStateHandle = SavedStateHandle(mapOf("meditationId" to "3")),
+            meditationRepository = JniMeditationRepository(),
+            soundPlayer = RecordingSoundPlayer(),
+            selection = MeditationSelection,
+        )
         val store = ViewModelStore()
         ViewModelProvider(store, vmFactory(vm))[BreathingSessionViewModel::class.java]
 

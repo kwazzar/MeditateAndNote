@@ -1,10 +1,5 @@
 package com.mn.android.data
 
-import android.content.Context
-import android.net.Uri
-import android.provider.OpenableColumns
-import java.io.File
-import java.io.InputStream
 import org.json.JSONObject
 
 /**
@@ -31,8 +26,6 @@ object BookSource {
     )
 
     /** The result of an import: the new book id and the format it came in. */
-    data class ImportedBook(val id: String, val format: String)
-
     fun readLibrary(): List<BookRecord> {
         val books = JSONObject(read()).getJSONArray("books")
         return (0 until books.length()).map { i ->
@@ -61,67 +54,6 @@ object BookSource {
         require(error.isEmpty()) { error }
         return obj.getString("id")
     }
-
-    /**
-     * The stored format for a file name, or null when the format is not
-     * supported. The extension decides — a MIME type ("text/plain") has none,
-     * and guessing from it imported every text book as FB2.
-     *
-     * The same rule lives in the domain (`BookFormat`, used by the iOS
-     * importer); Kotlin cannot call into the Core package directly, so it
-     * repeats it here for the JNI call.
-     */
-    private fun detectFormat(fileName: String): String? {
-        return when (fileName.substringAfterLast('.', "").lowercase()) {
-            "fb2" -> "fb2"
-            "epub" -> "epub"
-            "txt", "md", "markdown" -> "txt"
-            else -> null
-        }
-    }
-
-    /**
-     * Copies a picked document into the library and returns the new book id
-     * with the format it was imported as. Used by the in-app importer and by
-     * the file-manager "open with" path.
-     */
-    fun importDocument(context: Context, uri: Uri): ImportedBook {
-        val name = displayName(context, uri)
-        val format = detectFormat(name) ?: error("unsupported format")
-        val temp = File(context.cacheDir, name.asFileName())
-        openStream(context, uri)?.use { input ->
-            temp.outputStream().use { output -> input.copyTo(output) }
-        } ?: error("cannot read picked file")
-        try {
-            // The temp file carries the original name: the title is derived
-            // from it on the Swift side.
-            return ImportedBook(id = import(temp.absolutePath, format), format = format)
-        } finally {
-            temp.delete()
-        }
-    }
-
-    /** The document's real name — the MIME type carries no extension. */
-    private fun displayName(context: Context, uri: Uri): String {
-        if (uri.scheme != "file") {
-            context.contentResolver
-                .query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
-                ?.use { cursor ->
-                    val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-                    if (index >= 0 && cursor.moveToFirst()) {
-                        return cursor.getString(index) ?: "book"
-                    }
-                }
-        }
-        return uri.lastPathSegment ?: "book"
-    }
-
-    private fun openStream(context: Context, uri: Uri): InputStream? =
-        if (uri.scheme == "file") {
-            uri.path?.let { File(it).inputStream() }
-        } else {
-            context.contentResolver.openInputStream(uri)
-        }
 
     fun delete(id: String) {
         deleteNative(id)
@@ -218,8 +150,21 @@ object ReaderSource {
     private external fun savePositionNative(id: String, page: Int)
 }
 
+/**
+ * The format a file name is imported as, or null when the extension is not
+ * supported. Module scope on purpose: the adapter needs it and `BookSource`'s
+ * init touches JNI classes, which are not available in plain JVM unit tests.
+ */
+internal fun detectBookFormat(fileName: String): String? =
+    when (fileName.substringAfterLast('.', "").lowercase()) {
+        "fb2" -> "fb2"
+        "epub" -> "epub"
+        "txt", "md", "markdown" -> "txt"
+        else -> null
+    }
+
 /** A safe cache file name that keeps letters (Cyrillic included). */
-private fun String.asFileName(): String =
+internal fun String.asFileName(): String =
     replace(Regex("[^\\p{L}\\p{N}._ -]"), "_").take(120).ifBlank { "book" }
 
 /// File-name stems get humanized for display; these extensions are stripped first.

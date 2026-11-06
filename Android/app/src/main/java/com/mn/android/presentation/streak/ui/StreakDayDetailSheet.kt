@@ -36,7 +36,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mn.android.R
-import com.mn.android.data.StreakDetailSource
+import com.mn.android.domain.streak.Day
 import com.mn.android.presentation.theme.ui.MnDoneButton
 import com.mn.android.presentation.theme.ui.MnTheme
 import java.time.Instant
@@ -51,7 +51,7 @@ internal enum class DayDetailAction { MEDITATION, NOTE }
 
 @Composable
 internal fun StreakDayDetailSheet(
-    day: StreakDetailSource.Day,
+    day: Day,
     onClose: () -> Unit,
     onMissingAction: (DayDetailAction) -> Unit,
 ) {

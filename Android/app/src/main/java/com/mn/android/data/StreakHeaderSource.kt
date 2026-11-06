@@ -1,5 +1,7 @@
 package com.mn.android.data
 
+import com.mn.android.domain.streak.DayFlags
+import com.mn.android.domain.streak.Header
 import java.time.LocalDate
 
 /**
@@ -43,17 +45,6 @@ object StreakHeaderSource {
         return LongArray(7) { offset ->
             localDayStartMillis(today.minusDays(6L - offset), offsetMillis)
         }
-    }
-
-    data class DayFlags(val hasMeditation: Boolean, val hasNote: Boolean)
-
-    data class Header(
-        val currentStreak: Int,
-        val dayFlags: List<DayFlags>,
-    ) {
-        val today: DayFlags get() = dayFlags.last()
-        val isTodayComplete: Boolean get() = today.hasMeditation && today.hasNote
-        val showNoteReminder: Boolean get() = today.hasMeditation && !today.hasNote
     }
 
     fun readHeader(): Header {
