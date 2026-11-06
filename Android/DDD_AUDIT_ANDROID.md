@@ -61,6 +61,17 @@ cd Android
 ./gradlew :app:connectedDebugAndroidTest # 104 tests, 0 failures, 0 skipped
 ```
 
+The device probes (`com.mn.android.debug.*Probe`, `MetricsActivity`) live in
+`src/debug/`, not in `src/main/`: the release APK ships without them and
+without the probe activity in its manifest. The debug variant keeps them -
+start them with `adb shell am start -n com.mn.android/.debug.MetricsActivity`.
+
+⚠️ Release builds fail on this machine before packaging: `lintVitalRelease`
+cannot start its UAST analysis (`IllegalArgumentException: 25.0.3`) with
+JDK 27 and AGP 8.7.3. The failure is in the toolchain, not in the code -
+it reproduces on a clean checkout. Workaround for a local release APK:
+`./gradlew :app:assembleRelease -x lintVitalRelease`.
+
 Remaining ⚠️ (accepted): the file-extension → book-format mapping is
 written twice — `BookFormat` in the Swift core and `detectBookFormat()` in
 `data/BookSource.kt`. The Kotlin copy only picks the format for the JNI
