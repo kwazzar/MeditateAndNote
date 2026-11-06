@@ -19,11 +19,20 @@ if (file("google-services.json").exists()) {
 // gradle.properties (or -PaiDraftEndpoint=...) after the proxy is deployed.
 val aiDraftEndpoint = (project.findProperty("aiDraftEndpoint") as String?)?.trim().orEmpty()
 
+// Release signing: the four properties (releaseStoreFile, releaseStorePassword,
+// releaseKeyAlias, releaseKeyPassword) point at a keystore that stays out of
+// the repo. Without them the release build produces an unsigned APK.
+
 // RevenueCat public SDK key. Not a secret (the same key ships inside the
 // app), but it is per-project, so it stays in gradle.properties and can be
 // overridden with -PrevenueCatApiKey=... An empty key leaves the SDK
 // unconfigured: the paywall then reports "unavailable" instead of crashing.
 val revenueCatApiKey = (project.findProperty("revenueCatApiKey") as String?)?.trim().orEmpty()
+
+// The release signing key stays out of the repo: the four properties point at
+// a keystore the developer owns. Without them the release build produces an
+// unsigned APK, which is what CI wants.
+val releaseStoreFile = providers.gradleProperty("releaseStoreFile").orNull
 
 android {
     namespace = "com.mn.android"
@@ -53,6 +62,25 @@ android {
 
     kotlinOptions {
         jvmTarget = "17"
+    }
+
+    signingConfigs {
+        if (releaseStoreFile != null) {
+            create("release") {
+                storeFile = file(releaseStoreFile)
+                storePassword = providers.gradleProperty("releaseStorePassword").orNull
+                keyAlias = providers.gradleProperty("releaseKeyAlias").orNull
+                keyPassword = providers.gradleProperty("releaseKeyPassword").orNull
+            }
+        }
+    }
+
+    buildTypes {
+        getByName("release") {
+            if (releaseStoreFile != null) {
+                signingConfig = signingConfigs.getByName("release")
+            }
+        }
     }
 
     buildFeatures {

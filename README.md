@@ -160,6 +160,21 @@ xcodebuild test -project MeditateAndNote.xcodeproj -scheme MeditateAndNote -dest
 The on-device Android tests are not part of CI - the JNI library is built for
 aarch64 only and the GitHub runner images are x86_64.
 
+### Signing the Android release
+
+The release key stays out of the repo. Create a keystore and put its four
+values in `~/.gradle/gradle.properties` (or pass them with `-P`):
+
+```properties
+releaseStoreFile=/absolute/path/to/release.jks
+releaseStorePassword=...
+releaseKeyAlias=...
+releaseKeyPassword=...
+```
+
+Without them `./gradlew :app:assembleRelease` produces an unsigned APK, which
+is what CI wants.
+
 The Android app builds with `./gradlew :app:assembleDebug` and its tests with
 `./gradlew :app:testDebugUnitTest` and `:app:connectedDebugAndroidTest`. The
 Gradle daemon runs on Java 17 (`Android/gradle/gradle-daemon-jvm.properties`)
