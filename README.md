@@ -34,7 +34,7 @@ Domain-Driven Design with dependencies pointing inward:
 ```
 Presentation (SwiftUI Views, ViewModels)
         ↓
-Application (NoteManager, StreakTracker, InsightManager, ReminderManager, ...)
+Application (NoteManager, StreakTracker, InsightManager, ReminderManager, BookManager, BookmarkManager, ...)
         ↓
 Domain (Entities, Value Objects, DataSource/Store protocols)
         ↑

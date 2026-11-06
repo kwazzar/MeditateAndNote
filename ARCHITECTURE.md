@@ -11,7 +11,7 @@ Dependencies point inward toward the domain:
 Presentation (SwiftUI Views, ViewModels)
         ↓
 Application (NoteManager, StreakTracker, StreakInsightManager,
-            ReminderManager, MeditationSessionEngine adapters, ...)
+            ReminderManager, BookManager, BookmarkManager, MeditationSessionEngine adapters, ...)
         ↓
 Domain (Entities, Value Objects, DataSource/Store protocols)
         ↑
@@ -71,14 +71,14 @@ Fresh `init()`s are only for previews/tests isolation.
 **Event routing.** Cross-cutting side effects are wired through lazy
 *Scopes* — one per bounded context (`NoteScope`, `StreakScope`,
 `MeditationScope`, `SearchScope`, `AIDraftScope`, `SettingsScope`,
-`SubscriptionScope`, `BookScope`), each conforming to `DomainEventRouting`
-(`static handles(_:)` + `handle(_:)`). A single `EventLoopCoordinator` owns
-the one stored `Task { for await }` over `DomainEventBus.shared`'s
-`AsyncStream` and, per event, asks the container's `handlers` closure which
-scopes react — the `handles` filter runs *before* the scope's `lazy` backing
-is touched, so an unhandled event never builds a CoreData stack. All handlers
-hop to `@MainActor` before mutating observable/CoreData state; events are
-processed sequentially in publish order.
+`SubscriptionScope`, `BookScope`, `AnalyticsScope`), each conforming to
+`DomainEventRouting` (`static handles(_:)` + `handle(_:)`). A single
+`EventLoopCoordinator` owns the one stored `Task { for await }` over
+`DomainEventBus.shared`'s `AsyncStream` and, per event, asks the container's
+`handlers` closure which scopes react — the `handles` filter runs *before*
+the scope's `lazy` backing is touched, so an unhandled event never builds a
+CoreData stack. All handlers hop to `@MainActor` before mutating
+observable/CoreData state; events are processed sequentially in publish order.
 
 Factored ViewModel constructors:
 
@@ -260,7 +260,7 @@ graph TB
   router, and maps destinations to concrete views via
   `Destination-ViewMapping.swift` + `ContainerView`.
 - `NavigationContainer` exposes only the router and a view builder; it never
-  holds screen logic. ViewModels never reference a concrete View.
+  holds screen logic. ViewModels never reference a concrete View directly.
 
 ## Views & ViewModels
 
@@ -276,7 +276,7 @@ graph TB
         LibraryView["LibraryView<br/>Reading Tab (Library + Import)"]
         ReaderView["ReaderView<br/>FB Reader (fullScreen)"]
         StreakDetail["StreakDetailView<br/>InsightsSection, WeekdayHeatmap,
-<br/>LifetimePatternsSection, StreakDayDetailSheet"]
+        <br/>LifetimePatternsSection, StreakDayDetailSheet"]
         SettingsView["SettingsView<br/>Reminder / Animation / Theme / Sound"]
         OnboardingView["OnboardingView<br/>OnboardingPageView"]
         TimeSheet["TimeMeditationSheet"]
@@ -608,6 +608,7 @@ stateDiagram-v2
     [*] --> Home: Tab .home
     [*] --> Notes: Tab .notes
     [*] --> Meditations: Tab .meditations
+    [*] --> Reading: Tab .reading
 
     Home --> Meditation: Push .meditation(meditation)
     Home --> NoteDetail: Push .noteDetails(noteId)
@@ -623,6 +624,9 @@ stateDiagram-v2
     Meditation --> TimePicker: Sheet .timeMeditation
     Meditation --> Completion: Push .meditationCompletion (after finish)
     Meditation --> Home: Close
+
+    Reading --> Reader: FullScreen .reader(bookId)
+    Reader --> Reading: Close
 
     state Meditation {
         [*] --> Idle
