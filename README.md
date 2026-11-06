@@ -148,6 +148,18 @@ The apps speak the OpenAI chat-completions dialect (the wire protocol lives in t
 xcodebuild test -project MeditateAndNote.xcodeproj -scheme MeditateAndNote -destination 'platform=iOS Simulator,name=iPhone 16'
 ```
 
+## CI
+
+`.github/workflows/ci.yml` runs on every push and pull request:
+
+- **iOS** - the unit tests on a simulator (`MeditateAndNoteTests`)
+- **Android** - `assembleDebug` and the JVM unit tests. The job installs the
+  Swift 6.4.0 toolchain, the Android Swift SDK bundle and NDK r30: the JNI
+  library is compiled from the Swift core, so Gradle alone is not enough.
+
+The on-device Android tests are not part of CI - the JNI library is built for
+aarch64 only and the GitHub runner images are x86_64.
+
 The Android app builds with `./gradlew :app:assembleDebug` and its tests with
 `./gradlew :app:testDebugUnitTest` and `:app:connectedDebugAndroidTest`. The
 Gradle daemon runs on Java 17 (`Android/gradle/gradle-daemon-jvm.properties`)

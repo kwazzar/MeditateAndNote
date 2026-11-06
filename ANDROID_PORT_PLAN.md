@@ -1334,9 +1334,9 @@ FB2/EPUB/TXT імпорт, Library + пагінований Reader, TOC, bookmar
 **Відкриті ризики:**
 
 - **`jextract` мовчки пропускає непідтримувані методи.** `exit 0`, warning у лозі, методу немає; помилка виявиться лише під час компіляції Kotlin. Перевірка логу `jextract` — обов'язковий крок CI.
-- **`swift-java` не зафіксований версією** — `Package.swift` тримає path dependency (`~/Developer/swift-java`), thunk без неї не компілюється.
+- **`swift-java` не зафіксований версією** — `Package.swift` тримає path dependency (`~/Developer/swift-java`), thunk без неї не компілюється. У CI версія зафіксована комітом `d6ff36c` (ім'я jar-файлу містить хеш цього коміту).
 - **Розсинхрон `.so` зі Swift-кодом** — поки крок компіляції Swift не вбудований у Gradle, `lib*.so` може розходитись із джерелом.
-- **Повний двоплатформний CI** — iOS і Android мають перевірятися разом, інакше Domain-зміни зламають одну платформу непомітно.
+- ~~**Повний двоплатформний CI**~~ — закрито: `.github/workflows/ci.yml` ганяє iOS-тести й Android-збірку з юніт-тестами. On-device тести в CI не входять: `.so` лише під aarch64, а образи runner-ів x86_64.
 - **On-device AI** — AICore/ML Kit не реалізовано, немає пристрою з AI-модулем і 12 GB+ RAM. Remote провайдер покриває v1.
 - **Android billing/RevenueCat** — не робився; paywall/Pro locks відсутні (див. `docs/ui-parity/README.md:166`).
 - **CoreData → Room міграція існуючих користувачів** — окремо не покрита; потрібна стратегія міграції/експорту.

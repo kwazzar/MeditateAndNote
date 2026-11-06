@@ -1,0 +1,115 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ios:
+    name: iOS unit tests
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      # Xcode 26.3 is the newest one the macOS 15 image ships; the app is
+      # developed against Xcode 26.6.
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_26.3.app
+
+      # The simulator is picked from what the image has: the runtime names
+      # move with every image update, a hardcoded one would break the job.
+      - name: Run the unit tests
+        run: |
+          set -o pipefail
+          DEVICE=$(xcrun simctl list devices available | grep -m1 -E "iPhone 1[5-9] \(" | sed -E 's/.*\(([0-9A-F-]{36})\).*/\1/')
+          if [ -z "$DEVICE" ]; then
+            echo "no iPhone simulator on this image" >&2
+            exit 1
+          fi
+          echo "simulator: $DEVICE"
+          xcodebuild test \
+            -project MeditateAndNote.xcodeproj \
+            -scheme MeditateAndNote \
+            -destination "id=$DEVICE" \
+            -only-testing:MeditateAndNoteTests \
+            -resultBundlePath TestResults.xcresult
+
+      - name: Upload the test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-test-results
+          path: TestResults.xcresult
+
+  android:
+    name: Android build and unit tests
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      # The Gradle daemon runs on Java 17 (Android/gradle/gradle-daemon-jvm.properties):
+      # the lint that AGP runs for the release build cannot analyse on a newer JDK.
+      - name: Java 17
+        run: echo "JAVA_HOME=$JAVA_HOME_17_X64" >> "$GITHUB_ENV"
+
+      # NDK r30 is not on the image: the Swift Android runtime is built against
+      # its libc++, and an older one does not export the symbols it needs.
+      - name: Android SDK packages
+        run: |
+          SDKMANAGER=$(command -v sdkmanager || ls "$ANDROID_SDK_ROOT"/cmdline-tools/*/bin/sdkmanager | head -1)
+          if [ -z "$SDKMANAGER" ]; then
+            echo "sdkmanager not found on this image" >&2
+            exit 1
+          fi
+          yes | "$SDKMANAGER" --licenses > /dev/null
+          "$SDKMANAGER" "ndk;30.0.16248370" "platforms;android-36" "build-tools;36.0.0"
+
+      # The Swift 6.4.0 toolchain: the core package is compiled for Android
+      # with it, and the toolchain id is what Scripts/build-android.sh asks for.
+      - name: Swift 6.4.0 toolchain
+        run: |
+          curl -fsSL "https://download.swift.org/swift-6.4.0-release/xcode/swift-6.4.0-RELEASE/swift-6.4.0-RELEASE-osx.pkg" -o /tmp/swift.pkg
+          sudo installer -pkg /tmp/swift.pkg -target /
+
+      # The Android Swift SDK bundle: without it `swift build` has no Android
+      # SDK to compile against. The checksum is the one from ANDROID_PORT_PLAN.md.
+      - name: Android Swift SDK bundle
+        run: |
+          /Library/Developer/Toolchains/swift-6.4.0-RELEASE.xctoolchain/usr/bin/swift sdk install \
+            "https://download.swift.org/swift-6.4.0-release/android-sdk/swift-6.4.0-RELEASE/swift-6.4.0-RELEASE_android.artifactbundle.tar.gz" \
+            --checksum 21fb555122a3d801ad943d48df7ebffdd8824de61c25c180bb792d3edaee0b43
+
+      # swift-java provides jextract and the JNI bindings. The commit is
+      # pinned: the jar name carries its hash (swiftkit-core-<hash>.jar) and
+      # the Android build looks that name up.
+      - name: swift-java
+        run: |
+          mkdir -p "$HOME/Developer/swift-java"
+          cd "$HOME/Developer/swift-java"
+          git init -q .
+          git remote add origin https://github.com/swiftlang/swift-java.git
+          git fetch -q --depth 1 origin d6ff36cf80775e3088f548df98e675d6277a0a6c
+          git checkout -q FETCH_HEAD
+          ./gradlew :SwiftKitCore:jar -PswiftkitVersion=d6ff36c
+
+      - name: Build and test
+        env:
+          SWIFT_TOOLCHAIN: /Library/Developer/Toolchains/swift-6.4.0-RELEASE.xctoolchain
+          SWIFT_JAVA_PATH: /Users/runner/Developer/swift-java
+          ANDROID_NDK: ${{ env.ANDROID_SDK_ROOT }}/ndk/30.0.16248370
+          ANDROID_NDK_HOME: ${{ env.ANDROID_SDK_ROOT }}/ndk/30.0.16248370
+        run: |
+          cd Android
+          ./gradlew :app:assembleDebug :app:testDebugUnitTest
+
+      # The device tests need an arm64 emulator: the JNI library is built for
+      # aarch64 only, and the GitHub runner images are x86_64.
+      - name: Note
+        run: echo "The on-device tests need an arm64 host, they are not part of this job."

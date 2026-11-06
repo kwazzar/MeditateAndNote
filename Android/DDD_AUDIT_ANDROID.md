@@ -83,6 +83,12 @@ written twice — `BookFormat` in the Swift core and `detectBookFormat()` in
 call, but the rule can drift; move it to the port when a second format
 check is needed.
 
+CI (`.github/workflows/ci.yml`) builds both apps on every push: the iOS unit
+tests, and the Android build with its JVM unit tests. The Android job
+installs the Swift 6.4.0 toolchain, the Android Swift SDK bundle and NDK r30
+- without them the JNI library cannot be compiled. The on-device tests stay
+local: the library is aarch64 only and the runner images are x86_64.
+
 The on-device run needs the local (gitignored) Firebase file
 `Android/app/google-services.json`, and the iOS build needs
 `MeditateAndNote/Resources/GoogleService-Info.plist` — both are listed in the
