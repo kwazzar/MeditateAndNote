@@ -438,7 +438,7 @@ private fun MnTabBar(currentRoute: String?, onSelect: (TabItem) -> Unit) {
                 .then(if (landscape) Modifier.width(480.dp).align(Alignment.Center) else Modifier)
                 .clip(RoundedCornerShape(100.dp))
                 .background(MnTheme.toolbarBackground, RoundedCornerShape(100.dp))
-                .shadow(5.dp, RoundedCornerShape(100.dp), Color.Gray.copy(alpha = 0.3f))
+                .shadow(5.dp, RoundedCornerShape(100.dp))
                 .border(1.dp, MnTheme.divider, RoundedCornerShape(100.dp))
                 .padding(horizontal = 8.dp, vertical = 6.dp),
             horizontalArrangement = Arrangement.spacedBy(2.dp),
