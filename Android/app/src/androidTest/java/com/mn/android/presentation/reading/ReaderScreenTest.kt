@@ -31,30 +31,47 @@ class ReaderScreenTest {
 
     @Test
     fun theReaderShowsThePaginatedLines() {
+        val vm = ReaderViewModel(
+            bookId = BookId("fake-book"),
+            books = FakeBookRepository(),
+            bookmarks = FakeBookmarkRepository(),
+            backgroundScope = CoroutineScope(Dispatchers.Unconfined),
+        )
         compose.setContent {
             ReaderScreen(
                 bookId = "fake-book",
                 onBack = {},
                 settings = FakeReaderSettings(),
                 measurer = FakeTextMeasurer(),
-                readerViewModel = ReaderViewModel(
-                    bookId = BookId("fake-book"),
-                    books = FakeBookRepository(),
-                    bookmarks = FakeBookmarkRepository(),
-                    backgroundScope = CoroutineScope(Dispatchers.Unconfined),
-                ),
+                readerViewModel = vm,
             )
         }
 
+        // The reader loads the page asynchronously, so the lines are not there
+        // the moment the content is set. Waiting for the first one is what
+        // makes the test deterministic.
+        //
         // A locked device keeps the test activity's window from attaching, and
         // then there is no compose hierarchy to inspect at all. Skip that; an
         // empty tree still fails the assertion below.
-        val found = runCatching {
-            compose.onAllNodesWithText("Line one").fetchSemanticsNodes()
+        val loaded = runCatching {
+            compose.waitUntil(timeoutMillis = 5_000) {
+                compose.onAllNodesWithText("Line one").fetchSemanticsNodes().isNotEmpty()
+            }
         }.getOrNull()
-        assumeTrue("no compose hierarchy — is the device locked?", found != null)
+        assumeTrue("no compose hierarchy — is the device locked?", loaded != null)
 
         compose.onNodeWithText("Line one").assertExists()
+
+        // The page height comes from the screen, so a shorter device splits
+        // the two lines over two pages. Turn to the page that holds the
+        // second one instead of asserting a layout the device decides.
+        if (compose.onAllNodesWithText("Line two").fetchSemanticsNodes().isEmpty()) {
+            vm.showPage(1, scrollMode = false)
+            compose.waitUntil(timeoutMillis = 5_000) {
+                compose.onAllNodesWithText("Line two").fetchSemanticsNodes().isNotEmpty()
+            }
+        }
         compose.onNodeWithText("Line two").assertExists()
     }
 }
