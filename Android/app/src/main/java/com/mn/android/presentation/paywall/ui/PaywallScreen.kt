@@ -33,7 +33,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,7 +47,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.mn.android.R
-import com.mn.android.application.subscription.SubscriptionScope
+import com.mn.android.application.container.AppContainer
 import com.mn.android.domain.subscription.SubscriptionPackage
 import com.mn.android.presentation.paywall.viewmodel.PaywallError
 import com.mn.android.presentation.paywall.viewmodel.PaywallViewModel
@@ -66,10 +65,9 @@ import com.mn.android.presentation.theme.ui.MnTheme
 @Composable
 fun PaywallScreen(onClose: () -> Unit) {
     val context = LocalContext.current
-    val manager = remember(context) { SubscriptionScope.manager(context) }
     val viewModel: PaywallViewModel = viewModel(
         factory = viewModelFactory {
-            initializer { PaywallViewModel(providable = manager, manageable = manager) }
+            initializer { AppContainer.makePaywallViewModel(context) }
         }
     )
     val state by viewModel.state.collectAsStateWithLifecycle()

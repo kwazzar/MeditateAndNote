@@ -46,10 +46,12 @@ import com.mn.android.infrastructure.persistence.local.settings.SoundSettings
 import com.mn.android.infrastructure.persistence.local.reader.ReaderSettingsImpl
 import com.mn.android.infrastructure.platform.notifications.AndroidReminderScheduler
 import com.mn.android.infrastructure.platform.sound.SoundPlayerImpl
+import com.mn.android.application.subscription.SubscriptionScope
 import com.mn.android.presentation.meditate.viewmodel.BreathingSessionViewModel
 import com.mn.android.presentation.meditate.viewmodel.MeditateSelectViewModel
 import com.mn.android.presentation.notes.viewmodel.NoteEditorViewModel
 import com.mn.android.presentation.notes.viewmodel.NoteInsightsViewModel
+import com.mn.android.presentation.paywall.viewmodel.PaywallViewModel
 import com.mn.android.presentation.reading.viewmodel.LibraryViewModel
 import com.mn.android.presentation.reading.viewmodel.ReaderViewModel
 import com.mn.android.presentation.settings.viewmodel.SettingsViewModel
@@ -220,6 +222,12 @@ object AppContainer {
     fun getMeditationSelection(context: Context): MeditationSelectionStore {
         MeditationSelection.configure(context)
         return MeditationSelection
+    }
+
+    /** The paywall: one subscription manager is both the read and the write side. */
+    fun makePaywallViewModel(context: Context): PaywallViewModel {
+        val manager = SubscriptionScope.manager(context)
+        return PaywallViewModel(providable = manager, manageable = manager)
     }
 
     fun makeBreathingSessionViewModel(

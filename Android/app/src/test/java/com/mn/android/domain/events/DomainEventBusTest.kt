@@ -32,6 +32,40 @@ class DomainEventBusTest {
     }
 
     @Test
+    fun aLateSubscriberSeesTheLastEntitlementChange() = runTest {
+        DomainEventBus.publish(DomainEvent.SubscriptionChanged(isPremium = true))
+
+        val received = async(UnconfinedTestDispatcher(testScheduler)) {
+            DomainEventBus.entitlementChanges.take(1).toList()
+        }
+
+        assertEquals(listOf(DomainEvent.SubscriptionChanged(isPremium = true)), received.await())
+    }
+
+    @Test
+    fun onlyTheLastEntitlementChangeIsReplayed() = runTest {
+        DomainEventBus.publish(DomainEvent.SubscriptionChanged(isPremium = false))
+        DomainEventBus.publish(DomainEvent.SubscriptionChanged(isPremium = true))
+
+        val received = async(UnconfinedTestDispatcher(testScheduler)) {
+            DomainEventBus.entitlementChanges.take(1).toList()
+        }
+
+        assertEquals(listOf(DomainEvent.SubscriptionChanged(isPremium = true)), received.await())
+    }
+
+    @Test
+    fun anInvalidationEventIsNotReplayed() = runTest {
+        val before = DomainEventBus.entitlementChanges.replayCache.size
+
+        DomainEventBus.publish(DomainEvent.NoteDeleted("note-1"))
+
+        // The replay cache only grows for entitlement changes: an
+        // invalidation event must not become a pending state update.
+        assertEquals(before, DomainEventBus.entitlementChanges.replayCache.size)
+    }
+
+    @Test
     fun eventsArriveInPublishOrder() = runTest {
         val received = async(UnconfinedTestDispatcher(testScheduler)) {
             DomainEventBus.events.take(3).toList()
