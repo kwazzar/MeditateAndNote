@@ -48,10 +48,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.mn.android.data.StreakInsightsSource.Category
-import com.mn.android.data.StreakInsightsSource.Heatmap
-import com.mn.android.data.StreakInsightsSource.Insight
-import com.mn.android.data.StreakInsightsSource.WeeklyBucket
+import com.mn.android.domain.streak.Category
+import com.mn.android.domain.streak.Heatmap
+import com.mn.android.domain.streak.Insight
+import com.mn.android.domain.streak.WeeklyBucket
 import com.mn.android.presentation.theme.ui.MnTheme
 import java.time.Instant
 import java.time.ZoneId

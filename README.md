@@ -60,7 +60,7 @@ Firebase config is gitignored because this repo is public. Create a Firebase pro
 - iOS: `MeditateAndNote/Resources/GoogleService-Info.plist`
 - Android: `Android/app/google-services.json`
 
-Without them the apps still build/launch; analytics stays disabled/no-op. Enable Google Analytics for the Firebase project and use DebugView (`-FIRDebugEnabled` on iOS, `adb shell setprop debug.firebase.analytics.app com.mn.android` on Android) to verify events.
+Without them the apps still build/launch; analytics stays disabled/no-op. The iOS file is copied into the bundle by a build phase (so a missing file does not fail the build), and a file with a wrong API key, app id or bundle id is ignored instead of killing the app at launch. Enable Google Analytics for the Firebase project and use DebugView (`-FIRDebugEnabled` on iOS, `adb shell setprop debug.firebase.analytics.app com.mn.android` on Android) to verify events.
 
 ### BigQuery export
 
@@ -147,3 +147,36 @@ The apps speak the OpenAI chat-completions dialect (the wire protocol lives in t
 ```bash
 xcodebuild test -project MeditateAndNote.xcodeproj -scheme MeditateAndNote -destination 'platform=iOS Simulator,name=iPhone 16'
 ```
+
+## CI
+
+`.github/workflows/ci.yml` runs on every push and pull request:
+
+- **iOS** - the unit tests on a simulator (`MeditateAndNoteTests`)
+- **Android** - `assembleDebug` and the JVM unit tests. The job installs the
+  Swift 6.4.0 toolchain, the Android Swift SDK bundle and NDK r30: the JNI
+  library is compiled from the Swift core, so Gradle alone is not enough.
+
+The on-device Android tests are not part of CI - the JNI library is built for
+aarch64 only and the GitHub runner images are x86_64.
+
+### Signing the Android release
+
+The release key stays out of the repo. Create a keystore and put its four
+values in `~/.gradle/gradle.properties` (or pass them with `-P`):
+
+```properties
+releaseStoreFile=/absolute/path/to/release.jks
+releaseStorePassword=...
+releaseKeyAlias=...
+releaseKeyPassword=...
+```
+
+Without them `./gradlew :app:assembleRelease` produces an unsigned APK, which
+is what CI wants.
+
+The Android app builds with `./gradlew :app:assembleDebug` and its tests with
+`./gradlew :app:testDebugUnitTest` and `:app:connectedDebugAndroidTest`. The
+Gradle daemon runs on Java 17 (`Android/gradle/gradle-daemon-jvm.properties`)
+and downloads it when the machine does not have it: the lint that AGP runs for
+the release build cannot start its analysis on a newer JDK.

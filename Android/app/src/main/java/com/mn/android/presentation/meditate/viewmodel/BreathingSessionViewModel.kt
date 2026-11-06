@@ -6,28 +6,38 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import com.mn.android.infrastructure.persistence.local.meditation.MeditationCatalog
-import com.mn.android.infrastructure.persistence.local.meditation.MeditationSelection
+import androidx.lifecycle.viewModelScope
 import com.mn.android.application.analytics.StreakEvents
-import com.mn.android.data.SessionRecorder
 import com.mn.android.domain.events.DomainEvent
 import com.mn.android.domain.events.DomainEventBus
-import com.mn.android.infrastructure.platform.sound.MeditationSound
-import com.mn.android.infrastructure.platform.sound.SoundPlayer
+import com.mn.android.domain.meditation.CompletedSession
+import com.mn.android.domain.meditation.MeditationId
+import com.mn.android.domain.meditation.MeditationRepository
+import com.mn.android.domain.meditation.MeditationSelectionStore
+import com.mn.android.domain.meditation.SessionCue
+import com.mn.android.domain.meditation.SoundPlayer
 import com.mn.core.BreathingPattern
 import com.mn.core.BreathingStyle
 import com.mn.core.MeditationSessionEngine
 import com.mn.core.SessionDuration
 import com.mn.core.Date
+import kotlinx.coroutines.launch
 import org.swift.swiftkit.core.SwiftMemoryManagement
 import java.time.Instant
 
-class BreathingSessionViewModel(private val savedStateHandle: SavedStateHandle) : ViewModel() {
+class BreathingSessionViewModel(
+    private val savedStateHandle: SavedStateHandle,
+    private val meditationRepository: MeditationRepository,
+    private val soundPlayer: SoundPlayer,
+    private val selection: MeditationSelectionStore,
+) : ViewModel() {
 
   private val meditationId: String = checkNotNull(savedStateHandle.get<String>("meditationId"))
+  /** The Swift arena: the session engine's memory is bound to it. */
   val arena = SwiftMemoryManagement.DEFAULT_SWIFT_JAVA_AUTO_ARENA
-  val meditationTitle: String = MeditationCatalog.load().firstOrNull { it.id == meditationId }?.title ?: "Meditation"
-  val breathingStyle: String = MeditationCatalog.load().firstOrNull { it.id == meditationId }?.breathingStyleRawValue ?: "box"
+
+  val meditationTitle: String = meditationRepository.catalog.firstOrNull { it.id == meditationId }?.title ?: "Meditation"
+  val breathingStyle: String = meditationRepository.catalog.firstOrNull { it.id == meditationId }?.breathingStyleRawValue ?: "box"
 
   /** Flat copy of Core `BreathingPattern.phases` — type discriminator + seconds. */
   data class Phase(val type: String, val durationSeconds: Double)
@@ -131,38 +141,45 @@ class BreathingSessionViewModel(private val savedStateHandle: SavedStateHandle) 
    */
   private fun playCues(old: UiState?, new: UiState) {
     if (old is UiState.Countdown && new is UiState.Countdown && new.remaining < old.remaining) {
-      SoundPlayer.play(MeditationSound.COUNTDOWN_TICK)
+      soundPlayer.play(SessionCue.COUNTDOWN_TICK)
     }
     if (old !is UiState.Active && new is UiState.Active && !new.paused) {
-      SoundPlayer.play(MeditationSound.fromPhase(new.discriminator))
+      soundPlayer.play(SessionCue.fromPhase(new.discriminator))
       // mirrors iOS `MeditationViewModel.tickCountdown()`: the session is
       // started once the countdown is over, not when it is requested.
       DomainEventBus.publish(DomainEvent.MeditationStarted(meditationId))
     }
     if (old is UiState.Active && new is UiState.Active) {
       if (new.discriminator != old.discriminator) {
-        SoundPlayer.play(MeditationSound.fromPhase(new.discriminator))
+        soundPlayer.play(SessionCue.fromPhase(new.discriminator))
       }
-      if (!old.paused && new.paused) SoundPlayer.play(MeditationSound.PAUSED)
-      if (old.paused && !new.paused) SoundPlayer.play(MeditationSound.RESUMED)
+      if (!old.paused && new.paused) soundPlayer.play(SessionCue.PAUSED)
+      if (old.paused && !new.paused) soundPlayer.play(SessionCue.RESUMED)
     }
     if (new is UiState.Finished && old !is UiState.Finished) {
-      SoundPlayer.play(MeditationSound.FINISHED)
+      soundPlayer.play(SessionCue.FINISHED)
       // mirrors iOS `.completed` event handler: publish session once, with the
       // full selected duration (iOS passes the same value down the event).
-      // `record` returns 1 only when the session was persisted, so the event
-      // follows the write instead of the intent.
-      val saved = SessionRecorder.record(
-          meditationId,
-          totalSeconds,
-          java.util.TimeZone.getDefault().getOffset(System.currentTimeMillis()) / 60_000,
-      )
-      if (saved == 1L) {
+      // The event follows the write, not the intent: the repository reports
+      // success only when Swift persisted the session.
+      recordCompletedSession()
+    }
+  }
+
+  private fun recordCompletedSession() {
+    val session = CompletedSession(
+      meditationId = MeditationId(meditationId),
+      durationSeconds = Math.round(totalSeconds).toInt(),
+      dateMillis = System.currentTimeMillis(),
+      tzOffsetMinutes = java.util.TimeZone.getDefault().getOffset(System.currentTimeMillis()) / 60_000
+    )
+    viewModelScope.launch {
+      meditationRepository.recordSession(session).onSuccess {
         DomainEventBus.publish(
-            DomainEvent.MeditationCompleted(
-                meditationId = meditationId,
-                durationSeconds = Math.round(totalSeconds).toInt(),
-            ),
+          DomainEvent.MeditationCompleted(
+            meditationId = meditationId,
+            durationSeconds = Math.round(totalSeconds).toInt(),
+          ),
         )
         StreakEvents.sync()
       }
@@ -200,8 +217,8 @@ class BreathingSessionViewModel(private val savedStateHandle: SavedStateHandle) 
   }
 
   private fun pattern(): BreathingPattern {
-    val raw = MeditationSelection.lastSelectedId?.let { id ->
-      MeditationCatalog.load().firstOrNull { it.id == id }?.breathingStyleRawValue
+    val raw = selection.lastSelectedId?.let { id ->
+      meditationRepository.catalog.firstOrNull { it.id == id }?.breathingStyleRawValue
     } ?: "4-7-8"
     return BreathingStyle.init(raw, arena)
       .map { it.getPattern(arena) }

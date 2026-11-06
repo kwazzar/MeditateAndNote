@@ -30,7 +30,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,26 +47,27 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import com.mn.android.R
-import com.mn.android.data.BookSource
-import com.mn.android.domain.events.DomainEvent
-import com.mn.android.domain.events.DomainEventBus
+import com.mn.android.application.container.AppContainer
+import com.mn.android.domain.book.BookId
+import com.mn.android.presentation.reading.viewmodel.LibraryViewModel
 import com.mn.android.presentation.theme.ui.MnBackground
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 /**
  * Port of the iOS `LibraryView`: cover grid, import from the system picker,
  * per-book progress, long-press delete.
  *
- * All book state flows through `BookSource` (Swift via JNI); this screen only
+ * All book state flows through [BookRepository] (Swift via JNI); this screen only
  * holds which books are shown and which dialogs are up.
  */
 
-/** Reader paper palette entry used by the cover placeholder. */
+/** One library cell: the summary plus the decoded cover. */
 private data class LibraryBook(
-    val id: String,
+    val id: BookId,
     val title: String,
     val author: String,
     val format: String,
@@ -74,34 +75,52 @@ private data class LibraryBook(
     val cover: android.graphics.Bitmap?,
 )
 
+/**
+ * The picked document's file name — the MIME type carries no extension, and
+ * the extension is what decides the import format.
+ */
+internal fun documentName(context: android.content.Context, uri: android.net.Uri): String {
+    if (uri.scheme != "file") {
+        context.contentResolver
+            .query(uri, arrayOf(android.provider.OpenableColumns.DISPLAY_NAME), null, null, null)
+            ?.use { cursor ->
+                val index = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                if (index >= 0 && cursor.moveToFirst()) {
+                    return cursor.getString(index) ?: "book"
+                }
+            }
+    }
+    return uri.lastPathSegment ?: "book"
+}
+
 @Composable
 fun LibraryScreen(
     onOpenBook: (String) -> Unit,
 ) {
     val context = LocalContext.current
+    val viewModel: LibraryViewModel = viewModel(
+        factory = viewModelFactory {
+            initializer { AppContainer.makeLibraryViewModel(context) }
+        },
+    )
     val scope = rememberCoroutineScope()
-    var books by remember { mutableStateOf<List<LibraryBook>>(emptyList()) }
-    var importError by remember { mutableStateOf(false) }
+    val state by viewModel.state.collectAsState()
     var pendingDelete by remember { mutableStateOf<LibraryBook?>(null) }
 
-    suspend fun reload() = withContext(Dispatchers.IO) {
-        val records = BookSource.readLibrary()
-        records.map { record ->
+    // The covers are bytes in the ViewModel; the bitmaps are the screen's.
+    val books = remember(state.books, state.covers) {
+        state.books.map { summary ->
             LibraryBook(
-                id = record.id,
-                title = record.title,
-                author = record.author,
-                format = record.format,
-                progressPerMille = record.progressPerMille,
-                cover = BookSource.cover(record.id)?.let {
+                id = summary.id,
+                title = summary.title,
+                author = summary.author,
+                format = summary.format,
+                progressPerMille = summary.progressPerMille,
+                cover = state.covers[summary.id]?.let {
                     BitmapFactory.decodeByteArray(it, 0, it.size)
                 },
             )
         }
-    }
-
-    LaunchedEffect(Unit) {
-        runCatching { books = reload() }
     }
 
     val importer = rememberLauncherForActivityResult(
@@ -109,16 +128,12 @@ fun LibraryScreen(
     ) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
         scope.launch {
-            val result = runCatching {
-                withContext(Dispatchers.IO) {
-                    BookSource.importDocument(context, uri)
-                }
-            }
-            if (result.isSuccess) {
-                DomainEventBus.publish(DomainEvent.BookImported(result.getOrThrow().format))
-                runCatching { books = reload() }
+            val name = documentName(context, uri)
+            val content = context.contentResolver.openInputStream(uri)
+            if (content == null) {
+                viewModel.reportImportFailure()
             } else {
-                importError = true
+                viewModel.import(name, content)
             }
         }
     }
@@ -155,10 +170,10 @@ fun LibraryScreen(
                 ),
                 modifier = Modifier.fillMaxSize(),
             ) {
-                items(books, key = { it.id }) { book ->
+                items(books, key = { it.id.value }) { book ->
                     BookCell(
                         book = book,
-                        onOpen = { onOpenBook(book.id) },
+                        onOpen = { onOpenBook(book.id.value) },
                         onDelete = { pendingDelete = book },
                     )
                 }
@@ -189,11 +204,11 @@ fun LibraryScreen(
         }
     }
 
-    if (importError) {
+    if (state.importFailed) {
         AlertDialog(
-            onDismissRequest = { importError = false },
+            onDismissRequest = { viewModel.dismissImportError() },
             confirmButton = {
-                Button(onClick = { importError = false }) { Text(stringResource(R.string.ok)) }
+                Button(onClick = { viewModel.dismissImportError() }) { Text(stringResource(R.string.ok)) }
             },
             title = { Text(stringResource(R.string.import_failed)) },
             text = { Text(stringResource(R.string.import_failed_hint)) },
@@ -205,11 +220,8 @@ fun LibraryScreen(
             onDismissRequest = { pendingDelete = null },
             confirmButton = {
                 Button(onClick = {
-                    scope.launch {
-                        withContext(Dispatchers.IO) { BookSource.delete(book.id) }
-                        runCatching { books = reload() }
-                        pendingDelete = null
-                    }
+                    viewModel.delete(book.id)
+                    pendingDelete = null
                 }) { Text(stringResource(R.string.delete)) }
             },
             dismissButton = {

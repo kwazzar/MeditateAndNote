@@ -27,6 +27,11 @@ interface DomainEventPublisher {
  * The buffer is small and lossy under sustained bursts, which is fine for
  * invalidation-style consumers: they reload from the store, so a dropped
  * older reload collapses into the newest one.
+ *
+ * Entitlement is the exception: it is state, not invalidation. A premium
+ * change that nobody was around for leaves the app unlocked (or locked)
+ * until the next refresh, so the last one is kept and replayed to whoever
+ * subscribes next.
  */
 object DomainEventBus : DomainEventPublisher {
 
@@ -37,8 +42,24 @@ object DomainEventBus : DomainEventPublisher {
 
     val events: SharedFlow<DomainEvent> = _events.asSharedFlow()
 
+    /**
+     * The last entitlement change, replayed to a late subscriber.
+     *
+     * Only the latest one is kept: entitlement is a state, not a history.
+     */
+    private val _entitlementChanges = MutableSharedFlow<DomainEvent.SubscriptionChanged>(
+        replay = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
+    )
+
+    val entitlementChanges: SharedFlow<DomainEvent.SubscriptionChanged> =
+        _entitlementChanges.asSharedFlow()
+
     /** Safe from any thread; publishers today are main-thread UI callbacks. */
     override fun publish(event: DomainEvent) {
         _events.tryEmit(event)
+        if (event is DomainEvent.SubscriptionChanged) {
+            _entitlementChanges.tryEmit(event)
+        }
     }
 }

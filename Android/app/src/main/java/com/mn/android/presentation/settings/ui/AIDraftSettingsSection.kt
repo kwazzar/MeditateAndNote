@@ -22,12 +22,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.mn.android.R
-import com.mn.android.data.AIDraftSettingsStore
+import com.mn.android.application.container.AppContainer
+import com.mn.android.domain.aidraft.AIDraftSettings
 import com.mn.android.presentation.theme.ui.MnTheme
 
 /**
@@ -39,11 +41,13 @@ import com.mn.android.presentation.theme.ui.MnTheme
  * choice of who receives it, not a promise of privacy.
  */
 @Composable
-internal fun AIDraftSettingsSection() {
-    var useHosted by remember { mutableStateOf(AIDraftSettingsStore.useHostedProvider()) }
-    var endpoint by remember { mutableStateOf(AIDraftSettingsStore.userEndpoint()) }
-    var model by remember { mutableStateOf(AIDraftSettingsStore.model()) }
-    var apiKey by remember { mutableStateOf(AIDraftSettingsStore.apiKey().orEmpty()) }
+internal fun AIDraftSettingsSection(
+    settings: AIDraftSettings = AppContainer.getAIDraftSettings(LocalContext.current),
+) {
+    var useHosted by remember { mutableStateOf(settings.useHostedProvider()) }
+    var endpoint by remember { mutableStateOf(settings.userEndpoint()) }
+    var model by remember { mutableStateOf(settings.model()) }
+    var apiKey by remember { mutableStateOf(settings.apiKey().orEmpty()) }
     var saved by remember { mutableStateOf(false) }
 
     SectionCard {
@@ -82,7 +86,7 @@ internal fun AIDraftSettingsSection() {
         if (useHosted) {
             Spacer(Modifier.height(8.dp))
             Text(
-                AIDraftSettingsStore.hostedEndpoint(),
+                settings.hostedEndpoint(),
                 color = MnTheme.textSecondary,
                 style = MaterialTheme.typography.bodySmall,
             )
@@ -112,9 +116,9 @@ internal fun AIDraftSettingsSection() {
         ) {
             TextButton(
                 onClick = {
-                    AIDraftSettingsStore.setUseHostedProvider(useHosted)
+                    settings.setUseHostedProvider(useHosted)
                     if (!useHosted) {
-                        AIDraftSettingsStore.save(endpoint, model, apiKey)
+                        settings.save(endpoint, model, apiKey)
                     }
                     saved = true
                 },

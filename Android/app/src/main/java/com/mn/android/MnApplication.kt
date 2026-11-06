@@ -35,6 +35,15 @@ class MnApplication : Application() {
                 updateUserProperties(event)
             }
         }
+        // The entitlement is replayed, so a premium change that happened
+        // before this collector was running still lands in the user
+        // properties. The analytics event itself is logged from the live
+        // stream only - replaying it would count the purchase twice.
+        scope.launch {
+            DomainEventBus.entitlementChanges.collect { event ->
+                updateUserProperties(event)
+            }
+        }
     }
 
     private fun setInitialUserProperties() {

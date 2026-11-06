@@ -69,13 +69,8 @@
                 <data android:mimeType="application/epub+zip" />
             </intent-filter>
         </activity>
-        <!-- Kept exported but without a LAUNCHER filter: the device probes start
-             it explicitly with `adb shell am start -n com.mn.android/.debug.MetricsActivity`,
-             and the app itself now opens on MainActivity. -->
-        <activity
-            android:name=".debug.MetricsActivity"
-            android:exported="true"
-            android:label="Metrics" />
+        <!-- The device probes (and their MetricsActivity) live in the debug
+             source set, see src/debug/AndroidManifest.xml. -->
 
         <!-- Streak reminder alarms: fires the notification and chains the next
              horizon; reschedules everything after reboot (alarms do not

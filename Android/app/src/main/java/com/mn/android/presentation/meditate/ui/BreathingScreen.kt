@@ -44,8 +44,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -53,17 +51,19 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.viewModelFactory
+import androidx.lifecycle.viewmodel.initializer
 import com.mn.android.R
-import com.mn.android.infrastructure.persistence.local.settings.AnimationSettings
+import com.mn.android.application.container.AppContainer
 import com.mn.android.presentation.theme.ui.MnBackground
 import com.mn.android.presentation.theme.ui.MnCloseButton
 import com.mn.android.presentation.theme.ui.MnBreathing
 import com.mn.android.presentation.theme.ui.MnTheme
 import com.mn.core.MeditationDuration
-import com.mn.core.MeditationSessionEngine
 import com.mn.core.SessionDuration
 import org.swift.swiftkit.core.SwiftMemoryManagement
 import com.mn.android.presentation.meditate.viewmodel.BreathingSessionViewModel
+import androidx.compose.ui.platform.LocalContext
 
 internal val phaseLabel = mapOf(
     "inhale" to "Inhale",
@@ -106,7 +106,13 @@ fun BreathingScreen(
     onBack: () -> Unit,
     onWriteNote: () -> Unit,
 ) {
-    val vm: BreathingSessionViewModel = viewModel(key = "breath_$meditationId")
+    val context = LocalContext.current
+    val vm: BreathingSessionViewModel = viewModel(
+        factory = androidx.lifecycle.viewmodel.viewModelFactory {
+            initializer { AppContainer.makeBreathingSessionViewModel(context, androidx.lifecycle.SavedStateHandle(mapOf("meditationId" to meditationId))) }
+        },
+        key = "breath_$meditationId"
+    )
     var sheetOpen by rememberSaveable { mutableStateOf(true) }
     var selectedDuration by remember { mutableStateOf(meditationDurations[1]) }
 

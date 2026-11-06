@@ -1,7 +1,7 @@
 package com.mn.android.presentation.notes
 
-import com.mn.android.data.NoteInsightsSource
 import com.mn.android.domain.events.DomainEvent
+import com.mn.android.insights.FakeNoteInsightsRepository
 import com.mn.android.presentation.notes.viewmodel.NoteInsightsViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -35,38 +35,28 @@ class NoteInsightsViewModelEventsTest {
 
     @Test
     fun noteEventReloadsTheInsights() = runTest {
-        var loads = 0
-        viewModel(loads = { loads++ })
+        val repository = FakeNoteInsightsRepository()
+
+        viewModel(repository)
 
         events.emit(DomainEvent.NoteCreated("note-1"))
 
-        assertEquals(1, loads)
+        assertEquals(1, repository.storedCalls)
     }
 
     @Test
     fun meditationEventLeavesTheInsightsAlone() = runTest {
-        var loads = 0
-        viewModel(loads = { loads++ })
+        val repository = FakeNoteInsightsRepository()
+
+        viewModel(repository)
 
         events.emit(DomainEvent.MeditationCompleted("breathing-4-7-8", 305))
 
-        assertEquals(0, loads)
+        assertEquals(0, repository.storedCalls)
     }
 
-    private fun viewModel(loads: () -> Unit) = NoteInsightsViewModel(
-        loadStored = {
-            loads()
-            listOf(
-                NoteInsightsSource.Insight(
-                    id = "stored",
-                    summary = "stored",
-                    tags = listOf("calm"),
-                    themes = listOf(NoteInsightsSource.Theme("calm", 1.0)),
-                )
-            )
-        },
-        loadHeuristic = { emptyList() },
-        runAnalysis = { NoteInsightsSource.Analysis(emptyList(), "") },
+    private fun viewModel(repository: FakeNoteInsightsRepository) = NoteInsightsViewModel(
+        repository = repository,
         ioDispatcher = UnconfinedTestDispatcher(),
         events = events,
     )

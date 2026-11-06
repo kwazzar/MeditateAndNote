@@ -2,7 +2,8 @@ package com.mn.android.presentation.notes.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mn.android.data.NoteInsightsSource
+import com.mn.android.domain.insights.NoteInsight
+import com.mn.android.domain.insights.NoteInsightsRepository
 import com.mn.android.domain.events.DomainEvent
 import com.mn.android.domain.events.DomainEventBus
 import kotlinx.coroutines.CoroutineDispatcher
@@ -24,12 +25,10 @@ import kotlinx.coroutines.withContext
  *
  * The analysis rules are not here: Swift owns them (`HeuristicNoteAnalyzer`,
  * `NoteInsightRemoteProtocol`) and Kotlin only decodes what comes back. The
- * three lambdas are the seam the tests replace.
+ * repository is the seam the tests replace.
  */
 class NoteInsightsViewModel(
-    private val loadStored: suspend () -> List<NoteInsightsSource.Insight> = { NoteInsightsSource.storedInsights() },
-    private val loadHeuristic: suspend () -> List<NoteInsightsSource.Insight> = { NoteInsightsSource.load() },
-    private val runAnalysis: suspend () -> NoteInsightsSource.Analysis = { NoteInsightsSource.analyzeInsights() },
+    private val repository: NoteInsightsRepository,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val events: Flow<DomainEvent> = DomainEventBus.events,
 ) : ViewModel() {
@@ -50,7 +49,7 @@ class NoteInsightsViewModel(
     }
 
     data class UiState(
-        val insights: List<NoteInsightsSource.Insight> = emptyList(),
+        val insights: List<NoteInsight> = emptyList(),
         val isLoading: Boolean = false,
         val isRefreshing: Boolean = false,
         /** The error of the last pass, "providerUnavailable" by default. */
@@ -64,7 +63,15 @@ class NoteInsightsViewModel(
 
     /** Aggregate theme labels across all insights, most frequent first. */
     val topThemes: List<String>
-        get() = NoteInsightsSource.topThemes(state.value.insights)
+        get() {
+            val counts = LinkedHashMap<String, Int>()
+            for (insight in state.value.insights) {
+                for (theme in insight.themes) {
+                    counts[theme.label] = (counts[theme.label] ?: 0) + 1
+                }
+            }
+            return counts.entries.sortedByDescending { it.value }.take(5).map { it.key }
+        }
 
     /**
      * The stored insights — what the last pass found. With nothing stored
@@ -75,8 +82,8 @@ class NoteInsightsViewModel(
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
             val insights = withContext(ioDispatcher) {
-                val stored = runCatching { loadStored() }.getOrDefault(emptyList())
-                stored.ifEmpty { runCatching { loadHeuristic() }.getOrDefault(emptyList()) }
+                val stored = runCatching { repository.stored() }.getOrDefault(emptyList())
+                stored.ifEmpty { runCatching { repository.heuristic() }.getOrDefault(emptyList()) }
             }
             _state.update { it.copy(insights = insights, isLoading = false, hasLoaded = true) }
         }
@@ -92,7 +99,7 @@ class NoteInsightsViewModel(
         viewModelScope.launch {
             _state.update { it.copy(isRefreshing = true, error = null) }
             val analysis = withContext(ioDispatcher) {
-                runCatching { runAnalysis() }.getOrNull()
+                runCatching { repository.analyze() }.getOrNull()
             }
             if (analysis == null || analysis.error != null) {
                 _state.update {

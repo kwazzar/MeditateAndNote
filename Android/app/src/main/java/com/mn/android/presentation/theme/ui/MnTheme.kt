@@ -21,7 +21,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.mn.android.application.subscription.SubscriptionScope
 import com.mn.android.domain.theme.model.MainTheme
-import com.mn.android.infrastructure.persistence.local.settings.MnThemeStore
+import com.mn.android.application.container.AppContainer
+import com.mn.android.domain.theme.ThemeSelectionStore
 import kotlin.random.Random
 
 // MARK: - Theme plumbing
@@ -37,6 +38,8 @@ val LocalMnThemeManager = staticCompositionLocalOf<MnThemeManager> {
 @Stable
 class MnThemeManager(
     initial: MainTheme,
+    /** Where the picked theme is remembered. */
+    private val themeSelection: ThemeSelectionStore,
     /** Whether the `pro` entitlement is active. No provider → nothing is locked. */
     private val isPro: () -> Boolean = { true },
 ) {
@@ -56,7 +59,7 @@ class MnThemeManager(
     fun select(theme: MainTheme) {
         if (isLocked(theme)) return
         this.theme = theme
-        MnThemeStore.selected = theme
+        themeSelection.selected = theme
     }
 }
 
@@ -64,8 +67,8 @@ class MnThemeManager(
 fun rememberMnThemeManager(): MnThemeManager {
     val context = LocalContext.current
     return remember {
-        MnThemeStore.configure(context)
-        MnThemeManager(MnThemeStore.selected) {
+        val themeSelection = AppContainer.getThemeSelection(context)
+        MnThemeManager(themeSelection.selected, themeSelection) {
             SubscriptionScope.manager(context).isPro
         }
     }

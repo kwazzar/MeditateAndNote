@@ -2,7 +2,6 @@ package com.mn.android.presentation.home.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -51,10 +50,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mn.android.R
-import com.mn.android.data.StreakHeaderSource
-import com.mn.android.data.StreakHeaderSource.DayFlags
+import com.mn.android.application.container.AppContainer
 import com.mn.android.domain.events.DomainEvent
 import com.mn.android.domain.events.DomainEventBus
+import com.mn.android.domain.streak.DayFlags
+import com.mn.android.domain.streak.Header
+import com.mn.android.domain.streak.StreakRepository
 import com.mn.android.presentation.streak.ui.DayCellView
 import com.mn.android.presentation.theme.ui.MnBackground
 import com.mn.android.presentation.theme.ui.MnTheme
@@ -68,7 +69,7 @@ import java.util.Locale
  * last-7-days grid), the note-reminder banner, the Meditate entry point and
  * the Settings button.
  *
- * Data comes from the Swift snapshot through [StreakHeaderSource]; the JSON
+ * Data comes from the Swift snapshot through [StreakRepository]; the JSON
  * itself is never parsed in Kotlin.
  */
 @Composable
@@ -77,13 +78,14 @@ fun HomeScreen(
     onStreakDetail: () -> Unit,
     onSettings: () -> Unit,
     onNewNote: () -> Unit,
+    repository: StreakRepository = AppContainer.getStreakRepository(),
 ) {
     Box(Modifier.fillMaxSize()) {
         MnBackground()
         // The streak header is a snapshot: it is read once and again after
         // every note or meditation event, the same way the iOS home tab
         // refreshes on the domain events.
-        var header by remember { mutableStateOf(StreakHeaderSource.readHeader()) }
+        var header by remember { mutableStateOf(repository.readHeader()) }
         LaunchedEffect(Unit) {
             DomainEventBus.events.collect { event ->
                 if (event is DomainEvent.NoteCreated ||
@@ -91,7 +93,7 @@ fun HomeScreen(
                     event is DomainEvent.NoteDeleted ||
                     event is DomainEvent.MeditationCompleted
                 ) {
-                    header = StreakHeaderSource.readHeader()
+                    header = repository.readHeader()
                 }
             }
         }
@@ -148,7 +150,7 @@ fun HomeScreen(
 
 @Composable
 private fun StreakHeaderCard(
-    header: StreakHeaderSource.Header,
+    header: Header,
     onStreakDetail: () -> Unit,
     onNewNote: () -> Unit,
     modifier: Modifier = Modifier,
@@ -297,7 +299,7 @@ internal fun SettingsButton(onClick: () -> Unit, modifier: Modifier = Modifier) 
 @Preview(name = "Streak card, reminder shown")
 @Composable
 private fun StreakHeaderCardPreview() {
-    val header = StreakHeaderSource.Header(
+    val header = Header(
         currentStreak = 4,
         dayFlags = listOf(
             DayFlags(true, true),  // Mo

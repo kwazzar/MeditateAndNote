@@ -31,7 +31,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.mn.android.R
-import com.mn.android.data.BookmarksSource
+import com.mn.android.domain.book.Bookmark
+import com.mn.android.domain.book.Chapter
 import java.text.DateFormat
 import java.util.Date
 
@@ -41,9 +42,9 @@ import java.util.Date
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TableOfContentsSheet(
-    chapters: List<BookmarksSource.Chapter>,
+    chapters: List<Chapter>,
     currentPage: Int,
-    onSelect: (BookmarksSource.Chapter) -> Unit,
+    onSelect: (Chapter) -> Unit,
     onDismiss: () -> Unit,
 ) {
     ModalBottomSheet(onDismissRequest = onDismiss) {
@@ -95,12 +96,12 @@ fun TableOfContentsSheet(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReaderMarksSheet(
-    marks: List<BookmarksSource.Mark>,
-    onSelect: (BookmarksSource.Mark) -> Unit,
-    onDelete: (BookmarksSource.Mark) -> Unit,
+    marks: List<Bookmark>,
+    onSelect: (Bookmark) -> Unit,
+    onDelete: (Bookmark) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    var pendingDelete by remember { mutableStateOf<BookmarksSource.Mark?>(null) }
+    var pendingDelete by remember { mutableStateOf<Bookmark?>(null) }
 
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(Modifier.padding(horizontal = 20.dp)) {
@@ -118,7 +119,7 @@ fun ReaderMarksSheet(
                 )
             }
             LazyColumn(Modifier.padding(top = 8.dp)) {
-                items(marks, key = { it.id }) { mark ->
+                items(marks, key = { it.id.value }) { mark ->
                     Column {
                         TextButton(
                             onClick = { onSelect(mark) },

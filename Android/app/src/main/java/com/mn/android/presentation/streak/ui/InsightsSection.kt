@@ -2,6 +2,7 @@ package com.mn.android.presentation.streak.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -34,11 +36,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mn.android.R
-import com.mn.android.data.SharedPrefsReminderSettingsStore
-import com.mn.android.data.StreakInsightsSource.Bundle
-import com.mn.android.data.StreakInsightsSource.Insight
-import com.mn.android.data.StreakInsightsSource.Recommendation
-import com.mn.android.data.StreakInsightsSource.RecommendationAction
+import com.mn.android.application.container.AppContainer
+import com.mn.android.domain.settings.ReminderSettings
+import com.mn.android.domain.streak.Bundle
+import com.mn.android.domain.streak.Category
+import com.mn.android.domain.streak.Insight
+import com.mn.android.domain.streak.Recommendation
+import com.mn.android.domain.streak.RecommendationAction
 import com.mn.android.presentation.theme.ui.MnTheme
 import androidx.compose.ui.res.stringResource
 
@@ -58,6 +62,7 @@ internal fun InsightsSection(
     onNavigateToMeditation: () -> Unit,
     onNavigateToNote: () -> Unit,
 ) {
+    val context = LocalContext.current
     var selectedInsight by remember { mutableStateOf<Insight?>(null) }
     var reminderMessage by remember { mutableStateOf<String?>(null) }
 
@@ -70,6 +75,7 @@ internal fun InsightsSection(
                         RecommendationAction.NAVIGATE_TO_MEDITATION -> onNavigateToMeditation()
                         RecommendationAction.NAVIGATE_TO_NOTE -> onNavigateToNote()
                         RecommendationAction.SET_REMINDER -> enableReminderForWeakestDay(
+                            context = context,
                             bundle = bundle,
                             onMessage = { reminderMessage = it },
                         )
@@ -219,7 +225,7 @@ private fun InsightsHeader(
 /** iOS `rangeSubtitle`: "Last 7 Days · 42% complete" (completion insight value). */
 private fun rangeSubtitle(bundle: Bundle, range: String): String {
     val completion = bundle.insights
-        .firstOrNull { it.category == com.mn.android.data.StreakInsightsSource.Category.COMPLETION }
+        .firstOrNull { it.category == Category.COMPLETION }
         ?.value
         ?: return rangeTitle(range)
     return "${rangeTitle(range)} · ${(completion * 100).toInt()}% complete"
@@ -365,12 +371,23 @@ private fun HeatmapInsightRow(insight: Insight, onClick: () -> Unit) {
  * Android has no reminder scheduling yet (Phase 6), so this only persists
  * the settings the scheduler will read.
  */
-private fun enableReminderForWeakestDay(bundle: Bundle, onMessage: (String) -> Unit) {
+private fun enableReminderForWeakestDay(
+    context: Context,
+    bundle: Bundle,
+    onMessage: (String) -> Unit,
+) {
     val days = bundle.insights.firstOrNull { it.heatmap != null }?.heatmap?.days
     val weakestIndex = days?.indices?.minByOrNull { days[it].completionRate }
     val weekdays = if (weakestIndex != null) longArrayOf((weakestIndex + 1).toLong())
     else longArrayOf(1, 2, 3, 4, 5, 6, 7)
-    SharedPrefsReminderSettingsStore.save(enabled = true, hour = 20, minute = 0, weekdays = weekdays)
+    AppContainer.getReminderSettings(context).save(
+        ReminderSettings(
+            enabled = true,
+            hour = 20,
+            minute = 0,
+            weekdays = weekdays.map { it.toInt() }.toSet(),
+        ),
+    )
     onMessage(
         if (weakestIndex != null) {
             "Reminder enabled for ${days!![weakestIndex].name}s at 20:00."

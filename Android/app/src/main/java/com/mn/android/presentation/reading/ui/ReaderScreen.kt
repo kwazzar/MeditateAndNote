@@ -54,8 +54,6 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -73,29 +71,34 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import com.mn.android.R
-import com.mn.android.data.BookmarksSource
-import com.mn.android.data.ReaderSettingsStore
-import com.mn.android.data.TextMetrics
-import com.mn.android.data.ReaderSource
-import com.mn.android.domain.events.DomainEvent
-import com.mn.android.domain.events.DomainEventBus
-import kotlinx.coroutines.Dispatchers
+import com.mn.android.application.container.AppContainer
+import com.mn.android.domain.book.BookId
+import com.mn.android.domain.book.Bookmark
+import com.mn.android.domain.book.Chapter
+import com.mn.android.domain.book.ReaderLayout
+import com.mn.android.domain.book.ReadingPosition
+import com.mn.android.domain.reader.ReaderSettings
+import com.mn.android.domain.reader.TextMeasurer
+import com.mn.android.presentation.reading.viewmodel.ReaderViewModel
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 /**
  * Port of the iOS `ReaderView` + `ReaderSettingsSheet`: paged text with tap
  * zones (left/back, center/chrome, right/forward), saved reading position,
  * font size + paper theme in a bottom sheet.
  *
- * Pagination happens in Swift (`ReaderSource`); this screen renders the lines
- * of one page and asks for a re-layout when the font size changes. Paper
+ * Pagination happens in Swift (behind [BookRepository]); this screen renders the
+ * lines of one page and asks for a re-layout when the font size changes. Paper
  * palettes are feature constants (mirroring iOS `ReaderTheme`), not app-theme
  * tokens — the reader intentionally reads differently from the app chrome.
  */
@@ -122,11 +125,6 @@ private enum class ReaderPaper(
     ),
 }
 
-private class PageLines(
-    val lines: List<String>,
-    val positions: List<ReaderSource.LinePosition>,
-)
-
 private fun clockText(): String =
     java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
         .format(java.util.Date())
@@ -147,17 +145,29 @@ private tailrec fun android.content.Context.findActivity(): android.app.Activity
 fun ReaderScreen(
     bookId: String,
     onBack: () -> Unit,
+    settings: ReaderSettings = AppContainer.getReaderSettings(LocalContext.current),
+    measurer: TextMeasurer = AppContainer.getTextMeasurer(),
+    /** The session; the tests hand in one built on the fakes. */
+    readerViewModel: ReaderViewModel? = null,
 ) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+    val id = remember(bookId) { BookId(bookId) }
+    val vm: ReaderViewModel = readerViewModel ?: viewModel(
+        key = bookId,
+        factory = viewModelFactory {
+            initializer { AppContainer.makeReaderViewModel(context, bookId) }
+        },
+    )
+    val readerState by vm.state.collectAsStateWithLifecycle()
     var paper by rememberSaveable {
         mutableStateOf(
-            ReaderSettingsStore.paper().let { name ->
+            settings.paper().let { name ->
                 ReaderPaper.entries.firstOrNull { it.name == name } ?: ReaderPaper.SEPIA
             }
         )
     }
-    var fontSize by rememberSaveable { mutableFloatStateOf(ReaderSettingsStore.fontSize()) }
+    var fontSize by rememberSaveable { mutableFloatStateOf(settings.fontSize()) }
     var showSettings by remember { mutableStateOf(false) }
     // Immersive by default, like the FBReader reference: chrome appears on a
     // center tap and hides again on the next one. Pagination reserves the same
@@ -166,15 +176,15 @@ fun ReaderScreen(
 
     // Two reading modes: page-by-page (FBReader-style boxes) or one continuous
     // column of the whole book that the reader scrolls vertically.
-    var scrollMode by rememberSaveable { mutableStateOf(ReaderSettingsStore.scrollMode()) }
+    var scrollMode by rememberSaveable { mutableStateOf(settings.scrollMode()) }
 
-    var title by remember { mutableStateOf("") }
-    var pageCount by remember { mutableIntStateOf(0) }
-    var page by remember { mutableIntStateOf(0) }
-    var lines by remember { mutableStateOf<List<String>>(emptyList()) }
-    var linePositions by remember { mutableStateOf<List<ReaderSource.LinePosition>>(emptyList()) }
-    var progress by remember { mutableFloatStateOf(0f) }
-    var loadFailed by remember { mutableStateOf(false) }
+    val title = readerState.title
+    val pageCount = readerState.pageCount
+    val page = readerState.page
+    val lines = readerState.lines
+    val linePositions = readerState.linePositions
+    val progress = readerState.progress
+    val loadFailed = readerState.loadFailed
     var clock by remember { mutableStateOf(clockText()) }
 
     // Full-screen reading: system bars follow the chrome — hidden while reading,
@@ -202,16 +212,22 @@ fun ReaderScreen(
         }
     }
 
-    var chapters by remember { mutableStateOf<List<BookmarksSource.Chapter>>(emptyList()) }
-    var marks by remember { mutableStateOf<List<BookmarksSource.Mark>>(emptyList()) }
+    val chapters = readerState.chapters
+    val marks = readerState.marks
     var showContents by remember { mutableStateOf(false) }
     var showMarks by remember { mutableStateOf(false) }
     var showGotoPage by remember { mutableStateOf(false) }
     var gotoInput by remember { mutableStateOf("") }
     var actionLine by remember { mutableStateOf<Int?>(null) }
+    // The lines the long press was on: in the scroll mode they come from the
+    // page under the finger, not from the page the state holds.
+    var actionLines by remember { mutableStateOf<List<String>>(emptyList()) }
+    var actionPositions by remember { mutableStateOf<List<ReadingPosition>>(emptyList()) }
+    // The lines the long press was on: in the scroll mode they come from the
+    // page under the finger, not from the page the state holds.
     // Scroll mode renders the whole book lazily: one item per paginated page,
     // cached by index so scroll-back never re-queries the engine.
-    val pageCache = remember { mutableStateMapOf<Int, PageLines>() }
+    val pageCache = readerState.pages
     val listState = rememberLazyListState()
 
     // Swift paginates in pixels (Android Paint metrics), so the page box and
@@ -235,7 +251,7 @@ fun ReaderScreen(
     // The engine lays lines out with Paint metrics ((descent - ascent) * 1.45),
     // which is taller than Compose's fontSize * 1.45. Render every line at the
     // engine's advance, or the page ends short of the bottom edge.
-    val lineHeightPx = remember(fontSizePx) { TextMetrics.lineHeight(fontSizePx.toDouble()).toFloat() }
+    val lineHeightPx = remember(fontSizePx) { measurer.lineHeight(fontSizePx.toDouble()).toFloat() }
     val lineHeightSp = with(localDensity) { lineHeightPx.toSp() }
 
     // The engine wraps with Paint metrics, the page renders with Compose
@@ -264,7 +280,7 @@ fun ReaderScreen(
                 text = probe,
                 style = TextStyle(fontSize = fontSize.sp, fontFamily = FontFamily.Serif),
             ).size.width.toDouble()
-            val paintWidth = TextMetrics.measure(probe, fontSizePx.toDouble())
+            val paintWidth = measurer.measure(probe, fontSizePx.toDouble())
             if (paintWidth > 0) {
                 worst = maxOf(worst, composeWidth / paintWidth)
             }
@@ -272,31 +288,23 @@ fun ReaderScreen(
         worst * 1.01
     }
 
-    suspend fun openBook() = withContext(Dispatchers.IO) {
-        val opened = ReaderSource.open(bookId, fontSizePx.toDouble(), pageWidth, pageHeight, widthScale)
-        title = opened.title
-        // Page before pageCount: the scroll-mode effect is keyed on pageCount,
-        // and it jumps the list to `page` — write the page first or the jump
-        // races a recomposition and lands on item 0.
-        page = opened.page
-        pageCount = opened.pageCount
-        val (pageLines, pagePositions, pageProgress) = ReaderSource.page(opened.page)
-        lines = pageLines
-        linePositions = pagePositions
-        pageCache[opened.page] = PageLines(pageLines, pagePositions)
-        progress = pageProgress.toFloat()
+    // The box the engine lays the book out in.
+    val layout = remember(fontSizePx, pageWidth, pageHeight, widthScale) {
+        ReaderLayout(
+            fontSize = fontSizePx.toDouble(),
+            width = pageWidth,
+            height = pageHeight,
+            widthScale = widthScale,
+        )
     }
 
+
+
+
+    // The book is opened once: a font size change re-lays it out, it does
+    // not open it again.
     LaunchedEffect(bookId) {
-        runCatching {
-            openBook()
-            DomainEventBus.publish(DomainEvent.ReaderOpened(bookId))
-            chapters = withContext(Dispatchers.IO) { BookmarksSource.readChapters(bookId) }
-            marks = withContext(Dispatchers.IO) { BookmarksSource.readMarks(bookId) }
-        }.onFailure {
-            android.util.Log.e("ReaderScreen", "open failed", it)
-            loadFailed = true
-        }
+        vm.open(layout)
     }
 
     // The clock sits in the footer; refresh it while the reader is open even
@@ -309,38 +317,14 @@ fun ReaderScreen(
     }
 
     fun showPage(index: Int) {
-        val clamped = index.coerceIn(0, (pageCount - 1).coerceAtLeast(0))
-        page = clamped
         clock = clockText()
         if (scrollMode) {
             // The list position is the page: jump there and let the tracker
             // update the footer as the scroll settles.
-            scope.launch {
-                listState.scrollToItem(clamped)
-                progress = if (pageCount > 1) clamped.toFloat() / (pageCount - 1) else 0f
-                withContext(Dispatchers.IO) { ReaderSource.savePosition(bookId, clamped) }
-            }
-            return
+            val clamped = index.coerceIn(0, (pageCount - 1).coerceAtLeast(0))
+            scope.launch { listState.scrollToItem(clamped) }
         }
-        scope.launch {
-            val (pageLines, pagePositions, pageProgress) = runCatching {
-                withContext(Dispatchers.IO) { ReaderSource.page(clamped) }
-            }.getOrNull() ?: Triple(emptyList<String>(), emptyList<ReaderSource.LinePosition>(), 0.0)
-            lines = pageLines
-            linePositions = pagePositions
-            pageCache[clamped] = PageLines(pageLines, pagePositions)
-            progress = pageProgress.toFloat()
-            withContext(Dispatchers.IO) { ReaderSource.savePosition(bookId, clamped) }
-            // Neighbour pages are what the slide animation renders next;
-            // loading them now keeps the turn instant instead of flashing
-            // the old page mid-animation.
-            for (neighbour in intArrayOf(clamped - 1, clamped + 1)) {
-                if (neighbour in 0 until pageCount && pageCache[neighbour] == null) {
-                    runCatching { withContext(Dispatchers.IO) { ReaderSource.page(neighbour) } }
-                        .onSuccess { pageCache[neighbour] = PageLines(it.first, it.second) }
-                }
-            }
-        }
+        vm.showPage(index, scrollMode)
     }
 
     // Scroll mode: the first visible page drives the footer and the saved
@@ -351,8 +335,7 @@ fun ReaderScreen(
         snapshotFlow { listState.firstVisibleItemIndex }
             .distinctUntilChanged()
             .collect { index ->
-                page = index
-                progress = if (pageCount > 1) index.toFloat() / (pageCount - 1) else 0f
+                vm.onVisiblePage(index)
                 clock = clockText()
             }
     }
@@ -365,7 +348,7 @@ fun ReaderScreen(
                     // Read the list itself: the `page` state is filled by the
                     // sibling flow and can still be one index behind here.
                     val index = listState.firstVisibleItemIndex
-                    withContext(Dispatchers.IO) { ReaderSource.savePosition(bookId, index) }
+                    vm.savePosition(index)
                 }
             }
     }
@@ -373,10 +356,11 @@ fun ReaderScreen(
     DisposableEffect(Unit) {
         onDispose {
             // Position is saved on every page turn; the dispose hook only
-            // covers a reader closed without turning a page.
+            // covers a reader closed without turning a page. There is no
+            // coroutine scope left here, so the write goes to the
+            // application scope.
             if (pageCount > 0) {
-                ReaderSource.savePosition(
-                    bookId,
+                vm.savePosition(
                     if (scrollMode) listState.firstVisibleItemIndex else page,
                 )
             }
@@ -449,8 +433,8 @@ fun ReaderScreen(
                                 val line = ((offset.y - item.offset) / lineHeightPx)
                                     .toInt()
                                     .coerceIn(0, cached.lines.lastIndex)
-                                lines = cached.lines
-                                linePositions = cached.positions
+                                actionLines = cached.lines
+                                actionPositions = cached.positions
                                 actionLine = line
                             }
                         } else {
@@ -459,6 +443,8 @@ fun ReaderScreen(
                                 val index = ((offset.y - topPaddingPx) / lineHeightPx)
                                     .toInt()
                                     .coerceIn(0, lines.lastIndex)
+                                actionLines = lines
+                                actionPositions = linePositions
                                 actionLine = index
                             }
                         }
@@ -500,12 +486,7 @@ fun ReaderScreen(
                         // Reserve the page's height while it loads, so the
                         // scrollbar and the current page do not jump.
                         LaunchedEffect(index) {
-                            val loaded = withContext(Dispatchers.IO) {
-                                runCatching { ReaderSource.page(index) }.getOrNull()
-                            }
-                            if (loaded != null) {
-                                pageCache[index] = PageLines(loaded.first, loaded.second)
-                            }
+                            vm.loadPage(index)
                         }
                         Spacer(Modifier.height((pageHeight / density).dp))
                     } else {
@@ -577,7 +558,7 @@ fun ReaderScreen(
                 IconButton(onClick = {
                     showContents = true
                     scope.launch {
-                        chapters = withContext(Dispatchers.IO) { BookmarksSource.readChapters(bookId) }
+                        vm.refreshChapters()
                     }
                 }) {
                     Icon(
@@ -589,7 +570,7 @@ fun ReaderScreen(
                 IconButton(onClick = {
                     showMarks = true
                     scope.launch {
-                        marks = withContext(Dispatchers.IO) { BookmarksSource.readMarks(bookId) }
+                        vm.refreshMarks()
                     }
                 }) {
                     Icon(
@@ -693,17 +674,14 @@ fun ReaderScreen(
             marks = marks,
             onSelect = { mark ->
                 scope.launch {
-                    val target = withContext(Dispatchers.IO) {
-                        BookmarksSource.pageForPosition(mark.chapter, mark.block, mark.offset)
-                    }
+                    val target = vm.pageFor(mark)
                     showPage(target)
                 }
                 showMarks = false
             },
             onDelete = { mark ->
                 scope.launch {
-                    withContext(Dispatchers.IO) { BookmarksSource.delete(mark.id) }
-                    marks = withContext(Dispatchers.IO) { BookmarksSource.readMarks(bookId) }
+                    vm.deleteMark(mark.id)
                 }
             },
             onDismiss = { showMarks = false },
@@ -711,56 +689,20 @@ fun ReaderScreen(
     }
 
     actionLine?.let { index ->
-        val line = lines.getOrNull(index).orEmpty()
-        val position = linePositions.getOrNull(index)
+        val line = actionLines.getOrNull(index).orEmpty()
+        val position = actionPositions.getOrNull(index)
         LineActionsSheet(
             lineText = line,
             onHighlight = {
-                scope.launch {
-                    withContext(Dispatchers.IO) {
-                        BookmarksSource.addHighlight(
-                            bookId = bookId,
-                            chapter = position?.chapter ?: 0,
-                            block = position?.block ?: 0,
-                            offset = position?.offset ?: 0,
-                            text = line,
-                            bookTitle = title,
-                            location = "page ${page + 1}",
-                            asNote = false,
-                        )
-                    }
-                    DomainEventBus.publish(DomainEvent.BookmarkCreated("highlight"))
-                    marks = withContext(Dispatchers.IO) { BookmarksSource.readMarks(bookId) }
-                }
+                vm.addHighlight(line, position ?: ReadingPosition(0, 0, 0), asNote = false)
                 actionLine = null
             },
             onAddToNotes = {
-                scope.launch {
-                    withContext(Dispatchers.IO) {
-                        BookmarksSource.addHighlight(
-                            bookId = bookId,
-                            chapter = position?.chapter ?: 0,
-                            block = position?.block ?: 0,
-                            offset = position?.offset ?: 0,
-                            text = line,
-                            bookTitle = title,
-                            location = "page ${page + 1}",
-                            asNote = true,
-                        )
-                    }
-                    DomainEventBus.publish(DomainEvent.BookmarkCreated("highlight"))
-                    marks = withContext(Dispatchers.IO) { BookmarksSource.readMarks(bookId) }
-                }
+                vm.addHighlight(line, position ?: ReadingPosition(0, 0, 0), asNote = true)
                 actionLine = null
             },
             onBookmarkPage = {
-                scope.launch {
-                    withContext(Dispatchers.IO) {
-                        BookmarksSource.addPageBookmark(bookId, 0, 0, 0)
-                    }
-                    DomainEventBus.publish(DomainEvent.BookmarkCreated("page"))
-                    marks = withContext(Dispatchers.IO) { BookmarksSource.readMarks(bookId) }
-                }
+                vm.addPageBookmark()
                 actionLine = null
             },
             onDismiss = { actionLine = null },
@@ -780,7 +722,7 @@ fun ReaderScreen(
                         Button(
                             onClick = {
                                 scrollMode = enabled
-                                ReaderSettingsStore.setScrollMode(enabled)
+                                settings.setScrollMode(enabled)
                                 showPage(page)
                             },
                             // A border is invisible on a filled button here, so the
@@ -805,22 +747,8 @@ fun ReaderScreen(
                         value = fontSize,
                         onValueChange = { fontSize = it },
                         onValueChangeFinished = {
-                            ReaderSettingsStore.setFontSize(fontSize)
-                            scope.launch {
-                                val result = runCatching {
-                                    withContext(Dispatchers.IO) {
-                                        ReaderSource.repaginate(bookId, fontSizePx.toDouble(), pageWidth, pageHeight, widthScale)
-                                    }
-                                }.getOrNull()
-                                if (result != null) {
-                                    // The cache holds lines from the previous
-                                    // layout: every entry would wrap at the old
-                                    // width and drift the scroll list.
-                                    pageCache.clear()
-                                    pageCount = result.first
-                                    showPage(result.second)
-                                }
-                            }
+                            settings.setFontSize(fontSize)
+                            vm.repaginate(layout, scrollMode)
                         },
                         valueRange = 12f..32f,
                         modifier = Modifier.weight(1f),
@@ -834,7 +762,7 @@ fun ReaderScreen(
                         Button(
                             onClick = {
                                 paper = candidate
-                                ReaderSettingsStore.setPaper(candidate.name)
+                                settings.setPaper(candidate.name)
                             },
                             border = if (selected) {
                                 androidx.compose.foundation.BorderStroke(

@@ -25,8 +25,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.mn.android.data.StreakInsightsSource.Insight
-import com.mn.android.data.StreakInsightsSource.WeeklyBucket
+import com.mn.android.domain.streak.Insight
+import com.mn.android.domain.streak.WeeklyBucket
 import com.mn.android.presentation.theme.ui.MnDoneButton
 import com.mn.android.presentation.theme.ui.MnTheme
 import java.time.Instant

@@ -1,5 +1,8 @@
 package com.mn.android.data
 
+import com.mn.android.domain.insights.NoteInsight
+import com.mn.android.domain.insights.NoteInsightTheme
+import com.mn.android.domain.insights.NoteInsightsAnalysis
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -31,39 +34,17 @@ object NoteInsightsSource {
     /** An analysis pass: provider first, heuristic as the fallback. */
     external fun analyze(): String
 
-    data class Theme(
-        val label: String,
-        val relevance: Double,
-    )
-
-    data class Insight(
-        val id: String,
-        val summary: String,
-        val tags: List<String>,
-        val themes: List<Theme>,
-    )
-
-    /**
-     * The result of an analysis pass: the insights, where they came from
-     * ("llm" or "heuristic") and the error, when there was one.
-     */
-    data class Analysis(
-        val insights: List<Insight>,
-        val source: String,
-        val error: String? = null,
-    )
-
     /**
      * Insights in note order — the blob store hands the notes over newest
      * first, so index 0 is the freshest note.
      */
-    fun load(): List<Insight> {
+    fun load(): List<NoteInsight> {
         val root = JSONObject(read())
         return root.getJSONArray("insights").mapObjects { insight(it) }
     }
 
     /** The insights of the last analysis pass, as they were stored. */
-    fun storedInsights(): List<Insight> {
+    fun storedInsights(): List<NoteInsight> {
         val root = try {
             JSONObject(stored())
         } catch (error: Exception) {
@@ -73,48 +54,34 @@ object NoteInsightsSource {
     }
 
     /** Runs an analysis pass. Never throws: a failure comes back as data. */
-    fun analyzeInsights(): Analysis {
+    fun analyzeInsights(): NoteInsightsAnalysis {
         val root = try {
             JSONObject(analyze())
         } catch (error: Exception) {
-            return Analysis(emptyList(), source = "", error = "providerUnavailable")
+            return NoteInsightsAnalysis(emptyList(), source = "", error = "providerUnavailable")
         }
         if (!root.optBoolean("ok")) {
-            return Analysis(emptyList(), source = "", error = root.optString("error"))
+            return NoteInsightsAnalysis(emptyList(), source = "", error = root.optString("error"))
         }
-        return Analysis(
+        return NoteInsightsAnalysis(
             insights = insights(root),
             source = root.optString("source"),
         )
     }
 
-    /**
-     * Aggregate theme labels across all insights, most frequent first.
-     * Mirrors iOS `NoteInsightsViewModel.topThemes`.
-     */
-    fun topThemes(insights: List<Insight>): List<String> {
-        val counts = LinkedHashMap<String, Int>()
-        for (insight in insights) {
-            for (theme in insight.themes) {
-                counts[theme.label] = (counts[theme.label] ?: 0) + 1
-            }
-        }
-        return counts.entries.sortedByDescending { it.value }.take(5).map { it.key }
-    }
-
     // MARK: - Decoding
 
-    private fun insights(root: JSONObject): List<Insight> =
+    private fun insights(root: JSONObject): List<NoteInsight> =
         root.optJSONArray("insights")?.mapObjects { insight(it) } ?: emptyList()
 
-    private fun insight(json: JSONObject) = Insight(
+    private fun insight(json: JSONObject) = NoteInsight(
         id = json.getString("id"),
         summary = json.getString("summary"),
         tags = json.getJSONArray("tags").mapStrings(),
         themes = json.getJSONArray("themes").mapObjects { theme(it) },
     )
 
-    private fun theme(json: JSONObject) = Theme(
+    private fun theme(json: JSONObject) = NoteInsightTheme(
         label = json.getString("label"),
         relevance = json.getDouble("relevance"),
     )

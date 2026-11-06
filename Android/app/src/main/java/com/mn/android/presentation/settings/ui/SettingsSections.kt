@@ -43,6 +43,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -52,8 +53,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.mn.android.R
 import com.mn.android.domain.theme.model.MainTheme
-import com.mn.android.infrastructure.persistence.local.settings.AnimationSettings
-import com.mn.android.infrastructure.persistence.local.settings.SoundSettings
+import com.mn.android.application.container.AppContainer
+import com.mn.android.domain.settings.AnimationStyle
+import com.mn.android.domain.settings.AnimationStyleStore
+import com.mn.android.domain.settings.SoundVolumeStore
 import com.mn.android.presentation.theme.ui.LocalMnThemeManager
 import com.mn.android.presentation.theme.ui.MnTheme
 import com.mn.android.presentation.theme.ui.MnVolumeSlider
@@ -127,23 +130,28 @@ internal fun SubscriptionSection(isPro: Boolean, onShowPaywall: () -> Unit) {
 // MARK: - Meditation Animation — iOS animationSection: segmented Rings/Path.
 
 @Composable
-internal fun AnimationSection(isPro: Boolean, onShowPaywall: () -> Unit) {
+internal fun AnimationSection(
+    isPro: Boolean,
+    onShowPaywall: () -> Unit,
+    animationStyle: com.mn.android.domain.settings.AnimationStyle,
+    onAnimationStyleChange: (com.mn.android.domain.settings.AnimationStyle) -> Unit,
+) {
     SectionCard {
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
             SectionHeader(stringResource(R.string.meditation_animation), Icons.Filled.Waves)
-            var animationStyle by remember { mutableStateOf(AnimationSettings.style) }
+            val selectedStyle = animationStyle
             Row(
                 Modifier
                     .fillMaxWidth()
                     .background(MnTheme.cardBackground, RoundedCornerShape(8.dp))
                     .padding(2.dp),
             ) {
-                listOf(AnimationSettings.RINGS to R.string.animation_rings,
-                       AnimationSettings.PATH to R.string.animation_path).forEach { (option, label) ->
-                    val selected = option == animationStyle
+                listOf(AnimationStyle.RINGS to R.string.animation_rings,
+                       AnimationStyle.PATH to R.string.animation_path).forEach { (option, label) ->
+                    val selected = option == selectedStyle
                     // iOS: a locked style is labelled with a lock and routes
                     // the tap to the paywall instead of selecting it.
-                    val locked = AnimationSettings.isPremium(option) && !isPro
+                    val locked = option.isPremium && !isPro
                     Text(
                         if (locked) {
                             stringResource(label) + LOCK_MARK
@@ -164,8 +172,7 @@ internal fun AnimationSection(isPro: Boolean, onShowPaywall: () -> Unit) {
                                 if (locked) {
                                     onShowPaywall()
                                 } else {
-                                    animationStyle = option
-                                    AnimationSettings.style = option
+                                    onAnimationStyleChange(option)
                                 }
                             }
                             .padding(vertical = 6.dp),
@@ -179,19 +186,23 @@ internal fun AnimationSection(isPro: Boolean, onShowPaywall: () -> Unit) {
 // MARK: - App Theme — iOS themeSection: one row per MainTheme.
 
 @Composable
-internal fun ThemeSection(isPro: Boolean, onShowPaywall: () -> Unit) {
+internal fun ThemeSection(
+    isPro: Boolean,
+    onShowPaywall: () -> Unit,
+    themeSelection: MainTheme,
+    onThemeSelectionChange: (MainTheme) -> Unit,
+) {
     SectionCard {
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             SectionHeader(stringResource(R.string.app_theme), Icons.Filled.Palette)
-            val themeManager = LocalMnThemeManager.current
             MainTheme.entries.forEach { theme ->
-                val selected = theme == themeManager.theme
+                val selected = theme == themeSelection
                 val locked = theme.isPremium && !isPro
                 Row(
                     Modifier
                         .fillMaxWidth()
                         .clickable {
-                            if (locked) onShowPaywall() else themeManager.select(theme)
+                            if (locked) onShowPaywall() else onThemeSelectionChange(theme)
                         }
                         .padding(vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -240,11 +251,13 @@ private const val LOCK_MARK = " 🔒"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun VolumeSection() {
+internal fun VolumeSection(
+    volume: Float,
+    onVolumeChange: (Float) -> Unit,
+) {
     SectionCard {
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
             SectionHeader(stringResource(R.string.meditation_sound_volume), Icons.Filled.VolumeUp)
-            var volume by remember { mutableFloatStateOf(SoundSettings.volume) }
             Text(
                 stringResource(R.string.percent_format, (volume * 100).toInt()),
                 color = MnTheme.textSecondary,
@@ -255,10 +268,7 @@ internal fun VolumeSection() {
             // iOS UISlider: a 4pt line with a round white knob.
             MnVolumeSlider(
                 value = volume,
-                onValueChange = {
-                    volume = it
-                    SoundSettings.volume = it
-                },
+                onValueChange = { onVolumeChange(it) },
             )
             Row {
                 Icon(

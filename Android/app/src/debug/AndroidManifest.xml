@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <!-- Debug-only: the device probes start it explicitly with
+             `adb shell am start -n com.mn.android/.debug.MetricsActivity`.
+             It stays out of the release APK. -->
+        <activity
+            android:name=".debug.MetricsActivity"
+            android:exported="true"
+            android:label="Metrics" />
+    </application>
+
+</manifest>

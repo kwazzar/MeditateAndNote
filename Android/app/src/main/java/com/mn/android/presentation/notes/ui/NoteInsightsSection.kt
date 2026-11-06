@@ -33,7 +33,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mn.android.R
-import com.mn.android.data.NoteInsightsSource
+import com.mn.android.domain.insights.NoteInsight
 import com.mn.android.presentation.theme.ui.MnTheme
 
 /**
@@ -45,7 +45,7 @@ import com.mn.android.presentation.theme.ui.MnTheme
  */
 @Composable
 internal fun NoteInsightsSection(
-    insights: List<NoteInsightsSource.Insight>,
+    insights: List<NoteInsight>,
     themes: List<String>,
     isLoading: Boolean,
     error: String?,
@@ -161,7 +161,7 @@ private fun ThemeChips(themes: List<String>) {
 // MARK: - Insight card
 
 @Composable
-private fun InsightCard(insight: NoteInsightsSource.Insight) {
+private fun InsightCard(insight: NoteInsight) {
     Column(Modifier.fillMaxWidth()) {
         if (insight.summary.isNotEmpty()) {
             Text(
