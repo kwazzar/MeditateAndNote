@@ -449,7 +449,7 @@ private fun MnTabBar(currentRoute: String?, onSelect: (TabItem) -> Unit) {
                 Column(
                     Modifier
                         .weight(1f)
-                        .clip(RoundedCornerShape(10.dp))
+                        .clip(RoundedCornerShape(100.dp))
                         .background(
                             if (selected) MnTheme.accentColor.copy(alpha = 0.12f)
                             else Color.Transparent

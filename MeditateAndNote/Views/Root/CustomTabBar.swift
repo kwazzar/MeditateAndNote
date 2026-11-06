@@ -53,7 +53,7 @@ struct CustomTabBar: View {
             .padding(.horizontal, 4)
             .frame(maxWidth: .infinity)
             .background(
-                RoundedRectangle(cornerRadius: 10)
+                Capsule()
                     .fill(isSelected ? themeManager.current.accentColor.opacity(0.12) : .clear)
             )
         }
